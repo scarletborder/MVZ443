@@ -1,0 +1,81 @@
+import { Game } from "../scenes/Game";
+import { IZombie } from "./IZombie";
+
+export class IPlant extends Phaser.Physics.Arcade.Sprite {
+    public static Group: Phaser.Physics.Arcade.Group;
+
+    public health: number;
+    public Timer?: Phaser.Time.TimerEvent;
+    public attackingZombie: Set<IZombie> = new Set<IZombie>();
+
+    public col: number;
+    public row: number;
+
+
+    static InitGroup(scene: Game) {
+        this.Group = scene.physics.add.group({
+            classType: IPlant,
+            runChildUpdate: true
+        });
+    }
+
+
+    constructor(scene: Game, col: number, row: number, texture: string) {
+        const { x, y } = scene.positionCalc.getPlantBottomCenter(col, row);
+        super(scene, x, y, texture, 0);
+        scene.add.existing(this);
+        scene.physics.add.existing(this);
+
+        if (!this.body) {
+            throw new Error('IPlant body is null');
+        }
+
+        let size = scene.positionCalc.getPlantDisplaySize();
+        this.setDisplaySize(size.sizeX, size.sizeY); // 改变显示大小
+        size = scene.positionCalc.getPlantBodySize();
+        this.setBodySize(size.sizeX, size.sizeY);
+        this.setOrigin(0.5, 1);
+
+        console.log(this.body.width, this.body.height);
+
+        IPlant.Group.add(this, true);  //TODO: 一定要把group带入,否则,真的会忘记添加到组里面
+        this.body.immovable = true;
+
+        this.col = col;
+        this.row = row;
+    }
+
+    public setHealth(value: number) {
+        this.health = value;
+        console.log(`Plant health updated to: ${this.health}`);
+
+        if (this.health <= 0) {
+            this.destroyPlant();
+        }
+    }
+
+    public takeDamage(amount: number) {
+        this.setHealth(this.health - amount);
+    }
+
+    private destroyPlant() {
+        // 通知正在攻击的僵尸
+        this.attackingZombie.forEach(zombie => {
+            zombie.stopAttacking();
+        });
+        // 停止物理效果（已在 destroy 中自动处理）
+        this.destroy(true); // 移除植物
+        console.log('Plant destroyed');
+
+    }
+
+    destroy(fromScene?: boolean) {
+        if (this.Timer) {
+            this.Timer.remove();
+            this.Timer.destroy();
+        }
+        super.destroy(fromScene);
+    }
+
+
+}

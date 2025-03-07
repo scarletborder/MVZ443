@@ -2,7 +2,7 @@ body {
     margin: 0;
     padding: 0;
     color: rgba(255, 255, 255, 0.87);
-    background-color: #000000; 
+    background-color: #000000;
     font-family: Arial, Helvetica, sans-serif;
 }
 
@@ -13,6 +13,17 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
+    flex-direction: column;
+}
+
+#mainContainer {
+    display: flex;
+    flex-direction: row;
+}
+
+#controlContainer {
+    display: flex;
+    flex-direction: row;
 }
 
 .spritePosition {
