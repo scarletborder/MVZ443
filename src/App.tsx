@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { IRefPhaserGame, PhaserGame } from './game/PhaserGame';
 import { MainMenu } from './game/scenes/MainMenu';
 
-import CardSlotHorizontal from './components/cardslot';
+import { CardSlotHorizontal } from './components/cardslot';
 
 function App() {
     // The sprite can only be moved in the MainMenu Scene
@@ -97,12 +97,12 @@ function App() {
 
 
     return (
-        <div id="app">
+        <div id="app" onContextMenu={(e) => { event?.preventDefault() }}>
             <div id="cardsContainer" style={{
                 "height": options[opt] / 6,
                 "width": options[opt]
             }}>
-                <CardSlotHorizontal />
+                <CardSlotHorizontal sceneRef={phaserRef} />
             </div>
             <div id="mainContainer">
                 <PhaserGame ref={phaserRef} currentActiveScene={currentScene} />

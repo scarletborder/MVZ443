@@ -108,4 +108,21 @@ export class PositionCalc {
             sizeY: 90 * this.scaleFactor
         }
     }
+
+    // 根据(x,y)计算(col,row)
+    public getGridByPos(x: number, y: number) {
+        //  判断是否超越
+        if (x < this.gridOffsetX || y < this.gridOffsetY ||
+            x > this.gridOffsetX + this.GRID_SIZEX * 9 || y > this.gridOffsetY + this.GRID_SIZEY * 5) {
+            return {
+                col: -1,
+                row: -1
+            }
+        }
+
+        return {
+            col: Math.floor((x - this.gridOffsetX) / this.GRID_SIZEX),
+            row: Math.floor((y - this.gridOffsetY) / this.GRID_SIZEY)
+        }
+    }
 }

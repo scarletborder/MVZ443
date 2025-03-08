@@ -1,16 +1,18 @@
 import { Game } from "../scenes/Game";
+import Gardener from "../utils/gardener";
 import { IZombie } from "./IZombie";
 
 export class IPlant extends Phaser.Physics.Arcade.Sprite {
     public static Group: Phaser.Physics.Arcade.Group;
+    gardener: Gardener;
 
+    public pid: number;
     public health: number;
     public Timer?: Phaser.Time.TimerEvent;
     public attackingZombie: Set<IZombie> = new Set<IZombie>();
 
     public col: number;
     public row: number;
-
 
     static InitGroup(scene: Game) {
         this.Group = scene.physics.add.group({
@@ -20,9 +22,11 @@ export class IPlant extends Phaser.Physics.Arcade.Sprite {
     }
 
 
-    constructor(scene: Game, col: number, row: number, texture: string) {
+    constructor(scene: Game, col: number, row: number, texture: string, pid: number) {
+        // TODO: texture逻辑还是要的,通过New某个植物的时候,传入对应的texture
         const { x, y } = scene.positionCalc.getPlantBottomCenter(col, row);
         super(scene, x, y, texture, 0);
+        this.pid = pid;
         scene.add.existing(this);
         scene.physics.add.existing(this);
 
@@ -43,6 +47,8 @@ export class IPlant extends Phaser.Physics.Arcade.Sprite {
 
         this.col = col;
         this.row = row;
+        this.gardener = scene.gardener;
+        this.gardener.registerPlant(this);
     }
 
     public setHealth(value: number) {
@@ -74,8 +80,8 @@ export class IPlant extends Phaser.Physics.Arcade.Sprite {
             this.Timer.remove();
             this.Timer.destroy();
         }
+        this.gardener.registerDestroy(this);
         super.destroy(fromScene);
     }
-
 
 }
