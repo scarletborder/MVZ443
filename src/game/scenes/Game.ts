@@ -3,21 +3,21 @@ import { Scene } from 'phaser';
 import { IPlant } from '../models/IPlant';
 import { IZombie } from '../models/IZombie';
 import { IBullet } from '../models/IBullet';
-import NewPeaShooter from '../presets/plant/pea_shooter';
-import NewZombie from '../presets/zombie/zombie';
 import { PositionCalc } from '../utils/position';
 import Gardener from '../utils/gardener';
+import MonsterSpawner from '../utils/spawner';
 
 
 
 export class Game extends Scene {
     private scaleFactor: number = 1;
     private grid: Phaser.GameObjects.Rectangle[][];
-    private GRID_ROWS = 5;
-    private GRID_COLS = 9;
+    public GRID_ROWS = 5;
+    public GRID_COLS = 9;
 
     public positionCalc: PositionCalc;
     public gardener: Gardener;
+    public monsterSpawner: MonsterSpawner;
 
 
     camera: Phaser.Cameras.Scene2D.Camera;
@@ -33,14 +33,32 @@ export class Game extends Scene {
         // 设置资源路径
         this.load.setPath('assets');
         this.load.image('background', 'background.png'); // 请确保有背景资源
-        this.load.image('bullet/pea', 'bullet/pea.png');
-        this.load.image('plant/peashooter', 'plant/pea_shooter.png');
+        this.load.image('bullet/snowball', 'bullet/snowball.png');
+        this.load.image('bullet/arrow', 'bullet/arrow.png');
+
+
+        this.load.image('plant/dispenser', 'plant/dispenser.png');
+        this.load.spritesheet('plant/furnace', 'plant/furnace.png',
+            { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('plant/obsidian', 'plant/obsidian.png',
+            { frameWidth: 64, frameHeight: 64 });
+
+
         this.load.image('zombie/zombie', 'zombie/zombie.png');
+        this.load.image('attach/zombie_wound', 'attach/zombie_wound.png');
+        this.load.spritesheet('attach/cap', 'attach/cap.png',
+            { frameWidth: 33, frameHeight: 14 });
+
+        this.load.spritesheet('anime/death_smoke', 'anime/death_smoke.png',
+            { frameWidth: 16, frameHeight: 16 });
+
+        this.load.json('ch101', 'stages/ch101.json');
     }
 
     create() {
         this.scaleFactor = this.scale.displaySize.width / 800;
         this.positionCalc = new PositionCalc(this.scaleFactor);
+        this.monsterSpawner = new MonsterSpawner(this, this.cache.json.get('ch101'));
 
 
         // 网格初始化
@@ -93,14 +111,13 @@ export class Game extends Scene {
 
 
         // test tmp        snippet
-        // 放置豌豆射手（植物），建议大小 80×80
-        let peashooter = NewPeaShooter(this, 2, 1);
 
-        // 创建僵尸（建议大小 80×120），这里放置 3 个僵尸
-        for (let i = 0; i < 3; i++) {
-            let zombie = NewZombie(this, 8, i);
-        }
 
+        // // 创建僵尸（建议大小 80×120），这里放置 3 个僵尸
+        // for (let i = 0; i < 3; i++) {
+        //     let zombie = NewZombie.NewFunction(this, 9, i);
+        // }
+        this.monsterSpawner.startWave();
 
         EventBus.emit('current-scene-ready', this);
     }
@@ -122,8 +139,8 @@ export class Game extends Scene {
         this.gardener.cancelPrePlant();
         EventBus.emit('card-deselected', { pid: null }); // 通知卡片取消选中
     }
-
     // game->app 通知种植卡片
+    // 在react manager中处理消耗energy
     broadCastPlant(pid: number) {
         EventBus.emit('card-plant', { pid });
     }
@@ -131,19 +148,28 @@ export class Game extends Scene {
     broadCastCancelPrePlant() {
         EventBus.emit('card-deselected', { pid: null }); // 通知卡片取消选中
     }
+    // game->app 通知更新能量
+    broadCastEnergy(energyChange: number) {
+        EventBus.emit('energy-update', { energyChange });
+    }
+    // game->app 通知游戏进度
+    broadCastProgress(progress: number) {
+        EventBus.emit('game-progress', { progress });
+    }
+    // game->app 通知游戏结束
+    broadCastGameOver(win: boolean) {
+        EventBus.emit('game-over', { win });
+    }
 }
 
-// 豌豆与僵尸碰撞的伤害判定
-function damageZombie(peaSprite: Phaser.GameObjects.GameObject, zombieSprite: Phaser.GameObjects.GameObject) {
+// bullet与僵尸碰撞的伤害判定
+function damageZombie(bulletSprite: Phaser.GameObjects.GameObject, zombieSprite: Phaser.GameObjects.GameObject) {
     console.log('damage!'); // 确保碰撞被检测到
-    const pea = peaSprite as IBullet;
+    const bullet = bulletSprite as IBullet;
     const zombie = zombieSprite as IZombie;
 
-    pea.destroy();
-    zombie.health -= pea.damage;
-    if (zombie.health <= 0) {
-        zombie.destroy();
-    }
+    bullet.destroy();
+    zombie.takeDamage(bullet.damage);
 }
 
 
@@ -151,5 +177,6 @@ function damageZombie(peaSprite: Phaser.GameObjects.GameObject, zombieSprite: Ph
 function damagePlant(plantSprite: Phaser.GameObjects.GameObject, zombieSprite: Phaser.GameObjects.GameObject) {
     const plant = plantSprite as IPlant;
     const zombie = zombieSprite as IZombie;
+    console.log('size', plant.body?.width, plant.body?.height)
     zombie.startAttacking(plant);
 }

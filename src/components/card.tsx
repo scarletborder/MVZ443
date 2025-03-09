@@ -1,31 +1,35 @@
 // Card.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import "../../public/cardslot.css"
 import { IRefPhaserGame } from '../game/PhaserGame';
 import { Game } from '../game/scenes/Game';
 import { EventBus } from '../game/EventBus';
+import { useGameContext } from '../context/garden_ctx';
 
 interface CardProps {
-    pid: number; // 植物id
-    textureKey: string; // 贴图key
-    plantName: string; // 名称
-    cooldownTime: number; // 最大冷却时间（秒）
+    pid: number;
+    texture: string;
+    plantName: string;
+    cost: number;
+    cooldownTime: number;
     sceneRef: React.MutableRefObject<IRefPhaserGame | null>;
 }
 
-
-// 只关心 src（或 title），保证只在真正变更时才更新
-// 嵌入card
-// const ImageComponent = React.memo(({ src, alt }) => {
-//     return <img src={src} alt={alt} />;
-//   }, (prevProps, nextProps) => {
-//     return prevProps.src === nextProps.src;
-//   });
-
-export default function Card({ pid, plantName, cooldownTime, sceneRef }: CardProps) {
+export default function Card({ pid, texture, plantName, cooldownTime, sceneRef, cost }: CardProps) {
     const [isCoolingDown, setIsCoolingDown] = useState(false);
     const [remainingTime, setRemainingTime] = useState(0);
     const [isChosen, setIsChosen] = useState(false);
+    const { energy } = useGameContext();
+
+    const textureUri = useMemo(() => {
+        if (!sceneRef.current) return;
+        const scene = sceneRef.current.scene as Game;
+        if (!scene || scene.scene.key !== 'Game') {
+            console.error('当前场景不是Game');
+            return;
+        }
+        return scene.textures.getBase64(texture);
+    }, [texture, pid, sceneRef.current]);
 
     useEffect(() => {
         let timer: any;
@@ -41,14 +45,12 @@ export default function Card({ pid, plantName, cooldownTime, sceneRef }: CardPro
 
     useEffect(() => {
         const handleDeselect = (data: { pid: number | null }) => {
-            if (data.pid !== pid) { // 跳过当前选中的卡片
+            if (data.pid !== pid) {
                 setIsChosen(false);
             }
         };
         const handlePlant = (data: { pid: number }) => {
-            console.log('pid is', data.pid);
             if (data.pid === pid) {
-                console.log('slot: card plant', pid);
                 setIsChosen(false);
                 setIsCoolingDown(true);
                 setRemainingTime(cooldownTime);
@@ -64,10 +66,14 @@ export default function Card({ pid, plantName, cooldownTime, sceneRef }: CardPro
 
     const handleClick = () => {
         if (!sceneRef.current) return;
-
         const scene = sceneRef.current.scene as Game;
         if (!scene || scene.scene.key !== 'Game') {
             console.error('当前场景不是Game');
+            return;
+        }
+
+        if (energy < cost) {
+            console.log('Not enough energy');
             return;
         }
 
@@ -79,18 +85,24 @@ export default function Card({ pid, plantName, cooldownTime, sceneRef }: CardPro
 
         if (!isCoolingDown) {
             setIsChosen(true);
-            scene.chooseCard(pid); // 调用 Game 的 chooseCard
+            scene.chooseCard(pid);
             console.log(`Card ${plantName} (pid=${pid}) chosen`);
         }
     };
 
     return (
         <button
-            className={`card ${isCoolingDown ? 'cooling' : ''} ${isChosen ? 'chosen' : ''}`}
+            className={`card ${isCoolingDown ? 'cooling' : ''} ${isChosen ? 'chosen' : ''} ${(energy < cost) ? 'expensive' : ''}`}
             onClick={handleClick}
             disabled={isCoolingDown}
         >
-            <span className="plant-name">{plantName}</span>
+            <div className="card-content">
+                <div className="plant-name">{plantName}</div>
+                <div className="plant-image">
+                    <img src={textureUri} alt={plantName} />
+                </div>
+                <div className="plant-cost">{cost}</div>
+            </div>
             {isCoolingDown && (
                 <div
                     className="cooldown-overlay"
@@ -99,16 +111,4 @@ export default function Card({ pid, plantName, cooldownTime, sceneRef }: CardPro
             )}
         </button>
     );
-}
-
-interface EnergyProps {
-    energy: number;
-};
-
-export function Energy() {
-
-}
-
-export function Shovel() {
-
 }

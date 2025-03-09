@@ -9,8 +9,8 @@ import { Preloader } from './scenes/Preloader';
 //  https://newdocs.phaser.io/docs/3.70.0/Phaser.Types.Core.GameConfig
 const config: Phaser.Types.Core.GameConfig = {
     type: AUTO,
-    width: 800,
-    height: 600,
+    width: 1024,
+    height: 768,
     fps: {
         target: 60,
     },
@@ -18,8 +18,23 @@ const config: Phaser.Types.Core.GameConfig = {
         default: 'arcade',
         arcade: {
             gravity: { x: 0, y: 0 },
-            debug: false
+            debug: true
         }
+    },
+    scale: {
+        mode: Phaser.Scale.NONE,
+
+        // Minimum size
+        min: {
+            width: 800,
+            height: 600
+        },
+        // Maximum size
+        max: {
+            width: 1200,
+            height: 900
+        },
+
     },
     parent: 'game-container',
     backgroundColor: '#028af8',

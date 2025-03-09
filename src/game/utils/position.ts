@@ -1,4 +1,5 @@
 // 计算各种东西应该出现的坐标
+// body 位置不用带上scaleFactor
 
 export class PositionCalc {
     scaleFactor: number = 1;
@@ -8,6 +9,7 @@ export class PositionCalc {
     GRID_SIZEY: number = 90;
 
     constructor(scaleFactor: number) {
+        console.log(scaleFactor)
         this.scaleFactor = scaleFactor;
         this.gridOffsetX = this.gridOffsetX * this.scaleFactor;
         this.gridOffsetY = this.gridOffsetY * this.scaleFactor;
@@ -35,6 +37,7 @@ export class PositionCalc {
     // 计算植物底部中间
     public getPlantBottomCenter(col: number, row: number) {
         const { x, y } = this.getGridTopLeft(col, row);
+
         return {
             x: x + this.GRID_SIZEX / 2,
             y: y + this.GRID_SIZEY
@@ -52,8 +55,8 @@ export class PositionCalc {
     // 获得植物的碰撞体积
     public getPlantBodySize() {
         return {
-            sizeX: 400 * this.scaleFactor,
-            sizeY: 300 * this.scaleFactor
+            sizeX: 60,
+            sizeY: 45
         }
     }
 
@@ -62,8 +65,8 @@ export class PositionCalc {
         let { x, y } = this.getPlantBottomCenter(col, row);
 
         return {
-            x: x * this.scaleFactor,
-            y: y - 55 * this.scaleFactor
+            x: x,
+            y: y - 45 * this.scaleFactor
         }
     }
 
@@ -95,8 +98,8 @@ export class PositionCalc {
     // 获得僵尸的display size
     public getZombieDisplaySize() {
         return {
-            sizeX: 80 * this.scaleFactor,
-            sizeY: 120 * this.scaleFactor
+            sizeX: 72 * this.scaleFactor,
+            sizeY: 108 * this.scaleFactor
         }
 
     }
@@ -104,8 +107,8 @@ export class PositionCalc {
     // 获得僵尸的body size
     public getZombieBodySize() {
         return {
-            sizeX: 130 * this.scaleFactor,
-            sizeY: 90 * this.scaleFactor
+            sizeX: 30,
+            sizeY: 50
         }
     }
 

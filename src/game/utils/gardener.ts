@@ -1,8 +1,8 @@
 // 管理种植,铲除植物.以及使用星之碎片和激发植物的能力
 
 import { IPlant } from "../models/IPlant";
-import NewPeaShooter from "../presets/plant/pea_shooter";
 import { Game } from "../scenes/Game";
+import { PlantFactoryMap } from "./loader";
 import { PositionCalc } from "./position";
 
 export default class Gardener {
@@ -108,7 +108,13 @@ export default class Gardener {
         if ((col === this.prevCol && row === this.prevRow) || col < 0 || row < 0) {
             return;
         }
-        this.startHighlight(col, row);
+
+        this.prevCol = col;
+        this.prevRow = row;
+        const plantRecord = PlantFactoryMap[this.prePlantPid];
+        if (plantRecord) {
+            this.startHighlight(col, row, plantRecord.texture);
+        }
     }
 
 
@@ -127,7 +133,10 @@ export default class Gardener {
         const { col, row } = this.positionCalc.getGridByPos(pointer.x, pointer.y);
         if (col >= 0 && row >= 0 && this.canPlant(col, row)) { // 假设已实现 isPlanted
             // TODO: 根据 pid 创建具体植物,这里注册函数在preload时候放到game的loader里面
-            const plant = NewPeaShooter(this.scene, col, row); // 根据 pid 创建具体植物
+            const plantRecord = PlantFactoryMap[pid];
+            if (plantRecord) {
+                plantRecord.NewFunction(this.scene, col, row); // 根据 pid 创建具体植物
+            }
             this.cancelPrePlant(); // 种植后取消预种植
             this.scene.broadCastPlant(pid); // 通知种植卡片
         }
@@ -158,8 +167,7 @@ export default class Gardener {
             repeat: -1,
         });
 
-        this.prevCol = col;
-        this.prevRow = row;
+
     }
 
     // 停止高光

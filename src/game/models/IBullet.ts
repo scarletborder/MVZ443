@@ -19,14 +19,15 @@ export class IBullet extends Phaser.Physics.Arcade.Sprite {
     constructor(scene: Game, col: number, row: number, texture: string, damage: number = 5) {
         const { x, y } = scene.positionCalc.getBulletCenter(col, row);
         super(scene, x, y, texture);
-        console.log(x,y)
-        let size = scene.positionCalc.getBulletDisplaySize();
-        this.setDisplaySize(size.sizeX, size.sizeY);
-        size = scene.positionCalc.getBulletBodySize();
-        this.setOrigin(0.5, 0.5);
-        scene.add.existing(this);
         scene.physics.add.existing(this);
+        scene.add.existing(this);
         IBullet.Group.add(this, true);
+
+        let size = scene.positionCalc.getBulletBodySize();
+        size = scene.positionCalc.getBulletDisplaySize();
+        this.setDisplaySize(size.sizeX, size.sizeY);
+
+        this.setOrigin(0.5, 0.5);
 
 
         this.damage = damage;

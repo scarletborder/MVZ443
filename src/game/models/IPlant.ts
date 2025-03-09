@@ -26,23 +26,32 @@ export class IPlant extends Phaser.Physics.Arcade.Sprite {
         // TODO: texture逻辑还是要的,通过New某个植物的时候,传入对应的texture
         const { x, y } = scene.positionCalc.getPlantBottomCenter(col, row);
         super(scene, x, y, texture, 0);
+
+
         this.pid = pid;
         scene.add.existing(this);
         scene.physics.add.existing(this);
 
+        this.debugShowBody = true
         if (!this.body) {
             throw new Error('IPlant body is null');
         }
 
-        let size = scene.positionCalc.getPlantDisplaySize();
-        this.setDisplaySize(size.sizeX, size.sizeY); // 改变显示大小
-        size = scene.positionCalc.getPlantBodySize();
-        this.setBodySize(size.sizeX, size.sizeY);
-        this.setOrigin(0.5, 1);
 
-        console.log(this.body.width, this.body.height);
 
         IPlant.Group.add(this, true);  //TODO: 一定要把group带入,否则,真的会忘记添加到组里面
+        let size = scene.positionCalc.getPlantDisplaySize();
+        this.setDisplaySize(size.sizeX, size.sizeY); // 改变显示大小 
+        size = scene.positionCalc.getPlantBodySize();
+        this.setBodySize(size.sizeX, size.sizeY);
+        // console.log(scene.positionCalc.scaleFactor)
+        // this.setScale(scene.positionCalc.scaleFactor);
+
+
+
+        this.setOrigin(0.5, 1);
+
+        // console.log(this.body.width, this.body.height);
         this.body.immovable = true;
 
         this.col = col;
@@ -60,10 +69,16 @@ export class IPlant extends Phaser.Physics.Arcade.Sprite {
         }
     }
 
-    public takeDamage(amount: number) {
+    public takeDamage(amount: number, zombie: IZombie) {
         this.setHealth(this.health - amount);
     }
 
+    // 星之碎片
+    public onStarShards() {
+        console.log('Plant onStarShards');
+    }
+
+    // 调用摧毁
     private destroyPlant() {
         // 通知正在攻击的僵尸
         this.attackingZombie.forEach(zombie => {
@@ -72,9 +87,9 @@ export class IPlant extends Phaser.Physics.Arcade.Sprite {
         // 停止物理效果（已在 destroy 中自动处理）
         this.destroy(true); // 移除植物
         console.log('Plant destroyed');
-
     }
 
+    // 底层摧毁
     destroy(fromScene?: boolean) {
         if (this.Timer) {
             this.Timer.remove();

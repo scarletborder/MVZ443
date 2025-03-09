@@ -2,14 +2,16 @@ import { useRef, useState } from 'react';
 import { IRefPhaserGame, PhaserGame } from './game/PhaserGame';
 import { MainMenu } from './game/scenes/MainMenu';
 
-import { CardSlotHorizontal } from './components/cardslot';
+import { CardSlotHorizontal, EnergySlot } from './components/cardslot';
+import { GameProvider } from './context/garden_ctx';
+import BottomTools from './components/bottom';
 
 function App() {
     // The sprite can only be moved in the MainMenu Scene
     const [canMoveSprite, setCanMoveSprite] = useState(true);
 
     // resolution
-    const options = [800, 1200];
+    const options = [1024, 1200, 800];
     const [opt, setOpts] = useState(0);
 
     //  References to the PhaserGame component (game and scene are exposed)
@@ -88,7 +90,7 @@ function App() {
             const height = width * 3 / 4;
             if (phaserRef.current) {
                 const scene = phaserRef.current.scene;
-                scene?.scale.resize(width, height);
+                scene?.scale.setGameSize(width, height);
             }
             return newOpt;
         });
@@ -98,34 +100,44 @@ function App() {
 
     return (
         <div id="app" onContextMenu={(e) => { event?.preventDefault() }}>
-            <div id="cardsContainer" style={{
-                "height": options[opt] / 6,
-                "width": options[opt]
-            }}>
-                <CardSlotHorizontal sceneRef={phaserRef} />
-            </div>
-            <div id="mainContainer">
-                <PhaserGame ref={phaserRef} currentActiveScene={currentScene} />
+            <GameProvider>
+                <div id="cardsContainer" style={{
+                    "height": options[opt] / 8,
+                    "maxHeight": '135px',
+                    "width": options[opt],
+                    display: "flex",
+                    "flexDirection": "row"
+                }}>
 
-            </div>
-            <div id="controlContainer">
-                <div>
-                    <button className="button" onClick={changeScene}>Change Scene</button>
-                </div>
-                <div>
-                    <button disabled={canMoveSprite} className="button" onClick={moveSprite}>Toggle Movement</button>
-                </div>
-                <div className="spritePosition">Sprite Position:
-                    <pre>{`{\n  x: ${spritePosition.x}\n  y: ${spritePosition.y}\n}`}</pre>
-                </div>
-                <div>
-                    <button className="button" onClick={addSprite}>Add New Sprite</button>
-                </div>
-                <div>
-                    <button className='button' onClick={switchResolution}>resolution {options[opt]}</button>
-                </div>
-            </div>
+                    <EnergySlot sceneRef={phaserRef} />
+                    <CardSlotHorizontal sceneRef={phaserRef} />
 
+                </div>
+
+
+                <div id="mainContainer">
+                    <div id="controlContainer">
+                        <div>
+                            <button className="button" onClick={changeScene}>Change Scene</button>
+                        </div>
+                        <div>
+                            <button disabled={canMoveSprite} className="button" onClick={moveSprite}>Toggle Movement</button>
+                        </div>
+                        <div className="spritePosition">Sprite Position:
+                            <pre>{`{\n  x: ${spritePosition.x}\n  y: ${spritePosition.y}\n}`}</pre>
+                        </div>
+                        <div>
+                            <button className="button" onClick={addSprite}>Add New Sprite</button>
+                        </div>
+                        <div>
+                            <button className='button' onClick={switchResolution}>resolution {options[opt]}</button>
+                        </div>
+                    </div>
+                    <PhaserGame ref={phaserRef} currentActiveScene={currentScene} />
+                </div>
+                <BottomTools />
+
+            </GameProvider>
         </div>
     )
 }

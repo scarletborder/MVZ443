@@ -10,10 +10,60 @@
     border-radius: 8px;
     cursor: pointer;
     overflow: hidden;
+    transition: all 0.3s ease;
+    padding: 0;
+}
+
+.card-content {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.plant-name {
+    height: 20%;
+    width: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.3s ease;
+    color: #333;
+    font-weight: bold;
+    text-align: center;
+    z-index: 1;
+    font-size: 12px;
+    padding: 2px;
+    overflow: hidden;
+}
+
+.plant-image {
+    height: 60%;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+}
+
+.plant-image img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.plant-cost {
+    height: 20%;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #333;
+    font-weight: bold;
+    text-align: center;
+    z-index: 1;
+    font-size: 14px;
 }
 
 .card:disabled {
@@ -22,19 +72,14 @@
 
 .card.chosen {
     border: 6px solid yellow;
-    /* 高亮选中状态 */
 }
 
 .card.cooling {
     background-color: #d3d3d3;
-    /* 淡灰色 */
 }
 
-.plant-name {
-    z-index: 1;
-    color: #333;
-    font-weight: bold;
-    text-align: center;
+.card.expensive {
+    background-color: #ce7f7f;
 }
 
 .cooldown-overlay {
@@ -44,7 +89,6 @@
     width: 100%;
     height: 100%;
     background-color: rgba(64, 64, 64, 0.7);
-    /* 深灰色半透明 */
     animation: cooldown linear forwards;
     transform-origin: bottom;
 }

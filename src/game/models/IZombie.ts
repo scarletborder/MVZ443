@@ -1,21 +1,41 @@
 import { Game } from "../scenes/Game";
+import MonsterSpawner from "../utils/spawner";
 import { IPlant } from "./IPlant";
 
+function setDisplay(spr: IZombie, scene: Game) {
+    let size = scene.positionCalc.getZombieBodySize();
+    spr.setBodySize(size.sizeX, size.sizeY);
+    size = scene.positionCalc.getZombieDisplaySize();
+    spr.setDisplaySize(size.sizeX, size.sizeY);
+    spr.setOffset(10 * scene.positionCalc.scaleFactor, + 20 * scene.positionCalc.scaleFactor);
+    spr.setOrigin(0.5, 1);
+}
 
 export class IZombie extends Phaser.Physics.Arcade.Sprite {
     public static Group: Phaser.Physics.Arcade.Group;
+    private Spawner: MonsterSpawner;
 
     // 私有
+    // 属性
     public health: number;
     public speed: number;
     public IsFrozen: boolean = false;
     public IsStop: boolean = false;
+
+    // 攻击
     private attackTimer?: Phaser.Time.TimerEvent; // 攻击定时器
     public attackingPlant: IPlant | null = null; // 当前攻击的植物
-    private attackInterval: number = 1000; // 攻击间隔（1秒）
+    private attackInterval: number = 160; // 攻击间隔（1秒）
+    private attackDamage: number = 16; // 攻击伤害
+
+    // 附加物体
+    public attachSprites: Map<string, Phaser.Physics.Arcade.Sprite> = new Map();
 
     public col: number;
     public row: number;
+
+    // 动画
+    isDying: boolean = false; // 是否正在死亡
 
     static InitGroup(scene: Game) {
         this.Group = scene.physics.add.group({
@@ -27,13 +47,11 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite {
     constructor(scene: Game, col: number, row: number, texture: string) {
         const { x, y } = scene.positionCalc.getZombieBottomCenter(col, row);
         super(scene, x, y, texture, 0);
+
         scene.add.existing(this);
         scene.physics.add.existing(this);
-        let size = scene.positionCalc.getZombieDisplaySize();
-        this.setDisplaySize(size.sizeX, size.sizeY);
-        size = scene.positionCalc.getZombieBodySize();
-        this.setBodySize(size.sizeX, size.sizeY);
-        this.setOrigin(0.5, 1);
+
+        setDisplay(this, scene);
 
 
         IZombie.Group.add(this, true);
@@ -41,6 +59,10 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite {
 
         this.col = col;
         this.row = row;
+        this.isDying = false;
+
+        this.Spawner = scene.monsterSpawner;
+        this.Spawner.registerMonster(this);
     }
 
     // 设置生命值并监听
@@ -75,6 +97,7 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite {
 
         // 启动攻击定时器
         this.attackTimer = this.scene.time.addEvent({
+            startAt: this.attackInterval * 4 / 5,
             delay: this.attackInterval,
             callback: () => this.hurtPlant(),
             loop: true,
@@ -95,14 +118,18 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite {
         this.IsStop = false;
         this.setVelocityX(-this.speed);
         console.log('Zombie stopped attacking');
+    }
 
-
+    setVelocityX(speed: number) {
+        super.setVelocityX(speed);
+        this.attachSprites.forEach(sprite => sprite.setVelocityX(speed));
+        return this;
     }
 
     // 伤害植物
     private hurtPlant() {
         if (this.attackingPlant && this.attackingPlant.active) {
-            this.attackingPlant.takeDamage(5);
+            this.attackingPlant.takeDamage(this.attackDamage, this);
             if (!this.attackingPlant) return;
             console.log(`Zombie hurt plant, plant health: ${this.attackingPlant.health}`);
         }
@@ -114,15 +141,70 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite {
             this.attackTimer.remove();
             this.attackTimer.destroy();
         }
-        this.destroy();
+        this.playDeathAnimation();
         console.log('Zombie destroyed');
+    }
+
+    playDeathAnimation() {
+        this.isDying = true;
+        this.setVelocityX(0);
+        // 移除物理效果
+        if (this.body) {
+            this.body.enable = false;
+            this.scene.physics.world.remove(this.body);
+            this.attachSprites.forEach(sprite => {
+                if (sprite.body) {
+                    sprite.body.enable = false;
+                    this.scene.physics.world.remove(sprite.body);
+                }
+            });
+            // 设置旋转原点为底部中心
+            this.setOrigin(0.5, 1);
+            this.attachSprites.forEach(sprite => sprite.setOrigin(0.5, 1));
+
+            // 播放死亡动画
+            this.scene.tweens.add({
+                targets: [this, ...Array.from(this.attachSprites.values())],
+                angle: 90,
+                duration: 400,
+                ease: 'Liner',
+                onComplete: () => {
+                    this.playDeathSmokeAnimation();
+                    this.destroy();
+                }
+            });
+        }
+    }
+
+    playDeathSmokeAnimation() {
+        // 创建临时的白烟 sprite
+        const smoke = this.scene.add.sprite(this.x, this.y, 'anime/death_smoke');
+        smoke.setDisplaySize(this.displayWidth, this.displayWidth);
+        smoke.setOrigin(0.5, 1);  // 设置底部为中心
+
+        // 确保动画只创建一次（全局定义）
+        if (!this.scene.anims.exists('death_smoke')) {
+            this.scene.anims.create({
+                key: 'death_smoke',
+                frames: this.scene.anims.generateFrameNumbers('anime/death_smoke', { start: 0, end: 7 }),
+                frameRate: 16,  // 0.5秒播放8帧
+                repeat: 0
+            });
+        }
+        // 播放动画并销毁
+        smoke.play('death_smoke');
+        smoke.once('animationcomplete', () => {
+            smoke.destroy();    // 销毁临时白烟
+        });
     }
 
     // 覆盖 destroy 方法，确保清理
     destroy(fromScene?: boolean) {
         this.attackTimer?.remove();
         this.attackTimer?.destroy();
-
+        this.Spawner.registerDestroy(this);
+        // 处理attach
+        this.attachSprites.forEach(sprite => sprite.destroy());
         super.destroy(fromScene);
     }
 
