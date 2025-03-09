@@ -80,6 +80,11 @@
 
 .card.expensive {
     background-color: #ce7f7f;
+    cursor: not-allowed;
+}
+
+.card.paused {
+    cursor: not-allowed;
 }
 
 .cooldown-overlay {

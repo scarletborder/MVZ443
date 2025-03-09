@@ -30,6 +30,30 @@ export class Preloader extends Scene {
 
         this.load.image('logo', 'logo.png');
         this.load.image('star', 'star.png');
+
+        // this.load.setPath('assets');
+        // this.load.image('background', 'background.png'); // 请确保有背景资源
+        // TODO: 移动到preload中
+        this.load.image('bullet/snowball', 'bullet/snowball.png');
+        this.load.image('bullet/arrow', 'bullet/arrow.png');
+
+
+        this.load.image('plant/dispenser', 'plant/dispenser.png');
+        this.load.spritesheet('plant/furnace', 'plant/furnace.png',
+            { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('plant/obsidian', 'plant/obsidian.png',
+            { frameWidth: 64, frameHeight: 64 });
+
+
+        this.load.image('zombie/zombie', 'zombie/zombie.png');
+        this.load.image('attach/zombie_wound', 'attach/zombie_wound.png');
+        this.load.spritesheet('attach/cap', 'attach/cap.png',
+            { frameWidth: 33, frameHeight: 14 });
+
+        this.load.spritesheet('anime/death_smoke', 'anime/death_smoke.png',
+            { frameWidth: 16, frameHeight: 16 });
+
+        this.load.json('ch101', 'stages/ch101.json');
     }
 
     create() {
@@ -37,6 +61,6 @@ export class Preloader extends Scene {
         //  For example, you can define global animations here, so we can use them in other scenes.
 
         //  Move to the MainMenu. You could also swap this for a Scene Transition, such as a camera fade.
-        this.scene.start('MainMenu');
+        this.scene.start('Game');
     }
 }

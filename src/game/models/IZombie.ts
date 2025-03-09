@@ -25,8 +25,8 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite {
     // 攻击
     private attackTimer?: Phaser.Time.TimerEvent; // 攻击定时器
     public attackingPlant: IPlant | null = null; // 当前攻击的植物
-    private attackInterval: number = 160; // 攻击间隔（1秒）
-    private attackDamage: number = 16; // 攻击伤害
+    private attackInterval: number = 160; // 攻击间隔
+    private attackDamage: number = 15; // 攻击伤害
 
     // 附加物体
     public attachSprites: Map<string, Phaser.Physics.Arcade.Sprite> = new Map();
@@ -121,8 +121,14 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite {
     }
 
     setVelocityX(speed: number) {
+        if (!super.setVelocityX) {
+            return this;
+        }
         super.setVelocityX(speed);
-        this.attachSprites.forEach(sprite => sprite.setVelocityX(speed));
+        this.attachSprites.forEach(sprite => {
+            if (!sprite || !sprite.setVelocityX) return;
+            sprite.setVelocityX(speed);
+        });
         return this;
     }
 
@@ -137,6 +143,9 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite {
 
     // 销毁僵尸
     private destroyZombie() {
+        // 通知正在收到攻击的植物
+        this.attackingPlant?.attackingZombie.delete(this);
+
         if (this.attackTimer) {
             this.attackTimer.remove();
             this.attackTimer.destroy();

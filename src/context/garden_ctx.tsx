@@ -9,6 +9,7 @@ interface GameState {
     wave: number;
     bossHealth: number;
     starShareds: number;
+    isPaused: boolean;
 }
 
 // 定义 Context 值的类型
@@ -18,6 +19,7 @@ interface GameContextValue extends GameState {
     updateWave: (percent: number) => void;
     updateBossHealth: (amount: number) => void;
     updateStarShards: (amouunt: number) => void;
+    setIsPaused: (isPaused: boolean) => void;
 }
 
 // 创建 Context
@@ -37,6 +39,7 @@ export function GameProvider(props: GameProviderProps) {
         wave: 0,
         bossHealth: -1,
         starShareds: 0,
+        isPaused: false
     });
 
     function updateEnergy(amount: number) {
@@ -74,13 +77,21 @@ export function GameProvider(props: GameProviderProps) {
         }))
     }
 
+    function setIsPaused(isPaused: boolean) {
+        setGameState(prev => ({
+            ...prev,
+            isPaused
+        }));
+    }
+
     const contextValue: GameContextValue = {
         ...gameState,
         updateEnergy,
         updateMoney,
         updateWave: updateWave,
         updateBossHealth,
-        updateStarShards
+        updateStarShards,
+        setIsPaused
     };
 
     return (

@@ -1,14 +1,17 @@
 // BottomTools.jsx
 import { useGameContext } from "../context/garden_ctx";
 import "../../public/bottom.css";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { EventBus } from "../game/EventBus";
+import { useSettings } from "../context/settings_ctx";
 
 export default function BottomTools() {
-    const { money, wave, bossHealth, starShareds, updateWave } = useGameContext();
+    const { money, wave, bossHealth, starShareds, updateWave, isPaused, setIsPaused } = useGameContext();
 
     const [starStr, setStarStr] = useState<string>('*');
     const [starChosen, setStarChosen] = useState<boolean>(false);
+    const { isBluePrint } = useSettings();
+
 
     useEffect(() => {
         const handleProgress = (data: { progress: number }) => {
@@ -21,18 +24,39 @@ export default function BottomTools() {
                 alert('You Lose!');
             }
         }
+        const handleSceneReady = (data: { scene: Phaser.Scene }) => {
+            EventBus.emit("send-game-settings", {
+                isBluePrint
+            });
+        };
         EventBus.on('game-progress', handleProgress);
         EventBus.on('game-over', handleGameOver);
+        EventBus.on('current-scene-ready', handleSceneReady);
 
         return () => {
             EventBus.removeListener('game-progress', handleProgress);
             EventBus.removeListener('game-over', handleGameOver);
+            EventBus.removeListener('current-scene-ready', handleSceneReady);
         }
     }, [])
 
     const handleStarClick = () => {
         setStarChosen(stat => !stat);
     };
+
+    const handleSetPause = useCallback(() => {
+        let newPaused = !isPaused;
+        EventBus.emit('setIsPaused', { paused: newPaused });
+    }, [isPaused]);
+
+    useEffect(() => {
+        EventBus.on('okIsPaused', (data: { paused: boolean }) => {
+            setIsPaused(data.paused);
+        });
+        return () => {
+            EventBus.removeListener('okIsPaused');
+        }
+    }, []);
 
     useEffect(() => {
         let tmp = 'star';
@@ -74,7 +98,7 @@ export default function BottomTools() {
                     </div>
                 )
             }
-            <button className="pause">Pause</button>
+            <button className="pause" onClick={handleSetPause}>Pause</button>
         </div >
     );
 }

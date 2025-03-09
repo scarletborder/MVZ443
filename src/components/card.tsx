@@ -1,10 +1,10 @@
-// Card.tsx
-import React, { useState, useEffect, useMemo } from 'react';
-import "../../public/cardslot.css"
+import React, { useState, useEffect, useRef } from 'react';
+import "../../public/cardslot.css";
 import { IRefPhaserGame } from '../game/PhaserGame';
 import { Game } from '../game/scenes/Game';
 import { EventBus } from '../game/EventBus';
 import { useGameContext } from '../context/garden_ctx';
+import { useSettings } from '../context/settings_ctx';
 
 interface CardProps {
     pid: number;
@@ -19,29 +19,34 @@ export default function Card({ pid, texture, plantName, cooldownTime, sceneRef, 
     const [isCoolingDown, setIsCoolingDown] = useState(false);
     const [remainingTime, setRemainingTime] = useState(0);
     const [isChosen, setIsChosen] = useState(false);
-    const { energy } = useGameContext();
-
-    const textureUri = useMemo(() => {
-        if (!sceneRef.current) return;
-        const scene = sceneRef.current.scene as Game;
-        if (!scene || scene.scene.key !== 'Game') {
-            console.error('当前场景不是Game');
-            return;
-        }
-        return scene.textures.getBase64(texture);
-    }, [texture, pid, sceneRef.current]);
+    const { energy, isPaused } = useGameContext();
+    const [pausedTime, setPausedTime] = useState(0);
+    const settings = useSettings();
 
     useEffect(() => {
         let timer: any;
-        if (isCoolingDown && remainingTime > 0) {
+        if (isCoolingDown && remainingTime > 0 && !isPaused) {
+            // console.log('start cooldown', remainingTime);
             timer = setInterval(() => {
                 setRemainingTime(prev => Math.max(prev - 0.1, 0));
             }, 100);
-        } else if (remainingTime <= 0) {
+        } else if (remainingTime <= 0 && !isPaused) {
             setIsCoolingDown(false);
         }
         return () => clearInterval(timer);
-    }, [isCoolingDown, remainingTime]);
+    }, [isCoolingDown, remainingTime, isPaused]);
+
+    useEffect(() => {
+        if (isPaused) {
+            setPausedTime(remainingTime);
+        } else {
+            if (pausedTime > 0) {
+                setRemainingTime(pausedTime);
+                setPausedTime(0);
+                setIsCoolingDown(true);
+            }
+        }
+    }, [isPaused]);
 
     useEffect(() => {
         const handleDeselect = (data: { pid: number | null }) => {
@@ -52,8 +57,22 @@ export default function Card({ pid, texture, plantName, cooldownTime, sceneRef, 
         const handlePlant = (data: { pid: number }) => {
             if (data.pid === pid) {
                 setIsChosen(false);
-                setIsCoolingDown(true);
-                setRemainingTime(cooldownTime);
+                // Use the isPaused value from the component scope
+                if (!isPaused) {
+                    setIsCoolingDown(true);
+                    setRemainingTime(cooldownTime);
+                } else {
+                    // If paused, wait until unpaused to start cooldown
+                    setRemainingTime(cooldownTime);
+                    setIsCoolingDown(true);
+                    const timer = setInterval(() => {
+                        if (!isPaused) {
+                            console.log('resume');
+                            clearInterval(timer);
+
+                        }
+                    }, 100);
+                }
             }
         };
         EventBus.on('card-deselected', handleDeselect);
@@ -62,9 +81,12 @@ export default function Card({ pid, texture, plantName, cooldownTime, sceneRef, 
             EventBus.removeListener('card-deselected', handleDeselect);
             EventBus.removeListener('card-plant', handlePlant);
         };
-    }, [pid]);
+    }, [pid, isPaused, cooldownTime]); // Add isPaused and cooldownTime to dependencies
 
     const handleClick = () => {
+        if (isPaused && !settings.isBluePrint) {
+            return;
+        }
         if (!sceneRef.current) return;
         const scene = sceneRef.current.scene as Game;
         if (!scene || scene.scene.key !== 'Game') {
@@ -92,21 +114,37 @@ export default function Card({ pid, texture, plantName, cooldownTime, sceneRef, 
 
     return (
         <button
-            className={`card ${isCoolingDown ? 'cooling' : ''} ${isChosen ? 'chosen' : ''} ${(energy < cost) ? 'expensive' : ''}`}
+            className={`card ${isCoolingDown ? 'cooling' : ''} ${isChosen ? 'chosen' : ''} 
+                ${(energy < cost) ? 'expensive' : ''} ${(isPaused && !settings.isBluePrint) ? 'paused' : ''}`}
             onClick={handleClick}
             disabled={isCoolingDown}
         >
             <div className="card-content">
                 <div className="plant-name">{plantName}</div>
                 <div className="plant-image">
-                    <img src={textureUri} alt={plantName} />
+                    {texture && texture !== "" && (
+                        <img
+                            src={`/public/assets/${texture}.png`}
+                            alt={plantName}
+                            style={{
+                                width: "64px",
+                                height: "64px",
+                                objectFit: "none",
+                                objectPosition: "top left",
+                                marginBottom: "8px"
+                            }}
+                        />
+                    )}
                 </div>
                 <div className="plant-cost">{cost}</div>
             </div>
             {isCoolingDown && (
                 <div
                     className="cooldown-overlay"
-                    style={{ animationDuration: `${cooldownTime}s` }}
+                    style={{
+                        animationDuration: `${cooldownTime}s`,
+                        animationPlayState: isPaused ? 'paused' : 'running',
+                    }}
                 />
             )}
         </button>

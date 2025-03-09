@@ -1,7 +1,6 @@
 import { Boot } from './scenes/Boot';
 import { GameOver } from './scenes/GameOver';
 import { Game as MainGame } from './scenes/Game';
-import { MainMenu } from './scenes/MainMenu';
 import { AUTO, Game } from 'phaser';
 import { Preloader } from './scenes/Preloader';
 
@@ -31,8 +30,8 @@ const config: Phaser.Types.Core.GameConfig = {
         },
         // Maximum size
         max: {
-            width: 1200,
-            height: 900
+            width: 1600,
+            height: 1200
         },
 
     },
@@ -41,14 +40,14 @@ const config: Phaser.Types.Core.GameConfig = {
     scene: [
         Boot,
         Preloader,
-        MainMenu,
         MainGame,
         GameOver
     ]
 };
 
-const StartGame = (parent: string) => {
-
+const StartGame = (parent: string, width: number) => {
+    config.width = width;
+    config.height = width * 3 / 4;
     return new Game({ ...config, parent });
 
 }

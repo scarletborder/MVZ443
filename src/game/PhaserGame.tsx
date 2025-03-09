@@ -1,6 +1,7 @@
 import { forwardRef, useEffect, useLayoutEffect, useRef } from 'react';
 import StartGame from './main';
 import { EventBus } from './EventBus';
+import { useSettings } from '../context/settings_ctx';
 
 export interface IRefPhaserGame {
     game: Phaser.Game | null;
@@ -8,16 +9,19 @@ export interface IRefPhaserGame {
 }
 
 interface IProps {
-    currentActiveScene?: (scene_instance: Phaser.Scene) => void
+    currentActiveScene?: (scene_instance: Phaser.Scene) => void,
+    isVisibility: boolean
 }
 
-export const PhaserGame = forwardRef<IRefPhaserGame, IProps>(function PhaserGame({ currentActiveScene }, ref) {
+
+export const PhaserGame = forwardRef<IRefPhaserGame, IProps>(function PhaserGame({ currentActiveScene, isVisibility }, ref) {
+    const { width } = useSettings();
     const game = useRef<Phaser.Game | null>(null!);
 
     useLayoutEffect(() => {
         if (game.current === null) {
 
-            game.current = StartGame("game-container");
+            game.current = StartGame("game-container", width);
 
             if (typeof ref === 'function') {
                 ref({ game: game.current, scene: null });
@@ -58,7 +62,9 @@ export const PhaserGame = forwardRef<IRefPhaserGame, IProps>(function PhaserGame
     }, [currentActiveScene, ref]);
 
     return (
-        <div id="game-container"></div>
+        <div id="game-container" style={{
+            visibility: isVisibility ? 'visible' : 'hidden',
+        }}></div>
     );
 
 });

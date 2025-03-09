@@ -128,6 +128,13 @@ export default class Gardener {
             return;
         }
 
+
+        // 如果是暂停状态并且没有私密图纸,也不给种
+        console.log('blueprint', this.scene.innerSettings.isBluePrint)
+        if (!this.scene.innerSettings.isBluePrint && this.scene.physics.world.isPaused) {
+            return;
+        }
+
         console.log('prepare to plant', this.prePlantPid);
         let pid = this.prePlantPid;
         const { col, row } = this.positionCalc.getGridByPos(pointer.x, pointer.y);

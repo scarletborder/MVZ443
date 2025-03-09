@@ -5,8 +5,8 @@
         "flag": "normal",
         "monsters": [],
         "duration": 0,
-        "maxDelay": 20,
-        "minDelay": 1
+        "maxDelay": 50,
+        "minDelay": 30
     },
     {
         "waveId": 1,
@@ -15,11 +15,7 @@
         "monsters": [
             {
                 "mid": 1,
-                "count": 1
-            },
-            {
-                "mid": 2,
-                "count": 1
+                "count": 2
             }
         ],
         "duration": 6,
@@ -33,7 +29,11 @@
         "monsters": [
             {
                 "mid": 1,
-                "count": 6
+                "count": 3
+            },
+            {
+                "mid": 2,
+                "count": 1
             }
         ],
         "duration": 6,
@@ -48,6 +48,10 @@
             {
                 "mid": 1,
                 "count": 6
+            },
+            {
+                "mid": 2,
+                "count": 3
             }
         ],
         "duration": 6,

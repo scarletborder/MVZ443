@@ -1,143 +1,94 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { IRefPhaserGame, PhaserGame } from './game/PhaserGame';
-import { MainMenu } from './game/scenes/MainMenu';
-
 import { CardSlotHorizontal, EnergySlot } from './components/cardslot';
 import { GameProvider } from './context/garden_ctx';
 import BottomTools from './components/bottom';
+import DocFrame from './components/DocFrame';
+import { SaveProvider } from './context/save_ctx';
+import { useSettings } from './context/settings_ctx';
+import { Scene } from 'phaser';
+import { EventBus } from './game/EventBus';
 
 function App() {
     // The sprite can only be moved in the MainMenu Scene
     const [canMoveSprite, setCanMoveSprite] = useState(true);
-
-    // resolution
-    const options = [1024, 1200, 800];
-    const [opt, setOpts] = useState(0);
+    const [showGameTool, setShowGameTool] = useState(false);
+    const [showGameScreen, setShowGameScreen] = useState(false);
 
     //  References to the PhaserGame component (game and scene are exposed)
     const phaserRef = useRef<IRefPhaserGame | null>(null);
 
-    const [spritePosition, setSpritePosition] = useState({ x: 0, y: 0 });
+    const { width} = useSettings();
 
-    const changeScene = () => {
-
-        if (phaserRef.current) {
-            const scene = phaserRef.current.scene as MainMenu;
-
-            if (scene) {
-                scene.changeScene();
-            }
-        }
-    }
-
-    const moveSprite = () => {
-
-        if (phaserRef.current) {
-
-            const scene = phaserRef.current.scene as MainMenu;
-
-            if (scene && scene.scene.key === 'MainMenu') {
-                // Get the update logo position
-                scene.moveLogo(({ x, y }) => {
-
-                    setSpritePosition({ x, y });
-
-                });
-            }
-        }
-
-    }
-
-    const addSprite = () => {
-
-        if (phaserRef.current) {
-            const scene = phaserRef.current.scene;
-
-            if (scene) {
-                // Add more stars
-                const x = Phaser.Math.Between(64, scene.scale.width - 64);
-                const y = Phaser.Math.Between(64, scene.scale.height - 64);
-
-                //  `add.sprite` is a Phaser GameObjectFactory method and it returns a Sprite Game Object instance
-                const star = scene.add.sprite(x, y, 'star');
-
-                //  ... which you can then act upon. Here we create a Phaser Tween to fade the star sprite in and out.
-                //  You could, of course, do this from within the Phaser Scene code, but this is just an example
-                //  showing that Phaser objects and systems can be acted upon from outside of Phaser itself.
-                scene.add.tween({
-                    targets: star,
-                    duration: 500 + Math.random() * 1000,
-                    alpha: 0,
-                    yoyo: true,
-                    repeat: -1
-                });
-            }
-        }
-    }
+    const gameStart = () => {
+        setShowGameScreen(true);
+        setShowGameTool(true);
+    };
+    const gameExit = () => {
+        setShowGameScreen(false);
+        setShowGameTool(false);
+    };
 
     // Event emitted from the PhaserGame component
     const currentScene = (scene: Phaser.Scene) => {
-
         setCanMoveSprite(scene.scene.key !== 'MainMenu');
-
     }
 
-    //switch in different resolution
-    const switchResolution = () => {
-        setOpts(opt => {
-            let newOpt = (opt + 1) % options.length
-            const width = options[newOpt];
-            const height = width * 3 / 4;
-            if (phaserRef.current) {
-                const scene = phaserRef.current.scene;
-                scene?.scale.setGameSize(width, height);
+    // 监听键盘事件，阻止 F11 触发全屏
+    useEffect(() => {
+        const handleKeyDown = (event: any) => {
+            if (event.key === "F11") {
+                event.preventDefault();
             }
-            return newOpt;
-        });
-    }
-
+        };
+        document.addEventListener("keydown", handleKeyDown);
+    
+        return () => {
+            document.removeEventListener("keydown", handleKeyDown);
+        };
+    }, []);
 
 
     return (
         <div id="app" onContextMenu={(e) => { event?.preventDefault() }}>
-            <GameProvider>
-                <div id="cardsContainer" style={{
-                    "height": options[opt] / 8,
-                    "maxHeight": '135px',
-                    "width": options[opt],
-                    display: "flex",
-                    "flexDirection": "row"
-                }}>
 
-                    <EnergySlot sceneRef={phaserRef} />
-                    <CardSlotHorizontal sceneRef={phaserRef} />
+            <SaveProvider>
+                <GameProvider>
+                    {showGameTool &&
+                        <div id="cardsContainer" style={{
+                            "height": width / 8,
+                            "maxHeight": '135px',
+                            "width": width,
+                            display: "flex",
+                            "flexDirection": "row"
+                        }}>
+                            <EnergySlot sceneRef={phaserRef} />
+                            <CardSlotHorizontal sceneRef={phaserRef} />
+                        </div>}
 
-                </div>
 
+                    <div id="mainContainer">
+                        <div id="controlContainer">
+                            <div>
+                                <button className='button' onClick={gameStart}>Game Start</button>
+                            </div>
+                            <div>
+                                <button className='button' onClick={gameExit}>Game Exit</button>
+                            </div>
 
-                <div id="mainContainer">
-                    <div id="controlContainer">
-                        <div>
-                            <button className="button" onClick={changeScene}>Change Scene</button>
                         </div>
-                        <div>
-                            <button disabled={canMoveSprite} className="button" onClick={moveSprite}>Toggle Movement</button>
-                        </div>
-                        <div className="spritePosition">Sprite Position:
-                            <pre>{`{\n  x: ${spritePosition.x}\n  y: ${spritePosition.y}\n}`}</pre>
-                        </div>
-                        <div>
-                            <button className="button" onClick={addSprite}>Add New Sprite</button>
-                        </div>
-                        <div>
-                            <button className='button' onClick={switchResolution}>resolution {options[opt]}</button>
-                        </div>
+                        {showGameScreen && <PhaserGame ref={phaserRef} currentActiveScene={currentScene} isVisibility={showGameScreen} />}
+                        {(!showGameScreen) && <DocFrame width={width} sceneRef={phaserRef} />}
                     </div>
-                    <PhaserGame ref={phaserRef} currentActiveScene={currentScene} />
-                </div>
-                <BottomTools />
 
-            </GameProvider>
+                    {showGameTool &&
+                        <BottomTools />}
+
+                </GameProvider>
+            </SaveProvider>
+
+
+
         </div>
     )
 }
