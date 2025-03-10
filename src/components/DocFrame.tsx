@@ -50,7 +50,7 @@ export default function DocFrame({ width, height, sceneRef, setGameParams, gameS
             height: `${height}px`,
             minHeight: `${height}px`,
             minWidth: `${width}px`,
-            backgroundImage: `url("../../public/assets/intro.jpg")`,
+            backgroundImage: `url("assets/intro.jpg")`,
 
             backgroundRepeat: 'no-repeat',
             position: "relative",

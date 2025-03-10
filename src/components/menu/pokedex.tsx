@@ -38,7 +38,7 @@ export default function Pokedex({ width, height, onBack, sceneRef }: Props) {
             return {
                 name: plantObj.name,
                 details: plantObj.description,
-                image: `/public/assets/${plantObj.texture}.png`
+                image: `/assets/${plantObj.texture}.png`
             };
         });
         setPokedexItems(tmpList);

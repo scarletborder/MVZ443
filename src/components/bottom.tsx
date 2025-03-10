@@ -1,6 +1,5 @@
 // BottomTools.jsx
 import { useGameContext } from "../context/garden_ctx";
-import "../../public/bottom.css";
 import { useCallback, useEffect, useState } from "react";
 import { EventBus } from "../game/EventBus";
 import { useSettings } from "../context/settings_ctx";

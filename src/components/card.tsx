@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import "../../public/cardslot.css";
 import { IRefPhaserGame } from '../game/PhaserGame';
 import { Game } from '../game/scenes/Game';
 import { EventBus } from '../game/EventBus';
@@ -124,7 +123,7 @@ export default function Card({ pid, texture, plantName, cooldownTime, sceneRef, 
                 <div className="plant-image">
                     {texture && texture !== "" && (
                         <img
-                            src={`/public/assets/${texture}.png`}
+                            src={`/assets/${texture}.png`}
                             alt={plantName}
                             style={{
                                 width: "64px",

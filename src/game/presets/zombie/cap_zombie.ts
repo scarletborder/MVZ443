@@ -1,4 +1,3 @@
-import { LINE_DEPTH } from "../../../../public/constants";
 import { MIRecord } from "../../models/IRecord";
 import { IZombie } from "../../models/IZombie";
 import { Game } from "../../scenes/Game";
