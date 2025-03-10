@@ -1,3 +1,5 @@
+import { LINE_DEPTH } from "../../../../public/constants";
+import { MIRecord } from "../../models/IRecord";
 import { IZombie } from "../../models/IZombie";
 import { Game } from "../../scenes/Game";
 import { EnhancedZombie } from "./zombie";
@@ -11,8 +13,8 @@ class CapZombie extends EnhancedZombie {
         this.speed = 20 * scene.positionCalc.scaleFactor;
         this.capHealth = 375;
 
-        const topX = this.x + this.displayWidth / 5;
-        const topY = this.y - this.displayHeight * 9 / 10;
+        const topX = this.x + this.offsetX;
+        const topY = this.y - scene.positionCalc.GRID_SIZEY * 1.15 + this.offsetY;
         const cap = scene.physics.add.sprite(topX, topY, 'attach/cap');
         cap.setScale(scene.positionCalc.scaleFactor * 1.4);
         cap.setFrame(0);
@@ -45,6 +47,12 @@ class CapZombie extends EnhancedZombie {
             this.attachSprites.get('cap')?.setFrame(this.currentHatState);
         }
     }
+
+    setDepth(base: number) {
+        this.attachSprites.get('cap')?.setDepth(base + 10);
+        super.setDepth(base);
+        return this;
+    }
 }
 
 
@@ -54,7 +62,7 @@ function NewZombie(scene: Game, x: number, y: number): IZombie {
     return zombie;
 }
 
-const CapZombieRecord = {
+const CapZombieRecord: MIRecord = {
     mid: 2,
     name: 'CapZombie',
     NewFunction: NewZombie,

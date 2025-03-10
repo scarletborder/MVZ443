@@ -7,6 +7,8 @@ import { PositionCalc } from '../utils/position';
 import Gardener from '../utils/gardener';
 import MonsterSpawner from '../utils/spawner';
 import InnerSettings from '../utils/settings';
+import { GameParams } from '../models/GameParams';
+import { MAXDEPTH } from '../../../public/constants';
 
 
 
@@ -26,7 +28,12 @@ export class Game extends Scene {
     background: Phaser.GameObjects.Image;
     gameText: Phaser.GameObjects.Text;
 
+    pauseBtn: Phaser.GameObjects.Text;
     pauseText: Phaser.GameObjects.Text;
+    exitText: Phaser.GameObjects.Text;
+
+    params: GameParams;
+    private isDestroyed = false; // Track if the scene/game is destroyed
 
 
     constructor() {
@@ -61,25 +68,54 @@ export class Game extends Scene {
     }
 
     create() {
+        this.params = this.game.registry.get('gameParams') as GameParams;
         this.scaleFactor = this.scale.displaySize.width / 800;
         this.positionCalc = new PositionCalc(this.scaleFactor);
         this.monsterSpawner = new MonsterSpawner(this, this.cache.json.get('ch101'));
 
-        // 一些字符串
-        EventBus.on('setIsPaused', this.handlePause, this);
-
         // 屏幕中央显示 "已停止" 的文本，默认隐藏
-        this.pauseText = this.add.text(
-            this.cameras.main.width / 2,
-            this.cameras.main.height / 2,
-            '已停止',
+        this.pauseBtn = this.add.text(
+            this.cameras.main.width,
+            this.cameras.main.height,
+            '暂停',
             {
-                fontSize: '32px',
-                color: '#ffffff',
-                backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                fontSize: this.scale.displaySize.width / 30,
+                color: 'rgb(187, 21, 21)',
+                backgroundColor: 'rgba(0, 0, 0, 0.35)',
                 padding: { x: 10, y: 5 },
             }
-        ).setOrigin(0.5).setVisible(false);
+        ).setOrigin(1, 1).setInteractive().setDepth(MAXDEPTH);
+        this.pauseBtn.on('pointerup', () => {
+            // 判断场景有无暂停
+            let currently = this.physics.world.isPaused;
+            this.handlePause({ paused: !currently });
+        }, this);
+
+        this.pauseText = this.add.text(
+            this.cameras.main.width / 2,
+            this.cameras.main.height / 3,
+            '已停止',
+            {
+                fontSize: this.scale.displaySize.width / 20,
+                color: '#ffffff',
+                backgroundColor: 'rgba(0, 0, 0, 0.35)',
+                padding: { x: 10, y: 5 },
+            }
+        ).setOrigin(0.5).setVisible(false).setDepth(MAXDEPTH);
+
+        this.exitText = this.add.text(
+            this.cameras.main.width / 2,
+            this.cameras.main.height,
+            '退出游戏',
+            {
+                fontSize: this.scale.displaySize.width / 20,
+                color: 'rgb(187, 21, 21)',
+                backgroundColor: 'rgba(0, 0, 0, 0.35)',
+                padding: { x: 10, y: 5 },
+            }
+        ).setOrigin(0.5, 1).setVisible(false).disableInteractive().setDepth(MAXDEPTH);
+        this.exitText.on('pointerup', this.handleExit, this);
+
 
 
         // 网格初始化
@@ -137,8 +173,6 @@ export class Game extends Scene {
             this.handlePause({ paused: !currently });
         });
 
-        // test tmp        snippet
-
 
         // // 创建僵尸（建议大小 80×120），这里放置 3 个僵尸
         // for (let i = 0; i < 3; i++) {
@@ -146,9 +180,13 @@ export class Game extends Scene {
         // }
 
         this.innerSettings = new InnerSettings();
-        EventBus.emit('current-scene-ready', this);
 
+        EventBus.emit('current-scene-ready', this);
+        EventBus.on('setIsPaused', this.handlePause, this);
+        EventBus.on('starShards-chosen', () => { console.log('pick shards') });
         this.monsterSpawner.startWave();
+
+
     }
 
     update(time: number, delta: number): void { }
@@ -191,19 +229,46 @@ export class Game extends Scene {
     }
     // 处理暂停
     handlePause({ paused }: { paused: boolean }) {
-        if (paused) {
-            this.physics.world.pause(); // 暂停物理系统
-            this.anims.pauseAll(); // 暂停所有动画
-            this.time.paused = true; // 暂停定时器
-            this.pauseText.setVisible(true); // 显示"已停止"文本
-            EventBus.emit('okIsPaused', { paused: true }); // 通知暂停成功
-        } else {
-            this.physics.world.resume(); // 恢复物理系统
-            this.anims.resumeAll(); // 恢复所有动画
-            this.time.paused = false; // 恢复定时器
-            this.pauseText.setVisible(false); // 隐藏"已停止"文本
-            EventBus.emit('okIsPaused', { paused: false });
+        if (this.isDestroyed) return; // Skip if scene is destroyed
+        if (!this.exitText || !this.pauseText) {
+            console.warn('Text objects not initialized yet');
+            return;
         }
+
+        if (paused) {
+            this.physics.world?.pause();
+            this.anims?.pauseAll();
+            this.tweens?.pauseAll();
+            this.time.paused = true;
+            this.pauseText.setVisible(true);
+            this.exitText.setVisible(true);
+            try { this.exitText.setInteractive(); } finally { EventBus.emit('okIsPaused', { paused: true }); }
+        } else {
+            this.physics.world?.resume();
+            this.anims?.resumeAll();
+            this.tweens?.resumeAll();
+            this.time.paused = false;
+            this.pauseText.setVisible(false);
+            this.exitText.setVisible(false);
+            try { this.exitText.disableInteractive(); } finally { EventBus.emit('okIsPaused', { paused: false }); }
+        }
+    }
+    handleExit() {
+        // this.physics.world?.resume(); // 恢复物理系统
+        // this.anims.resumeAll(); // 恢复所有动画
+        // this.time.paused = false; // 恢复定时器
+        // this.pauseText.setVisible(false); // 隐藏"已停止"文本
+        // this.exitText.setVisible(false).disableInteractive();.
+        this.params.gameExit();
+        EventBus.emit('okIsPaused', { paused: false });
+    }
+
+    destroy() { // Override Phaser's destroy method
+        this.isDestroyed = true;
+        EventBus.off('setIsPaused', this.handlePause, this); // Clean up listener
+        this.input.keyboard?.removeAllKeys(); // Clean up keyboard listeners
+        this.input.off('pointerup'); // Remove pointer listeners
+        this.input.off('pointermove');
     }
 }
 
@@ -222,6 +287,6 @@ function damageZombie(bulletSprite: Phaser.GameObjects.GameObject, zombieSprite:
 function damagePlant(plantSprite: Phaser.GameObjects.GameObject, zombieSprite: Phaser.GameObjects.GameObject) {
     const plant = plantSprite as IPlant;
     const zombie = zombieSprite as IZombie;
-    console.log('size', plant.body?.width, plant.body?.height)
+    // console.log('size', plant.body?.width, plant.body?.height)
     zombie.startAttacking(plant);
 }

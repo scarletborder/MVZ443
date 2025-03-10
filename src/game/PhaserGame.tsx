@@ -2,6 +2,7 @@ import { forwardRef, useEffect, useLayoutEffect, useRef } from 'react';
 import StartGame from './main';
 import { EventBus } from './EventBus';
 import { useSettings } from '../context/settings_ctx';
+import { GameParams } from './models/GameParams';
 
 export interface IRefPhaserGame {
     game: Phaser.Game | null;
@@ -10,18 +11,25 @@ export interface IRefPhaserGame {
 
 interface IProps {
     currentActiveScene?: (scene_instance: Phaser.Scene) => void,
-    isVisibility: boolean
+    isVisibility: boolean,
+    gameParams: GameParams | null,
+    gameExit: () => void
 }
 
 
-export const PhaserGame = forwardRef<IRefPhaserGame, IProps>(function PhaserGame({ currentActiveScene, isVisibility }, ref) {
+export const PhaserGame = forwardRef<IRefPhaserGame, IProps>(function PhaserGame({ currentActiveScene, isVisibility, gameParams, gameExit }, ref) {
+    if (!gameParams) {
+        return <p>no game params!@!</p>
+    }
+    gameParams.gameExit = gameExit;
+
     const { width } = useSettings();
     const game = useRef<Phaser.Game | null>(null!);
 
     useLayoutEffect(() => {
         if (game.current === null) {
 
-            game.current = StartGame("game-container", width);
+            game.current = StartGame("game-container", width, gameParams);
 
             if (typeof ref === 'function') {
                 ref({ game: game.current, scene: null });
@@ -44,9 +52,7 @@ export const PhaserGame = forwardRef<IRefPhaserGame, IProps>(function PhaserGame
     useEffect(() => {
         EventBus.on('current-scene-ready', (scene_instance: Phaser.Scene) => {
             if (currentActiveScene && typeof currentActiveScene === 'function') {
-
                 currentActiveScene(scene_instance);
-
             }
 
             if (typeof ref === 'function') {

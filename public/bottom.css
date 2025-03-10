@@ -76,7 +76,7 @@
     width: 10%;
     text-align: center;
     padding: 8px 15px;
-    background-color: #666;
+    background-color: #a10606;
     color: white;
     border: none;
     border-radius: 5px;
@@ -84,6 +84,23 @@
     font-size: 1rem;
 }
 
+.pause.isPaused {
+    background-color: #4caf50;
+}
+
 .pause:hover {
-    background-color: #888;
+    background-color: #c26f22;
+}
+
+.stageDisplay {
+    width: 10%;
+    font-weight: bold;
+    text-align: center;
+    padding: 8px 15px;
+    background-color: #333;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: default;
+    font-size: 1rem;
 }

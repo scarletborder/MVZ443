@@ -6,15 +6,17 @@ import { createContext, useContext, useState, ReactNode } from 'react';
 interface GameState {
     energy: number;
     money: number;
-    wave: number;
-    bossHealth: number;
+    wave: number; // progress,进度
+    bossHealth: number; // progress, boss 血条
     starShareds: number;
     isPaused: boolean;
+    // 关卡
 }
 
 // 定义 Context 值的类型
 interface GameContextValue extends GameState {
     updateEnergy: (amount: number) => void;
+    setEnergy: (amount: number) => void;
     updateMoney: (amount: number) => void;
     updateWave: (percent: number) => void;
     updateBossHealth: (amount: number) => void;
@@ -46,6 +48,13 @@ export function GameProvider(props: GameProviderProps) {
         setGameState(prev => ({
             ...prev,
             energy: Math.max(0, prev.energy + amount)
+        }));
+    }
+
+    function setEnergy(amount: number) {
+        setGameState(prev => ({
+            ...prev,
+            energy: amount
         }));
     }
 
@@ -87,6 +96,7 @@ export function GameProvider(props: GameProviderProps) {
     const contextValue: GameContextValue = {
         ...gameState,
         updateEnergy,
+        setEnergy,
         updateMoney,
         updateWave: updateWave,
         updateBossHealth,

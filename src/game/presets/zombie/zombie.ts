@@ -1,21 +1,16 @@
 // src/game/sprites/NewZombie.ts
 import { Game } from '../../scenes/Game';
 import { IZombie } from '../../models/IZombie';
-import { IPlant } from '../../models/IPlant';
 import { MIRecord } from '../../models/IRecord';
+import { newNormalZombieAnim } from '../../sprite/normal_zombie';
 
 
 export class EnhancedZombie extends IZombie {
     constructor(scene: Game, col: number, row: number, texture: string) {
-        super(scene, col, row, texture);
+        super(scene, col, row, texture, newNormalZombieAnim);
         let x = this.x + 10 * scene.positionCalc.scaleFactor;
         let y = this.y - 50 * scene.positionCalc.scaleFactor;
-        const wound = scene.physics.add.sprite(x, y, 'attach/zombie_wound');
-        wound.debugShowBody = false;
-        scene.physics.add.existing(wound);
-        wound.setVisible(false);
 
-        this.attachSprites.set('wound', wound);
 
         this.health = 200;
         this.speed = 20 * scene.positionCalc.scaleFactor;
@@ -26,9 +21,9 @@ export class EnhancedZombie extends IZombie {
     private handleHealthChange(health: number) {
         console.log(`Zombie health updated to: ${this.health}`);
         if (this.health <= 100 && this.health > 0) {
-            this.attachSprites.get('wound')?.setVisible(true);
+            this.zombieAnim.switchBodyFrame(true);
         } else if (this.health > 100) {
-            this.attachSprites.get('wound')?.setVisible(false);
+            this.zombieAnim.switchBodyFrame(false);
         }
         // <0 给到别的逻辑处理
     }
@@ -39,7 +34,6 @@ export class EnhancedZombie extends IZombie {
     }
 
     playDeathAnimation(): void {
-        this.attachSprites.get('wound')?.setVisible(false);
         super.playDeathAnimation();
     }
 

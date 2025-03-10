@@ -46,12 +46,18 @@ export class Preloader extends Scene {
 
 
         this.load.image('zombie/zombie', 'zombie/zombie.png');
-        this.load.image('attach/zombie_wound', 'attach/zombie_wound.png');
         this.load.spritesheet('attach/cap', 'attach/cap.png',
             { frameWidth: 33, frameHeight: 14 });
 
         this.load.spritesheet('anime/death_smoke', 'anime/death_smoke.png',
             { frameWidth: 16, frameHeight: 16 });
+
+        this.load.spritesheet('sprZombieBody', 'path/to/sprZombieBody.png',
+            { frameWidth: 19, frameHeight: 35 }); // Adjust frameWidth if needed
+        this.load.image('sprZombieHead', 'path/to/sprZombieHead.png');
+        this.load.image('sprZombieArm', 'path/to/sprZombieArm.png'); // Single image, no sprite sheet
+        this.load.image('sprZombieLeg', 'path/to/sprZombieLeg.png'); // Single image, no sprite sheet
+
 
         this.load.json('ch101', 'stages/ch101.json');
     }

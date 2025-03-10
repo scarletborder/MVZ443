@@ -17,6 +17,10 @@ export default class Gardener {
 
     // 卡槽中选中的植物(可为null)
     prePlantPid: number | null = null;
+    // 星之碎片
+    starShards: boolean = false;
+
+    // 星之碎片动画管理
 
     // 高光植物和闪烁动画的管理
     private highlightSprite: Phaser.GameObjects.Sprite | null = null;
@@ -25,11 +29,17 @@ export default class Gardener {
     constructor(scene: Game, positionCalc: PositionCalc) {
         this.scene = scene;
         this.positionCalc = positionCalc;
+        // scene.add.image()
     }
 
     // 选择卡片植物后
     // 设置预种植的植物 pid
     public setPrePlantPid(pid: number) {
+        // 如果设置了星之碎片,取消他
+        if (this.starShards) {
+            this.starShards = false;
+        }
+
         this.prePlantPid = pid;
         console.log(`Pre-plant PID set to: ${pid}`);
     }
@@ -41,6 +51,17 @@ export default class Gardener {
         this.scene.broadCastCancelPrePlant();
         console.log('Pre-plant canceled');
     }
+
+    // 星之碎片选中
+    public setStarShards() {
+        this.starShards = true;
+    }
+
+    // 取消星之碎片
+    public cancelStarShards() {
+        this.starShards = false;
+    }
+
 
     // 植物注册种植
     public registerPlant(plant: IPlant) {
@@ -93,7 +114,7 @@ export default class Gardener {
     // 鼠标移动事件dispatch
     public onMouseMoveEvent(pointer: Phaser.Input.Pointer) {
         // 如果没有选择植物，不做任何事情
-        if (this.prePlantPid === null) {
+        if (!this.starShards && this.prePlantPid === null) {
             return;
         }
         // 获得时间
@@ -104,6 +125,14 @@ export default class Gardener {
         }
         // 更新时间
         this.prevMovementTime = time;
+
+        if (this.prePlantPid === null) {
+            // star shards
+            // 将星之碎片图标跟随
+
+            return;
+        }
+
         const { col, row } = this.positionCalc.getGridByPos(pointer.x, pointer.y);
         if ((col === this.prevCol && row === this.prevRow) || col < 0 || row < 0) {
             return;
@@ -118,17 +147,27 @@ export default class Gardener {
     }
 
 
-    // 点击种植
+    // 点击事件
+    // 种植,取消种植,使用星之碎片,取消星之碎片
     public onClickUp(pointer: Phaser.Input.Pointer) {
-        if (this.prePlantPid === null) return;
-        // 右键,取消种植
+        if (this.prePlantPid === null && !this.starShards) return;
+
+        // 右键,取消种植/取消星之碎片
         if (pointer.rightButtonReleased()) {
-            console.log('cancel pre-plant');
-            this.cancelPrePlant();
+            console.log('cancel right click');
+            if (this.starShards) {
+                this.cancelStarShards();
+            } else {
+                this.cancelPrePlant();
+            }
             return;
         }
 
+        // 星之碎片事件
 
+        // 非星之碎片事件
+
+        // 种植
         // 如果是暂停状态并且没有私密图纸,也不给种
         console.log('blueprint', this.scene.innerSettings.isBluePrint)
         if (!this.scene.innerSettings.isBluePrint && this.scene.physics.world.isPaused) {

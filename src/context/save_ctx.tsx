@@ -108,7 +108,7 @@ class GameManager {
             level: 1,
             plants: [{
                 pid: 1, level: 1
-            }],
+            }, { pid: 2, level: 1 }],
             zombies: []
         };
     }
@@ -132,7 +132,7 @@ class GameManager {
     // 设置植物的等级
     setPlantLevel(pid: number, level: number): void {
         const plant = this.currentProgress.plants.find((p) => p.pid === pid);
-        if (plant) {
+        if (plant && level > plant.level) {
             plant.level = level;
         }
     }

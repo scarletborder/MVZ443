@@ -42,6 +42,7 @@ export default function BottomTools() {
 
     const handleStarClick = () => {
         setStarChosen(stat => !stat);
+        EventBus.emit('starShards-chosen');
     };
 
     const handleSetPause = useCallback(() => {
@@ -98,7 +99,7 @@ export default function BottomTools() {
                     </div>
                 )
             }
-            <button className="pause" onClick={handleSetPause}>Pause</button>
+            <div className='stageDisplay' onClick={handleSetPause}>测试关卡第一关</div>
         </div >
     );
 }

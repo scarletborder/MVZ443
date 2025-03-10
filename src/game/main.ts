@@ -3,6 +3,7 @@ import { GameOver } from './scenes/GameOver';
 import { Game as MainGame } from './scenes/Game';
 import { AUTO, Game } from 'phaser';
 import { Preloader } from './scenes/Preloader';
+import { GameParams } from './models/GameParams';
 
 //  Find out more information about the Game Config at:
 //  https://newdocs.phaser.io/docs/3.70.0/Phaser.Types.Core.GameConfig
@@ -45,10 +46,12 @@ const config: Phaser.Types.Core.GameConfig = {
     ]
 };
 
-const StartGame = (parent: string, width: number) => {
+const StartGame = (parent: string, width: number, GameParams: GameParams) => {
     config.width = width;
     config.height = width * 3 / 4;
-    return new Game({ ...config, parent });
+    let game = new Game({ ...config, parent })
+    game.registry.set('gameParams', GameParams);
+    return game;
 
 }
 

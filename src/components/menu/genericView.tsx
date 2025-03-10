@@ -48,8 +48,8 @@ export default function GenericView({ width, height, title, items, onBack }: Pro
                 <button
                     style={{
                         position: "absolute",
-                        top: "10px",
-                        left: "10px",
+                        top: "2%",
+                        left: "5%",
                         padding: "8px 16px",
                         background: "none",
                         border: "2px solid #666",
@@ -69,17 +69,29 @@ export default function GenericView({ width, height, title, items, onBack }: Pro
                 >
                     返回
                 </button>
+                <p style={{
+                    position: "absolute",
+                    top: "0",
+                    left: "45%",
+                    background: "none",
+                    color: "#ddd",
+                    fontSize: "24px",
+                    fontWeight: "bold"
+                }}>{title}</p>
 
                 {Array(Math.ceil(items.length / 5)).fill(0).map((_, rowIndex) => (
                     <div key={rowIndex} style={{
                         display: "flex",
-                        justifyContent: "space-between",
-                        marginBottom: "20px"
+                        justifyContent: "flex-start",
+                        marginBottom: "20px",
+
                     }}>
                         {items.slice(rowIndex * 5, (rowIndex + 1) * 5).map((item, index) => (
                             <div
                                 key={index}
                                 style={{
+                                    minWidth: "16%",
+                                    maxWidth: "16%",
                                     textAlign: "center",
                                     cursor: "pointer",
                                     border: "2px solid rgba(100, 100, 100, 0.5)",
@@ -127,8 +139,8 @@ export default function GenericView({ width, height, title, items, onBack }: Pro
                 scrollbarColor: "#666 #333",
                 background: "rgba(30, 30, 30, 0.9)"
             }}>
-                <h2 style={{ marginBottom: "20px" }}>{title}</h2>
-                <h3 style={{ marginBottom: "2px" }}>{selectedItem}</h3>
+
+                <h2 style={{ marginBottom: "2px" }}>{selectedItem}</h2>
                 {selectedItem ? (
                     <div style={{ whiteSpace: "pre-wrap" }}>
                         {items.find(item => item.name === selectedItem)?.details || "未找到详情"}

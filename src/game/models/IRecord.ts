@@ -1,3 +1,6 @@
+import { Game } from "../scenes/Game";
+import { IZombie } from "./IZombie";
+
 // plant
 export interface IRecord {
     pid: number;
@@ -15,7 +18,7 @@ export interface IRecord {
 export interface MIRecord {
     mid: number;
     name: string;
-    NewFunction: Function;
+    NewFunction: (Game: Game, x: number, y: number) => IZombie;
     texture: string;
     brief?: string;
     description?: string;

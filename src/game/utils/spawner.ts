@@ -1,3 +1,4 @@
+import { LINE_DEPTH } from "../../../public/constants";
 import { IZombie } from "../models/IZombie";
 import { Game } from "../scenes/Game";
 import { MonsterFactoryMap } from "./loader";
@@ -152,7 +153,8 @@ export default class MonsterSpawner {
                 const row = this.weightedRandomRow(rowWeights);
 
                 const newFunc = MonsterFactoryMap[monsterData.mid].NewFunction;
-                newFunc(this.scene, colMax, row);
+                const zomb = newFunc(this.scene, colMax, row);
+                zomb.setDepth(LINE_DEPTH(row));
 
                 // 更新行权重
                 rowWeights[row] = Math.max(0.1, rowWeights[row] - 0.3);

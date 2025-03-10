@@ -6,7 +6,7 @@
         "monsters": [],
         "duration": 0,
         "maxDelay": 50,
-        "minDelay": 30
+        "minDelay": 2
     },
     {
         "waveId": 1,
@@ -14,8 +14,8 @@
         "flag": "normal",
         "monsters": [
             {
-                "mid": 1,
-                "count": 2
+                "mid": 2,
+                "count": 1
             }
         ],
         "duration": 6,

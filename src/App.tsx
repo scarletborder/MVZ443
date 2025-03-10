@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { IRefPhaserGame, PhaserGame } from './game/PhaserGame';
 import { CardSlotHorizontal, EnergySlot } from './components/cardslot';
 import { GameProvider } from './context/garden_ctx';
@@ -8,26 +8,33 @@ import { SaveProvider } from './context/save_ctx';
 import { useSettings } from './context/settings_ctx';
 import { Scene } from 'phaser';
 import { EventBus } from './game/EventBus';
+import { GameParams } from './game/models/GameParams';
 
 function App() {
     // The sprite can only be moved in the MainMenu Scene
     const [canMoveSprite, setCanMoveSprite] = useState(true);
     const [showGameTool, setShowGameTool] = useState(false);
     const [showGameScreen, setShowGameScreen] = useState(false);
+    const [gameParams, setGameParams] = useState<GameParams | null>(null);
 
     //  References to the PhaserGame component (game and scene are exposed)
     const phaserRef = useRef<IRefPhaserGame | null>(null);
 
-    const { width} = useSettings();
+    const { width } = useSettings();
 
-    const gameStart = () => {
+    const gameStart = useCallback(() => {
         setShowGameScreen(true);
         setShowGameTool(true);
-    };
-    const gameExit = () => {
+    }, [setShowGameScreen, setShowGameTool]);
+
+    const gameExit = useCallback(() => {
+        if (phaserRef.current) {
+            phaserRef.current.game?.destroy(true);
+            phaserRef.current = null;
+        }
         setShowGameScreen(false);
         setShowGameTool(false);
-    };
+    }, [setShowGameScreen, setShowGameTool]);
 
     // Event emitted from the PhaserGame component
     const currentScene = (scene: Phaser.Scene) => {
@@ -42,7 +49,7 @@ function App() {
             }
         };
         document.addEventListener("keydown", handleKeyDown);
-    
+
         return () => {
             document.removeEventListener("keydown", handleKeyDown);
         };
@@ -50,7 +57,13 @@ function App() {
 
 
     return (
-        <div id="app" onContextMenu={(e) => { event?.preventDefault() }}>
+        <div id="app" onContextMenu={(e) => { event?.preventDefault() }} style={{
+            userSelect: "none",
+            WebkitUserSelect: "none",
+            MozUserSelect: "none",
+            msUserSelect: "none",
+            KhtmlUserSelect: "none",
+        }}>
 
             <SaveProvider>
                 <GameProvider>
@@ -69,16 +82,11 @@ function App() {
 
                     <div id="mainContainer">
                         <div id="controlContainer">
-                            <div>
-                                <button className='button' onClick={gameStart}>Game Start</button>
-                            </div>
-                            <div>
-                                <button className='button' onClick={gameExit}>Game Exit</button>
-                            </div>
+
 
                         </div>
-                        {showGameScreen && <PhaserGame ref={phaserRef} currentActiveScene={currentScene} isVisibility={showGameScreen} />}
-                        {(!showGameScreen) && <DocFrame width={width} sceneRef={phaserRef} />}
+                        {showGameScreen && <PhaserGame ref={phaserRef} currentActiveScene={currentScene} isVisibility={showGameScreen} gameParams={gameParams} gameExit={gameExit} />}
+                        {(!showGameScreen) && <DocFrame width={width} sceneRef={phaserRef} setGameParams={setGameParams} gameStart={gameStart} />}
                     </div>
 
                     {showGameTool &&

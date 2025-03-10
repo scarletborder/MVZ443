@@ -1,16 +1,19 @@
 import { useState } from 'react';
-import { VERSION, updateContent } from '../../public/constants'
+import { VERSION, announcement, updateContent } from '../../public/constants'
 import LevelSelect from './menu/levelSelect';
 import Pokedex from './menu/pokedex';
 import Settings from './menu/settings';
+import { GameParams } from '../game/models/GameParams';
 
 interface Props {
     width: number,
     height?: number,
     sceneRef: any,
+    setGameParams: (gameParams: GameParams) => void,
+    gameStart: () => void,
 };
 
-export default function DocFrame({ width, height, sceneRef}: Props) {
+export default function DocFrame({ width, height, sceneRef, setGameParams, gameStart }: Props) {
     if (height === undefined) {
         height = width * 3 / 4;
     }
@@ -160,6 +163,17 @@ export default function DocFrame({ width, height, sceneRef}: Props) {
                             MC VS Zombie 443
                         </div>
                         <div style={{
+                            position: 'absolute',
+                            width: "96%",
+                            margin: '2% 2%',
+                            color: "#fff",
+                            fontSize: "20px",
+                            backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                            textShadow: "2px 2px 4px rgba(0, 0, 0, 0.5)"
+                        }}>
+                            {announcement}
+                        </div>
+                        <div style={{
                             position: "absolute",
                             bottom: "10px",
                             left: "10px",
@@ -202,9 +216,9 @@ export default function DocFrame({ width, height, sceneRef}: Props) {
     return (
         <>
             {currentView === 'main' || currentView === 'updates' || currentView === 'about' ? <MainMenu /> : null}
-            {currentView === 'levels' && <LevelSelect width={width} height={height} onBack={() => setCurrentView('main')} />}
+            {currentView === 'levels' && <LevelSelect width={width} height={height} onBack={() => setCurrentView('main')} startGame={gameStart} setGameParams={setGameParams} />}
             {currentView === 'pokedex' && <Pokedex sceneRef={sceneRef} width={width} height={height} onBack={() => setCurrentView('main')} />}
-            {currentView === 'settings' && <Settings width={width} height={height} onBack={() => setCurrentView('main')}/>}
+            {currentView === 'settings' && <Settings width={width} height={height} onBack={() => setCurrentView('main')} />}
 
             <style>
                 {`
