@@ -13,6 +13,7 @@ export const PlantFactoryMap: Record<number, IRecord> = {
     1: PlantPresets.DispenserRecord,
     2: PlantPresets.FurnaceRecord,
     3: PlantPresets.ObsidianRecord,
+    5: PlantPresets.SmallDispenserRecord,
 }
 
 

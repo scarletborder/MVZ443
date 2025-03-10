@@ -28,9 +28,6 @@ export class Preloader extends Scene {
         //  Load the assets for the game - Replace with your own assets
         this.load.setPath('assets');
 
-        this.load.image('logo', 'logo.png');
-        this.load.image('star', 'star.png');
-
         // this.load.setPath('assets');
         // this.load.image('background', 'background.png'); // 请确保有背景资源
         // TODO: 移动到preload中
@@ -43,6 +40,7 @@ export class Preloader extends Scene {
             { frameWidth: 64, frameHeight: 64 });
         this.load.spritesheet('plant/obsidian', 'plant/obsidian.png',
             { frameWidth: 64, frameHeight: 64 });
+        this.load.image('plant/small_dispenser', 'plant/small_dispenser.png');
 
 
         this.load.image('zombie/zombie', 'zombie/zombie.png');

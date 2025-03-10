@@ -172,6 +172,20 @@ export default class MonsterSpawner {
         return true;
     }
 
+    // 某一row > x的位置有没有怪物
+    hasMonsterInRowAfterX(row: number, x: number, maxDistance: number = 99999) {
+        const rows = this.monstered.get(`${row}`);
+        if (!rows || rows == undefined || rows.length == 0) {
+            return false;
+        }
+        for (let i = 0; i < rows.length; i++) {
+            if (rows[i].x > x && rows[i].x - x < maxDistance) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     // 怪物生成注册
     registerMonster(monster: IZombie) {
         const key = `${monster.row}`;

@@ -53,10 +53,10 @@ export function EnergySlot({ sceneRef }: slotProps) {
 }
 
 export function CardSlotHorizontal({ sceneRef }: slotProps) {
-    // 通过选关界面获得的植物信息
+    // TODO:通过选关界面获得的植物信息
     // 这里获得了除了游戏内使用的函数以外的全部信息
     // energy使用情况也是从这里发出
-    const pids = [1, 2, 3];
+    const pids = [1, 2, 3, 5];
     let plants: Array<IRecord> = [];
 
     pids.forEach(pid => {

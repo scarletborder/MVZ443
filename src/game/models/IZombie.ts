@@ -100,6 +100,7 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite {
         // 判断优先级,更换attackingPlant
         // 碰撞就会产生的函数
         // 如果在攻击过程中新增了碰撞(正在attacking的不为空),那么判断有了更加优先级的目标(南瓜)
+        if (this.attackingPlant) return;  // 目前直接忽略
 
 
         this.attackingPlant = plant;

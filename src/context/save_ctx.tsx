@@ -106,9 +106,7 @@ class GameManager {
         this.saveManager = new SaveManager();
         this.currentProgress = {
             level: 1,
-            plants: [{
-                pid: 1, level: 1
-            }, { pid: 2, level: 1 }],
+            plants: [{ pid: 1, level: 1 }, { pid: 2, level: 1 }],
             zombies: []
         };
     }

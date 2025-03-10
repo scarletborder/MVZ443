@@ -14,7 +14,10 @@ class dispenser extends IPlant {
             startAt: 1200, // 已经使用的时间,即开始时间
             callback: () => {
                 if (this.health > 0) {
-                    shootArrow(scene, this);
+                    // 判断本行之前有没有敌人(TODO:或者背后有并且之前有可反弹的物体)
+                    if (scene.monsterSpawner.hasMonsterInRowAfterX(this.row, this.x)) {
+                        shootArrow(scene, this);
+                    }
                 }
             },
             loop: true,
