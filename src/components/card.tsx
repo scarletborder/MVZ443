@@ -4,6 +4,8 @@ import { Game } from '../game/scenes/Game';
 import { EventBus } from '../game/EventBus';
 import { useGameContext } from '../context/garden_ctx';
 import { useSettings } from '../context/settings_ctx';
+import process from 'process';
+import { publicUrl } from '../utils/browser';
 
 interface CardProps {
     pid: number;
@@ -123,7 +125,7 @@ export default function Card({ pid, texture, plantName, cooldownTime, sceneRef, 
                 <div className="plant-image">
                     {texture && texture !== "" && (
                         <img
-                            src={`/assets/${texture}.png`}
+                            src={`${publicUrl}/assets/${texture}.png`}
                             alt={plantName}
                             style={{
                                 width: "64px",

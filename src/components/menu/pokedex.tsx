@@ -5,6 +5,7 @@ import { PlantFactoryMap } from '../../game/utils/loader';
 import GenericView from './genericView';
 import { IRefPhaserGame } from '../../game/PhaserGame';
 import { Game } from '../../game/scenes/Game';
+import { publicUrl } from '../../utils/browser';
 
 interface Props {
     width: number;
@@ -38,7 +39,7 @@ export default function Pokedex({ width, height, onBack, sceneRef }: Props) {
             return {
                 name: plantObj.name,
                 details: plantObj.description,
-                image: `/assets/${plantObj.texture}.png`
+                image: `${publicUrl}/assets/${plantObj.texture}.png`
             };
         });
         setPokedexItems(tmpList);
