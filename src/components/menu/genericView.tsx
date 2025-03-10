@@ -114,7 +114,7 @@ export default function GenericView({ width, height, title, items, onBack }: Pro
                             >
                                 {item.image && item.image !== "" && (
                                     <div style={{ width: "64px", height: "64px", overflow: "hidden" }}>
-                                        <img src={item.image} alt={item.name} style={{ display: "block" }} />
+                                        <img src={item.image} alt={item.name} style={{ display: "block" }} draggable="false" />
                                     </div>
                                 )}
                                 <div style={{ color: "#ddd", fontSize: "14px" }}>{item.name}</div>

@@ -134,6 +134,7 @@ export default function Card({ pid, texture, plantName, cooldownTime, sceneRef, 
                                 objectPosition: "top left",
                                 marginBottom: "8px"
                             }}
+                            draggable="false"
                         />
                     )}
                 </div>
