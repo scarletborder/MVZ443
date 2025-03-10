@@ -1,0 +1,61 @@
+[
+    {
+        "waveId": 0,
+        "progress": 0,
+        "flag": "normal",
+        "monsters": [],
+        "duration": 0,
+        "maxDelay": 50,
+        "minDelay": 2
+    },
+    {
+        "waveId": 1,
+        "progress": 20,
+        "flag": "normal",
+        "monsters": [
+            {
+                "mid": 2,
+                "count": 1
+            }
+        ],
+        "duration": 6,
+        "maxDelay": 40,
+        "minDelay": 30
+    },
+    {
+        "waveId": 2,
+        "progress": 40,
+        "flag": "normal",
+        "monsters": [
+            {
+                "mid": 1,
+                "count": 3
+            },
+            {
+                "mid": 2,
+                "count": 1
+            }
+        ],
+        "duration": 6,
+        "maxDelay": 40,
+        "minDelay": 30
+    },
+    {
+        "waveId": 3,
+        "progress": 40,
+        "flag": "normal",
+        "monsters": [
+            {
+                "mid": 1,
+                "count": 6
+            },
+            {
+                "mid": 2,
+                "count": 3
+            }
+        ],
+        "duration": 6,
+        "maxDelay": 40,
+        "minDelay": 30
+    }
+]
