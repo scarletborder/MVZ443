@@ -1,5 +1,6 @@
 // 管理种植,铲除植物.以及使用星之碎片和激发植物的能力
 
+import DepthManager from "../../utils/depth";
 import { IPlant } from "../models/IPlant";
 import { Game } from "../scenes/Game";
 import { PlantFactoryMap } from "./loader";
@@ -203,7 +204,7 @@ export default class Gardener {
         this.highlightSprite.setOrigin(0.5, 1);
         this.highlightSprite.setTint(0xffffff);
         this.highlightSprite.setAlpha(0.8);
-        this.highlightSprite.setDepth(10);
+        this.highlightSprite.setDepth(DepthManager.getInGameUIUnImportant(50));
 
         this.highlightTween = this.scene.tweens.add({
             targets: this.highlightSprite,

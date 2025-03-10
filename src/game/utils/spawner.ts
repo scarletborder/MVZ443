@@ -154,7 +154,6 @@ export default class MonsterSpawner {
 
                 const newFunc = MonsterFactoryMap[monsterData.mid].NewFunction;
                 const zomb = newFunc(this.scene, colMax, row);
-                zomb.setDepth(LINE_DEPTH(row));
 
                 // 更新行权重
                 rowWeights[row] = Math.max(0.1, rowWeights[row] - 0.3);

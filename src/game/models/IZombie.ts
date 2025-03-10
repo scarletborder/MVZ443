@@ -1,3 +1,4 @@
+import DepthManager from "../../utils/depth";
 import { Game } from "../scenes/Game";
 import IZombieAnim from "../sprite/zombie";
 import MonsterSpawner from "../utils/spawner";
@@ -41,6 +42,8 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite {
     offsetX: number = 0; // 动画偏移量,一个微小的偏移避免视觉在一起
     offsetY: number = 0;
 
+    baseDepth: number
+
     static InitGroup(scene: Game) {
         this.Group = scene.physics.add.group({
             classType: IZombie,
@@ -58,6 +61,8 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite {
         this.zombieAnim = newZombieAnim(scene, x, y);
         this.offsetX = Math.random() * scene.positionCalc.GRID_SIZEX / 5;
         this.offsetY = Math.random() * scene.positionCalc.GRID_SIZEY / 10;
+        this.baseDepth = DepthManager.getZombieBasicDepth(row, this.offsetY);
+        this.setDepth();
 
         this.zombieAnim.startLegSwing();
 
@@ -246,8 +251,8 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite {
 
     updateAttachPosition() { }
 
-    setDepth(base: number) {
-        this.zombieAnim.setDepth(base);
+    setDepth() {
+        this.zombieAnim.setDepth(this.baseDepth);
         return this;
     }
 }

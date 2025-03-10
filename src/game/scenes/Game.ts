@@ -9,6 +9,7 @@ import MonsterSpawner from '../utils/spawner';
 import InnerSettings from '../utils/settings';
 import { GameParams } from '../models/GameParams';
 import { MAXDEPTH } from '../../../public/constants';
+import DepthManager from '../../utils/depth';
 
 
 
@@ -84,7 +85,7 @@ export class Game extends Scene {
                 backgroundColor: 'rgba(0, 0, 0, 0.35)',
                 padding: { x: 10, y: 5 },
             }
-        ).setOrigin(1, 1).setInteractive().setDepth(MAXDEPTH);
+        ).setOrigin(1, 1).setInteractive().setDepth(DepthManager.getMenuDepth());
         this.pauseBtn.on('pointerup', () => {
             // 判断场景有无暂停
             let currently = this.physics.world.isPaused;
@@ -101,7 +102,7 @@ export class Game extends Scene {
                 backgroundColor: 'rgba(0, 0, 0, 0.35)',
                 padding: { x: 10, y: 5 },
             }
-        ).setOrigin(0.5).setVisible(false).setDepth(MAXDEPTH);
+        ).setOrigin(0.5).setVisible(false).setDepth(DepthManager.getMenuDepth());
 
         this.exitText = this.add.text(
             this.cameras.main.width / 2,
@@ -113,7 +114,7 @@ export class Game extends Scene {
                 backgroundColor: 'rgba(0, 0, 0, 0.35)',
                 padding: { x: 10, y: 5 },
             }
-        ).setOrigin(0.5, 1).setVisible(false).disableInteractive().setDepth(MAXDEPTH);
+        ).setOrigin(0.5, 1).setVisible(false).disableInteractive().setDepth(DepthManager.getMenuDepth());
         this.exitText.on('pointerup', this.handleExit, this);
 
 

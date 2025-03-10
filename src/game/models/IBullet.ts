@@ -1,3 +1,4 @@
+import DepthManager from "../../utils/depth";
 import { Game } from "../scenes/Game";
 
 export class IBullet extends Phaser.Physics.Arcade.Sprite {
@@ -11,6 +12,8 @@ export class IBullet extends Phaser.Physics.Arcade.Sprite {
     public damage: number;
     public col: number;
     public row: number;
+
+    public baseDepth: number;
 
     static InitGroup(scene: Game) {
         this.Group = scene.physics.add.group({
@@ -36,6 +39,9 @@ export class IBullet extends Phaser.Physics.Arcade.Sprite {
 
         this.setOrigin(0.5, 0.5);
         this.damage = damage;
+
+        this.baseDepth = DepthManager.getProjectileDepth('bullet', col);
+        this.setDepth(this.baseDepth);
     }
 
     update(...args: any[]): void {

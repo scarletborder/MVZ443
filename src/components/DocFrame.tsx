@@ -4,6 +4,7 @@ import LevelSelect from './menu/levelSelect';
 import Pokedex from './menu/pokedex';
 import Settings from './menu/settings';
 import { GameParams } from '../game/models/GameParams';
+import { publicUrl } from '../utils/browser';
 
 interface Props {
     width: number,
@@ -50,7 +51,7 @@ export default function DocFrame({ width, height, sceneRef, setGameParams, gameS
             height: `${height}px`,
             minHeight: `${height}px`,
             minWidth: `${width}px`,
-            backgroundImage: `url("/assets/intro.jpg")`,
+            backgroundImage: `url("${publicUrl}/assets/intro.jpg")`,
 
             backgroundRepeat: 'no-repeat',
             position: "relative",

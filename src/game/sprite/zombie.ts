@@ -89,14 +89,15 @@ export default class IZombieAnim {
         this.legRight.setOrigin(0.5, 0);
 
         this.setScale();
-        this.setDepth(0);
 
         this.legLeftTween = null;
         this.armTween = null;
     }
 
     setDepth(base: number) {
+        // 部件不在本地管
         this.head.setDepth(base + 9);
+        console.log('head dep', this.head.depth);
         this.armLeft.setDepth(base + 8);
         this.armRight.setDepth(base + 6);
         this.body.setDepth(base + 7);

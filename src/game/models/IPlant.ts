@@ -1,3 +1,4 @@
+import DepthManager from "../../utils/depth";
 import { Game } from "../scenes/Game";
 import Gardener from "../utils/gardener";
 import { IZombie } from "./IZombie";
@@ -13,6 +14,8 @@ export class IPlant extends Phaser.Physics.Arcade.Sprite {
 
     public col: number;
     public row: number;
+
+    public baseDepth: number;
 
     static InitGroup(scene: Game) {
         this.Group = scene.physics.add.group({
@@ -37,8 +40,6 @@ export class IPlant extends Phaser.Physics.Arcade.Sprite {
             throw new Error('IPlant body is null');
         }
 
-
-
         IPlant.Group.add(this, true);  //TODO: 一定要把group带入,否则,真的会忘记添加到组里面
         let size = scene.positionCalc.getPlantDisplaySize();
         this.setDisplaySize(size.sizeX, size.sizeY); // 改变显示大小 
@@ -46,8 +47,6 @@ export class IPlant extends Phaser.Physics.Arcade.Sprite {
         this.setBodySize(size.sizeX, size.sizeY);
         // console.log(scene.positionCalc.scaleFactor)
         // this.setScale(scene.positionCalc.scaleFactor);
-
-
 
         this.setOrigin(0.5, 1);
 
@@ -58,6 +57,10 @@ export class IPlant extends Phaser.Physics.Arcade.Sprite {
         this.row = row;
         this.gardener = scene.gardener;
         this.gardener.registerPlant(this);
+
+        this.baseDepth = DepthManager.getPlantBasicDepth(row);
+        this.setDepth(this.baseDepth);
+        console.log('Plant created', this.depth);
     }
 
     public setHealth(value: number) {

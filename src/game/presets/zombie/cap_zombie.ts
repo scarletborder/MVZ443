@@ -23,6 +23,8 @@ class CapZombie extends EnhancedZombie {
         console.log(cap.x, cap.y);
         cap.setVisible(true);
         this.attachSprites.set('cap', cap);
+
+        this.setDepth(); // 所有有附加元素的,要单独设置一次
     }
 
     public takeDamage(amount: number): void {
@@ -47,9 +49,11 @@ class CapZombie extends EnhancedZombie {
         }
     }
 
-    setDepth(base: number) {
-        this.attachSprites.get('cap')?.setDepth(base + 10);
-        super.setDepth(base);
+    setDepth() {
+        // attach 不由本地管
+        this.attachSprites.get('cap')?.setDepth(this.baseDepth + 13); // 帽子算比较高的
+        console.log('cap dep', this.attachSprites.get('cap')?.depth);
+        super.setDepth();
         return this;
     }
 }
