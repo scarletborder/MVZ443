@@ -87,10 +87,11 @@ class SaveManager {
         };
     }
 
-    importSaveFromJson(jsonString: string): void {
+    importSaveFromJson(jsonString: string): GameProgress | undefined {
         try {
             const gameProgress: GameProgress = JSON.parse(jsonString);
             this.saveGameProgress(gameProgress);
+            return gameProgress
         } catch (error) {
             console.error("导入存档失败: ", error);
         }
@@ -165,7 +166,12 @@ class GameManager {
 
     // 导入游戏存档
     importSave(jsonString: string): void {
-        this.saveManager.importSaveFromJson(jsonString);
+        let progress = this.saveManager.importSaveFromJson(jsonString);
+        if (progress === undefined) {
+            console.log("导入存档失败");
+        } else {
+            this.currentProgress = progress;
+        }
     }
 
     // 导出游戏存档
