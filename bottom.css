@@ -93,10 +93,8 @@
 }
 
 .stageDisplay {
-    width: 10%;
     font-weight: bold;
     text-align: center;
-    padding: 8px 15px;
     background-color: #333;
     color: white;
     border: none;
