@@ -9,10 +9,16 @@ interface Zombie {
     mid: number;
 }
 
+interface Item {
+    type: number;
+    count: number;
+}
+
 interface GameProgress {
-    level: number;
+    level: Set<number>;
     plants: Plant[];
     zombies: Zombie[];
+    items: Map<number, Item>;
 }
 class SaveManager {
     private dbName: string = "MVZ443";
@@ -106,10 +112,12 @@ class GameManager {
     constructor() {
         this.saveManager = new SaveManager();
         this.currentProgress = {
-            level: 1,
+            level: new Set([1]),
             plants: [{ pid: 1, level: 1 }, { pid: 2, level: 1 }],
-            zombies: []
+            zombies: [],
+            items: new Map<number, Item>()
         };
+        this.loadProgress();
     }
 
     // 记录遇到的植物
@@ -136,9 +144,28 @@ class GameManager {
         }
     }
 
+    /**
+     * 更新物品数量,  add or decrease
+     * @param type 
+     * @param count 
+     */
+    updateItemCount(type: number, count: number): void {
+        // 原有数量
+        let oldItem = this.currentProgress.items.get(type);
+        if (!oldItem) {
+            oldItem = { type, count: 0 };
+        }
+
+        // 设置新的数量
+        this.currentProgress.items.set(type, {
+            type, count: oldItem.count + count
+        });
+    }
+
     // 记录当前关卡进度
+    // 调用时需要循环对所有要解锁的关卡调用
     setCurrentLevel(level: number): void {
-        this.currentProgress.level = level;
+        this.currentProgress.level.add(level);
     }
 
     // 保存当前游戏进度
@@ -147,22 +174,23 @@ class GameManager {
     }
 
     // 加载当前游戏进度 (确保更更新的记录覆盖现有记录)
-    loadProgress(): void {
+    loadProgress(callback?: () => void): void {
         this.saveManager.loadGameProgress((gameProgress) => {
             if (gameProgress) {
                 // 只覆盖更新的部分
-                if (gameProgress.level > this.currentProgress.level) {
-                    this.currentProgress.level = gameProgress.level;
-                }
+                this.currentProgress.level = new Set([...gameProgress.level]);
                 this.currentProgress.plants = [...gameProgress.plants];
                 this.currentProgress.zombies = [...gameProgress.zombies];
+                this.currentProgress.items = new Map([...gameProgress.items]);
+
+                if (callback) {
+                    callback();
+                }
             } else {
                 console.log("没有找到存档，初始化默认进度");
             }
         });
     }
-
-
 
     // 导入游戏存档
     importSave(jsonString: string): void {

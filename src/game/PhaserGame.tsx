@@ -3,6 +3,7 @@ import StartGame from './main';
 import { EventBus } from './EventBus';
 import { useSettings } from '../context/settings_ctx';
 import { GameParams } from './models/GameParams';
+import { StageResult } from './models/IRecord';
 
 export interface IRefPhaserGame {
     game: Phaser.Game | null;
@@ -13,11 +14,12 @@ interface IProps {
     currentActiveScene?: (scene_instance: Phaser.Scene) => void,
     isVisibility: boolean,
     gameParams: GameParams | null,
-    gameExit: () => void
+    gameExit: (result: StageResult) => void
 }
 
 
-export const PhaserGame = forwardRef<IRefPhaserGame, IProps>(function PhaserGame({ currentActiveScene, isVisibility, gameParams, gameExit }, ref) {
+export const PhaserGame = forwardRef<IRefPhaserGame, IProps>(function PhaserGame({
+    currentActiveScene, isVisibility, gameParams, gameExit }, ref) {
     if (!gameParams) {
         return <p>no game params!@!</p>
     }

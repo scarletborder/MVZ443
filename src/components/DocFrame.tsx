@@ -227,7 +227,7 @@ export default function DocFrame({ width, height, sceneRef, setGameParams, gameS
                     @keyframes frameFadeIn {
                         from {
                             opacity: 0;
-                            transform: scale(0.95);
+                            transform: scale(0.98);
                         }
                         to {
                             opacity: 1;
@@ -242,7 +242,7 @@ export default function DocFrame({ width, height, sceneRef, setGameParams, gameS
                         }
                         to {
                             opacity: 0;
-                            transform: scale(0.95);
+                            transform: scale(0.98);
                         }
                     }
                 `}

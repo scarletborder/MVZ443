@@ -13,14 +13,13 @@ export class EnhancedZombie extends IZombie {
         // let y = this.y - 50 * scene.positionCalc.scaleFactor;
 
 
-        this.health = 200;
+        this.health = 180;
         this.speed = 20 * scene.positionCalc.scaleFactor;
     }
 
 
     // 处理血量变化并更新伤口位置
     private handleHealthChange(health: number) {
-        console.log(`Zombie health updated to: ${this.health}`);
         if (this.health <= 100 && this.health > 0) {
             this.zombieAnim.switchBodyFrame(true);
         } else if (this.health > 100) {

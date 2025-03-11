@@ -1,4 +1,5 @@
 import DepthManager from "../../utils/depth";
+import { EventBus } from "../EventBus";
 import { Game } from "../scenes/Game";
 import IZombieAnim from "../sprite/zombie";
 import MonsterSpawner from "../utils/spawner";
@@ -86,7 +87,6 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite {
     // 设置生命值并监听
     public setHealth(value: number) {
         this.health = value;
-        console.log(`Zombie health updated to: ${this.health}`);
         if (this.health <= 0) {
             this.destroyZombie();
         }
@@ -240,12 +240,17 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite {
 
     // 每帧更新
     update() {
-        // console.log('hello')
-        // if (this.attackingPlant && !this.attackingPlant.active) {
-        //     this.stopAttacking(); // 植物死亡时停止攻击
-        // }
+        // TODO: boss, elite 可能在x < 0时,不直接失败
         if (!this.isDying) {
             this.zombieAnim.updatePosition(this.x + this.offsetX, this.y + this.offsetY);
+        }
+        // 超越边界销毁
+        if (this.x < 0) {
+            console.log('Zombie out of boundary');
+            // 游戏直接失败,结束游戏
+            // 矿车可以被碰撞,如果丢,早丢了
+            this.destroy();
+            EventBus.emit('game-fail');
         }
     }
 

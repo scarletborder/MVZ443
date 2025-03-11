@@ -1,7 +1,7 @@
 // src/components/ChapterSelector.tsx
-import React, { useState } from 'react';
-import { ChapterDescription } from '../../../game/models/GameParams';
-import { ChapterDataRecords } from '../../../game/utils/loader';
+import React, { useEffect, useState } from 'react';
+import { ChapterDataRecords, StageDataRecords } from '../../../game/utils/loader';
+import { useSaveManager } from '../../../context/save_ctx';
 
 
 
@@ -12,6 +12,22 @@ interface ChapterSelectorProps {
 
 const ChapterSelector: React.FC<ChapterSelectorProps> = ({ onSelect, onBack }) => {
     const [selectedChapter, setSelectedChapter] = useState<number | null>(null);
+    const [availableChapters, setAvailableChapters] = useState<number[]>([]);
+    const saveManager = useSaveManager();
+
+
+    useEffect(() => {
+        let tmpChapters: number[] = [];
+        saveManager.currentProgress.level.forEach((level) => {
+            // 这里level是关卡数,我们通过其找到chapterId,注意排序
+            const chapterId = StageDataRecords[level].chapterID;
+            if (!tmpChapters.includes(chapterId))
+                tmpChapters.push(chapterId);
+        });
+        // 排序
+        tmpChapters = tmpChapters.sort((a, b) => a - b);
+        setAvailableChapters(tmpChapters);
+    }, []);
 
     return (
         <div style={{
@@ -51,36 +67,36 @@ const ChapterSelector: React.FC<ChapterSelectorProps> = ({ onSelect, onBack }) =
                     返回
                 </button>
 
-                {Object.values(ChapterDataRecords).map((chapter) => (
+                {Object.values(availableChapters).map((chapter) => (
                     <button
-                        key={chapter.id}
+                        key={chapter}
                         style={{
                             width: '100%',
                             padding: '15px 20px',
-                            background: selectedChapter === chapter.id ? 'rgba(255, 255, 255, 0.1)' : 'none',
+                            background: selectedChapter === chapter ? 'rgba(255, 255, 255, 0.1)' : 'none',
                             border: 'none',
                             color: '#ddd',
                             cursor: 'pointer',
                             transition: 'all 0.3s ease',
-                            boxShadow: selectedChapter === chapter.id
+                            boxShadow: selectedChapter === chapter
                                 ? 'inset 0 0 0 2px #00ccff'
                                 : 'inset 0 0 0 2px rgba(100, 100, 100, 0.3)',
                         }}
                         onMouseOver={(e) => {
-                            if (selectedChapter !== chapter.id) {
+                            if (selectedChapter !== chapter) {
                                 e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
                                 e.currentTarget.style.boxShadow = 'inset 0 0 0 2px #00ccff';
                             }
                         }}
                         onMouseOut={(e) => {
-                            if (selectedChapter !== chapter.id) {
+                            if (selectedChapter !== chapter) {
                                 e.currentTarget.style.background = 'none';
                                 e.currentTarget.style.boxShadow = 'inset 0 0 0 2px rgba(100, 100, 100, 0.3)';
                             }
                         }}
-                        onClick={() => setSelectedChapter(chapter.id)}
+                        onClick={() => setSelectedChapter(chapter)}
                     >
-                        {chapter.name}
+                        {ChapterDataRecords[chapter].name}
                     </button>
                 ))}
             </div>

@@ -30,8 +30,8 @@ export const ChapterDataRecords: Record<number, ChapterDescription> = {
 }
 
 export const StageDataRecords: Record<number, StageDescription> = {
-    1: { id: 1, name: '关卡 1-1', description: '简单入门关卡。' },
-    2: { id: 2, name: '关卡 1-2', description: '稍微复杂一些。' },
+    1: { id: 1, name: '训练关卡1', description: '仅有一只僵尸的测试关卡', chapterID: 1 },
+    2: { id: 2, name: '关卡 1-2', description: '稍微复杂一些,多只僵尸多波奖励', chapterID: 1 },
     // 3: { id: 3, name: '关卡 2-1', description: '中级挑战。' },
     // 4: { id: 4, name: '关卡 2-2', description: '需要策略。' },
     // 5: { id: 5, name: '关卡 3-1', description: '高级关卡。' },

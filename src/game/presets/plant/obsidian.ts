@@ -27,7 +27,6 @@ class Obsidian extends IPlant {
     public setHealth(value: number): void {
         super.setHealth(value);
         // 根据不同血量显示不同的帧
-        console.log(this.shieldHealth)
         if (this.health > 0) {
             if (this.shieldHealth > 0) {
                 if (this.shieldHealth > this.maxShieldHealth * 2 / 3) {

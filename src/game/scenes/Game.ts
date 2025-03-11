@@ -13,6 +13,7 @@ import QueueReceive from '../utils/queue_receive';
 import QueueSend from '../utils/queue_send';
 import CreateInnerMenu from '../utils/inner_menu';
 import { StageData } from '../models/IRecord';
+import MineCart from '../presets/bullet/minecart';
 
 
 
@@ -40,11 +41,14 @@ export class Game extends Scene {
 
     params: GameParams;
     private isDestroyed = false; // Track if the scene/game is destroyed
+    public stageData: StageData;
 
     // command queue
     private elapsed: number = 0;
     sendQueue: QueueSend
     recvQueue: QueueReceive
+
+    isGameEnd: boolean = true;
 
 
     constructor() {
@@ -56,14 +60,15 @@ export class Game extends Scene {
     }
 
     create() {
+        this.isGameEnd = true;
         // read external data
-        const stageData: StageData = this.cache.json.get(`ch${this.params.level}`);
+        this.stageData = this.cache.json.get(`ch${this.params.level}`);
         this.params = this.game.registry.get('gameParams') as GameParams;
         this.scaleFactor = this.scale.displaySize.width / 800;
 
-        this.GRID_ROWS = stageData.rows;
+        this.GRID_ROWS = this.stageData.rows;
         this.positionCalc = new PositionCalc(this.scaleFactor, this.GRID_ROWS, this.GRID_COLS);
-        this.monsterSpawner = new MonsterSpawner(this, stageData.waves);
+        this.monsterSpawner = new MonsterSpawner(this, this.stageData.waves);
 
         // 目前只有单机
         this.recvQueue = new QueueReceive({ mode: 'single' }, this);
@@ -126,13 +131,19 @@ export class Game extends Scene {
             const currently = this.physics.world.isPaused;
             this.handlePause({ paused: !currently });
         });
-
+        const backquoteKey = this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.BACKTICK);
+        backquoteKey?.on('down', () => {
+            // 判断场景有无暂停
+            const currently = this.physics.world.isPaused;
+            this.handlePause({ paused: !currently });
+        });
 
         this.innerSettings = new InnerSettings();
 
         EventBus.on('setIsPaused', this.handlePause, this);
         // TODO: move to gardener
         EventBus.on('starShards-chosen', () => { console.log('pick shards') });
+        EventBus.on('game-fail', this.handleExit, this);
 
         this.sendQueue.sendReady();
     }
@@ -160,7 +171,14 @@ export class Game extends Scene {
         this.monsterSpawner.setRandomSeed(seed);
         EventBus.emit('current-scene-ready', this);
         this.myID = myID;
+        this.params.setInitialEnergy(this.stageData.energy);
         this.monsterSpawner.startWave();
+
+        // 设置一排minecart
+        for (let i = 0; i < this.GRID_ROWS; i++) {
+            new MineCart(this, -1, i);
+        }
+        this.isGameEnd = false;
     }
 
     handleCardPlant(pid: number, level: number, col: number, row: number, uid: number) {
@@ -214,10 +232,7 @@ export class Game extends Scene {
     broadCastProgress(progress: number) {
         EventBus.emit('game-progress', { progress });
     }
-    // game->app 通知游戏结束
-    broadCastGameOver(win: boolean) {
-        EventBus.emit('game-over', { win });
-    }
+
     // 处理暂停
     handlePause({ paused }: { paused: boolean }) {
         if (this.isDestroyed) return; // Skip if scene is destroyed
@@ -244,14 +259,22 @@ export class Game extends Scene {
             try { this.exitText.disableInteractive(); } finally { EventBus.emit('okIsPaused', { paused: false }); }
         }
     }
-    handleExit() {
+
+    // game->app 通知游戏结束
+    handleExit(isWin: boolean = false) {
         // this.physics.world?.resume(); // 恢复物理系统
         // this.anims.resumeAll(); // 恢复所有动画
         // this.time.paused = false; // 恢复定时器
         // this.pauseText.setVisible(false); // 隐藏"已停止"文本
-        // this.exitText.setVisible(false).disableInteractive();.
-        this.params.gameExit();
+        // this.exitText.setVisible(false).disableInteractive();
+        this.isGameEnd = true;
         EventBus.emit('okIsPaused', { paused: false });
+        this.params.gameExit({
+            isWin,
+            onWin: this.stageData.onWin,
+            rewards: this.stageData.rewards,
+            progress: isWin ? 100 : this.monsterSpawner.progress,
+        });
     }
 
     destroy() { // Override Phaser's destroy method
@@ -265,12 +288,10 @@ export class Game extends Scene {
 
 // bullet与僵尸碰撞的伤害判定
 function damageZombie(bulletSprite: Phaser.GameObjects.GameObject, zombieSprite: Phaser.GameObjects.GameObject) {
-    console.log('damage!'); // 确保碰撞被检测到
     const bullet = bulletSprite as IBullet;
     const zombie = zombieSprite as IZombie;
 
-    bullet.destroy();
-    zombie.takeDamage(bullet.damage);
+    bullet.CollideObject(zombie);
 }
 
 

@@ -21,6 +21,11 @@ export default class MonsterSpawner {
     private killed_count = 0; // 怪物击杀数
     private total_count = 0; // 怪物总数
 
+    public progress: number = 0; // 进度
+
+    private bossObj: IZombie | null = null; // boss对象,如果有最后一波boss,监听boss存活,
+    // BOSS死亡自动emit游戏胜利,不再做胜利判断
+
 
     constructor(game: Game, waves_json: any, randomSeed?: number) {
         this.scene = game;
@@ -50,6 +55,7 @@ export default class MonsterSpawner {
             this.SpawnTimer.destroy();
         }
 
+        this.progress = 0;
         this.current_wave_idx = -1;
         this.killed_count = 0;
         this.total_count = 0;
@@ -60,6 +66,7 @@ export default class MonsterSpawner {
     nextWave() {
         // 无论如何都到达了下一波,那么开始进度记录
         if (this.current_wave_idx >= 0) {
+            this.progress = this.currentWave().progress;
             this.scene.broadCastProgress(this.currentWave().progress);
         }
 
@@ -247,6 +254,7 @@ export default class MonsterSpawner {
     }
 
     onMonsterKilled() {
+        if (this.scene.isGameEnd) return; // 结束了,避免结束杀人
         this.killed_count++;
         console.log('kill', this.killed_count, '/', this.total_count);
 
@@ -256,6 +264,12 @@ export default class MonsterSpawner {
 
             // 如果是最后一波
             if (this.current_wave_idx === this.waves.length - 1) {
+                const waveObj = this.currentWave();
+                if (waveObj.flag === 'boss') {
+                    console.log('Last wave is boss wave, waiting');
+                    return;
+                }
+
                 console.log('Last wave detected, starting victory check timer...');
 
                 // 启动一个每1.5秒检查一次的定时器
@@ -266,7 +280,7 @@ export default class MonsterSpawner {
                         // 检查场上是否还有怪物
                         if (this.monstered.size === 0) {
                             console.log('No monsters left on the field, game victory!');
-                            this.scene.broadCastGameOver(true); // 游戏胜利
+                            this.scene.handleExit(true);
                             victoryCheckTimer.remove(); // 移除定时器
                             victoryCheckTimer.destroy();
                         } else {

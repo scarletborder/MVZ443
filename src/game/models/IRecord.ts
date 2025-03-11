@@ -35,7 +35,8 @@ export interface Monster {
 export interface Wave {
     waveId: number;
     progress: number; // 进度,一般非常小,同时可以被重置,游戏结束不看这个,只是显示用
-    flag: string;
+    flag: string; // flag 类型,用于标记特殊的wave,如 `normal | elite | boss`
+    // 对于一些做精英怪的前期BOSS,初始化的时候带上isFinalBoss来控制死亡时是否触发胜利
     monsters: Monster[];
     duration: number; // seconds
     maxDelay: number; // seconds
@@ -44,9 +45,36 @@ export interface Wave {
     minLine: number; // 指定最少有多少行应该生成怪物，避免怪物过于集中在一行。
 }
 
-export interface StageData {
-    rows: number; // 行数
-    type: number; // 地图类型,如平原图,矿洞图等
-    waves: Wave[];
+
+export interface Reward {
+    type: number,
+    count: number
 }
 
+export interface ProgressReward {
+    progress: number;
+    reward: Reward;
+}
+
+export interface OnWin {
+    unLock: number[]; // 解锁的关卡
+    unLockPlant: number[]; // 解锁的器械
+}
+
+export interface StageData {
+    rows: number; // 行数
+    type: number; // 地图材质,如平原图,矿洞图等,影响贴图和地图特性
+    waves: Wave[];
+    onWin: OnWin; // 胜利后解锁
+    energy: number; // 初始能量
+    // 进度奖励
+    rewards: ProgressReward[];
+}
+
+// 关卡结束需要返回的东西
+export interface StageResult {
+    isWin: boolean;
+    onWin: OnWin;
+    rewards: ProgressReward[];
+    progress: number;
+}

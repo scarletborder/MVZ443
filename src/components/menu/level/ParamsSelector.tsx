@@ -22,15 +22,6 @@ interface PlantElem {
     level: number;
 }
 
-function insertSorted(array: PlantElem[], newElement: PlantElem): PlantElem[] {
-    const newArray = [...array];
-    let index = 0;
-    while (index < newArray.length && newArray[index].pid < newElement.pid) {
-        index++;
-    }
-    newArray.splice(index, 0, newElement);
-    return newArray;
-}
 
 const ParamsSelector: React.FC<ParamsSelectorProps> = ({ stageId, setGameParams, startGame, onBack }) => {
     const [selectedPlants, setSelectedPlants] = useState<number[]>([]);
@@ -67,20 +58,21 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({ stageId, setGameParams,
                 imgUrl: `${publicUrl}/assets/${plantObj.texture}.png`,
                 level: plantProgress[i].level
             };
-            newAvailablePlants = insertSorted(newAvailablePlants, newPlant);
+            newAvailablePlants.push(newPlant);
         }
+        newAvailablePlants = newAvailablePlants.sort((a, b) => a.pid - b.pid);
         setAvailablePlants(newAvailablePlants);
     }, [currentProgress]);
 
     const handleStart = () => {
-        garden_ctx.setEnergy(1080);
         const _ = () => { console.log('no gameexit Implemented') };
 
         const params: GameParams = {
             level: stageId,
             plants: selectedPlants,
             difficulty,
-            gameExit: _
+            gameExit: _,
+            setInitialEnergy: garden_ctx.setEnergy
         };
         setGameParams(params);
         startGame();
@@ -272,7 +264,7 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({ stageId, setGameParams,
 
                 <button
                     style={{
-                        padding: '10px 40%',
+                        padding: '3% 40%',
                         background: '#00ccff',
                         border: 'none',
                         color: '#fff',
@@ -282,7 +274,7 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({ stageId, setGameParams,
                     }}
                     onClick={handleStart}
                 >
-                    {`${i18n('welcome')}!!!!!!!`}
+                    {`${i18n('start')}`}
                 </button>
             </div>
         </div>)

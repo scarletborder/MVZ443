@@ -63,6 +63,7 @@ export class Preloader extends Scene {
     loadAllProjectile() {
         this.load.image('bullet/snowball', 'bullet/snowball.png');
         this.load.image('bullet/arrow', 'bullet/arrow.png');
+        this.load.image('bullet/minecart', 'bullet/minecart.png');
     }
 
     // 加载全部sprite

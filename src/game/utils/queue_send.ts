@@ -70,10 +70,8 @@ export default class QueueSend {
         while (!this.queues.isEmpty()) {
             const data = this.queues.shift();
             if (!data) continue;
-            console.log('handle', data)
 
             if (this.singRecvQueue) {
-                console.log(data);
                 this.dispatchSingle(data);
                 continue;
             }

@@ -29,7 +29,6 @@ export class PositionCalc {
 
     // 计算格子的左上角
     public getGridTopLeft(col: number, row: number) {
-        console.log(row * this.GRID_SIZEY + this.gridOffsetY)
         return {
             x: (col * this.GRID_SIZEX + this.gridOffsetX),
             y: (row * this.GRID_SIZEY + this.gridOffsetY)

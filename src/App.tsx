@@ -8,12 +8,16 @@ import { SaveProvider } from './context/save_ctx';
 import { useSettings } from './context/settings_ctx';
 import { GameParams } from './game/models/GameParams';
 import i18n from './utils/i18n';
+import { OnWin, StageResult } from './game/models/IRecord';
+import GameResultView from './components/menu/result';
 
 function App() {
     // State to control the visibility of the game tool
     const [showGameTool, setShowGameTool] = useState(false);
     const [showGameScreen, setShowGameScreen] = useState(false);
+    const [showGameResult, setShowGameResult] = useState(false);
     const [gameParams, setGameParams] = useState<GameParams | null>(null);
+    const [gameResult, setGameResult] = useState<StageResult | null>(null);
 
     //  References to the PhaserGame component (game and scene are exposed)
     const phaserRef = useRef<IRefPhaserGame | null>(null);
@@ -25,13 +29,23 @@ function App() {
         setShowGameTool(true);
     }, [setShowGameScreen, setShowGameTool]);
 
-    const gameExit = useCallback(() => {
+    const exitResultView = useCallback(() => {
+        setShowGameResult(false);
+        setShowGameScreen(false);
+        setShowGameTool(false);
+    }, [setShowGameResult, setShowGameScreen, setShowGameTool]);
+
+    const gameExit = useCallback((result: StageResult) => {
         if (phaserRef.current) {
             phaserRef.current.game?.destroy(true);
             phaserRef.current = null;
         }
         setShowGameScreen(false);
         setShowGameTool(false);
+
+        // 结算
+        setGameResult(result);
+        setShowGameResult(true);
     }, [setShowGameScreen, setShowGameTool]);
 
     // Event emitted from the PhaserGame component
@@ -39,10 +53,12 @@ function App() {
         // setCanMoveSprite(scene.scene.key !== 'MainMenu');
     }
 
-    // 监听键盘事件，阻止 F11 触发全屏
+    // 监听键盘事件
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
-            if (event.key === "F11") {
+            if (event.key === "F1" || event.key === "F2" || event.key === "F3" || event.key === "F4"
+                || event.key === "F5" || event.key === "F6" || event.key === "F7" || event.key === "F8"
+                || event.key === "F9" || event.key === "F10") {
                 event.preventDefault();
             }
         };
@@ -82,8 +98,8 @@ function App() {
                             display: "flex",
                             "flexDirection": "row"
                         }}>
-                            <EnergySlot sceneRef={phaserRef} />
-                            <CardSlotHorizontal sceneRef={phaserRef} />
+                            <EnergySlot />
+                            <CardSlotHorizontal sceneRef={phaserRef} gameParams={gameParams} />
                         </div>}
 
 
@@ -92,12 +108,15 @@ function App() {
 
 
                         </div>
-                        {showGameScreen && <PhaserGame ref={phaserRef} currentActiveScene={currentScene} isVisibility={showGameScreen} gameParams={gameParams} gameExit={gameExit} />}
-                        {(!showGameScreen) && <DocFrame width={width} sceneRef={phaserRef} setGameParams={setGameParams} gameStart={gameStart} />}
+                        {showGameScreen && (!showGameResult) && <PhaserGame ref={phaserRef} currentActiveScene={currentScene} isVisibility={showGameScreen} gameParams={gameParams} gameExit={gameExit} />}
+                        {(!showGameScreen) && (!showGameResult) && <DocFrame width={width} sceneRef={phaserRef} setGameParams={setGameParams} gameStart={gameStart} />}
+                        {showGameResult && (!showGameScreen) && (gameResult) && <GameResultView isWin={gameResult?.isWin ? gameResult.isWin : false}
+                            onWin={gameResult?.onWin} progressRewards={gameResult?.rewards} myProgress={gameResult?.progress ? gameResult.progress : 0}
+                            onBack={exitResultView} width={width} height={width * 3 / 4} />}
                     </div>
 
                     {showGameTool &&
-                        <BottomTools width={width} />}
+                        <BottomTools width={width} chapterID={gameParams?.level}/>}
 
                 </GameProvider>
             </SaveProvider>

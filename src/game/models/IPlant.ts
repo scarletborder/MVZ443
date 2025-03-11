@@ -67,7 +67,7 @@ export class IPlant extends Phaser.Physics.Arcade.Sprite {
 
     public setHealth(value: number) {
         this.health = value;
-        console.log(`Plant health updated to: ${this.health}`);
+        // console.log(`Plant health updated to: ${this.health}`);
 
         if (this.health <= 0) {
             this.destroyPlant();

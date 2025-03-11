@@ -1,5 +1,7 @@
 import DepthManager from "../../utils/depth";
 import { Game } from "../scenes/Game";
+import { IPlant } from "./IPlant";
+import { IZombie } from "./IZombie";
 
 export class IBullet extends Phaser.Physics.Arcade.Sprite {
     public ScreenWidth: number = 1024;
@@ -42,6 +44,16 @@ export class IBullet extends Phaser.Physics.Arcade.Sprite {
 
         this.baseDepth = DepthManager.getProjectileDepth('bullet', col);
         this.setDepth(this.baseDepth);
+    }
+
+    CollideObject(object: IZombie | IPlant) {
+        const damage = this.damage;
+        this.destroy(); // 一般子弹,碰到就销毁
+        if (object instanceof IZombie) {
+            object.takeDamage(damage);
+        } else if (object instanceof IPlant) {
+            console.log('bullet hit plant, function not implemented');
+        }
     }
 
     update(...args: any[]): void {

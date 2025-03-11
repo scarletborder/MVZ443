@@ -65,10 +65,11 @@ export function GameProvider(props: GameProviderProps) {
         }));
     }
 
+    // 强制赋值
     function updateWave(percent: number) {
         setGameState(prev => ({
             ...prev,
-            wave: prev.wave + percent
+            wave: percent
         }));
     }
 

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { IRefPhaserGame } from '../game/PhaserGame';
 import Card from './card';
 import { PlantFactoryMap } from '../game/utils/loader';
@@ -6,13 +6,15 @@ import { useGameContext } from '../context/garden_ctx';
 import { EventBus } from '../game/EventBus';
 import { IRecord } from '../game/models/IRecord';
 import { useSaveManager } from '../context/save_ctx';
+import { GameParams } from '../game/models/GameParams';
 
 interface slotProps {
     sceneRef: React.MutableRefObject<IRefPhaserGame | null>;
+    gameParams: GameParams | null;
 }
 
 
-export function EnergySlot({ sceneRef }: slotProps) {
+export function EnergySlot() {
     const { energy, updateEnergy } = useGameContext();
 
     useEffect(() => {
@@ -53,26 +55,31 @@ export function EnergySlot({ sceneRef }: slotProps) {
     )
 }
 
-export function CardSlotHorizontal({ sceneRef }: slotProps) {
+export function CardSlotHorizontal({ sceneRef, gameParams }: slotProps) {
     // TODO:通过选关界面获得的植物信息
     // 这里获得了除了游戏内使用的函数以外的全部信息
     // energy使用情况也是从这里发出
-    const pids = [1, 2, 3, 5];
-    const plants: Array<IRecord> = [];
-
     const { currentProgress } = useSaveManager();
-
-    const pidSet = new Set<number>();
-    pids.forEach(pid => {
-        pidSet.add(pid);
-        plants.push(PlantFactoryMap[pid]);
-    })
+    const [plants, setPlants] = useState<Array<IRecord>>([]);
     // 使用 WeakMap 来记录 pid 到 level 的映射
     const pidToLevelMap = new Map<number, number>();
 
-    currentProgress.plants.forEach(plant => {
-        if (pidSet.has(plant.pid)) pidToLevelMap.set(plant.pid, plant.level);
-    })
+    useEffect(() => {
+        if (!gameParams) {
+            return;
+        }
+        const newPlants: Array<IRecord> = gameParams.plants
+            .map(pid => PlantFactoryMap[pid])
+            .filter(Boolean);
+
+        setPlants(newPlants);
+
+        currentProgress.plants.forEach(plant => {
+            if (gameParams.plants.includes(plant.pid)) {
+                pidToLevelMap.set(plant.pid, plant.level);
+            }
+        });
+    }, [gameParams, currentProgress]);
 
     let line_1 = 9// 第一行, 阳光显示 + 9个卡槽
     let line_2 = 9// 列, 铲子 + 9个卡槽
@@ -100,6 +107,9 @@ export function CardSlotHorizontal({ sceneRef }: slotProps) {
         ))}
     </div>);
 }
+
+
+
 
 // export function CardSlotVertical({ scene }: slotProps) {
 //     const plants = [

@@ -43,5 +43,5 @@ export default function CreateInnerMenu(game: Game) {
             padding: { x: 10, y: 5 },
         }
     ).setOrigin(0.5, 1).setVisible(false).disableInteractive().setDepth(DepthManager.getMenuDepth());
-    game.exitText.on('pointerup', game.handleExit, game);
+    game.exitText.on('pointerup', () => { game.handleExit(false) }, game);
 }

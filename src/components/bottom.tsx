@@ -3,12 +3,14 @@ import { useGameContext } from "../context/garden_ctx";
 import { useCallback, useEffect, useState } from "react";
 import { EventBus } from "../game/EventBus";
 import { useSettings } from "../context/settings_ctx";
+import { StageDataRecords } from "../game/utils/loader";
 
 type Props = {
     width: number
+    chapterID: number | null
 }
 
-export default function BottomTools({ width }: Props) {
+export default function BottomTools({ width, chapterID }: Props) {
     const { money, wave, bossHealth, starShareds, updateWave, isPaused, setIsPaused } = useGameContext();
 
     const [starStr, setStarStr] = useState<string>('*');
@@ -20,25 +22,17 @@ export default function BottomTools({ width }: Props) {
         const handleProgress = (data: { progress: number }) => {
             updateWave(data.progress);
         }
-        const handleGameOver = (data: { win: boolean }) => {
-            if (data.win) {
-                alert('You Win!');
-            } else {
-                alert('You Lose!');
-            }
-        }
+
         const handleSceneReady = (data: { scene: Phaser.Scene }) => {
             EventBus.emit("send-game-settings", {
                 isBluePrint
             });
         };
         EventBus.on('game-progress', handleProgress);
-        EventBus.on('game-over', handleGameOver);
         EventBus.on('current-scene-ready', handleSceneReady);
 
         return () => {
             EventBus.removeListener('game-progress', handleProgress);
-            EventBus.removeListener('game-over', handleGameOver);
             EventBus.removeListener('current-scene-ready', handleSceneReady);
         }
     }, [isBluePrint, updateWave])
@@ -102,7 +96,7 @@ export default function BottomTools({ width }: Props) {
                     </div>
                 )
             }
-            <div className='stageDisplay' onClick={handleSetPause}>测试关卡第一关</div>
+            <div className='stageDisplay' onClick={handleSetPause}>{chapterID ? StageDataRecords[chapterID].name : 'loading'}</div>
         </div >
     );
 }

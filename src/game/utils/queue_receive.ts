@@ -71,7 +71,6 @@ export default class QueueReceive {
     Consume() {
         while (!this.queues.isEmpty()) {
             const data = this.queues.shift();
-            console.log(data);
             if (!data) continue;
 
             switch (data.type) {
