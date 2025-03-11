@@ -32,5 +32,5 @@ export default {
 白天失效
 
 雪球里包着石头，别问了。`,
-    welcome: '2334'
+    start: '开始游戏',
 }
