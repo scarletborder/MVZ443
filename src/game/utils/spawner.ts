@@ -40,9 +40,11 @@ export default class MonsterSpawner {
     private total_count = 0; // 怪物总数
 
 
-    constructor(game: Game, waves_json: any) {
+    constructor(game: Game, waves_json: any, randomSeed?: number) {
         this.scene = game;
         this.waves = waves_json
+        if (!randomSeed) randomSeed = Math.random();
+        this.setRandomSeed(randomSeed);
     }
     // TODO: 追加新的波数, 例如精英关卡开启
 

@@ -9,10 +9,13 @@ import MonsterSpawner from '../utils/spawner';
 import InnerSettings from '../utils/settings';
 import { GameParams } from '../models/GameParams';
 import DepthManager from '../../utils/depth';
+import { PlantFactoryMap } from '../utils/loader';
 
 
 
 export class Game extends Scene {
+    private myID: number = 0;
+
     private scaleFactor: number = 1;
     private grid: Phaser.GameObjects.Rectangle[][];
     public GRID_ROWS = 5;
@@ -196,10 +199,39 @@ export class Game extends Scene {
         this.scene.start('GameOver');
     }
 
-    handleGameStart(){
+
+    /**
+     * 接收队列消费函数
+     */
+
+    // 游戏开始
+    handleGameStart(seed: number, myID: number) {
         //TOD
+        this.monsterSpawner.setRandomSeed(seed);
+        this.myID = myID;
         this.monsterSpawner.startWave();
     }
+
+    handleCardPlant(pid: number, level: number, col: number, row: number, uid: number) {
+        // 关于判断能否种,本地已经判断,这里只判断冲突
+        if (this.gardener.canPlant(col, row)) {
+            // 本地种植
+            const plantRecord = PlantFactoryMap[pid];
+            if (plantRecord) {
+                plantRecord.NewFunction(this, col, row, level);
+            }
+            // 成功种植,如果是自己
+            if (this.myID === uid) {
+                this.cancelPrePlant(); //现在可以取消预种植了
+                  // 可以进行冷却 
+            }
+        }
+    }
+
+
+    /** 
+     * 本地
+    */
 
     // app->game 选择卡片，更新预种植植物
     chooseCard(pid: number) {

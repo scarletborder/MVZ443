@@ -23,8 +23,10 @@ type _GameStart = {
 type _CardPlant = {
     type: 0x2;
     pid: number;
+    level: number;
     col: number;
     row: number;
+    uid: number; // 来源用户
 };
 
 type _RemovePlant = {
@@ -32,6 +34,7 @@ type _RemovePlant = {
     pid: number;
     col: number;
     row: number;
+    uid: number; // 来源用户
 }
 
 
@@ -62,12 +65,13 @@ export default class QueueReceive {
     Consume() {
         while (!this.queues.isEmpty()) {
             const data = this.queues.shift();
+            if (!data) continue;
             switch (data.type) {
                 case 0x1:
-                    this.game.StartGame(data.seed, data.myID);
+                    this.game.handleGameStart(data.seed, data.myID);
                     break;
                 case 0x2:
-                    this.game.CardPlant(data.pid, data.col, data.row);
+                    this.game.handleCardPlant(data.pid, data.level, data.col, data.row, data.uid);
                     break;
                 case 0x4:
                     this.game.RemovePlant(data.pid, data.col, data.row);

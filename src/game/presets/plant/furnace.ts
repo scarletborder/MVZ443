@@ -36,6 +36,10 @@ function NewFurnace(scene: Game, col: number, row: number): IPlant {
     return furnace;
 }
 
+function cost(level?: number): number {
+    return 50;
+}
+
 const description = `
 熔炉能为你提供额外的红石。
 
@@ -47,7 +51,7 @@ const description = `
 const FurnaceRecord: IRecord = {
     pid: 2,
     name: '熔炉',
-    cost: 50,
+    cost: cost,
     cooldownTime: 7.5,
     NewFunction: NewFurnace,
     texture: 'plant/furnace',

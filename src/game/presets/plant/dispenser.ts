@@ -51,7 +51,7 @@ const description = `
 const DispenserRecord: IRecord = {
     pid: 1,
     name: '发射器',
-    cost: 75,
+    cost: ()=>75,
     cooldownTime: 5,
     NewFunction: NewDispenser,
     texture: 'plant/dispenser',

@@ -19,7 +19,7 @@ export default class Gardener {
     // 卡槽中选中的植物(可为null)
     prePlantPid: number | null = null;
     // 星之碎片
-    starShards: boolean = false;
+    useStarShards: boolean = false;
 
     // 星之碎片动画管理
 
@@ -37,8 +37,8 @@ export default class Gardener {
     // 设置预种植的植物 pid
     public setPrePlantPid(pid: number) {
         // 如果设置了星之碎片,取消他
-        if (this.starShards) {
-            this.starShards = false;
+        if (this.useStarShards) {
+            this.useStarShards = false;
         }
 
         this.prePlantPid = pid;
@@ -55,12 +55,12 @@ export default class Gardener {
 
     // 星之碎片选中
     public setStarShards() {
-        this.starShards = true;
+        this.useStarShards = true;
     }
 
     // 取消星之碎片
     public cancelStarShards() {
-        this.starShards = false;
+        this.useStarShards = false;
     }
 
 
@@ -115,7 +115,7 @@ export default class Gardener {
     // 鼠标移动事件dispatch
     public onMouseMoveEvent(pointer: Phaser.Input.Pointer) {
         // 如果没有选择植物，不做任何事情
-        if (!this.starShards && this.prePlantPid === null) {
+        if (!this.useStarShards && this.prePlantPid === null) {
             return;
         }
         // 获得时间
@@ -151,12 +151,12 @@ export default class Gardener {
     // 点击事件
     // 种植,取消种植,使用星之碎片,取消星之碎片
     public onClickUp(pointer: Phaser.Input.Pointer) {
-        if (this.prePlantPid === null && !this.starShards) return;
+        if (this.prePlantPid === null && !this.useStarShards) return;
 
         // 右键,取消种植/取消星之碎片
         if (pointer.rightButtonReleased()) {
             console.log('cancel right click');
-            if (this.starShards) {
+            if (this.useStarShards) {
                 this.cancelStarShards();
             } else {
                 this.cancelPrePlant();
@@ -165,30 +165,33 @@ export default class Gardener {
         }
 
         // 星之碎片事件
+        if (this.useStarShards) { return; }
+
 
         // 非星之碎片事件
 
         // 种植
-        // 如果是暂停状态并且没有私密图纸,也不给种
-        console.log('blueprint', this.scene.innerSettings.isBluePrint)
-        if (!this.scene.innerSettings.isBluePrint && this.scene.physics.world.isPaused) {
-            return;
-        }
-
-        console.log('prepare to plant', this.prePlantPid);
-        let pid = this.prePlantPid;
-        const { col, row } = this.positionCalc.getGridByPos(pointer.x, pointer.y);
-        if (col >= 0 && row >= 0 && this.canPlant(col, row)) { // 假设已实现 isPlanted
-            // TODO: 根据 pid 创建具体植物,这里注册函数在preload时候放到game的loader里面
-            const plantRecord = PlantFactoryMap[pid];
-            if (plantRecord) {
-                plantRecord.NewFunction(this.scene, col, row); // 根据 pid 创建具体植物
+        if (this.prePlantPid !== null) {
+            // 如果是暂停状态并且没有私密图纸,也不给种
+            console.log('blueprint', this.scene.innerSettings.isBluePrint)
+            if (!this.scene.innerSettings.isBluePrint && this.scene.physics.world.isPaused) {
+                return;
             }
-            this.cancelPrePlant(); // 种植后取消预种植
-            this.scene.broadCastPlant(pid); // 通知种植卡片
+
+            console.log('prepare to plant', this.prePlantPid);
+            let pid = this.prePlantPid;
+            const { col, row } = this.positionCalc.getGridByPos(pointer.x, pointer.y);
+            if (col >= 0 && row >= 0 && this.canPlant(col, row)) { // 假设已实现 isPlanted
+                // TODO: 根据 pid 创建具体植物,这里注册函数在preload时候放到game的loader里面
+                const plantRecord = PlantFactoryMap[pid];
+                if (plantRecord) {
+                    plantRecord.NewFunction(this.scene, col, row); // 根据 pid 创建具体植物
+                }
+                this.cancelPrePlant(); // 种植后取消预种植
+                this.scene.broadCastPlant(pid); // 通知种植卡片
+            }
         }
     }
-
 
     // 开始高光
     private startHighlight(col: number, row: number, texture: string = 'plant/peashooter') {

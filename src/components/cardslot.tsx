@@ -16,9 +16,9 @@ export function EnergySlot({ sceneRef }: slotProps) {
 
     useEffect(() => {
         // 处理种植消耗
-        const handlePlant = (data: { pid: number }) => {
+        const handlePlant = (data: { pid: number, level: number }) => {
             // 通过pid获知cost
-            let cost = PlantFactoryMap[data.pid]?.cost;
+            const cost = PlantFactoryMap[data.pid]?.cost(data.level);
             updateEnergy(-cost);
         };
         // 更新能量
@@ -83,7 +83,7 @@ export function CardSlotHorizontal({ sceneRef }: slotProps) {
                 sceneRef={sceneRef}
                 pid={plant.pid}
                 texture={plant.texture}
-                cost={plant.cost}
+                cost={plant.cost()}
             />
         ))}
     </div>);

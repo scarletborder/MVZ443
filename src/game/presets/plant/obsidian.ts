@@ -69,7 +69,7 @@ const description = `
 const ObsidianRecord: IRecord = {
     pid: 3,
     name: '黑曜石',
-    cost: 50,
+    cost: () => 50,
     cooldownTime: 7.5,
     NewFunction: NewObsidian,
     texture: 'plant/obsidian',

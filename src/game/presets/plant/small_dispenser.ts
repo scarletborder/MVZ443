@@ -56,7 +56,7 @@ const description = `
 const SmallDispenserRecord: IRecord = {
     pid: 5,
     name: '小发射器',
-    cost: 0,
+    cost: () => 0,
     cooldownTime: 5,
     NewFunction: NewDispenser,
     texture: 'plant/small_dispenser',
