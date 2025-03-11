@@ -9,6 +9,7 @@ export class IPlant extends Phaser.Physics.Arcade.Sprite {
 
     public pid: number;
     public health: number;
+    public level: number;
     public Timer?: Phaser.Time.TimerEvent;
     public attackingZombie: Set<IZombie> = new Set<IZombie>();
 
@@ -25,13 +26,14 @@ export class IPlant extends Phaser.Physics.Arcade.Sprite {
     }
 
 
-    constructor(scene: Game, col: number, row: number, texture: string, pid: number) {
+    constructor(scene: Game, col: number, row: number, texture: string, pid: number, level: number) {
         // TODO: texture逻辑还是要的,通过New某个植物的时候,传入对应的texture
         const { x, y } = scene.positionCalc.getPlantBottomCenter(col, row);
         super(scene, x, y, texture, 0);
 
 
         this.pid = pid;
+        this.level = level;
         scene.add.existing(this);
         scene.physics.add.existing(this);
 

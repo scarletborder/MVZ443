@@ -51,7 +51,7 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite {
         });
     }
 
-    //TODO: 没必要以后特定texture了,因为反正设置了不可见
+    // 没必要以后特定texture了,因为反正设置了不可见
     constructor(scene: Game, col: number, row: number, texture: string,
         newZombieAnim: (scene: Game, x: number, y: number) => IZombieAnim) {
         const { x, y } = scene.positionCalc.getZombieBottomCenter(col, row);

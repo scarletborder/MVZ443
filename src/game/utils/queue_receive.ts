@@ -15,13 +15,13 @@ interface MultiParams {
 
 // 消息类型
 type _GameStart = {
-    type: 0x1;
+    type: 0x01;
     seed: number;
     myID: number;
 };
 
 type _CardPlant = {
-    type: 0x2;
+    type: 0x02;
     pid: number;
     level: number;
     col: number;
@@ -30,21 +30,27 @@ type _CardPlant = {
 };
 
 type _RemovePlant = {
-    type: 0x4;
+    type: 0x04;
     pid: number;
     col: number;
     row: number;
     uid: number; // 来源用户
 }
 
+type _UseStarShards = {
+    type: 0x08;
+    pid: number;
+    col: number;
+    row: number;
+    uid: number; // 来源用户
+}
 
-
-
+export type _receiveType = _GameStart | _CardPlant | _RemovePlant | _UseStarShards;
 
 
 export default class QueueReceive {
     game: Game
-    queues: Denque<_GameStart | _CardPlant | _RemovePlant>
+    queues: Denque<_receiveType>
     sync: Syncer | null = null
 
     myID: number = 0
@@ -65,23 +71,38 @@ export default class QueueReceive {
     Consume() {
         while (!this.queues.isEmpty()) {
             const data = this.queues.shift();
+            console.log(data);
             if (!data) continue;
+
             switch (data.type) {
-                case 0x1:
-                    this.game.handleGameStart(data.seed, data.myID);
+                case 0x01:
+                    this._startGame(data.seed, data.myID);
                     break;
-                case 0x2:
-                    this.game.handleCardPlant(data.pid, data.level, data.col, data.row, data.uid);
+                case 0x02:
+                    this._cardPlant(data.pid, data.col, data.row, data.level, data.uid);
                     break;
-                case 0x4:
-                    this.game.RemovePlant(data.pid, data.col, data.row);
+                case 0x04:
+                    this._removePlant(data.pid, data.col, data.row, data.uid);
+                    break;
+                case 0x08:
+                    this._useStarShards(data.pid, data.col, data.row, data.uid);
                     break;
             }
 
         }
     }
 
-    private _startGame(seed: number, myID: number) { }
-    private _cardPlant(pid: number, col: number, row: number) { }
-    private _removePlant(pid: number, col: number, row: number) { }
+    private _startGame(seed: number, myID: number) {
+        // TODO:在启动游戏主进程前,调用发送队列设置发送队列的myID
+        this.game.handleGameStart(seed, myID);
+    }
+    private _cardPlant(pid: number, col: number, row: number, level: number, uid: number) {
+        this.game.handleCardPlant(pid, level, col, row, uid);
+    }
+    private _removePlant(pid: number, col: number, row: number, uid: number) {
+        // this.game.handleRemovePlant(pid, col, row);
+    }
+    private _useStarShards(pid: number, col: number, row: number, uid: number) {
+        // this.game.handleUseStarShards(pid, col, row, uid);
+    }
 }

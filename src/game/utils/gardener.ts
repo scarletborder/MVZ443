@@ -179,16 +179,9 @@ export default class Gardener {
             }
 
             console.log('prepare to plant', this.prePlantPid);
-            let pid = this.prePlantPid;
             const { col, row } = this.positionCalc.getGridByPos(pointer.x, pointer.y);
-            if (col >= 0 && row >= 0 && this.canPlant(col, row)) { // 假设已实现 isPlanted
-                // TODO: 根据 pid 创建具体植物,这里注册函数在preload时候放到game的loader里面
-                const plantRecord = PlantFactoryMap[pid];
-                if (plantRecord) {
-                    plantRecord.NewFunction(this.scene, col, row); // 根据 pid 创建具体植物
-                }
-                this.cancelPrePlant(); // 种植后取消预种植
-                this.scene.broadCastPlant(pid); // 通知种植卡片
+            if (col >= 0 && row >= 0 && this.canPlant(col, row)) {
+                this.scene.sendQueue.sendCardPlant(this.prePlantPid, col, row, 1);
             }
         }
     }

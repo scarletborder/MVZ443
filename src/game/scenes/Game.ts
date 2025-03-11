@@ -10,6 +10,8 @@ import InnerSettings from '../utils/settings';
 import { GameParams } from '../models/GameParams';
 import DepthManager from '../../utils/depth';
 import { PlantFactoryMap } from '../utils/loader';
+import QueueReceive from '../utils/queue_receive';
+import QueueSend from '../utils/queue_send';
 
 
 
@@ -38,43 +40,27 @@ export class Game extends Scene {
     params: GameParams;
     private isDestroyed = false; // Track if the scene/game is destroyed
 
+    // command queue
+    private elapsed: number = 0;
+    sendQueue: QueueSend
+    recvQueue: QueueReceive
+
 
     constructor() {
         super('Game');
     }
 
-    preload() {
-        // 设置资源路径
-        // this.load.setPath('assets');
-        // // this.load.image('background', 'background.png'); // 请确保有背景资源
-        // // TODO: 移动到preload中
-        // this.load.image('bullet/snowball', 'bullet/snowball.png');
-        // this.load.image('bullet/arrow', 'bullet/arrow.png');
-
-
-        // this.load.image('plant/dispenser', 'plant/dispenser.png');
-        // this.load.spritesheet('plant/furnace', 'plant/furnace.png',
-        //     { frameWidth: 64, frameHeight: 64 });
-        // this.load.spritesheet('plant/obsidian', 'plant/obsidian.png',
-        //     { frameWidth: 64, frameHeight: 64 });
-
-
-        // this.load.image('zombie/zombie', 'zombie/zombie.png');
-        // this.load.image('attach/zombie_wound', 'attach/zombie_wound.png');
-        // this.load.spritesheet('attach/cap', 'attach/cap.png',
-        //     { frameWidth: 33, frameHeight: 14 });
-
-        // this.load.spritesheet('anime/death_smoke', 'anime/death_smoke.png',
-        //     { frameWidth: 16, frameHeight: 16 });
-
-        // this.load.json('ch101', 'stages/ch101.json');
-    }
+    preload() { }
 
     create() {
         this.params = this.game.registry.get('gameParams') as GameParams;
         this.scaleFactor = this.scale.displaySize.width / 800;
         this.positionCalc = new PositionCalc(this.scaleFactor);
         this.monsterSpawner = new MonsterSpawner(this, this.cache.json.get('ch101'));
+
+        // 目前只有单机
+        this.recvQueue = new QueueReceive({ mode: 'single' }, this);
+        this.sendQueue = new QueueSend({ mode: 'single', recvQueue: this.recvQueue.queues });
 
         // 屏幕中央显示 "已停止" 的文本，默认隐藏
         this.pauseBtn = this.add.text(
@@ -188,12 +174,18 @@ export class Game extends Scene {
         // TODO: move to gardener
         EventBus.on('starShards-chosen', () => { console.log('pick shards') });
         EventBus.emit('current-scene-ready', this);
-        this.monsterSpawner.startWave();
 
-
+        this.sendQueue.sendReady();
     }
 
-    update(time: number, delta: number): void { }
+    update(time: number, delta: number): void {
+        this.elapsed += delta;
+        if (this.elapsed >= 100) {  // 达到 100 毫秒，执行函数
+            this.recvQueue.Consume();
+            this.elapsed -= 100; // 保留多余的时间，避免累积误差
+        }
+        this.sendQueue.Consume();
+    }
 
     changeScene() {
         this.scene.start('GameOver');
@@ -206,7 +198,7 @@ export class Game extends Scene {
 
     // 游戏开始
     handleGameStart(seed: number, myID: number) {
-        //TOD
+        //TODO
         this.monsterSpawner.setRandomSeed(seed);
         this.myID = myID;
         this.monsterSpawner.startWave();
@@ -215,6 +207,7 @@ export class Game extends Scene {
     handleCardPlant(pid: number, level: number, col: number, row: number, uid: number) {
         // 关于判断能否种,本地已经判断,这里只判断冲突
         if (this.gardener.canPlant(col, row)) {
+            // 根据 pid 创建具体植物,这里注册函数在preload时候放到game的loader里面
             // 本地种植
             const plantRecord = PlantFactoryMap[pid];
             if (plantRecord) {
@@ -223,7 +216,8 @@ export class Game extends Scene {
             // 成功种植,如果是自己
             if (this.myID === uid) {
                 this.cancelPrePlant(); //现在可以取消预种植了
-                  // 可以进行冷却 
+                // 可以进行冷却 
+                this.broadCastPlant(pid);
             }
         }
     }
@@ -245,7 +239,7 @@ export class Game extends Scene {
         EventBus.emit('card-deselected', { pid: null }); // 通知卡片取消选中
     }
     // game->app 通知种植卡片
-    // 在react manager中处理消耗energy
+    // 在react manager中处理消耗energy,处理冷却时间
     broadCastPlant(pid: number) {
         EventBus.emit('card-plant', { pid });
     }

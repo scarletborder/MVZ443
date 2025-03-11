@@ -3,8 +3,8 @@ import { IRecord } from "../../models/IRecord";
 import { Game } from "../../scenes/Game";
 
 class Furnace extends IPlant {
-    constructor(scene: Game, col: number, row: number) {
-        super(scene, col, row, FurnaceRecord.texture, FurnaceRecord.pid);
+    constructor(scene: Game, col: number, row: number, level: number) {
+        super(scene, col, row, FurnaceRecord.texture, FurnaceRecord.pid, level);
         this.setFrame(0);
         this.health = 300;
 
@@ -31,8 +31,8 @@ class Furnace extends IPlant {
 
 }
 
-function NewFurnace(scene: Game, col: number, row: number): IPlant {
-    const furnace = new Furnace(scene, col, row);
+function NewFurnace(scene: Game, col: number, row: number, level: number): IPlant {
+    const furnace = new Furnace(scene, col, row, level);
     return furnace;
 }
 

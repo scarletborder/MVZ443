@@ -9,7 +9,6 @@ export class PositionCalc {
     GRID_SIZEY: number = 90;
 
     constructor(scaleFactor: number) {
-        console.log(scaleFactor)
         this.scaleFactor = scaleFactor;
         this.gridOffsetX = this.gridOffsetX * this.scaleFactor;
         this.gridOffsetY = this.gridOffsetY * this.scaleFactor;
@@ -62,7 +61,7 @@ export class PositionCalc {
 
     // 获得子弹的中间位置
     public getBulletCenter(col: number, row: number) {
-        let { x, y } = this.getPlantBottomCenter(col, row);
+        const { x, y } = this.getPlantBottomCenter(col, row);
 
         return {
             x: x,

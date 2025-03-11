@@ -24,7 +24,7 @@ export default function Card({ pid, texture, plantName, cooldownTime, sceneRef, 
     const settings = useSettings();
 
     useEffect(() => {
-        let timer: any;
+        let timer: NodeJS.Timeout;
         if (isCoolingDown && remainingTime > 0 && !isPaused) {
             // console.log('start cooldown', remainingTime);
             timer = setInterval(() => {

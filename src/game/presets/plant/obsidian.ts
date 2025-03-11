@@ -7,8 +7,8 @@ class Obsidian extends IPlant {
     maxhealth: number = 4000;
     shieldHealth: number = 0;
     maxShieldHealth: number = 4000;
-    constructor(scene: Game, col: number, row: number) {
-        super(scene, col, row, ObsidianRecord.texture, ObsidianRecord.pid);
+    constructor(scene: Game, col: number, row: number, level: number) {
+        super(scene, col, row, ObsidianRecord.texture, ObsidianRecord.pid, level);
         this.setFrame(0);
         this.health = 4000;
     }
@@ -52,8 +52,8 @@ class Obsidian extends IPlant {
 
 }
 
-function NewObsidian(scene: Game, col: number, row: number): IPlant {
-    const furnace = new Obsidian(scene, col, row);
+function NewObsidian(scene: Game, col: number, row: number, level: number): IPlant {
+    const furnace = new Obsidian(scene, col, row, level);
     return furnace;
 }
 

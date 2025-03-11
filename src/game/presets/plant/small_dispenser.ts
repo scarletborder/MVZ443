@@ -1,13 +1,13 @@
 import { IPlant } from "../../models/IPlant";
 import { IRecord } from "../../models/IRecord";
 import { Game } from "../../scenes/Game";
-import NewArrow from "../bullet/arrow";
 import NewSnowBullet from "../bullet/snowball";
 
 class smallDispenser extends IPlant {
-    maxDistance: number;
-    constructor(scene: Game, col: number, row: number, texture: string, maxDistance: number = 3.5) {
-        super(scene, col, row, texture, 1);
+    maxDistance: number; // 画面的绝对坐标,非格子
+    constructor(scene: Game, col: number, row: number, texture: string, level: number) {
+        const maxDistance = (4 * scene.positionCalc.GRID_SIZEX);
+        super(scene, col, row, texture, SmallDispenserRecord.pid, level);
         this.health = 300;
         this.maxDistance = maxDistance;
 
@@ -29,8 +29,8 @@ class smallDispenser extends IPlant {
     }
 }
 
-function NewDispenser(scene: Game, col: number, row: number): IPlant {
-    const peashooter = new smallDispenser(scene, col, row, 'plant/small_dispenser', (3.5 * scene.positionCalc.GRID_SIZEX));
+function NewDispenser(scene: Game, col: number, row: number, level: number): IPlant {
+    const peashooter = new smallDispenser(scene, col, row, 'plant/small_dispenser', level);
     return peashooter;
 }
 

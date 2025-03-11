@@ -6,8 +6,6 @@ import BottomTools from './components/bottom';
 import DocFrame from './components/DocFrame';
 import { SaveProvider } from './context/save_ctx';
 import { useSettings } from './context/settings_ctx';
-import { Scene } from 'phaser';
-import { EventBus } from './game/EventBus';
 import { GameParams } from './game/models/GameParams';
 
 function App() {
@@ -42,7 +40,7 @@ function App() {
 
     // 监听键盘事件，阻止 F11 触发全屏
     useEffect(() => {
-        const handleKeyDown = (event: any) => {
+        const handleKeyDown = (event: KeyboardEvent) => {
             if (event.key === "F11") {
                 event.preventDefault();
             }

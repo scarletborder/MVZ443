@@ -34,7 +34,7 @@ export function EnergySlot({ sceneRef }: slotProps) {
             EventBus.removeListener('card-plant', handlePlant);
             EventBus.removeListener('energy-update', handleUpdateEnergy);
         }
-    }, []);
+    }, [updateEnergy]);
     return (
         <div style={{
             display: 'flex',
@@ -57,7 +57,7 @@ export function CardSlotHorizontal({ sceneRef }: slotProps) {
     // 这里获得了除了游戏内使用的函数以外的全部信息
     // energy使用情况也是从这里发出
     const pids = [1, 2, 3, 5];
-    let plants: Array<IRecord> = [];
+    const plants: Array<IRecord> = [];
 
     pids.forEach(pid => {
         plants.push(PlantFactoryMap[pid]);

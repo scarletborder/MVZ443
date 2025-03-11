@@ -178,7 +178,7 @@ export default class MonsterSpawner {
         return true;
     }
 
-    // 某一row > x的位置有没有怪物
+    // 某一row中,画面的坐标X > 给定x的位置有没有怪物
     hasMonsterInRowAfterX(row: number, x: number, maxDistance: number = 99999) {
         const rows = this.monstered.get(`${row}`);
         if (!rows || rows == undefined || rows.length == 0) {
