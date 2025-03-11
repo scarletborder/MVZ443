@@ -48,7 +48,7 @@ const i18n_tool: I18n = {
 // 动态加载语言文件
 const loadLocale = async (locale: Locale): Promise<Record<string, string>> => {
     try {
-        const messages = await import(`${publicUrl}/locales/${locale}.ts`); // 动态加载语言包
+        const messages = await import(/* @vite-ignore */`${publicUrl}/locales/${locale}.js`); // 动态加载语言包 
         return messages.default; // 返回语言文件中的默认对象
     } catch (error) {
         console.error(`语言加载失败: ${locale}, error`);
