@@ -95,6 +95,7 @@ export function CardSlotHorizontal({ sceneRef }: slotProps) {
                 pid={plant.pid}
                 texture={plant.texture}
                 cost={plant.cost(pidToLevelMap.get(plant.pid) || 1)}
+                level={pidToLevelMap.get(plant.pid) || 1}
             />
         ))}
     </div>);

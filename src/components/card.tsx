@@ -13,9 +13,10 @@ interface CardProps {
     cost: number;
     cooldownTime: number;
     sceneRef: React.MutableRefObject<IRefPhaserGame | null>;
+    level: number;
 }
 
-export default function Card({ pid, texture, plantName, cooldownTime, sceneRef, cost }: CardProps) {
+export default function Card({ pid, texture, plantName, cooldownTime, sceneRef, cost, level }: CardProps) {
     const [isCoolingDown, setIsCoolingDown] = useState(false);
     const [remainingTime, setRemainingTime] = useState(0);
     const [isChosen, setIsChosen] = useState(false);
@@ -46,7 +47,7 @@ export default function Card({ pid, texture, plantName, cooldownTime, sceneRef, 
                 setIsCoolingDown(true);
             }
         }
-    }, [isPaused]);
+    }, [isPaused]); // 别改
 
     useEffect(() => {
         const handleDeselect = (data: { pid: number | null }) => {
@@ -107,8 +108,8 @@ export default function Card({ pid, texture, plantName, cooldownTime, sceneRef, 
 
         if (!isCoolingDown) {
             setIsChosen(true);
-            scene.chooseCard(pid);
-            console.log(`Card ${plantName} (pid=${pid}) chosen`);
+            scene.chooseCard(pid, level);
+            console.log(`Card ${plantName} (pid=${pid} level=${level}) chosen`);
         }
     };
 

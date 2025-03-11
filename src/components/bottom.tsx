@@ -37,7 +37,7 @@ export default function BottomTools() {
             EventBus.removeListener('game-over', handleGameOver);
             EventBus.removeListener('current-scene-ready', handleSceneReady);
         }
-    }, [])
+    }, [isBluePrint, updateWave])
 
     const handleStarClick = () => {
         setStarChosen(stat => !stat);

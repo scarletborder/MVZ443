@@ -20,7 +20,8 @@ class CapZombie extends EnhancedZombie {
         this.currentHatState = 0;
         cap.debugShowBody = false;
         scene.physics.add.existing(cap);
-        console.log(cap.x, cap.y);
+        console.log('zomb', this.x, this.y);
+        console.log('cap', cap.x, cap.y);
         cap.setVisible(true);
         this.attachSprites.set('cap', cap);
 

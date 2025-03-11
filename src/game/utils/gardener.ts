@@ -17,11 +17,14 @@ export default class Gardener {
     UPDATE_INTERVAL = 50;
 
     // 卡槽中选中的植物(可为null)
-    prePlantPid: number | null = null;
+    prePlantPid: [number, number] | null = null; // [pid,level] | null
     // 星之碎片
     useStarShards: boolean = false;
 
     // 星之碎片动画管理
+
+    // 铁镐
+    usePickaxe: boolean = false;
 
     // 高光植物和闪烁动画的管理
     private highlightSprite: Phaser.GameObjects.Sprite | null = null;
@@ -35,13 +38,17 @@ export default class Gardener {
 
     // 选择卡片植物后
     // 设置预种植的植物 pid
-    public setPrePlantPid(pid: number) {
+    public setPrePlantPid(pid: number, level: number) {
         // 如果设置了星之碎片,取消他
         if (this.useStarShards) {
-            this.useStarShards = false;
+            this.cancelStarShards();
+        }
+        // 如果设置了pickaxe,取消他
+        if (this.usePickaxe) {
+            this.cancelPickAxe();
         }
 
-        this.prePlantPid = pid;
+        this.prePlantPid = [pid, level];
         console.log(`Pre-plant PID set to: ${pid}`);
     }
 
@@ -61,6 +68,7 @@ export default class Gardener {
     // 取消星之碎片
     public cancelStarShards() {
         this.useStarShards = false;
+        // 动画取消
     }
 
 
@@ -109,9 +117,6 @@ export default class Gardener {
     }
 
 
-    // 选择铲子后
-    public selectShovel() { }
-
     // 鼠标移动事件dispatch
     public onMouseMoveEvent(pointer: Phaser.Input.Pointer) {
         // 如果没有选择植物，不做任何事情
@@ -141,7 +146,7 @@ export default class Gardener {
 
         this.prevCol = col;
         this.prevRow = row;
-        const plantRecord = PlantFactoryMap[this.prePlantPid];
+        const plantRecord = PlantFactoryMap[this.prePlantPid[0]];
         if (plantRecord) {
             this.startHighlight(col, row, plantRecord.texture);
         }
@@ -151,13 +156,15 @@ export default class Gardener {
     // 点击事件
     // 种植,取消种植,使用星之碎片,取消星之碎片
     public onClickUp(pointer: Phaser.Input.Pointer) {
-        if (this.prePlantPid === null && !this.useStarShards) return;
+        if (this.prePlantPid === null && !this.useStarShards && !this.usePickaxe) return;
 
         // 右键,取消种植/取消星之碎片
         if (pointer.rightButtonReleased()) {
             console.log('cancel right click');
             if (this.useStarShards) {
                 this.cancelStarShards();
+            } else if (this.usePickaxe) {
+                this.cancelPickAxe();
             } else {
                 this.cancelPrePlant();
             }
@@ -168,9 +175,10 @@ export default class Gardener {
         if (this.useStarShards) { return; }
 
 
-        // 非星之碎片事件
+        // pickaxe事件
 
-        // 种植
+
+        // 种植事件
         if (this.prePlantPid !== null) {
             // 如果是暂停状态并且没有私密图纸,也不给种
             console.log('blueprint', this.scene.innerSettings.isBluePrint)
@@ -181,7 +189,7 @@ export default class Gardener {
             console.log('prepare to plant', this.prePlantPid);
             const { col, row } = this.positionCalc.getGridByPos(pointer.x, pointer.y);
             if (col >= 0 && row >= 0 && this.canPlant(col, row)) {
-                this.scene.sendQueue.sendCardPlant(this.prePlantPid, col, row, 1);
+                this.scene.sendQueue.sendCardPlant(this.prePlantPid[0], col, row, this.prePlantPid[1]);
             }
         }
     }
@@ -209,8 +217,6 @@ export default class Gardener {
             yoyo: true,
             repeat: -1,
         });
-
-
     }
 
     // 停止高光
@@ -226,5 +232,14 @@ export default class Gardener {
         }
         this.prevCol = -1;
         this.prevRow = -1;
+    }
+
+    // 拿起铁镐
+    public pickAxe() {
+        this.stopHighlight();
+    }
+
+    public cancelPickAxe() {
+        this.usePickaxe = false;
     }
 } 

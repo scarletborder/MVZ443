@@ -4,11 +4,22 @@
 export class PositionCalc {
     scaleFactor: number = 1;
     gridOffsetX: number = 50;
-    gridOffsetY: number = 100;
+    gridOffsetY: number;
     GRID_SIZEX: number = 80;
     GRID_SIZEY: number = 90;
 
-    constructor(scaleFactor: number) {
+    Row_Number: number = 5;
+    Col_Number: number = 9;
+
+    constructor(scaleFactor: number, row_number: number = 5, col_number: number = 9) {
+        // 如果行号不为空,则根据行号计算gridOffsetY
+        if (row_number > 6) throw ("row_number should be less than 6");
+        if (row_number === 6) this.gridOffsetY = 20;
+        else if (row_number <= 5) this.gridOffsetY = 100 + (5 - row_number) * (this.GRID_SIZEY * 2 / 3);
+
+        this.Row_Number = row_number;
+        this.Col_Number = col_number;
+
         this.scaleFactor = scaleFactor;
         this.gridOffsetX = this.gridOffsetX * this.scaleFactor;
         this.gridOffsetY = this.gridOffsetY * this.scaleFactor;
@@ -18,6 +29,7 @@ export class PositionCalc {
 
     // 计算格子的左上角
     public getGridTopLeft(col: number, row: number) {
+        console.log(row * this.GRID_SIZEY + this.gridOffsetY)
         return {
             x: (col * this.GRID_SIZEX + this.gridOffsetX),
             y: (row * this.GRID_SIZEY + this.gridOffsetY)
@@ -115,7 +127,7 @@ export class PositionCalc {
     public getGridByPos(x: number, y: number) {
         //  判断是否超越
         if (x < this.gridOffsetX || y < this.gridOffsetY ||
-            x > this.gridOffsetX + this.GRID_SIZEX * 9 || y > this.gridOffsetY + this.GRID_SIZEY * 5) {
+            x > this.gridOffsetX + this.GRID_SIZEX * this.Col_Number || y > this.gridOffsetY + this.GRID_SIZEY * this.Row_Number) {
             return {
                 col: -1,
                 row: -1

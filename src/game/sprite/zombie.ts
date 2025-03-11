@@ -165,9 +165,10 @@ export default class IZombieAnim {
 
     updatePosition(x: number, y: number) {
         x = x;
-        y = y - this.scene.positionCalc.gridOffsetY * 5 / 12;
+        y = y - this.scene.positionCalc.GRID_SIZEY * 25 / 54;
         this.x = x;
         this.y = y;
+        console.log('animy', y)
         this.body.setPosition(x, y);
         this.head.setPosition(x + this.headOffset[0] * this.scaneFactor,
             y + this.headOffset[1] * this.scaneFactor);

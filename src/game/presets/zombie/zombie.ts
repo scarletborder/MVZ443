@@ -8,8 +8,9 @@ import { newNormalZombieAnim } from '../../sprite/normal_zombie';
 export class EnhancedZombie extends IZombie {
     constructor(scene: Game, col: number, row: number, texture: string) {
         super(scene, col, row, texture, newNormalZombieAnim);
-        let x = this.x + 10 * scene.positionCalc.scaleFactor;
-        let y = this.y - 50 * scene.positionCalc.scaleFactor;
+        // TODO: Y 根据真实offset进行修改
+        // let x = this.x + 10 * scene.positionCalc.scaleFactor;
+        // let y = this.y - 50 * scene.positionCalc.scaleFactor;
 
 
         this.health = 200;

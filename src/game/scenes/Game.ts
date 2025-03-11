@@ -20,7 +20,7 @@ export class Game extends Scene {
 
     private scaleFactor: number = 1;
     private grid: Phaser.GameObjects.Rectangle[][];
-    public GRID_ROWS = 5;
+    public GRID_ROWS = 4;
     public GRID_COLS = 9;
 
     public positionCalc: PositionCalc;
@@ -55,7 +55,7 @@ export class Game extends Scene {
     create() {
         this.params = this.game.registry.get('gameParams') as GameParams;
         this.scaleFactor = this.scale.displaySize.width / 800;
-        this.positionCalc = new PositionCalc(this.scaleFactor);
+        this.positionCalc = new PositionCalc(this.scaleFactor, this.GRID_ROWS, this.GRID_COLS);
         this.monsterSpawner = new MonsterSpawner(this, this.cache.json.get('ch101'));
 
         // 目前只有单机
@@ -228,8 +228,8 @@ export class Game extends Scene {
     */
 
     // app->game 选择卡片，更新预种植植物
-    chooseCard(pid: number) {
-        this.gardener.setPrePlantPid(pid);
+    chooseCard(pid: number, level: number) {
+        this.gardener.setPrePlantPid(pid, level);
         EventBus.emit('card-deselected', { pid }); // 通知所有卡片取消选中
     }
 
