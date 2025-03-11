@@ -1,9 +1,12 @@
 import { Scene } from 'phaser';
+import { GameParams } from '../models/GameParams';
 
 export class Preloader extends Scene {
     constructor() {
         super('Preloader');
     }
+
+
 
     init() {
         //  We loaded this image in our Boot Scene, so we can display it here
@@ -25,39 +28,10 @@ export class Preloader extends Scene {
     }
 
     preload() {
+        const params = this.game.registry.get('gameParams') as GameParams;
         //  Load the assets for the game - Replace with your own assets
         this.load.setPath('assets');
-
-        // this.load.setPath('assets');
-        // this.load.image('background', 'background.png'); // 请确保有背景资源
-        // TODO: 移动到preload中
-        this.load.image('bullet/snowball', 'bullet/snowball.png');
-        this.load.image('bullet/arrow', 'bullet/arrow.png');
-
-
-        this.load.image('plant/dispenser', 'plant/dispenser.png');
-        this.load.spritesheet('plant/furnace', 'plant/furnace.png',
-            { frameWidth: 64, frameHeight: 64 });
-        this.load.spritesheet('plant/obsidian', 'plant/obsidian.png',
-            { frameWidth: 64, frameHeight: 64 });
-        this.load.image('plant/small_dispenser', 'plant/small_dispenser.png');
-
-
-        this.load.image('zombie/zombie', 'zombie/zombie.png');
-        this.load.spritesheet('attach/cap', 'attach/cap.png',
-            { frameWidth: 33, frameHeight: 14 });
-
-        this.load.spritesheet('anime/death_smoke', 'anime/death_smoke.png',
-            { frameWidth: 16, frameHeight: 16 });
-
-        this.load.spritesheet('sprZombieBody', 'path/to/sprZombieBody.png',
-            { frameWidth: 19, frameHeight: 35 }); // Adjust frameWidth if needed
-        this.load.image('sprZombieHead', 'path/to/sprZombieHead.png');
-        this.load.image('sprZombieArm', 'path/to/sprZombieArm.png'); // Single image, no sprite sheet
-        this.load.image('sprZombieLeg', 'path/to/sprZombieLeg.png'); // Single image, no sprite sheet
-
-
-        this.load.json('ch101', 'stages/ch101.json');
+        this.loadStage(params.level);
     }
 
     create() {
@@ -66,5 +40,56 @@ export class Preloader extends Scene {
 
         //  Move to the MainMenu. You could also swap this for a Scene Transition, such as a camera fade.
         this.scene.start('Game');
+    }
+
+    // 加载全部器械
+    loadAllPlant() {
+        this.load.image('plant/dispenser', 'plant/dispenser.png');
+        this.load.spritesheet('plant/furnace', 'plant/furnace.png',
+            { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('plant/obsidian', 'plant/obsidian.png',
+            { frameWidth: 64, frameHeight: 64 });
+        this.load.image('plant/small_dispenser', 'plant/small_dispenser.png');
+    }
+
+    // 加载全部怪物
+    loadAllMonster() {
+        this.load.image('zombie/zombie', 'zombie/zombie.png');
+        this.load.spritesheet('attach/cap', 'attach/cap.png',
+            { frameWidth: 33, frameHeight: 14 });
+    }
+
+    // 加载全部发射物
+    loadAllProjectile() {
+        this.load.image('bullet/snowball', 'bullet/snowball.png');
+        this.load.image('bullet/arrow', 'bullet/arrow.png');
+    }
+
+    // 加载全部sprite
+    loadAllSprite() {
+        this.load.spritesheet('anime/death_smoke', 'anime/death_smoke.png',
+            { frameWidth: 16, frameHeight: 16 });
+
+        this.load.spritesheet('sprZombieBody', 'sprite/zombie/sprZombieBody.png',
+            { frameWidth: 19, frameHeight: 35 }); // Adjust frameWidth if needed
+        this.load.image('sprZombieHead', 'sprite/zombie/sprZombieHead.png');
+        this.load.image('sprZombieArm', 'sprite/zombie/sprZombieArm.png'); // Single image, no sprite sheet
+        this.load.image('sprZombieLeg', 'sprite/zombie/sprZombieLeg.png'); // Single image, no sprite sheet
+    }
+
+    // 加载指定关卡
+    loadStage(stageId: number) {
+        console.log(`Loading stage ${stageId}`);
+        // 1. 加载关卡数据
+        this.load.json(`ch${stageId}`, `../stages/ch${stageId}.json`);
+        // 2. 加载关卡怪物
+        this.loadAllMonster();
+        // 3. 加载关卡植物
+        this.loadAllPlant();
+        // 4. 加载关卡发射物
+        this.loadAllProjectile();
+
+        this.loadAllSprite();
+
     }
 }

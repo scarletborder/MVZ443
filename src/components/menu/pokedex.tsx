@@ -4,7 +4,6 @@ import { useSaveManager } from '../../context/save_ctx';
 import { PlantFactoryMap } from '../../game/utils/loader';
 import GenericView from './genericView';
 import { IRefPhaserGame } from '../../game/PhaserGame';
-import { Game } from '../../game/scenes/Game';
 import { publicUrl } from '../../utils/browser';
 
 interface Props {
@@ -14,7 +13,7 @@ interface Props {
     sceneRef: React.MutableRefObject<IRefPhaserGame | null>;
 }
 
-export default function Pokedex({ width, height, onBack, sceneRef }: Props) {
+export default function Pokedex({ width, height, onBack }: Props) {
     if (height === undefined) {
         height = width * 3 / 4;
     }
@@ -25,26 +24,18 @@ export default function Pokedex({ width, height, onBack, sceneRef }: Props) {
     const plants = saveManager.currentProgress.plants;
 
     useEffect(() => {
-        let tmpList = Array.from(plants, (plant, i) => {
-            const plantObj = PlantFactoryMap[plant.pid];
-            let image = "";
-
-            if (sceneRef.current) {
-                const scene = sceneRef.current.scene as Game;
-                if (scene && scene.scene.key === 'Game') {
-                    image = scene.textures.getBase64(plantObj.texture);
-                }
-            }
-
-            return {
-                name: plantObj.name,
-                details: plantObj.description,
-                image: `${publicUrl}/assets/${plantObj.texture}.png`
-            };
-        });
+        let tmpList = plants
+            .sort((a, b) => a.pid - b.pid)  // 先按pid排序
+            .map((plant, i) => {
+                const plantObj = PlantFactoryMap[plant.pid];
+                return {
+                    name: plantObj.name,
+                    details: plantObj.description(),
+                    image: `${publicUrl}/assets/${plantObj.texture}.png`
+                };
+            });
         setPokedexItems(tmpList);
-    }, [sceneRef.current]);
-
+    }, [])
 
     console.log(plants)
     console.log(pokedexItems.length)

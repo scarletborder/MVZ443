@@ -7,6 +7,7 @@ import DocFrame from './components/DocFrame';
 import { SaveProvider } from './context/save_ctx';
 import { useSettings } from './context/settings_ctx';
 import { GameParams } from './game/models/GameParams';
+import i18n from './utils/i18n';
 
 function App() {
     // State to control the visibility of the game tool
@@ -52,6 +53,15 @@ function App() {
         };
     }, []);
 
+    // 设置语言
+    useEffect(() => {
+        const lang = navigator.language;
+        if (lang.startsWith('zh')) {
+            i18n.set('zh_CN');
+        } else {
+            i18n.set('en_US');
+        }
+    }, []);
 
     return (
         <div id="app" onContextMenu={(e) => { event?.preventDefault() }} style={{

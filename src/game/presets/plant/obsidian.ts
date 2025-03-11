@@ -1,3 +1,4 @@
+import i18n from "../../../utils/i18n";
 import { IPlant } from "../../models/IPlant";
 import { IRecord } from "../../models/IRecord";
 import { IZombie } from "../../models/IZombie";
@@ -57,14 +58,7 @@ function NewObsidian(scene: Game, col: number, row: number, level: number): IPla
     return furnace;
 }
 
-const description = `
-黑曜石的强力装甲能够抵御僵尸的攻击。
 
-技能：恢复所有生命值，并获得更加坚硬的护甲
-
-生命：高
-
-听说把黑曜石摆成地狱门的形状再放一个熔炉有惊喜。不如试试看？`;
 
 const ObsidianRecord: IRecord = {
     pid: 3,
@@ -73,7 +67,7 @@ const ObsidianRecord: IRecord = {
     cooldownTime: 7.5,
     NewFunction: NewObsidian,
     texture: 'plant/obsidian',
-    description: description
+    description: i18n.S('obsidian_description')
 };
 
 export default ObsidianRecord;

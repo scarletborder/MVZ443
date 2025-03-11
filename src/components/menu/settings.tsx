@@ -1,8 +1,9 @@
 // Settings.tsx
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useSaveManager } from '../../context/save_ctx';
 import { useSettings } from '../../context/settings_ctx';
 import { debounce } from '../../utils/debounce';
+import i18n from '../../utils/i18n';
 // import { useSave } from './SaveContext';
 
 interface Props {
@@ -40,6 +41,7 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
     const settingManager = useSettings();
 
     const [selectedCategory, setSelectedCategory] = useState('general');
+    const [displayLanguage, setDisplayLanguage] = useState(i18n.getLang());
     const [isFullscreen, setIsFullscreen] = useState(document.fullscreenElement !== null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const saveManager = useSaveManager();
@@ -48,6 +50,10 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
         onBackOriginal();
         saveManager.saveProgress();
     };
+
+    useEffect(() => {
+        setDisplayLanguage(i18n.getLang());
+    }, [i18n.getLang]);
 
 
     // 处理导入存档
@@ -119,12 +125,17 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
                             }
                         }
                     },
-                    // {
-                    //     title: "语言",
-                    //     description: "选择游戏语言",
-                    //     controlType: "selections",
-                    //     controlProps: { options: ["中文", "English", "日本語"], selected: "中文", onSelect: (val) => console.log("语言:", val) }
-                    // }
+                    {
+                        title: "语言",
+                        description: "选择游戏语言, only pokedx currently",
+                        controlType: "selections",
+                        controlProps: {
+                            options: ["zh_CN", "en_US"], selected: displayLanguage, onSelect: (val) => {
+                                i18n.set(val);
+                                setDisplayLanguage(val);
+                            }
+                        }
+                    }
                 ]
             },
             {

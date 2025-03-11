@@ -1,30 +1,10 @@
+import { Wave } from "../models/IRecord";
 import { IZombie } from "../models/IZombie";
 import { Game } from "../scenes/Game";
 import { MonsterFactoryMap } from "./loader";
 import seedrandom from 'seedrandom';
 // 出怪实例
 // 使用一个刷怪表进行实例化
-
-interface StageMap {
-    waves: Wave[];
-}
-
-interface Wave {
-    waveId: number;
-    progress: number; // 进度,一般非常小,同时可以被重置,游戏结束不看这个,只是显示用
-    flag: string;
-    monsters: Monster[];
-    duration: number; // seconds
-    maxDelay: number; // seconds
-    minDelay: number; // seconds
-    arrangement: 0x01 | 0x02 // 0x01: 均匀, 0x02: 集中
-    minLine: number; // 指定最少有多少行应该生成怪物，避免怪物过于集中在一行。
-}
-
-interface Monster {
-    mid: number;
-    count: number;
-}
 
 export default class MonsterSpawner {
     public scene: Game;
@@ -44,7 +24,7 @@ export default class MonsterSpawner {
 
     constructor(game: Game, waves_json: any, randomSeed?: number) {
         this.scene = game;
-        this.waves = waves_json
+        this.waves = waves_json;
         if (!randomSeed) randomSeed = Math.random();
         this.setRandomSeed(randomSeed);
     }

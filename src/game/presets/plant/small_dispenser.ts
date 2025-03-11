@@ -1,3 +1,4 @@
+import i18n from "../../../utils/i18n";
 import { IPlant } from "../../models/IPlant";
 import { IRecord } from "../../models/IRecord";
 import { Game } from "../../scenes/Game";
@@ -41,18 +42,6 @@ function shootSnowBall(scene: Game, shooter: IPlant, maxDistance: number) {
     const arrow = NewSnowBullet(scene, shooter.col, shooter.row, maxDistance);
 }
 
-
-const description = `
-小型发射器能发射短距离的雪球。
-
-技能：射出一个越滚越大的雪球
-
-伤害：中等
-
-白天失效
-
-雪球里包着石头，别问了。
-`
 const SmallDispenserRecord: IRecord = {
     pid: 5,
     name: '小发射器',
@@ -60,7 +49,7 @@ const SmallDispenserRecord: IRecord = {
     cooldownTime: 5,
     NewFunction: NewDispenser,
     texture: 'plant/small_dispenser',
-    description: description
+    description: i18n.S('small_dispenser_description')
 };
 
 export default SmallDispenserRecord;

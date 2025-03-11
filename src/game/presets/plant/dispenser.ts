@@ -1,3 +1,4 @@
+import i18n from "../../../utils/i18n";
 import { IPlant } from "../../models/IPlant";
 import { IRecord } from "../../models/IRecord";
 import { Game } from "../../scenes/Game";
@@ -39,15 +40,6 @@ function shootArrow(scene: Game, shooter: IPlant) {
 }
 
 
-const description = `
-发射器是你的第一道防线，它们发射箭来保卫你的房子。
-
-技能：朝前方发射大量箭矢
-
-伤害：中等
-
-“有人问我为什么我能不需要红石就能发射箭，还有人问我为什么我能发射无数的箭。”发射器顿了一顿，“第一，我的栅栏连着一个脉冲，第二，我内部的弓附有耐久450和无限I。啥？你问我为啥会说话？”
-`
 const DispenserRecord: IRecord = {
     pid: 1,
     name: '发射器',
@@ -55,7 +47,7 @@ const DispenserRecord: IRecord = {
     cooldownTime: 5,
     NewFunction: NewDispenser,
     texture: 'plant/dispenser',
-    description: description
+    description: i18n.S('dispenser_description')
 };
 
 export default DispenserRecord;

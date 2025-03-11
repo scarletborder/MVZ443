@@ -1,6 +1,6 @@
 // src/components/ChapterSelector.tsx
 import React, { useState } from 'react';
-import { ChapterData } from '../../../game/models/GameParams';
+import { ChapterDescription } from '../../../game/models/GameParams';
 import { ChapterDataRecords } from '../../../game/utils/loader';
 
 

@@ -8,11 +8,11 @@ import Gardener from '../utils/gardener';
 import MonsterSpawner from '../utils/spawner';
 import InnerSettings from '../utils/settings';
 import { GameParams } from '../models/GameParams';
-import DepthManager from '../../utils/depth';
 import { PlantFactoryMap } from '../utils/loader';
 import QueueReceive from '../utils/queue_receive';
 import QueueSend from '../utils/queue_send';
 import CreateInnerMenu from '../utils/inner_menu';
+import { StageData } from '../models/IRecord';
 
 
 
@@ -51,13 +51,19 @@ export class Game extends Scene {
         super('Game');
     }
 
-    preload() { }
+    preload() {
+        this.params = this.game.registry.get('gameParams') as GameParams;
+    }
 
     create() {
+        // read external data
+        const stageData: StageData = this.cache.json.get(`ch${this.params.level}`);
         this.params = this.game.registry.get('gameParams') as GameParams;
         this.scaleFactor = this.scale.displaySize.width / 800;
+
+        this.GRID_ROWS = stageData.rows;
         this.positionCalc = new PositionCalc(this.scaleFactor, this.GRID_ROWS, this.GRID_COLS);
-        this.monsterSpawner = new MonsterSpawner(this, this.cache.json.get('ch101'));
+        this.monsterSpawner = new MonsterSpawner(this, stageData.waves);
 
         // 目前只有单机
         this.recvQueue = new QueueReceive({ mode: 'single' }, this);

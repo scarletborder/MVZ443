@@ -1,7 +1,11 @@
 // src/components/ParamsSelector.tsx
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { GameParams } from '../../../game/models/GameParams';
 import { useGameContext } from '../../../context/garden_ctx';
+import { useSaveManager } from '../../../context/save_ctx';
+import { PlantFactoryMap, StageDataRecords } from '../../../game/utils/loader';
+import { publicUrl } from '../../../utils/browser';
+import i18n from '../../../utils/i18n';
 
 interface ParamsSelectorProps {
     chapterId: number;
@@ -11,29 +15,72 @@ interface ParamsSelectorProps {
     onBack: () => void;
 }
 
-const availablePlants = ['向日葵', '豌豆射手', '坚果墙', '樱桃炸弹'];
+interface PlantElem {
+    pid: number;
+    name: string;
+    imgUrl: string;
+    level: number;
+}
 
-const ParamsSelector: React.FC<ParamsSelectorProps> = ({ chapterId, stageId, setGameParams, startGame, onBack }) => {
-    // TODO: 通过context获得plantsProps
-    // 同时还要更新garden context
-    const [selectedPlants, setSelectedPlants] = useState<string[]>([]);
+function insertSorted(array: PlantElem[], newElement: PlantElem): PlantElem[] {
+    const newArray = [...array];
+    let index = 0;
+    while (index < newArray.length && newArray[index].pid < newElement.pid) {
+        index++;
+    }
+    newArray.splice(index, 0, newElement);
+    return newArray;
+}
+
+const ParamsSelector: React.FC<ParamsSelectorProps> = ({ stageId, setGameParams, startGame, onBack }) => {
+    const [selectedPlants, setSelectedPlants] = useState<number[]>([]);
     const [difficulty, setDifficulty] = useState<'easy' | 'normal' | 'hard'>('normal');
+    const [availablePlants, setAvailablePlants] = useState<PlantElem[]>([]);
     const garden_ctx = useGameContext();
+    const { currentProgress } = useSaveManager();
 
-    const handlePlantToggle = (plant: string) => {
+    const handlePlantToggle = (pid: number) => {
         setSelectedPlants(prev =>
-            prev.includes(plant) ? prev.filter(p => p !== plant) : [...prev, plant]
+            prev.includes(pid) ? prev.filter(p => p !== pid) : [...prev, pid]
         );
     };
 
+    useEffect(() => {
+        const plantProgress = currentProgress.plants;
+        if (!plantProgress || plantProgress.length < 1) {
+            console.log("No plant progress available:", currentProgress);
+            setAvailablePlants([]);
+            return;
+        }
+
+        let newAvailablePlants: PlantElem[] = [];
+        for (let i = 0; i < plantProgress.length; ++i) {
+            const pid = plantProgress[i].pid;
+            const plantObj = PlantFactoryMap[pid];
+            if (!plantObj) {
+                console.warn(`Plant with pid ${pid} not found in PlantFactoryMap`);
+                continue;
+            }
+            const newPlant: PlantElem = {
+                pid: pid,
+                name: plantObj.name,
+                imgUrl: `${publicUrl}/assets/${plantObj.texture}.png`,
+                level: plantProgress[i].level
+            };
+            newAvailablePlants = insertSorted(newAvailablePlants, newPlant);
+        }
+        setAvailablePlants(newAvailablePlants);
+    }, [currentProgress]);
+
     const handleStart = () => {
         garden_ctx.setEnergy(1080);
+        const _ = () => { console.log('no gameexit Implemented') };
 
         const params: GameParams = {
-            chapterId,
-            stageId,
+            level: stageId,
             plants: selectedPlants,
             difficulty,
+            gameExit: _
         };
         setGameParams(params);
         startGame();
@@ -48,78 +95,115 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({ chapterId, stageId, set
             overflow: 'hidden',
             border: '2px solid #444',
             boxShadow: '0 0 15px rgba(0, 0, 0, 0.5)',
+            display: 'flex'
         }}>
-            {/* 左侧 50% - 植物选择 */}
+            {/* 左侧 - 植物选择 */}
             <div style={{
-                width: '50%',
+                width: '60%',
                 height: '100%',
-                position: 'absolute',
-                left: 0,
-                top: 0,
                 background: 'rgba(20, 20, 20, 0.85)',
                 overflowY: 'auto',
-                scrollbarWidth: 'thin',
-                scrollbarColor: '#666 #333',
                 padding: '60px 20px 20px 20px',
             }}>
-                <button
-                    style={{
-                        position: 'absolute',
-                        top: '10px',
-                        left: '10px',
-                        padding: '8px 16px',
-                        background: 'none',
-                        border: '2px solid #666',
-                        color: '#ddd',
-                        cursor: 'pointer',
-                        transition: 'all 0.3s ease',
-                    }}
-                    onMouseOver={(e) => {
-                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                        e.currentTarget.style.borderColor = '#00ccff';
-                    }}
-                    onMouseOut={(e) => {
-                        e.currentTarget.style.background = 'none';
-                        e.currentTarget.style.borderColor = '#666';
-                    }}
-                    onClick={onBack}
-                >
-                    返回
-                </button>
-                {availablePlants.map((plant) => (
-                    <div
-                        key={plant}
+                <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    position: 'absolute',
+                    top: '10px',
+                    left: '10px'
+                }}>
+                    <button
                         style={{
-                            padding: '10px',
-                            border: selectedPlants.includes(plant) ? '2px solid #00ccff' : '2px solid rgba(100, 100, 100, 0.5)',
-                            marginBottom: '10px',
+                            padding: '8px 16px',
+                            background: 'none',
+                            border: '2px solid #666',
+                            color: '#ddd',
                             cursor: 'pointer',
                             transition: 'all 0.3s ease',
                         }}
-                        onClick={() => handlePlantToggle(plant)}
                         onMouseOver={(e) => {
-                            if (!selectedPlants.includes(plant)) e.currentTarget.style.borderColor = '#00ccff';
+                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                            e.currentTarget.style.borderColor = '#00ccff';
                         }}
                         onMouseOut={(e) => {
-                            if (!selectedPlants.includes(plant)) e.currentTarget.style.borderColor = 'rgba(100, 100, 100, 0.5)';
+                            e.currentTarget.style.background = 'none';
+                            e.currentTarget.style.borderColor = '#666';
                         }}
+                        onClick={onBack}
                     >
-                        {plant}
+                        返回
+                    </button>
+                    <div style={{
+                        marginLeft: '10px',
+                        color: '#ddd',
+                        fontSize: '16px'
+                    }}>
+                        {`stage ${stageId} - ${StageDataRecords[stageId].name}`}
                     </div>
-                ))}
+                </div>
+                <div style={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: '10px',
+                    justifyContent: 'flex-start'
+                }}>
+                    {availablePlants.map((plant) => (
+                        <div
+                            key={plant.pid}
+                            style={{
+                                width: '11.5%',
+                                aspectRatio: '1 / 1.5',
+                                border: selectedPlants.includes(plant.pid)
+                                    ? '2px solid #00ccff'
+                                    : '2px solid rgba(100, 100, 100, 0.5)',
+                                cursor: 'pointer',
+                                transition: 'all 0.3s ease',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                padding: '5px',
+                                background: 'rgba(255, 255, 255, 0.05)'
+                            }}
+                            onClick={() => handlePlantToggle(plant.pid)}
+                            onMouseOver={(e) => {
+                                if (!selectedPlants.includes(plant.pid))
+                                    e.currentTarget.style.borderColor = '#00ccff';
+                            }}
+                            onMouseOut={(e) => {
+                                if (!selectedPlants.includes(plant.pid))
+                                    e.currentTarget.style.borderColor = 'rgba(100, 100, 100, 0.5)';
+                            }}
+                        >
+                            <div style={{ width: "64px", height: "64px", overflow: "hidden" }}>
+                                <img
+                                    src={plant.imgUrl}
+                                    alt={plant.name}
+                                    style={{ display: "block" }}
+                                    draggable="false"
+                                />
+                            </div>
+                            <span style={{
+                                color: '#ddd',
+                                textAlign: 'center',
+                                fontSize: '12px',
+                                marginTop: '5px'
+                            }}>
+                                {plant.name}
+                            </span>
+                        </div>
+                    ))}
+                </div>
             </div>
 
-            {/* 右侧 50% - 参数选择 */}
+            {/* 右侧 - 参数和已选择植物 */}
             <div style={{
                 width: '40%',
                 height: '100%',
-                position: 'absolute',
-                right: 0,
-                top: 0,
                 padding: '20px',
                 color: '#ddd',
-                overflowY: 'auto',
                 background: 'rgba(30, 30, 30, 0.9)',
+                display: 'flex',
+                flexDirection: 'column'
             }}>
                 <h3>难度选择</h3>
                 <select
@@ -132,6 +216,7 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({ chapterId, stageId, set
                         color: '#ddd',
                         width: '100%',
                         borderRadius: '3px',
+                        marginBottom: '1%'
                     }}
                 >
                     <option value="easy">简单</option>
@@ -139,25 +224,68 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({ chapterId, stageId, set
                     <option value="hard">困难</option>
                 </select>
 
+                <h3>已选择植物</h3>
+                <div style={{
+                    flex: 1,
+                    overflowY: 'auto',
+                    maxHeight: '63%',
+                }}>
+                    {selectedPlants.map(pid => {
+                        const plant = availablePlants.find(p => p.pid === pid);
+                        if (!plant) return null;
+                        return (
+                            <div
+                                key={pid}
+                                style={{
+                                    display: 'flex',
+                                    maxHeight: '10%',
+                                    alignItems: 'center',
+                                    padding: '10px',
+                                    border: '1px solid #666',
+                                    marginBottom: '10px',
+                                    background: 'rgba(255, 255, 255, 0.05)',
+                                    transition: 'border 0.3s, background 0.3s',
+                                }}
+                                onClick={() => handlePlantToggle(plant.pid)}
+                                onMouseEnter={(e) => {
+                                    e.currentTarget.style.border = '1px solid red';
+                                    e.currentTarget.style.background = 'rgba(255, 0, 0, 0.1)';
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.currentTarget.style.border = '1px solid #666';
+                                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                                }}
+                            >
+                                <div style={{ width: "64px", height: "64px", overflow: "hidden" }}>
+                                    <img
+                                        src={plant.imgUrl}
+                                        alt={plant.name}
+                                        style={{ display: "block" }}
+                                        draggable="false"
+                                    />
+                                </div>
+                                <span style={{ marginLeft: '10px' }}>{plant.name}</span>
+                            </div>
+                        );
+                    })}
+                </div>
+
                 <button
                     style={{
-                        position: 'absolute',
-                        bottom: '10%',
-                        right: '40%',
-                        padding: '10px 20px',
+                        padding: '10px 40%',
                         background: '#00ccff',
                         border: 'none',
                         color: '#fff',
                         cursor: 'pointer',
                         transition: 'all 0.3s ease',
+                        alignSelf: 'center'
                     }}
                     onClick={handleStart}
                 >
-                    开始游戏
+                    {`${i18n('welcome')}!!!!!!!`}
                 </button>
             </div>
-        </div>
-    );
+        </div>)
 };
 
 export default ParamsSelector;

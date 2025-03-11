@@ -1,3 +1,4 @@
+import i18n from "../../../utils/i18n";
 import { IPlant } from "../../models/IPlant";
 import { IRecord } from "../../models/IRecord";
 import { Game } from "../../scenes/Game";
@@ -40,14 +41,6 @@ function cost(level?: number): number {
     return 50;
 }
 
-const description = `
-熔炉能为你提供额外的红石。
-
-技能：生成大量红石
-
-提供机械能：中等
-
-有人闲得慌在它下面安装了一个连着矿场的投掷器。哦，这个矿场是靠地热能的`;
 const FurnaceRecord: IRecord = {
     pid: 2,
     name: '熔炉',
@@ -55,7 +48,7 @@ const FurnaceRecord: IRecord = {
     cooldownTime: 7.5,
     NewFunction: NewFurnace,
     texture: 'plant/furnace',
-    description: description
+    description: i18n.S('furnace_description')
 };
 
 export default FurnaceRecord;
