@@ -11,8 +11,7 @@ import { EventBus } from './game/EventBus';
 import { GameParams } from './game/models/GameParams';
 
 function App() {
-    // The sprite can only be moved in the MainMenu Scene
-    const [canMoveSprite, setCanMoveSprite] = useState(true);
+    // State to control the visibility of the game tool
     const [showGameTool, setShowGameTool] = useState(false);
     const [showGameScreen, setShowGameScreen] = useState(false);
     const [gameParams, setGameParams] = useState<GameParams | null>(null);
@@ -38,7 +37,7 @@ function App() {
 
     // Event emitted from the PhaserGame component
     const currentScene = (scene: Phaser.Scene) => {
-        setCanMoveSprite(scene.scene.key !== 'MainMenu');
+        // setCanMoveSprite(scene.scene.key !== 'MainMenu');
     }
 
     // 监听键盘事件，阻止 F11 触发全屏

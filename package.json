@@ -30,22 +30,27 @@
     },
     "dependencies": {
         "-": "^0.0.1",
+        "denque": "^2.1.0",
         "gh-pages": "^6.3.0",
         "phaser": "^3.88.2",
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
-        "save": "^2.9.0"
+        "save": "^2.9.0",
+        "seedrandom": "^3.0.5"
     },
     "devDependencies": {
         "@types/node": "^22.13.10",
         "@types/react": "^18.3.3",
         "@types/react-dom": "^18.3.0",
+        "@types/seedrandom": "^3.0.8",
         "@typescript-eslint/eslint-plugin": "^7.13.1",
         "@typescript-eslint/parser": "^7.13.1",
         "@vitejs/plugin-react": "^4.3.1",
         "eslint": "^8.57.0",
         "eslint-plugin-react-hooks": "^4.6.2",
         "eslint-plugin-react-refresh": "^0.4.7",
+        "i": "^0.3.7",
+        "npm": "^11.2.0",
         "terser": "^5.28.1",
         "typescript": "^5.2.2",
         "vite": "^5.3.1"

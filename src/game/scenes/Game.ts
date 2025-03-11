@@ -8,7 +8,6 @@ import Gardener from '../utils/gardener';
 import MonsterSpawner from '../utils/spawner';
 import InnerSettings from '../utils/settings';
 import { GameParams } from '../models/GameParams';
-import { MAXDEPTH } from '../../../public/constants';
 import DepthManager from '../../utils/depth';
 
 
@@ -88,7 +87,7 @@ export class Game extends Scene {
         ).setOrigin(1, 1).setInteractive().setDepth(DepthManager.getMenuDepth());
         this.pauseBtn.on('pointerup', () => {
             // 判断场景有无暂停
-            let currently = this.physics.world.isPaused;
+            const currently = this.physics.world.isPaused;
             this.handlePause({ paused: !currently });
         }, this);
 
@@ -167,10 +166,10 @@ export class Game extends Scene {
             this.gardener.onMouseMoveEvent(pointer);
         }, this);
 
-        var escKey = this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
+        const escKey = this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
         escKey?.on('down', () => {
             // 判断场景有无暂停
-            let currently = this.physics.world.isPaused;
+            const currently = this.physics.world.isPaused;
             this.handlePause({ paused: !currently });
         });
 
@@ -182,9 +181,10 @@ export class Game extends Scene {
 
         this.innerSettings = new InnerSettings();
 
-        EventBus.emit('current-scene-ready', this);
         EventBus.on('setIsPaused', this.handlePause, this);
+        // TODO: move to gardener
         EventBus.on('starShards-chosen', () => { console.log('pick shards') });
+        EventBus.emit('current-scene-ready', this);
         this.monsterSpawner.startWave();
 
 
@@ -194,6 +194,11 @@ export class Game extends Scene {
 
     changeScene() {
         this.scene.start('GameOver');
+    }
+
+    handleGameStart(){
+        //TOD
+        this.monsterSpawner.startWave();
     }
 
     // app->game 选择卡片，更新预种植植物

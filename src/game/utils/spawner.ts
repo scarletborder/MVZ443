@@ -1,7 +1,7 @@
-import { LINE_DEPTH } from "../../../public/constants";
 import { IZombie } from "../models/IZombie";
 import { Game } from "../scenes/Game";
 import { MonsterFactoryMap } from "./loader";
+import seedrandom from 'seedrandom';
 // 出怪实例
 // 使用一个刷怪表进行实例化
 
@@ -27,6 +27,7 @@ interface Monster {
 export default class MonsterSpawner {
     public scene: Game;
     monstered: Map<string, Array<IZombie>> = new Map();
+    private SeedRandom: seedrandom.PRNG;
 
     private waves: Wave[];
     private current_wave_idx: number = 0;
@@ -48,6 +49,10 @@ export default class MonsterSpawner {
 
     currentWave() {
         return this.waves[this.current_wave_idx];
+    }
+
+    setRandomSeed(seed: number) {
+        this.SeedRandom = seedrandom.alea(String(seed))
     }
 
     // 触发开始,唯一
@@ -114,7 +119,7 @@ export default class MonsterSpawner {
     }
 
     spawnMonster() {
-        let wave = this.currentWave();
+        const wave = this.currentWave();
 
         const totalMonsters: { mid: number }[] = [];
         // 可生成的范围row = [0, rowMAX], col = colMAX
@@ -215,7 +220,7 @@ export default class MonsterSpawner {
     // 权重随机选择函数
     weightedRandomRow(weights: number[]): number {
         const totalWeight = weights.reduce((acc, w) => acc + w, 0);
-        let randomNum = Math.random() * totalWeight;
+        let randomNum = this.SeedRandom() * totalWeight;
         for (let i = 0; i < weights.length; i++) {
             if (randomNum < weights[i]) {
                 return i;
@@ -239,7 +244,7 @@ export default class MonsterSpawner {
             // TODO:如果是最后一拨,杀完了就没了
             this.scene.broadCastGameOver(true);
 
-            let now = this.scene.time.now;
+            const now = this.scene.time.now;
             // 判断是否mindelay
             if (now - this.prev_wave_time > this.currentWave().minDelay * 1000) {
                 this.nextWave();
