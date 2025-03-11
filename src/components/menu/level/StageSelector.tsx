@@ -1,6 +1,7 @@
 // src/components/StageSelector.tsx
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ChapterDataRecords, StageDataRecords } from '../../../game/utils/loader';
+import { useSaveManager } from '../../../context/save_ctx';
 
 interface StageSelectorProps {
     chapterId: number;
@@ -10,7 +11,20 @@ interface StageSelectorProps {
 
 const StageSelector: React.FC<StageSelectorProps> = ({ chapterId, onSelect, onBack }) => {
     const [selectedStage, setSelectedStage] = useState<number | null>(null);
-    const stagesIds = ChapterDataRecords[chapterId]?.stages || [];
+    const [stagesIds, setStagesIds] = useState<number[]>([]);
+    const saveManager = useSaveManager();
+
+    useEffect(() => {
+        const chapterStages = ChapterDataRecords[chapterId]?.stages || [];
+        const tmpStagesIds: number[] = [];
+        for (const stageId of chapterStages) {
+            if (saveManager.currentProgress.level.has(stageId)) {
+                tmpStagesIds.push(stageId);
+            }
+        }
+        tmpStagesIds.sort((a, b) => a - b);
+        setStagesIds(tmpStagesIds);
+    }, []);
 
     return (
         <div style={{

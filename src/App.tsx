@@ -30,6 +30,7 @@ function App() {
     }, [setShowGameScreen, setShowGameTool]);
 
     const exitResultView = useCallback(() => {
+        setGameResult(null);
         setShowGameResult(false);
         setShowGameScreen(false);
         setShowGameTool(false);
@@ -58,7 +59,7 @@ function App() {
         const handleKeyDown = (event: KeyboardEvent) => {
             if (event.key === "F1" || event.key === "F2" || event.key === "F3" || event.key === "F4"
                 || event.key === "F5" || event.key === "F6" || event.key === "F7" || event.key === "F8"
-                || event.key === "F9" || event.key === "F10") {
+                || event.key === "F9" || event.key === "F10" || event.key === 'ESC') {
                 event.preventDefault();
             }
         };
@@ -116,7 +117,7 @@ function App() {
                     </div>
 
                     {showGameTool &&
-                        <BottomTools width={width} chapterID={gameParams?.level}/>}
+                        <BottomTools width={width} chapterID={gameParams?.level} />}
 
                 </GameProvider>
             </SaveProvider>

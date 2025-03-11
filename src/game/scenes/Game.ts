@@ -131,12 +131,6 @@ export class Game extends Scene {
             const currently = this.physics.world.isPaused;
             this.handlePause({ paused: !currently });
         });
-        const backquoteKey = this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.BACKTICK);
-        backquoteKey?.on('down', () => {
-            // 判断场景有无暂停
-            const currently = this.physics.world.isPaused;
-            this.handlePause({ paused: !currently });
-        });
 
         this.innerSettings = new InnerSettings();
 

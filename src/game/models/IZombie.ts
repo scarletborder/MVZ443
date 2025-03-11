@@ -25,6 +25,9 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite {
     public IsFrozen: boolean = false;
     public IsStop: boolean = false;
 
+    public isFlying: boolean = false; // 是否在天上
+    public isInVoid: boolean = false; // 是否是灵魂状态
+
     // 攻击
     private attackTimer?: Phaser.Time.TimerEvent; // 攻击定时器
     public attackingPlant: IPlant | null = null; // 当前攻击的植物
@@ -79,6 +82,8 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite {
         this.col = col;
         this.row = row;
         this.isDying = false;
+        this.isFlying = false;
+        this.isInVoid = false;
 
         this.Spawner = scene.monsterSpawner;
         this.Spawner.registerMonster(this);

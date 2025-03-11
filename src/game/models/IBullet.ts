@@ -48,11 +48,18 @@ export class IBullet extends Phaser.Physics.Arcade.Sprite {
 
     CollideObject(object: IZombie | IPlant) {
         const damage = this.damage;
-        this.destroy(); // 一般子弹,碰到就销毁
+
         if (object instanceof IZombie) {
+            // 如果子弹的实际位置不再天上打不到isFlying
+            if (object.isFlying) return;
+
+            // 如果isInVoid,也打不到
+            if (object.isInVoid) return;
+            this.destroy(); // 一般子弹,碰到就销毁
             object.takeDamage(damage);
         } else if (object instanceof IPlant) {
             console.log('bullet hit plant, function not implemented');
+            this.destroy(); // 一般子弹,碰到就销毁
         }
     }
 

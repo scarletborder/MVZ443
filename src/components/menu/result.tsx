@@ -23,18 +23,22 @@ export default function GameResultView({ width, height, isWin, onWin, progressRe
             console.log("保存进度奖励");
             hasSavedRef.current = true; // 设置标志，防止重复保存
 
-            onWin?.unLockPlant.forEach(plant => {
-                saveManager.recordPlantEncounter(plant);
-            });
-            onWin?.unLock.forEach(level => {
-                saveManager.setCurrentLevel(level);
-            });
+            if (isWin) {
+                onWin?.unLockPlant.forEach(plant => {
+                    saveManager.recordPlantEncounter(plant);
+                });
+                onWin?.unLock.forEach(level => {
+                    saveManager.setCurrentLevel(level);
+                });
+            }
+     
             progressRewards.forEach(reward => {
                 if (myProgress >= reward.progress) {
                     saveManager.updateItemCount(reward.reward.type, reward.reward.count);
                 }
             });
             saveManager.saveProgress();
+            // 可以确保每次结算领取一次,并且不刷新网页情况可以每开新关卡领取一次
         }
     }, [progressRewards, onWin, isWin]); // 移除 hasSaved 依赖
 
