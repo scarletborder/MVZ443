@@ -4,7 +4,11 @@ import { useCallback, useEffect, useState } from "react";
 import { EventBus } from "../game/EventBus";
 import { useSettings } from "../context/settings_ctx";
 
-export default function BottomTools() {
+type Props = {
+    width: number
+}
+
+export default function BottomTools({ width }: Props) {
     const { money, wave, bossHealth, starShareds, updateWave, isPaused, setIsPaused } = useGameContext();
 
     const [starStr, setStarStr] = useState<string>('*');
@@ -45,7 +49,7 @@ export default function BottomTools() {
     };
 
     const handleSetPause = useCallback(() => {
-        let newPaused = !isPaused;
+        const newPaused = !isPaused;
         EventBus.emit('setIsPaused', { paused: newPaused });
     }, [isPaused]);
 
@@ -56,7 +60,7 @@ export default function BottomTools() {
         return () => {
             EventBus.removeListener('okIsPaused');
         }
-    }, []);
+    }, []); // 不要改
 
     useEffect(() => {
         let tmp = 'star';
@@ -72,10 +76,10 @@ export default function BottomTools() {
         (wave / 100) * 100;
 
     return (
-        <div className="bottom">
+        <div className="bottom" style={{ width: width }}>
             <div className="money">{money} $</div>
             <div className={`stars${starChosen ? ' chosen' : ''}`} onClick={handleStarClick}>{starStr}</div>
-            <div style={{ 'width': '30%' }}></div>
+            <div style={{ 'width': '15%' }}></div>
 
             {
                 bossHealth !== -1 ? (

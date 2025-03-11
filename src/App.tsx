@@ -87,7 +87,7 @@ function App() {
                     </div>
 
                     {showGameTool &&
-                        <BottomTools />}
+                        <BottomTools width={width} />}
 
                 </GameProvider>
             </SaveProvider>
