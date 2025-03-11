@@ -5,10 +5,11 @@ import { PlantFactoryMap } from '../game/utils/loader';
 import { useGameContext } from '../context/garden_ctx';
 import { EventBus } from '../game/EventBus';
 import { IRecord } from '../game/models/IRecord';
+import { useSaveManager } from '../context/save_ctx';
 
 interface slotProps {
     sceneRef: React.MutableRefObject<IRefPhaserGame | null>;
-};
+}
 
 
 export function EnergySlot({ sceneRef }: slotProps) {
@@ -59,8 +60,18 @@ export function CardSlotHorizontal({ sceneRef }: slotProps) {
     const pids = [1, 2, 3, 5];
     const plants: Array<IRecord> = [];
 
+    const { currentProgress } = useSaveManager();
+
+    const pidSet = new Set<number>();
     pids.forEach(pid => {
+        pidSet.add(pid);
         plants.push(PlantFactoryMap[pid]);
+    })
+    // 使用 WeakMap 来记录 pid 到 level 的映射
+    const pidToLevelMap = new Map<number, number>();
+
+    currentProgress.plants.forEach(plant => {
+        if (pidSet.has(plant.pid)) pidToLevelMap.set(plant.pid, plant.level);
     })
 
     let line_1 = 9// 第一行, 阳光显示 + 9个卡槽
@@ -83,7 +94,7 @@ export function CardSlotHorizontal({ sceneRef }: slotProps) {
                 sceneRef={sceneRef}
                 pid={plant.pid}
                 texture={plant.texture}
-                cost={plant.cost()}
+                cost={plant.cost(pidToLevelMap.get(plant.pid) || 1)}
             />
         ))}
     </div>);
