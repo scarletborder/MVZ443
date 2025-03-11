@@ -17,6 +17,8 @@ interface Wave {
     duration: number; // seconds
     maxDelay: number; // seconds
     minDelay: number; // seconds
+    arrangement: 0x01 | 0x02 // 0x01: 均匀, 0x02: 集中
+    minLine: number; // 指定最少有多少行应该生成怪物，避免怪物过于集中在一行。
 }
 
 interface Monster {
@@ -57,7 +59,7 @@ export default class MonsterSpawner {
         this.SeedRandom = seedrandom.alea(String(seed))
     }
 
-    // 触发开始,唯一
+    // 整局,触发开始,唯一
     startWave() {
         if (this.Timer) {
             this.Timer.remove();
@@ -124,30 +126,44 @@ export default class MonsterSpawner {
         const wave = this.currentWave();
 
         const totalMonsters: { mid: number }[] = [];
-        // 可生成的范围row = [0, rowMAX], col = colMAX
         const colMax = this.scene.GRID_COLS;
         const rowMax = this.scene.GRID_ROWS - 1;
+
+        // 收集所有怪物
         wave.monsters.forEach(monster => {
             for (let i = 0; i < monster.count; i++) {
                 totalMonsters.push({ mid: monster.mid });
             }
         });
 
-        // 随机打乱怪物顺序
         this.total_count = totalMonsters.length + this.total_count - this.killed_count;
-        if (wave.duration === 0) {
-            // 无怪物波数
+        if (wave.duration === 0) { // 本轮没有怪物生成,为准备时间,准备时间持续minDelay
             return;
         }
 
         Phaser.Utils.Array.Shuffle(totalMonsters);
         const duration = wave.duration * 1000;
-        const interval = duration / this.total_count;
+        const interval = duration / totalMonsters.length;
 
         // 行权重初始化
-        const rowWeights = Array(rowMax + 1).fill(1);
+        let rowWeights: number[];
+        let activeRows: number[] = []; // 活跃行数组
+
+        if (wave.arrangement === 0x02) {
+            // 集中分布模式
+            const minLines = Math.min(wave.minLine, rowMax + 1); // 确保不超过最大行数
+            const activeRowCount = minLines + Math.floor(this.SeedRandom() * (rowMax + 1 - minLines)); // 随机选择 minLine 到 rowMax 的行数
+            activeRows = Array.from({ length: rowMax + 1 }, (_, i) => i); // 所有行 [0, rowMax]
+            Phaser.Utils.Array.Shuffle(activeRows); // 打乱顺序
+            activeRows = activeRows.slice(0, activeRowCount); // 取前 activeRowCount 个行作为活跃行
+            rowWeights = Array(rowMax + 1).fill(0); // 先全部置为 0
+            activeRows.forEach(row => rowWeights[row] = 1); // 仅活跃行初始化权重为 1
+        } else {
+            // 默认均匀分布模式 (0x01)
+            rowWeights = Array(rowMax + 1).fill(1); // 所有行权重为 1
+        }
+
         let monsterIndex = 0;
-        // 定时器逐一生成怪物
         if (this.SpawnTimer) this.SpawnTimer.remove();
 
         this.SpawnTimer = this.scene.time.addEvent({
@@ -155,18 +171,35 @@ export default class MonsterSpawner {
             repeat: totalMonsters.length - 1,
             callback: () => {
                 const monsterData = totalMonsters[monsterIndex++];
-
-                // 根据权重随机选择一行
-                const row = this.weightedRandomRow(rowWeights);
-
+                const row = this.weightedRandomRow(rowWeights); // 根据权重选择行
                 const newFunc = MonsterFactoryMap[monsterData.mid].NewFunction;
                 const zomb = newFunc(this.scene, colMax, row);
 
-                // 更新行权重
-                rowWeights[row] = Math.max(0.1, rowWeights[row] - 0.3);
-                this.rebalanceRowWeights(rowWeights);
+                // 更新行权重（仅对活跃行生效）
+                if (wave.arrangement === 0x02 && activeRows.includes(row)) {
+                    rowWeights[row] = Math.max(0.1, rowWeights[row] - 0.3);
+                } else if (wave.arrangement === 0x01) {
+                    rowWeights[row] = Math.max(0.1, rowWeights[row] - 0.3);
+                }
+                this.rebalanceRowWeights(rowWeights, wave.arrangement === 0x02 ? activeRows : null);
             }
         });
+    }
+
+    //     // 权重再平衡函数 (逐渐恢复未选行的权重),支持活跃行
+    rebalanceRowWeights(weights: number[], activeRows: number[] | null) {
+        const recoveryRate = 0.1;
+        if (activeRows) {
+            // 只对活跃行恢复权重
+            activeRows.forEach(row => {
+                weights[row] = Math.min(1, weights[row] + recoveryRate);
+            });
+        } else {
+            // 默认模式，所有行恢复权重
+            for (let i = 0; i < weights.length; i++) {
+                weights[i] = Math.min(1, weights[i] + recoveryRate);
+            }
+        }
     }
 
     // 某一row是否有怪物
@@ -190,6 +223,19 @@ export default class MonsterSpawner {
             }
         }
         return false;
+    }
+
+    // 权重随机选择函数
+    weightedRandomRow(weights: number[]): number {
+        const totalWeight = weights.reduce((acc, w) => acc + w, 0);
+        let randomNum = this.SeedRandom() * totalWeight;
+        for (let i = 0; i < weights.length; i++) {
+            if (randomNum < weights[i]) {
+                return i;
+            }
+            randomNum -= weights[i];
+        }
+        return weights.length - 1;
     }
 
     // 怪物生成注册
@@ -217,50 +263,55 @@ export default class MonsterSpawner {
                 }
             }
         }
-    }
-
-    // 权重随机选择函数
-    weightedRandomRow(weights: number[]): number {
-        const totalWeight = weights.reduce((acc, w) => acc + w, 0);
-        let randomNum = this.SeedRandom() * totalWeight;
-        for (let i = 0; i < weights.length; i++) {
-            if (randomNum < weights[i]) {
-                return i;
-            }
-            randomNum -= weights[i];
-        }
-        return weights.length - 1;
-    }
-
-    // 权重再平衡函数 (逐渐恢复未选行的权重)
-    rebalanceRowWeights(weights: number[]) {
-        const recoveryRate = 0.1;
-        for (let i = 0; i < weights.length; i++) {
-            weights[i] = Math.min(1, weights[i] + recoveryRate);
-        }
+        this.onMonsterKilled();
     }
 
     onMonsterKilled() {
         this.killed_count++;
-        if (this.killed_count >= this.total_count) {
-            // TODO:如果是最后一拨,杀完了就没了
-            this.scene.broadCastGameOver(true);
+        console.log('kill', this.killed_count, '/', this.total_count);
 
-            const now = this.scene.time.now;
-            // 判断是否mindelay
-            if (now - this.prev_wave_time > this.currentWave().minDelay * 1000) {
-                this.nextWave();
-            } else {
-                this.Timer.reset({
-                    delay: this.currentWave().minDelay * 1000 - (now - this.prev_wave_time),
-                    loop: false,
+        // 检查是否所有怪物都被击杀
+        if (this.killed_count >= this.total_count) {
+            console.log('All monsters in current wave killed!');
+
+            // 如果是最后一波
+            if (this.current_wave_idx === this.waves.length - 1) {
+                console.log('Last wave detected, starting victory check timer...');
+
+                // 启动一个每1.5秒检查一次的定时器
+                const victoryCheckTimer = this.scene.time.addEvent({
+                    delay: 1500, // 1.5秒
+                    loop: true, // 循环执行
                     callback: () => {
-                        this.nextWave();
+                        // 检查场上是否还有怪物
+                        if (this.monstered.size === 0) {
+                            console.log('No monsters left on the field, game victory!');
+                            this.scene.broadCastGameOver(true); // 游戏胜利
+                            victoryCheckTimer.remove(); // 移除定时器
+                            victoryCheckTimer.destroy();
+                        } else {
+                            console.log('Monsters still on field:', this.monstered.size);
+                        }
                     }
                 });
+            } else {
+                // 非最后一波，继续下一波逻辑
+                const now = this.scene.time.now;
+                if (now - this.prev_wave_time > this.currentWave().minDelay * 1000) {
+                    this.nextWave();
+                } else {
+                    this.Timer.reset({
+                        delay: this.currentWave().minDelay * 1000 - (now - this.prev_wave_time),
+                        loop: false,
+                        callback: () => {
+                            this.nextWave();
+                        }
+                    });
+                }
             }
         }
     }
+
 }
 
 // TODO: 光源使用彭装箱,新的lightGroup

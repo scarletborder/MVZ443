@@ -160,7 +160,7 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite {
         if (this.attackingPlant && this.attackingPlant.active) {
             this.attackingPlant.takeDamage(this.attackDamage, this);
             if (!this.attackingPlant) return;
-            console.log(`Zombie hurt plant, plant health: ${this.attackingPlant.health}`);
+            // console.log(`Zombie hurt plant, plant health: ${this.attackingPlant.health}`);
         }
     }
 

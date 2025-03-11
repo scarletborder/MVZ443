@@ -12,6 +12,7 @@ import DepthManager from '../../utils/depth';
 import { PlantFactoryMap } from '../utils/loader';
 import QueueReceive from '../utils/queue_receive';
 import QueueSend from '../utils/queue_send';
+import CreateInnerMenu from '../utils/inner_menu';
 
 
 
@@ -62,50 +63,8 @@ export class Game extends Scene {
         this.recvQueue = new QueueReceive({ mode: 'single' }, this);
         this.sendQueue = new QueueSend({ mode: 'single', recvQueue: this.recvQueue.queues });
 
-        // 屏幕中央显示 "已停止" 的文本，默认隐藏
-        this.pauseBtn = this.add.text(
-            this.cameras.main.width,
-            this.cameras.main.height,
-            '暂停',
-            {
-                fontSize: this.scale.displaySize.width / 30,
-                color: 'rgb(187, 21, 21)',
-                backgroundColor: 'rgba(0, 0, 0, 0.35)',
-                padding: { x: 10, y: 5 },
-            }
-        ).setOrigin(1, 1).setInteractive().setDepth(DepthManager.getMenuDepth());
-        this.pauseBtn.on('pointerup', () => {
-            // 判断场景有无暂停
-            const currently = this.physics.world.isPaused;
-            this.handlePause({ paused: !currently });
-        }, this);
-
-        this.pauseText = this.add.text(
-            this.cameras.main.width / 2,
-            this.cameras.main.height / 3,
-            '已停止',
-            {
-                fontSize: this.scale.displaySize.width / 20,
-                color: '#ffffff',
-                backgroundColor: 'rgba(0, 0, 0, 0.35)',
-                padding: { x: 10, y: 5 },
-            }
-        ).setOrigin(0.5).setVisible(false).setDepth(DepthManager.getMenuDepth());
-
-        this.exitText = this.add.text(
-            this.cameras.main.width / 2,
-            this.cameras.main.height,
-            '退出游戏',
-            {
-                fontSize: this.scale.displaySize.width / 20,
-                color: 'rgb(187, 21, 21)',
-                backgroundColor: 'rgba(0, 0, 0, 0.35)',
-                padding: { x: 10, y: 5 },
-            }
-        ).setOrigin(0.5, 1).setVisible(false).disableInteractive().setDepth(DepthManager.getMenuDepth());
-        this.exitText.on('pointerup', this.handleExit, this);
-
-
+        // 菜单
+        CreateInnerMenu(this);
 
         // 网格初始化
         this.grid = [];
@@ -163,17 +122,11 @@ export class Game extends Scene {
         });
 
 
-        // // 创建僵尸（建议大小 80×120），这里放置 3 个僵尸
-        // for (let i = 0; i < 3; i++) {
-        //     let zombie = NewZombie.NewFunction(this, 9, i);
-        // }
-
         this.innerSettings = new InnerSettings();
 
         EventBus.on('setIsPaused', this.handlePause, this);
         // TODO: move to gardener
         EventBus.on('starShards-chosen', () => { console.log('pick shards') });
-        EventBus.emit('current-scene-ready', this);
 
         this.sendQueue.sendReady();
     }
@@ -198,8 +151,8 @@ export class Game extends Scene {
 
     // 游戏开始
     handleGameStart(seed: number, myID: number) {
-        //TODO
         this.monsterSpawner.setRandomSeed(seed);
+        EventBus.emit('current-scene-ready', this);
         this.myID = myID;
         this.monsterSpawner.startWave();
     }

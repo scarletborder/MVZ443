@@ -20,8 +20,6 @@ class CapZombie extends EnhancedZombie {
         this.currentHatState = 0;
         cap.debugShowBody = false;
         scene.physics.add.existing(cap);
-        console.log('zomb', this.x, this.y);
-        console.log('cap', cap.x, cap.y);
         cap.setVisible(true);
         this.attachSprites.set('cap', cap);
 
@@ -53,7 +51,6 @@ class CapZombie extends EnhancedZombie {
     setDepth() {
         // attach 不由本地管
         this.attachSprites.get('cap')?.setDepth(this.baseDepth + 13); // 帽子算比较高的
-        console.log('cap dep', this.attachSprites.get('cap')?.depth);
         super.setDepth();
         return this;
     }

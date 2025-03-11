@@ -97,7 +97,6 @@ export default class IZombieAnim {
     setDepth(base: number) {
         // 部件不在本地管
         this.head.setDepth(base + 9);
-        console.log('head dep', this.head.depth);
         this.armLeft.setDepth(base + 8);
         this.armRight.setDepth(base + 6);
         this.body.setDepth(base + 7);
@@ -168,7 +167,6 @@ export default class IZombieAnim {
         y = y - this.scene.positionCalc.GRID_SIZEY * 25 / 54;
         this.x = x;
         this.y = y;
-        console.log('animy', y)
         this.body.setPosition(x, y);
         this.head.setPosition(x + this.headOffset[0] * this.scaneFactor,
             y + this.headOffset[1] * this.scaneFactor);

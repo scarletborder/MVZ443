@@ -6,7 +6,9 @@
         "monsters": [],
         "duration": 0,
         "maxDelay": 50,
-        "minDelay": 2
+        "minDelay": 2,
+        "arrangement": 1,
+        "minLine": 1
     },
     {
         "waveId": 1,
@@ -20,7 +22,9 @@
         ],
         "duration": 6,
         "maxDelay": 40,
-        "minDelay": 30
+        "minDelay": 30,
+        "arrangement": 1,
+        "minLine": 1
     },
     {
         "waveId": 2,
@@ -38,7 +42,9 @@
         ],
         "duration": 6,
         "maxDelay": 40,
-        "minDelay": 30
+        "minDelay": 30,
+        "arrangement": 2,
+        "minLine": 2
     },
     {
         "waveId": 3,
@@ -56,6 +62,8 @@
         ],
         "duration": 6,
         "maxDelay": 40,
-        "minDelay": 30
+        "minDelay": 30,
+        "arrangement": 2,
+        "minLine": 2
     }
 ]
