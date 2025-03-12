@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSaveManager } from '../../context/save_ctx';
 import { OnWin, ProgressReward } from '../../game/models/IRecord';
+import { ChapterDataRecords, PlantFactoryMap, StageDataRecords } from '../../game/utils/loader';
 
 
 interface Props {
@@ -31,7 +32,7 @@ export default function GameResultView({ width, height, isWin, onWin, progressRe
                     saveManager.setCurrentLevel(level);
                 });
             }
-     
+
             progressRewards.forEach(reward => {
                 if (myProgress >= reward.progress) {
                     saveManager.updateItemCount(reward.reward.type, reward.reward.count);
@@ -104,8 +105,26 @@ export default function GameResultView({ width, height, isWin, onWin, progressRe
                         <p style={{ fontSize: "18px", marginBottom: "10px" }}>胜利！</p>
                         {onWin && (
                             <>
-                                <p>解锁关卡: {onWin.unLock.length > 0 ? onWin.unLock.join(", ") : "无"}</p>
-                                <p>解锁器械: {onWin.unLockPlant.length > 0 ? onWin.unLockPlant.join(", ") : "无"}</p>
+                                <p>解锁关卡: {onWin.unLock.length > 0 ?
+
+                                    Array.from(onWin.unLock, (cpid) => {
+                                        if (saveManager.currentProgress.level.has(cpid)) {
+                                            return null;
+                                        }
+                                        const stage = StageDataRecords[cpid];
+                                        const chapter = ChapterDataRecords[stage.chapterID];
+                                        return `${chapter.name} - ${stage.name}`;
+                                    }).join(" ")
+                                    : "无"}</p>
+                                <p>解锁器械: {onWin.unLockPlant.length > 0 ?
+                                    Array.from(onWin.unLockPlant, (pid) => {
+                                        if (saveManager.currentProgress.plants.some(p => p.pid === pid)) {
+                                            // 已有
+                                            return null;
+                                        }
+                                        return PlantFactoryMap[pid].name;
+                                    }).join(" ")
+                                    : "无"}</p>
                             </>
                         )}
                     </div>

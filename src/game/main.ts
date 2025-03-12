@@ -37,7 +37,8 @@ const config: Phaser.Types.Core.GameConfig = {
 
     },
     parent: 'game-container',
-    backgroundColor: '#028af8',
+    backgroundColor: 'rgba(0,0,0,0)',
+    transparent: true,
     scene: [
         Boot,
         Preloader,

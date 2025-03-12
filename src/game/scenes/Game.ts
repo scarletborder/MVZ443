@@ -21,7 +21,7 @@ export class Game extends Scene {
     private myID: number = 0;
 
     private scaleFactor: number = 1;
-    private grid: Phaser.GameObjects.Rectangle[][];
+    private grid: Phaser.GameObjects.Sprite[][];
     public GRID_ROWS = 4;
     public GRID_COLS = 9;
 
@@ -42,6 +42,8 @@ export class Game extends Scene {
     params: GameParams;
     private isDestroyed = false; // Track if the scene/game is destroyed
     public stageData: StageData;
+
+    music: Phaser.Sound.BaseSound;
 
     // command queue
     private elapsed: number = 0;
@@ -79,32 +81,45 @@ export class Game extends Scene {
         // 菜单
         CreateInnerMenu(this);
 
-        // 网格初始化
-        this.grid = [];
-        for (let row = 0; row < this.GRID_ROWS; row++) {
-            this.grid[row] = [];
-            for (let col = 0; col < this.GRID_COLS; col++) {
-                const { x, y } = this.positionCalc.getGridTopLeft(col, row);
-                const rect = this.add.rectangle(x, y, this.positionCalc.GRID_SIZEX,
-                    this.positionCalc.GRID_SIZEY, 0x00ff00, 0.2).setOrigin(0, 0);
-                rect.setStrokeStyle(1, 0xffffff);
-                this.grid[row][col] = rect;
-            }
-        }
-
         if (this.innerSettings.isDebug) {
+            // 网格初始化
+            // 包括镶嵌地板
+            for (let row = 0; row < this.GRID_ROWS; row++) {
+                this.grid[row] = [];
+                for (let col = 0; col < this.GRID_COLS; col++) {
+                    const { x, y } = this.positionCalc.getGridTopLeft(col, row);
+                    const rect = this.add.rectangle(x, y, this.positionCalc.GRID_SIZEX,
+                        this.positionCalc.GRID_SIZEY, 0, 0.2)
+                        .setOrigin(0, 0).setDepth(3);
+                    rect.setStrokeStyle(1, 0xffffff);
+                }
+            }
             this.physics.world.createDebugGraphic(); // 显示所有物体的碰撞体
         }
         this.physics.resume(); // 恢复物理系统
 
         // 设置主摄像机背景颜色
         this.camera = this.cameras.main;
-        this.camera.setBackgroundColor(0x00ff00);
+        this.camera.setBackgroundColor('rgba(0,0,0,0)');
 
-        // 添加背景并将其拉伸到整个场景
-        this.background = this.add.image(0, 0, 'background').setOrigin(0, 0);
-        this.background.setDisplaySize(this.scale.width, this.scale.height);
-        this.background.setAlpha(0.5);
+        // 添加背景
+        this.background = this.add.image(0, 0, 'bgimg');
+        // 获取背景图片的原始尺寸
+        // 计算裁剪区域 (10% 到 70% 的宽度)
+        const cropStartX = this.background.width * 17 / 140;  // 10%
+
+        // 应用裁剪
+        this.background = this.background.setCrop(cropStartX, 0, 960, this.scale.height);
+
+        // 拉伸裁剪后的图片以填充整个场景宽度，保持高度比例
+        this.background.setOrigin(0, 0).setDepth(2).setDisplaySize(1260 * this.scaleFactor, this.scale.height * 1.05);
+
+        // 确保位置在左上方
+        this.background.setPosition(-cropStartX * this.scaleFactor, 0);
+
+        // 调整摄像机位置，确保从 (0, 0) 开始显示
+        this.cameras.main.scrollX = 0;
+        this.cameras.main.scrollY = 0;
 
         // 创建分组
         IPlant.InitGroup(this);
@@ -140,6 +155,7 @@ export class Game extends Scene {
         EventBus.on('starShards-chosen', () => { console.log('pick shards') });
         EventBus.on('game-fail', this.handleExit, this);
 
+        this.music = this.sound.add('bgm');
         this.sendQueue.sendReady();
     }
 
@@ -174,6 +190,7 @@ export class Game extends Scene {
             new MineCart(this, -1, i);
         }
         this.isGameEnd = false;
+        this.music.play();
     }
 
     handleCardPlant(pid: number, level: number, col: number, row: number, uid: number) {
@@ -249,6 +266,7 @@ export class Game extends Scene {
             this.pauseText.setVisible(true);
             this.exitText.setVisible(true);
             try { this.exitText.setInteractive(); } finally { EventBus.emit('okIsPaused', { paused: true }); }
+            this.music.pause();
         } else {
             this.physics.world?.resume();
             this.anims?.resumeAll();
@@ -257,11 +275,13 @@ export class Game extends Scene {
             this.pauseText.setVisible(false);
             this.exitText.setVisible(false);
             try { this.exitText.disableInteractive(); } finally { EventBus.emit('okIsPaused', { paused: false }); }
+            this.music.resume();
         }
     }
 
     // game->app 通知游戏结束
     handleExit(isWin: boolean = false) {
+        this.music.stop();
         this.isGameEnd = true;
         EventBus.emit('okIsPaused', { paused: false });
         this.params.gameExit({

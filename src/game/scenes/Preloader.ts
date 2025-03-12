@@ -1,30 +1,41 @@
 import { Scene } from 'phaser';
 import { GameParams } from '../models/GameParams';
+import { ResourceMapData } from '../../../public/constants';
 
 export class Preloader extends Scene {
     constructor() {
         super('Preloader');
     }
 
+    loadbg: Phaser.GameObjects.Image
+    loadprogress: any
+
 
 
     init() {
-        //  We loaded this image in our Boot Scene, so we can display it here
-        this.add.image(512, 384, 'background');
+        const width = this.cameras.main.width;
+        const height = this.cameras.main.height;
 
-        //  A simple progress bar. This is the outline of the bar.
-        this.add.rectangle(512, 384, 468, 32).setStrokeStyle(1, 0xffffff);
+        // 计算进度条宽度（例如占屏幕宽度的80%）
+        const progressBarWidth = width * 0.8;
+        const progressBarHeight = 32;
+        const progressBarX = width / 2;
+        const progressBarY = height / 2;
 
-        //  This is the progress bar itself. It will increase in size from the left based on the % of progress.
-        const bar = this.add.rectangle(512 - 230, 384, 4, 28, 0xffffff);
+        // 背景图
 
-        //  Use the 'progress' event emitted by the LoaderPlugin to update the loading bar
+        // 显示进度条外框
+        this.add.rectangle(progressBarX, progressBarY, progressBarWidth, progressBarHeight).setStrokeStyle(1, 0xffffff);
+
+        // 进度条本身
+        const bar = this.add.rectangle(progressBarX - (progressBarWidth / 2) + 2, progressBarY, 4, 28, 0xffffff);
+
+        // 使用加载器的'progress'事件来更新进度条
         this.load.on('progress', (progress: number) => {
-
-            //  Update the progress bar (our bar is 464px wide, so 100% = 464px)
-            bar.width = 4 + (460 * progress);
-
+            // 计算进度条的宽度，根据加载进度来调整
+            bar.width = 4 + (progressBarWidth - 8) * progress; // 8是留出的边距（2px*4）
         });
+
     }
 
     preload() {
@@ -39,6 +50,7 @@ export class Preloader extends Scene {
         //  For example, you can define global animations here, so we can use them in other scenes.
 
         //  Move to the MainMenu. You could also swap this for a Scene Transition, such as a camera fade.
+        // this.loadbg.destroy();
         this.scene.start('Game');
     }
 
@@ -79,6 +91,15 @@ export class Preloader extends Scene {
         this.load.image('sprZombieLeg', 'sprite/zombie/sprZombieLeg.png'); // Single image, no sprite sheet
     }
 
+    // 加载bgimg和bgm 
+    loadBackground(stageId: number) {
+        let mapdata = ResourceMapData.get(stageId);
+        this.load.image('bgimg', mapdata?.bgimg);
+        this.load.audio('bgm', mapdata?.bgm);
+        // this.load.image('bgpix1', 'bg/bgPaper1.png');
+        // this.load.image('bgpix3', 'bg/bgPaper3.png');
+    }
+
     // 加载指定关卡
     loadStage(stageId: number) {
         console.log(`Loading stage ${stageId}`);
@@ -90,6 +111,8 @@ export class Preloader extends Scene {
         this.loadAllPlant();
         // 4. 加载关卡发射物
         this.loadAllProjectile();
+        // 5. 加载关卡地图
+        this.loadBackground(stageId);
 
         this.loadAllSprite();
 
