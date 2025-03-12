@@ -7,6 +7,8 @@ export const updateContent = `
     - 图鉴
     - 存档管理
     - 出怪表机制
+
+2025.3.7: 启程
 `;
 
 export const announcement =
