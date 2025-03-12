@@ -29,13 +29,18 @@ type _ResourceMapData = {
     bgm: string;
 }
 
-const chapter1: _ResourceMapData = {
+const chapter1_day: _ResourceMapData = {
     bgimg: 'bg/bgDay.png',
     bgm: 'audio/AREP-0005-03.ogg',
 }
+const chapter1_night: _ResourceMapData = {
+    bgimg: 'bg/bgHalloween.png',
+    bgm: 'audio/AREP-0005-03.ogg',
+}
+
 
 // level to data
 export const ResourceMapData: Map<number, _ResourceMapData> = new Map<number, _ResourceMapData>([
-    [1, chapter1],
-    [2, chapter1],
+    [1, chapter1_day],
+    [2, chapter1_night],
 ]);
