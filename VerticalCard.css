@@ -1,0 +1,92 @@
+.horizontal-card {
+    position: relative;
+    width: 100%;
+    height: 10%;
+    background-color: white;
+    border: 2px solid #333;
+    border-radius: 8px;
+    cursor: pointer;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    padding: 4px;
+    margin: 1% 0;
+}
+
+.horizontal-card .horizontal-card-content {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.horizontal-card .plant-image {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    height: 100%;
+}
+
+.horizontal-card .plant-cost {
+    color: #333;
+    font-weight: bold;
+    text-align: center;
+    font-size: 28px;
+    padding: 4px;
+    min-width: 30px;
+}
+
+.horizontal-card:disabled {
+    cursor: not-allowed;
+}
+
+.horizontal-card.chosen {
+    border: 4px solid yellow;
+}
+
+.horizontal-card.cooling {
+    background-color: #d3d3d3;
+}
+
+.horizontal-card.expensive {
+    background-color: #ce7f7f;
+    cursor: not-allowed;
+}
+
+.horizontal-card.paused {
+    cursor: not-allowed;
+}
+
+.horizontal-card:hover:not(:disabled) {
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.horizontal-card:active:not(:disabled) {
+    transform: scale(0.95);
+}
+
+.Vcooldown-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0%;
+    /* Start at 0% width */
+    height: 100%;
+    background-color: rgba(64, 64, 64, 0.7);
+    animation: Vcooldown 3s linear forwards;
+    /* Adjust animation duration as needed */
+}
+
+@keyframes Vcooldown {
+    from {
+        width: 0%;
+        /* Start with 0% width */
+    }
+
+    to {
+        width: 100%;
+        /* End with 100% width */
+    }
+}
