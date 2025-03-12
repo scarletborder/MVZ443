@@ -66,8 +66,10 @@ export default class MonsterSpawner {
     nextWave() {
         // 无论如何都到达了下一波,那么开始进度记录
         if (this.current_wave_idx >= 0) {
-            this.progress = this.currentWave().progress;
-            this.scene.broadCastProgress(this.currentWave().progress);
+            if (this.progress < this.currentWave().progress) { // 新进度
+                this.progress = this.currentWave().progress;
+                this.scene.broadCastProgress(this.currentWave().progress);
+            }
         }
 
         this.current_wave_idx++;
