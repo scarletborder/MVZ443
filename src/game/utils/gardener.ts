@@ -4,6 +4,7 @@ import { SHIELD_PLANT } from "../../../public/constants";
 
 // Ensure SHIELD_PLANT is typed correctly
 import DepthManager from "../../utils/depth";
+import { EventBus } from "../EventBus";
 import { IPlant } from "../models/IPlant";
 import { Game } from "../scenes/Game";
 import { PlantFactoryMap } from "./loader";
@@ -44,6 +45,15 @@ export default class Gardener {
 
         // 监听q按键
         this.scene.input.keyboard?.on('keydown-Q', () => {
+            if (this.usePickaxe) {
+                this.cancelPickAxe();
+            } else {
+                this.pickAxe();
+            }
+        });
+
+        // 监听事件
+        EventBus.on('pickaxe-click', ()=>{
             if (this.usePickaxe) {
                 this.cancelPickAxe();
             } else {

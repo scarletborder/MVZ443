@@ -49,16 +49,7 @@ const StageSelector: React.FC<StageSelectorProps> = ({ chapterId, onSelect, onBa
                 scrollbarColor: '#666 #333',
             }}>
                 <button
-                    style={{
-                        width: '100%',
-                        padding: '15px 20px',
-                        background: 'none',
-                        border: 'none',
-                        color: '#ddd',
-                        cursor: 'pointer',
-                        transition: 'all 0.3s ease',
-                        boxShadow: 'inset 0 0 0 2px rgba(100, 100, 100, 0.3)',
-                    }}
+                    className='backbutton'
                     onMouseOver={(e) => {
                         e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
                         e.currentTarget.style.boxShadow = 'inset 0 0 0 2px #00ccff';
@@ -74,14 +65,11 @@ const StageSelector: React.FC<StageSelectorProps> = ({ chapterId, onSelect, onBa
                 {stagesIds.map((stageId) => (
                     <button
                         key={stageId}
+                        className='menubutton'
                         style={{
-                            width: '100%',
-                            padding: '15px 20px',
+
                             background: selectedStage === stageId ? 'rgba(255, 255, 255, 0.1)' : 'none',
-                            border: 'none',
-                            color: '#ddd',
-                            cursor: 'pointer',
-                            transition: 'all 0.3s ease',
+
                             boxShadow: selectedStage === stageId
                                 ? 'inset 0 0 0 2px #00ccff'
                                 : 'inset 0 0 0 2px rgba(100, 100, 100, 0.3)',

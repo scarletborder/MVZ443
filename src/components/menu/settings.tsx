@@ -116,7 +116,7 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
                     },
                     {
                         title: "切换分辨率",
-                        description: "选择游戏分辨率",
+                        description: "选择游戏分辨率,移动端推荐选择画面缩小50%并选用924x693",
                         controlType: "selections",
                         controlProps: {
                             options: ["800x600", "924x693", "1024x768", "1200x900", "1600x1200"], selected: `${width}x${width / 4 * 3}`, onSelect: (val) => {
@@ -264,9 +264,8 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
                 borderRight: "1px solid rgba(100, 100, 100, 0.3)"
             }}>
                 <button
+                    className='backbutton'
                     style={{
-                        width: "100%",
-                        padding: "15px 20px",
                         background: "none",
                         border: "none",
                         color: "#ddd",
@@ -295,18 +294,9 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
                 {menuItems.map((item) => (
                     <button
                         key={item.key}
+                        className='menubutton'
                         style={{
-                            width: "100%",
-                            padding: "15px 20px",
                             background: selectedCategory === item.key ? "rgba(255, 255, 255, 0.1)" : "none",
-                            border: "none",
-                            color: "#ddd",
-                            textAlign: "center",
-                            cursor: "pointer",
-                            fontSize: "16px",
-                            transition: "all 0.3s ease",
-                            position: "relative",
-                            margin: "5px 0",
                             boxShadow: selectedCategory === item.key
                                 ? "inset 0 0 0 2px #00ccff, 0 0 8px rgba(0, 204, 255, 0.5)"
                                 : "inset 0 0 0 2px rgba(100, 100, 100, 0.3)"

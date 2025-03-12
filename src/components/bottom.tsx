@@ -63,7 +63,10 @@ export default function BottomTools({ width, chapterID }: Props) {
         (wave / 100) * 100;
 
     return (
-        <div className="bottom" style={{ width: width }}>
+        <div className="bottom" style={{
+            width: width,
+            height: width / 32,
+        }}>
             <div className="money">{money} $</div>
             <div className={`stars${starChosen ? ' chosen' : ''}`} onClick={handleStarClick}>{starStr}</div>
             <div style={{ 'width': '15%' }}></div>

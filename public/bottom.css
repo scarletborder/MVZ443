@@ -1,9 +1,5 @@
 /* bottom.css */
 .bottom {
-    height: 5%;
-    /* 占视窗高度的10% */
-    width: 100%;
-    /* 占全部宽度 */
     display: flex;
     align-items: center;
     justify-content: flex-start;

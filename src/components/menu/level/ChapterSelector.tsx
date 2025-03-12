@@ -52,16 +52,7 @@ const ChapterSelector: React.FC<ChapterSelectorProps> = ({ onSelect, onBack }) =
                 scrollbarColor: '#666 #333',
             }}>
                 <button
-                    style={{
-                        width: '100%',
-                        padding: '15px 20px',
-                        background: 'none',
-                        border: 'none',
-                        color: '#ddd',
-                        cursor: 'pointer',
-                        transition: 'all 0.3s ease',
-                        boxShadow: 'inset 0 0 0 2px rgba(100, 100, 100, 0.3)',
-                    }}
+                    className='backbutton'
                     onClick={onBack}
                 >
                     返回
@@ -70,14 +61,9 @@ const ChapterSelector: React.FC<ChapterSelectorProps> = ({ onSelect, onBack }) =
                 {Object.values(availableChapters).map((chapter) => (
                     <button
                         key={chapter}
+                        className='menubutton'
                         style={{
-                            width: '100%',
-                            padding: '15px 20px',
                             background: selectedChapter === chapter ? 'rgba(255, 255, 255, 0.1)' : 'none',
-                            border: 'none',
-                            color: '#ddd',
-                            cursor: 'pointer',
-                            transition: 'all 0.3s ease',
                             boxShadow: selectedChapter === chapter
                                 ? 'inset 0 0 0 2px #00ccff'
                                 : 'inset 0 0 0 2px rgba(100, 100, 100, 0.3)',

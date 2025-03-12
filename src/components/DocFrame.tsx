@@ -5,6 +5,7 @@ import Pokedex from './menu/pokedex';
 import Settings from './menu/settings';
 import { GameParams } from '../game/models/GameParams';
 import { publicUrl } from '../utils/browser';
+import { useDeviceType } from '../hooks/useDeviceType';
 
 interface Props {
     width: number,
@@ -80,7 +81,8 @@ export default function DocFrame({ width, height, sceneRef, setGameParams, gameS
                         key={index}
                         style={{
                             width: "100%",
-                            padding: "15px 20px",
+                            padding: '4vh 20px',
+                            maxHeight: useDeviceType() === 'mobile' ? '15vh' : '5vh',
                             background: "none",
                             border: "none",
                             color: "#ddd",
