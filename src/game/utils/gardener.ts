@@ -1,5 +1,8 @@
 // 管理种植,铲除植物.以及使用星之碎片和激发植物的能力
 
+import { SHIELD_PLANT } from "../../../public/constants";
+
+// Ensure SHIELD_PLANT is typed correctly
 import DepthManager from "../../utils/depth";
 import { IPlant } from "../models/IPlant";
 import { Game } from "../scenes/Game";
@@ -25,6 +28,7 @@ export default class Gardener {
 
     // 铁镐
     usePickaxe: boolean = false;
+    pickaxeSprite: Phaser.GameObjects.Sprite;
 
     // 高光植物和闪烁动画的管理
     private highlightSprite: Phaser.GameObjects.Sprite | null = null;
@@ -34,6 +38,18 @@ export default class Gardener {
         this.scene = scene;
         this.positionCalc = positionCalc;
         // scene.add.image()
+        this.pickaxeSprite = scene.add.sprite(0, 0, 'pickaxe');
+        this.pickaxeSprite.setDepth(DepthManager.getInGameUIElementDepth(50));
+        this.pickaxeSprite.setVisible(false);
+
+        // 监听q按键
+        this.scene.input.keyboard?.on('keydown-Q', () => {
+            if (this.usePickaxe) {
+                this.cancelPickAxe();
+            } else {
+                this.pickAxe();
+            }
+        });
     }
 
     // 选择卡片植物后
@@ -72,6 +88,23 @@ export default class Gardener {
     }
 
 
+    // 拿起铁镐
+    public pickAxe() {
+        this.stopHighlight();
+        this.prePlantPid = null;
+        this.useStarShards = false;
+        this.usePickaxe = true;
+        this.pickaxeSprite.setVisible(true);
+        // 移动的光标位置
+        const pointer = this.scene.input.activePointer;
+        this.pickaxeSprite.setPosition(pointer.x, pointer.y);
+    }
+
+    public cancelPickAxe() {
+        this.usePickaxe = false;
+        this.pickaxeSprite.setVisible(false);
+    }
+
     // 植物注册种植
     public registerPlant(plant: IPlant) {
         const key = `${plant.col}-${plant.row}`;
@@ -101,6 +134,25 @@ export default class Gardener {
         }
     }
 
+    public removePlant(pid: number, col: number, row: number) {
+        const key = `${col}-${row}`;
+        if (this.planted.has(key)) {
+            const list = this.planted.get(key);
+            if (list) {
+                const index = list.findIndex(plant => plant.pid === pid);
+                if (index >= 0) {
+                    // 找到对象
+                    const plantObj = list[index];
+                    plantObj.destroy();
+                    list.splice(index, 1);
+                }
+                if (list.length === 0) {
+                    this.planted.delete(key);
+                }
+            }
+        }
+    }
+
     // 给定植物是否能够在(col,row)种植,考虑有没有南瓜罩
     public canPlant(col: number, row: number) {
         const key = `${col}-${row}`;
@@ -120,7 +172,27 @@ export default class Gardener {
     // 鼠标移动事件dispatch
     public onMouseMoveEvent(pointer: Phaser.Input.Pointer) {
         // 如果没有选择植物，不做任何事情
-        if (!this.useStarShards && this.prePlantPid === null) {
+        // pickaxe 跟随
+        if (this.usePickaxe) {
+            const currentX = this.pickaxeSprite.x;
+            const currentY = this.pickaxeSprite.y;
+            const targetX = pointer.x;
+            const targetY = pointer.y;
+            const speed = 0.6;
+            const newX = Phaser.Math.Linear(currentX, targetX, speed);
+            const newY = Phaser.Math.Linear(currentY, targetY, speed);
+            this.pickaxeSprite.setPosition(newX, newY);
+            return;
+        }
+
+        if (this.useStarShards) {
+            // star shards
+            // 将星之碎片图标跟随
+
+            return;
+        }
+
+        if (this.prePlantPid === null) {
             return;
         }
         // 获得时间
@@ -131,13 +203,6 @@ export default class Gardener {
         }
         // 更新时间
         this.prevMovementTime = time;
-
-        if (this.prePlantPid === null) {
-            // star shards
-            // 将星之碎片图标跟随
-
-            return;
-        }
 
         const { col, row } = this.positionCalc.getGridByPos(pointer.x, pointer.y);
         if ((col === this.prevCol && row === this.prevRow) || col < 0 || row < 0) {
@@ -176,7 +241,40 @@ export default class Gardener {
 
 
         // pickaxe事件
+        if (this.usePickaxe) {
+            // 铲除事件
+            const { col, row } = this.positionCalc.getGridByPos(pointer.x, pointer.y);
+            if (col >= 0 && row >= 0 && col < this.positionCalc.Col_Number && row < this.positionCalc.Row_Number) {
+                const { y } = this.positionCalc.getGridCenter(col, row);
+                const removeShield = pointer.y < y;
+                const key = `${col}-${row}`;
 
+                // 获得 pid
+                // TODO: 在后续拓展中，要考虑 axe 在一个格子内部的上下位置来决定铲除
+
+                if (this.planted.has(key)) {
+                    const list = this.planted.get(key) || [];
+
+                    if (list.length > 0) {
+                        if (list.length === 1) {
+                            // 直接铲除唯一的植物
+                            this.scene.sendQueue.sendRemovePlant(list[0].pid, col, row);
+                        } else {
+                            // 处理多个植物情况，优先识别护盾器械
+                            const [firstPlant, secondPlant] = list;
+                            const isFirstShield = SHIELD_PLANT.includes(firstPlant.pid);
+
+                            const shieldPid = isFirstShield ? firstPlant.pid : secondPlant.pid;
+                            const nonShieldPid = isFirstShield ? secondPlant.pid : firstPlant.pid;
+
+                            // 根据指针位置决定移除护盾或非护盾植物
+                            this.scene.sendQueue.sendRemovePlant(removeShield ? shieldPid : nonShieldPid, col, row);
+                        }
+                    }
+                }
+                this.cancelPickAxe();
+            }
+        }
 
         // 种植事件
         if (this.prePlantPid !== null) {
@@ -192,6 +290,7 @@ export default class Gardener {
                 this.scene.sendQueue.sendCardPlant(this.prePlantPid[0], col, row, this.prePlantPid[1]);
             }
         }
+
     }
 
     // 开始高光
@@ -234,12 +333,4 @@ export default class Gardener {
         this.prevRow = -1;
     }
 
-    // 拿起铁镐
-    public pickAxe() {
-        this.stopHighlight();
-    }
-
-    public cancelPickAxe() {
-        this.usePickaxe = false;
-    }
 } 

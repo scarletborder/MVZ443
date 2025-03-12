@@ -170,7 +170,8 @@ export default function DocFrame({ width, height, sceneRef, setGameParams, gameS
                             color: "#fff",
                             fontSize: "20px",
                             backgroundColor: 'rgba(0, 0, 0, 0.3)',
-                            textShadow: "2px 2px 4px rgba(0, 0, 0, 0.5)"
+                            textShadow: "2px 2px 4px rgba(0, 0, 0, 0.5)",
+                            whiteSpace: "pre-wrap"
                         }}>
                             {announcement}
                         </div>

@@ -9,14 +9,14 @@ import { publicUrl } from '../utils/browser';
 interface CardProps {
     pid: number;
     texture: string;
-    plantName: string;
+    plantName: string; // 保留参数以兼容接口，尽管不显示
     cost: number;
     cooldownTime: number;
     sceneRef: React.MutableRefObject<IRefPhaserGame | null>;
     level: number;
 }
 
-export default function Card({ pid, texture, plantName, cooldownTime, sceneRef, cost, level }: CardProps) {
+export default function VCard({ pid, texture, plantName, cooldownTime, sceneRef, cost, level }: CardProps) {
     const [isCoolingDown, setIsCoolingDown] = useState(false);
     const [remainingTime, setRemainingTime] = useState(0);
     const [isChosen, setIsChosen] = useState(false);
@@ -24,10 +24,10 @@ export default function Card({ pid, texture, plantName, cooldownTime, sceneRef, 
     const [pausedTime, setPausedTime] = useState(0);
     const settings = useSettings();
 
+    // [保持原有的 useEffect 逻辑不变]
     useEffect(() => {
         let timer: NodeJS.Timeout;
         if (isCoolingDown && remainingTime > 0 && !isPaused) {
-            // console.log('start cooldown', remainingTime);
             timer = setInterval(() => {
                 setRemainingTime(prev => Math.max(prev - 0.1, 0));
             }, 100);
@@ -47,7 +47,7 @@ export default function Card({ pid, texture, plantName, cooldownTime, sceneRef, 
                 setIsCoolingDown(true);
             }
         }
-    }, [isPaused]); // 别改
+    }, [isPaused]);
 
     useEffect(() => {
         const handleDeselect = (data: { pid: number | null }) => {
@@ -58,19 +58,16 @@ export default function Card({ pid, texture, plantName, cooldownTime, sceneRef, 
         const handlePlant = (data: { pid: number }) => {
             if (data.pid === pid) {
                 setIsChosen(false);
-                // Use the isPaused value from the component scope
                 if (!isPaused) {
                     setIsCoolingDown(true);
                     setRemainingTime(cooldownTime);
                 } else {
-                    // If paused, wait until unpaused to start cooldown
                     setRemainingTime(cooldownTime);
                     setIsCoolingDown(true);
                     const timer = setInterval(() => {
                         if (!isPaused) {
                             console.log('resume');
                             clearInterval(timer);
-
                         }
                     }, 100);
                 }
@@ -82,7 +79,7 @@ export default function Card({ pid, texture, plantName, cooldownTime, sceneRef, 
             EventBus.removeListener('card-deselected', handleDeselect);
             EventBus.removeListener('card-plant', handlePlant);
         };
-    }, [pid, isPaused, cooldownTime]); // Add isPaused and cooldownTime to dependencies
+    }, [pid, isPaused, cooldownTime]);
 
     const handleClick = () => {
         if (isPaused && !settings.isBluePrint) {
@@ -109,19 +106,18 @@ export default function Card({ pid, texture, plantName, cooldownTime, sceneRef, 
         if (!isCoolingDown) {
             setIsChosen(true);
             scene.chooseCard(pid, level);
-            console.log(`Card ${plantName} (pid=${pid} level=${level}) chosen`);
+            console.log(`Card (pid=${pid} level=${level}) chosen`);
         }
     };
 
     return (
         <button
-            className={`card ${isCoolingDown ? 'cooling' : ''} ${isChosen ? 'chosen' : ''} 
+            className={`horizontal-card ${isCoolingDown ? 'cooling' : ''} ${isChosen ? 'chosen' : ''} 
                 ${(energy < cost) ? 'expensive' : ''} ${(isPaused && !settings.isBluePrint) ? 'paused' : ''}`}
             onClick={handleClick}
             disabled={isCoolingDown}
         >
-            <div className="card-content">
-                <div className="plant-name">{plantName}</div>
+            <div className="horizontal-card-content">
                 <div className="plant-image">
                     {texture && texture !== "" && (
                         <img
@@ -139,7 +135,7 @@ export default function Card({ pid, texture, plantName, cooldownTime, sceneRef, 
             </div>
             {isCoolingDown && (
                 <div
-                    className="cooldown-overlay"
+                    className="Vcooldown-overlay"
                     style={{
                         animationDuration: `${cooldownTime}s`,
                         animationPlayState: isPaused ? 'paused' : 'running',

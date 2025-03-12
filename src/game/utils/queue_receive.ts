@@ -99,7 +99,7 @@ export default class QueueReceive {
         this.game.handleCardPlant(pid, level, col, row, uid);
     }
     private _removePlant(pid: number, col: number, row: number, uid: number) {
-        // this.game.handleRemovePlant(pid, col, row);
+        this.game.handleRemovePlant(pid, col, row);
     }
     private _useStarShards(pid: number, col: number, row: number, uid: number) {
         // this.game.handleUseStarShards(pid, col, row, uid);

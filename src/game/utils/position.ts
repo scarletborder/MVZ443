@@ -138,4 +138,10 @@ export class PositionCalc {
             row: Math.floor((y - this.gridOffsetY) / this.GRID_SIZEY)
         }
     }
+
+    // 根据 (x,y) 计算 (col,row) 的中心
+    public getCenterByPos(x: number, y: number) {
+        const { col, row } = this.getGridByPos(x, y);
+        return this.getGridCenter(col, row);
+    } 
 }

@@ -68,6 +68,7 @@ export class Preloader extends Scene {
 
     // 加载全部sprite
     loadAllSprite() {
+        this.load.image('pickaxe', 'sprite/pickaxe.png');
         this.load.spritesheet('anime/death_smoke', 'anime/death_smoke.png',
             { frameWidth: 16, frameHeight: 16 });
 

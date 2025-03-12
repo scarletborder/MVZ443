@@ -193,6 +193,11 @@ export class Game extends Scene {
         }
     }
 
+    handleRemovePlant(pid: number, col: number, row: number) {
+        // 本地移除
+        this.gardener.removePlant(pid, col, row);
+    }
+
 
     /** 
      * 本地
@@ -256,11 +261,6 @@ export class Game extends Scene {
 
     // game->app 通知游戏结束
     handleExit(isWin: boolean = false) {
-        // this.physics.world?.resume(); // 恢复物理系统
-        // this.anims.resumeAll(); // 恢复所有动画
-        // this.time.paused = false; // 恢复定时器
-        // this.pauseText.setVisible(false); // 隐藏"已停止"文本
-        // this.exitText.setVisible(false).disableInteractive();
         this.isGameEnd = true;
         EventBus.emit('okIsPaused', { paused: false });
         this.params.gameExit({

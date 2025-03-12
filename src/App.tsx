@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { IRefPhaserGame, PhaserGame } from './game/PhaserGame';
-import { CardSlotHorizontal, EnergySlot } from './components/cardslot';
+import { CardSlotHorizontal, CardSlotVertical, EnergySlot, VerticalEnergySlot } from './components/cardslot';
 import { GameProvider } from './context/garden_ctx';
 import BottomTools from './components/bottom';
 import DocFrame from './components/DocFrame';
@@ -10,6 +10,7 @@ import { GameParams } from './game/models/GameParams';
 import i18n from './utils/i18n';
 import { OnWin, StageResult } from './game/models/IRecord';
 import GameResultView from './components/menu/result';
+import { useDeviceType } from './hooks/useDeviceType';
 
 function App() {
     // State to control the visibility of the game tool
@@ -18,6 +19,7 @@ function App() {
     const [showGameResult, setShowGameResult] = useState(false);
     const [gameParams, setGameParams] = useState<GameParams | null>(null);
     const [gameResult, setGameResult] = useState<StageResult | null>(null);
+    const deviceType = useDeviceType();
 
     //  References to the PhaserGame component (game and scene are exposed)
     const phaserRef = useRef<IRefPhaserGame | null>(null);
@@ -56,6 +58,7 @@ function App() {
 
     // 监听键盘事件
     useEffect(() => {
+        console.log(deviceType)
         const handleKeyDown = (event: KeyboardEvent) => {
             if (event.key === "F1" || event.key === "F2" || event.key === "F3" || event.key === "F4"
                 || event.key === "F5" || event.key === "F6" || event.key === "F7" || event.key === "F8"
@@ -87,11 +90,13 @@ function App() {
             MozUserSelect: "none",
             msUserSelect: "none",
             KhtmlUserSelect: "none",
+            display: "flex",
+            flexDirection: deviceType === 'pc' ? "column" : "row",
+            justifyContent: "center",
         }}>
-
             <SaveProvider>
                 <GameProvider>
-                    {showGameTool &&
+                    {showGameTool && deviceType === 'pc' &&
                         <div id="cardsContainer" style={{
                             "height": width / 8,
                             "maxHeight": '135px',
@@ -103,27 +108,75 @@ function App() {
                             <CardSlotHorizontal sceneRef={phaserRef} gameParams={gameParams} />
                         </div>}
 
-
-                    <div id="mainContainer">
-                        <div id="controlContainer">
-
-
+                    <div style={{
+                        display: "flex",
+                        flexDirection: "row",
+                        alignItems: "center",
+                    }}>
+                        {deviceType === 'mobile' && showGameScreen &&
+                            <div id='mobileCardContainer' style={{
+                                width: width / 8,
+                                maxWidth: '135px',
+                                height: width * 79 / 100,
+                                display: "flex",
+                                flexDirection: "column",
+                                justifyContent: "center",
+                                marginRight: "10px",
+                            }}>
+                                <VerticalEnergySlot />
+                                <CardSlotVertical
+                                    sceneRef={phaserRef}
+                                    gameParams={gameParams}
+                                />
+                            </div>
+                        }
+                        <div id="mainContainer" style={{
+                            width: width,
+                            display: "flex",
+                            flexDirection: "column", // 改为垂直布局以容纳 BottomTools
+                        }}>
+                            <div id="controlContainer">
+                            </div>
+                            {showGameScreen && (!showGameResult) &&
+                                <PhaserGame
+                                    ref={phaserRef}
+                                    currentActiveScene={currentScene}
+                                    isVisibility={showGameScreen}
+                                    gameParams={gameParams}
+                                    gameExit={gameExit}
+                                />
+                            }
+                            {(!showGameScreen) && (!showGameResult) &&
+                                <DocFrame
+                                    width={width}
+                                    sceneRef={phaserRef}
+                                    setGameParams={setGameParams}
+                                    gameStart={gameStart}
+                                />
+                            }
+                            {showGameResult && (!showGameScreen) && (gameResult) &&
+                                <GameResultView
+                                    isWin={gameResult?.isWin ? gameResult.isWin : false}
+                                    onWin={gameResult?.onWin}
+                                    progressRewards={gameResult?.rewards}
+                                    myProgress={gameResult?.progress ? gameResult.progress : 0}
+                                    onBack={exitResultView}
+                                    width={width}
+                                    height={width * 3 / 4}
+                                />
+                            }
+                            {showGameTool &&
+                                <BottomTools
+                                    width={width}
+                                    chapterID={gameParams?.level}
+                                />
+                            }
                         </div>
-                        {showGameScreen && (!showGameResult) && <PhaserGame ref={phaserRef} currentActiveScene={currentScene} isVisibility={showGameScreen} gameParams={gameParams} gameExit={gameExit} />}
-                        {(!showGameScreen) && (!showGameResult) && <DocFrame width={width} sceneRef={phaserRef} setGameParams={setGameParams} gameStart={gameStart} />}
-                        {showGameResult && (!showGameScreen) && (gameResult) && <GameResultView isWin={gameResult?.isWin ? gameResult.isWin : false}
-                            onWin={gameResult?.onWin} progressRewards={gameResult?.rewards} myProgress={gameResult?.progress ? gameResult.progress : 0}
-                            onBack={exitResultView} width={width} height={width * 3 / 4} />}
+
+
                     </div>
-
-                    {showGameTool &&
-                        <BottomTools width={width} chapterID={gameParams?.level} />}
-
                 </GameProvider>
             </SaveProvider>
-
-
-
         </div>
     )
 }

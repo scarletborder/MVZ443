@@ -55,7 +55,7 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({ stageId, setGameParams,
             const newPlant: PlantElem = {
                 pid: pid,
                 name: plantObj.name,
-                imgUrl: `${publicUrl}/assets/${plantObj.texture}.png`,
+                imgUrl: `${publicUrl}/assets/card/${plantObj.texture}.png`,
                 level: plantProgress[i].level
             };
             newAvailablePlants.push(newPlant);
@@ -248,12 +248,13 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({ stageId, setGameParams,
                                     e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
                                 }}
                             >
-                                <div style={{ width: "64px", height: "64px", overflow: "hidden" }}>
+                                <div style={{ overflow: "hidden" }}>
                                     <img
                                         src={plant.imgUrl}
                                         alt={plant.name}
-                                        style={{ display: "block" }}
+                                        style={{ display: "block", width: "90%", height: "80%" }}
                                         draggable="false"
+
                                     />
                                 </div>
                                 <span style={{ marginLeft: '10px' }}>{plant.name}</span>
