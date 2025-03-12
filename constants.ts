@@ -23,3 +23,19 @@ export const SECKILL = 99889988;
 
 // 护盾器械,铲除上方时铲除,可以和任何非护盾器械兼容
 export const SHIELD_PLANT: number[] = [];
+
+type _ResourceMapData = {
+    bgimg: string;
+    bgm: string;
+}
+
+const chapter1: _ResourceMapData = {
+    bgimg: 'bg/bgDay.png',
+    bgm: 'audio/AREP-0005-03.ogg',
+}
+
+// level to data
+export const ResourceMapData: Map<number, _ResourceMapData> = new Map<number, _ResourceMapData>([
+    [1, chapter1],
+    [2, chapter1],
+]);
