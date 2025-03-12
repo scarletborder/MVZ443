@@ -6,6 +6,7 @@ import { useSaveManager } from '../../../context/save_ctx';
 import { PlantFactoryMap, StageDataRecords } from '../../../game/utils/loader';
 import { publicUrl } from '../../../utils/browser';
 import i18n from '../../../utils/i18n';
+import { useSettings } from '../../../context/settings_ctx';
 
 interface ParamsSelectorProps {
     chapterId: number;
@@ -29,6 +30,7 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({ stageId, setGameParams,
     const [availablePlants, setAvailablePlants] = useState<PlantElem[]>([]);
     const garden_ctx = useGameContext();
     const { currentProgress } = useSaveManager();
+    const settings = useSettings();
 
     const handlePlantToggle = (pid: number) => {
         setSelectedPlants(prev =>
@@ -72,7 +74,11 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({ stageId, setGameParams,
             plants: selectedPlants,
             difficulty,
             gameExit: _,
-            setInitialEnergy: garden_ctx.setEnergy
+            setInitialEnergy: garden_ctx.setEnergy,
+            gameSettings: {
+                isBluePrint: settings.isBluePrint,
+                isDebug: settings.isDebug
+            }
         };
         setGameParams(params);
         startGame();

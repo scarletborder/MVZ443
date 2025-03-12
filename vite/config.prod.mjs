@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import removeConsole from 'vite-plugin-remove-console'
 
 const phasermsg = () => {
     return {
@@ -21,7 +22,8 @@ export default defineConfig({
     base: './',
     plugins: [
         react(),
-        phasermsg()
+        phasermsg(),
+        removeConsole()
     ],
     logLevel: 'warning',
     build: {

@@ -6,10 +6,12 @@ interface GameSettings {
     width: number; // width
     language: string;
     isBluePrint: boolean;
+    isDebug: boolean;
     toggleFullScreen: () => void;
     setWidth: (newWidth: number) => void;
     toggleLanguage: () => void;
     setIsBluePrint: (isBluePrint: boolean) => void;
+    setIsDebug: (isDebug: boolean) => void;
 
     exportAsJson: () => string;
     importFromJson: (jsonString: string) => void;
@@ -32,6 +34,8 @@ export function SettingsProvider(props: Props) {
     const [language, setLanguage] = useState<string>('en');
     // 是否开启私密蓝图模式
     const [isBluePrint, setIsBluePrintStatus] = useState<boolean>(false);
+    // 调试框
+    const [isDebug, setIsDebug] = useState<boolean>(false);
 
     const setIsBluePrint = (isBluePrint: boolean) => {
         debounce((newVal) => setIsBluePrintStatus(newVal), 50)(isBluePrint);
@@ -82,12 +86,14 @@ export function SettingsProvider(props: Props) {
         width,
         language,
         isBluePrint,
+        isDebug,
         toggleFullScreen,
         setWidth,
         toggleLanguage,
         setIsBluePrint,
         exportAsJson,
-        importFromJson
+        importFromJson,
+        setIsDebug,
     };
 
     return (

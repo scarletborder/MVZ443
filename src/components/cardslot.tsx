@@ -8,6 +8,8 @@ import { IRecord } from '../game/models/IRecord';
 import { useSaveManager } from '../context/save_ctx';
 import { GameParams } from '../game/models/GameParams';
 import VCard from './vcard';
+import { publicUrl } from '../utils/browser';
+import { useDeviceType } from '../hooks/useDeviceType';
 
 interface slotProps {
     sceneRef: React.MutableRefObject<IRefPhaserGame | null>;
@@ -45,20 +47,29 @@ export function EnergySlot() {
     }, [updateEnergy]);
     return (
         <div style={{
-            display: 'flex',
+            display: "flex",  // 关键：启用 Flexbox 布局
             flexDirection: "column",
-            backgroundColor: '#f0f0f0',
-            justifyContent: 'flex-end',
-            width: '10%',
-            height: "100%",
+            justifyContent: "center",  // 让内容垂直居中
             alignItems: "center",
-            color: 'black'
+            backgroundColor: '#f0f0f0',
+            width: '6%',
+            minWidth: "6%",
+            maxWidth: '150px', // 避免过窄
+            height: "100%",
+            padding: '10px',
+            color: 'black',
+            textAlign: 'center',
         }}>
-            <p>Energy</p>
-            <p>{energy}</p>
+            <img src={`${publicUrl}/assets/sprite/redstone.png`} alt="energy"
+                style={{ width: '40px', height: '40px', marginBottom: '10px' }} draggable="false" />
+            <p style={{
+                fontSize: '1.6em',
+                margin: 0  // 去除默认外边距
+            }}>{energy}</p>
         </div>
     )
 }
+
 
 export function VerticalEnergySlot() {
     const { energy, updateEnergy } = useGameContext();
@@ -86,23 +97,27 @@ export function VerticalEnergySlot() {
     }, [updateEnergy]);
     return (
         <div style={{
-            flexDirection: "column",
-            backgroundColor: '#f0f0f0',
-            width: '110%',
-            maxHeight: '10%',
+            display: "flex",  // 关键：使用 Flexbox 布局
+            flexDirection: "row",
             alignItems: "center",
+            backgroundColor: '#f0f0f0',
+            width: '100%',
+            padding: '10px',
             color: 'black',
             textAlign: 'center',
+            gap: '10px'  // 增加间距
         }}>
-            <p>Energy  {energy}</p>
+            <img src={`${publicUrl}/assets/sprite/redstone.png`} alt="energy"
+                style={{ width: '40px', height: '40px' }} draggable="false" />
+            <p style={{ margin: 0, fontSize: '1.5em' }}>{energy}</p>
         </div>
+
     )
 }
 
 export function CardSlotHorizontal({ sceneRef, gameParams }: slotProps) {
-    // TODO:通过选关界面获得的植物信息
-    // 这里获得了除了游戏内使用的函数以外的全部信息
-    // energy使用情况也是从这里发出
+    // PC 用主要卡槽
+    const MaxCardNumber = 10;
     const { currentProgress } = useSaveManager();
     const [plants, setPlants] = useState<Array<IRecord>>([]);
     // 使用 WeakMap 来记录 pid 到 level 的映射
@@ -112,7 +127,7 @@ export function CardSlotHorizontal({ sceneRef, gameParams }: slotProps) {
         if (!gameParams) {
             return;
         }
-        const newPlants: Array<IRecord> = gameParams.plants
+        const newPlants: Array<IRecord> = gameParams.plants.slice(0, MaxCardNumber)
             .map(pid => PlantFactoryMap[pid])
             .filter(Boolean);
 
@@ -125,8 +140,7 @@ export function CardSlotHorizontal({ sceneRef, gameParams }: slotProps) {
         });
     }, [gameParams, currentProgress]);
 
-    let line_1 = 9// 第一行, 阳光显示 + 9个卡槽
-    let line_2 = 9// 列, 铲子 + 9个卡槽
+
 
     return (<div style={{
         display: 'flex',
@@ -155,6 +169,8 @@ export function CardSlotHorizontal({ sceneRef, gameParams }: slotProps) {
 
 
 export function CardSlotVertical({ sceneRef, gameParams }: slotProps) {
+    // Mobile 用主要卡槽
+    const MaxCardNumber = 9;
     const { currentProgress } = useSaveManager();
     const [plants, setPlants] = useState<Array<IRecord>>([]);
     const pidToLevelMap = new Map<number, number>();
@@ -163,7 +179,7 @@ export function CardSlotVertical({ sceneRef, gameParams }: slotProps) {
         if (!gameParams) {
             return;
         }
-        const newPlants: Array<IRecord> = gameParams.plants
+        const newPlants: Array<IRecord> = gameParams.plants.slice(0, MaxCardNumber)
             .map(pid => PlantFactoryMap[pid])
             .filter(Boolean);
 
@@ -184,7 +200,7 @@ export function CardSlotVertical({ sceneRef, gameParams }: slotProps) {
             justifyContent: 'flex-start',
             alignItems: 'center',
             width: '120%', /* 调整宽度以适应横向卡片 */
-            height: "100%",
+            height: "91%",
         }}>
             {plants.map((plant, index) => (
                 <VCard
@@ -200,4 +216,62 @@ export function CardSlotVertical({ sceneRef, gameParams }: slotProps) {
             ))}
         </div>
     );
+}
+
+
+// 永远竖向排列,有pickaxe和剩余的卡片
+export function ViceCardSlot({ sceneRef, gameParams }: slotProps) {
+    // TODO:通过选关界面获得的植物信息
+    // 这里获得了除了游戏内使用的函数以外的全部信息
+    // energy使用情况也是从这里发出
+    const { currentProgress } = useSaveManager();
+    const [plants, setPlants] = useState<Array<IRecord>>([]);
+    // 使用 WeakMap 来记录 pid 到 level 的映射
+    const pidToLevelMap = new Map<number, number>();
+    const ExistedCards = useDeviceType() === 'pc' ? 10 : 9;
+
+    useEffect(() => {
+        if (!gameParams) {
+            return;
+        }
+        // 显示盈余的卡片
+        if (gameParams.plants.length > ExistedCards) {
+            const newPlants: Array<IRecord> = gameParams.plants
+                .map(pid => PlantFactoryMap[pid])
+                .filter(Boolean);
+
+            setPlants(newPlants);
+
+            currentProgress.plants.forEach(plant => {
+                if (gameParams.plants.includes(plant.pid)) {
+                    pidToLevelMap.set(plant.pid, plant.level);
+                }
+            });
+        } else {
+            setPlants([]);
+        }
+    }, [gameParams, currentProgress]);
+
+    return (<div style={{
+        display: 'flex',
+        flexDirection: "row",
+        backgroundColor: '#f0f0f0',
+        justifyContent: 'flex-start',
+        width: '100%',
+        height: "100%",
+        alignItems: "center",
+    }} >
+        {plants.map((plant, index) => (
+            <Card
+                key={index}
+                plantName={plant.name}
+                cooldownTime={plant.cooldownTime}
+                sceneRef={sceneRef}
+                pid={plant.pid}
+                texture={plant.texture}
+                cost={plant.cost(pidToLevelMap.get(plant.pid) || 1)}
+                level={pidToLevelMap.get(plant.pid) || 1}
+            />
+        ))}
+    </div>);
 }

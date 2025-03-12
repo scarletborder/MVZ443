@@ -8,7 +8,13 @@ export interface GameParams {
     difficulty?: 'easy' | 'normal' | 'hard'; // 可选难度（未来扩展）
     gameExit: (result: StageResult) => void;
     setInitialEnergy: (energy: number) => void;
+    gameSettings : GameSettings;
     [key: string]: any; // 允许动态扩展其他参数
+}
+
+export interface GameSettings {
+    isBluePrint: boolean;
+    isDebug: boolean;
 }
 
 export interface ChapterDescription {

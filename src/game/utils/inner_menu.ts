@@ -1,3 +1,4 @@
+import { debounce } from "../../utils/debounce";
 import DepthManager from "../../utils/depth";
 import { Game } from "../scenes/Game";
 
@@ -16,8 +17,10 @@ export default function CreateInnerMenu(game: Game) {
     ).setOrigin(1, 1).setInteractive().setDepth(DepthManager.getMenuDepth());
     game.pauseBtn.on('pointerup', () => {
         // 判断场景有无暂停
-        const currently = game.physics.world.isPaused;
-        game.handlePause({ paused: !currently });
+        debounce(() => {
+            const currently = game.physics.world.isPaused;
+            game.handlePause({ paused: !currently });
+        }, 100)();
     }, game);
 
     game.pauseText = game.add.text(

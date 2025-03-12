@@ -23,17 +23,10 @@ export default function BottomTools({ width, chapterID }: Props) {
             updateWave(data.progress);
         }
 
-        const handleSceneReady = (data: { scene: Phaser.Scene }) => {
-            EventBus.emit("send-game-settings", {
-                isBluePrint
-            });
-        };
         EventBus.on('game-progress', handleProgress);
-        EventBus.on('current-scene-ready', handleSceneReady);
 
         return () => {
             EventBus.removeListener('game-progress', handleProgress);
-            EventBus.removeListener('current-scene-ready', handleSceneReady);
         }
     }, [isBluePrint, updateWave])
 

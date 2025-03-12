@@ -7,7 +7,7 @@ import { PositionCalc } from '../utils/position';
 import Gardener from '../utils/gardener';
 import MonsterSpawner from '../utils/spawner';
 import InnerSettings from '../utils/settings';
-import { GameParams } from '../models/GameParams';
+import { GameParams, GameSettings } from '../models/GameParams';
 import { PlantFactoryMap } from '../utils/loader';
 import QueueReceive from '../utils/queue_receive';
 import QueueSend from '../utils/queue_send';
@@ -28,7 +28,7 @@ export class Game extends Scene {
     public positionCalc: PositionCalc;
     public gardener: Gardener;
     public monsterSpawner: MonsterSpawner;
-    public innerSettings: InnerSettings;
+    public innerSettings: GameSettings;
 
 
     camera: Phaser.Cameras.Scene2D.Camera;
@@ -57,12 +57,14 @@ export class Game extends Scene {
 
     preload() {
         this.params = this.game.registry.get('gameParams') as GameParams;
+        this.stageData = this.cache.json.get(`ch${this.params.level}`) as StageData;
+        this.innerSettings = this.params.gameSettings;
     }
 
     create() {
         this.isGameEnd = true;
         // read external data
-        this.stageData = this.cache.json.get(`ch${this.params.level}`);
+        // TODO : 根据type具体判断放置那张背景图
         this.params = this.game.registry.get('gameParams') as GameParams;
         this.scaleFactor = this.scale.displaySize.width / 800;
 
@@ -90,8 +92,9 @@ export class Game extends Scene {
             }
         }
 
-        this.physics.world.createDebugGraphic(); // 显示所有物体的碰撞体
-        this.physics.world.drawDebug = true;
+        if (this.innerSettings.isDebug) {
+            this.physics.world.createDebugGraphic(); // 显示所有物体的碰撞体
+        }
         this.physics.resume(); // 恢复物理系统
 
         // 设置主摄像机背景颜色
@@ -131,8 +134,6 @@ export class Game extends Scene {
             const currently = this.physics.world.isPaused;
             this.handlePause({ paused: !currently });
         });
-
-        this.innerSettings = new InnerSettings();
 
         EventBus.on('setIsPaused', this.handlePause, this);
         // TODO: move to gardener
