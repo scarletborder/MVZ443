@@ -85,7 +85,7 @@ export class Game extends Scene {
             // 网格初始化
             // 包括镶嵌地板
             for (let row = 0; row < this.GRID_ROWS; row++) {
-                this.grid[row] = [];
+                // this.grid[row] = [];
                 for (let col = 0; col < this.GRID_COLS; col++) {
                     const { x, y } = this.positionCalc.getGridTopLeft(col, row);
                     const rect = this.add.rectangle(x, y, this.positionCalc.GRID_SIZEX,
@@ -95,6 +95,17 @@ export class Game extends Scene {
                 }
             }
             this.physics.world.createDebugGraphic(); // 显示所有物体的碰撞体
+        } else {
+            for (let row = 0; row < this.GRID_ROWS; row++) {
+                // this.grid[row] = [];
+                for (let col = 0; col < this.GRID_COLS; col++) {
+                    const { x, y } = this.positionCalc.getGridTopLeft(col, row);
+                    const rect = this.add.rectangle(x, y, this.positionCalc.GRID_SIZEX,
+                        this.positionCalc.GRID_SIZEY, 0, 0.2)
+                        .setOrigin(0, 0).setDepth(3);
+                    rect.setStrokeStyle(1, 0xffffff, 0.1);
+                }
+            }
         }
         this.physics.resume(); // 恢复物理系统
 
