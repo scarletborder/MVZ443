@@ -34,7 +34,7 @@ const chapter1_day: _ResourceMapData = {
     bgm: 'audio/AREP-0005-03.ogg',
 }
 const chapter1_night: _ResourceMapData = {
-    bgimg: 'bg/bgHalloween.png',
+    bgimg: 'bg/bgInnerMine.png',
     bgm: 'audio/AREP-0005-03.ogg',
 }
 
