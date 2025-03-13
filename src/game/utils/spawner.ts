@@ -111,6 +111,18 @@ export default class MonsterSpawner {
 
     }
 
+    shuffleArray<T>(array: T[]): T[] {
+        const rng = this.SeedRandom(); // 创建一个基于种子的随机数生成器
+        const shuffledArray = [...array]; // 创建原数组的副本
+
+        for (let i = shuffledArray.length - 1; i > 0; i--) {
+            const j = Math.floor(rng * (i + 1)); // 使用伪随机数生成器
+            [shuffledArray[i], shuffledArray[j]] = [shuffledArray[j], shuffledArray[i]]; // 交换元素
+        }
+
+        return shuffledArray;
+    }
+
     spawnMonster() {
         const wave = this.currentWave();
 
@@ -130,7 +142,8 @@ export default class MonsterSpawner {
             return;
         }
 
-        Phaser.Utils.Array.Shuffle(totalMonsters);
+        // 怪物随机排序
+        this.shuffleArray(totalMonsters)
         const duration = wave.duration * 1000;
         const interval = duration / totalMonsters.length;
 

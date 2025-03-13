@@ -14,6 +14,23 @@ interface MultiParams {
 }
 
 // 消息类型
+type _requestJoin = {
+    // 多人only,加入房间
+    type: 0x00;
+    roomID: number;
+}
+
+type _requestChooseMap = {
+    type: 0x10;
+    chapterId: number;
+}
+
+// 选卡结束,游戏外的准备
+type _requestStartGame = {
+    type: 0x20;
+}
+
+// 加载结束,游戏内的准备
 type _ready = {
     type: 0x01;
     uid: number; // 来源用户
@@ -67,15 +84,12 @@ export default class QueueSend {
     }
 
     Consume() {
-        while (!this.queues.isEmpty()) {
-            const data = this.queues.shift();
-            if (!data) continue;
-
-            if (this.singRecvQueue) {
+        if (this.singRecvQueue) {
+            while (!this.queues.isEmpty()) {
+                const data = this.queues.shift();
+                if (!data) continue;
                 this.dispatchSingle(data);
-                continue;
             }
-            console.log('multi player mode is not implemented now');
         }
     }
 

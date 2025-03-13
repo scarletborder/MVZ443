@@ -1,9 +1,11 @@
 // src/components/LevelSelector.tsx
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { GameParams } from '../../game/models/GameParams';
 import ChapterSelector from './level/ChapterSelector';
 import StageSelector from './level/StageSelector';
 import ParamsSelector from './level/ParamsSelector';
+import { StageDataRecords } from '../../game/utils/loader';
+import BackendWS from '../../utils/net/sync';
 
 interface LevelSelectorProps {
     width: number;
@@ -11,9 +13,14 @@ interface LevelSelectorProps {
     onBack: () => void;
     setGameParams: (params: GameParams) => void;
     startGame: () => void;
+
+    skipToParams?: boolean;
+    chosenStage?: number;
+    islord?: boolean;
 }
 
-const LevelSelector: React.FC<LevelSelectorProps> = ({ setGameParams, startGame, width, height, onBack }) => {
+const LevelSelector: React.FC<LevelSelectorProps> = ({ setGameParams, startGame, width, height, onBack,
+    skipToParams, chosenStage, islord }) => {
     const [currentStep, setCurrentStep] = useState<'chapter' | 'stage' | 'params'>('chapter');
     const [selectedChapterId, setSelectedChapterId] = useState<number | null>(null);
     const [selectedStageId, setSelectedStageId] = useState<number | null>(null);
@@ -22,6 +29,32 @@ const LevelSelector: React.FC<LevelSelectorProps> = ({ setGameParams, startGame,
         if (currentStep === 'stage') setCurrentStep('chapter');
         if (currentStep === 'params') setCurrentStep('stage');
     };
+
+    useEffect(() => {
+        if (skipToParams && chosenStage) {
+            setSelectedChapterId(StageDataRecords[chosenStage].chapterID);
+            setSelectedStageId(chosenStage);
+            setCurrentStep('params');
+        }
+    }, [skipToParams, chosenStage]);
+
+    useEffect(() => {
+        const chapterJumpHandler = (event: MessageEvent) => {
+            const data = JSON.parse(event.data);
+            if (data.type === 0x00 && !islord) {
+                const chapterID = data.chapterId;
+                  // 不选卡了
+                if (chapterID === 0) {
+                    console.log('get back');
+                    onBack();
+                }
+            }
+        }
+        BackendWS.addMessageListener(chapterJumpHandler);
+        return () => {
+            BackendWS.delMessageListener(chapterJumpHandler);
+        }
+    }, []);
 
     return (
         <div style={{
@@ -49,6 +82,15 @@ const LevelSelector: React.FC<LevelSelectorProps> = ({ setGameParams, startGame,
                     onSelect={(stageId) => {
                         setSelectedStageId(stageId);
                         setCurrentStep('params');
+                        if (islord) {
+                            console.log("send message map");
+                            BackendWS.sendMessage(JSON.stringify(
+                                {
+                                    type: 0x10,
+                                    chapterId: stageId
+                                }
+                            ))
+                        }
                     }}
                     onBack={handleBack}
                 />
@@ -59,7 +101,17 @@ const LevelSelector: React.FC<LevelSelectorProps> = ({ setGameParams, startGame,
                     stageId={selectedStageId}
                     setGameParams={setGameParams}
                     startGame={startGame}
-                    onBack={handleBack}
+                    onBack={() => {
+                        if (islord) {
+                            BackendWS.sendMessage(JSON.stringify(
+                                {
+                                    type: 0x10,
+                                    chapterId: 0
+                                }
+                            ))
+                        }
+                        handleBack();
+                    }}
                 />
             )}
         </div>

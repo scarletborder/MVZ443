@@ -11,6 +11,8 @@ import i18n from './utils/i18n';
 import { OnWin, StageResult } from './game/models/IRecord';
 import GameResultView from './components/menu/result';
 import { useDeviceType } from './hooks/useDeviceType';
+import { _RoomInfo } from './game/utils/queue_receive';
+import BackendWS from './utils/net/sync';
 
 function App() {
     // State to control the visibility of the game tool
@@ -49,6 +51,9 @@ function App() {
         // 结算
         setGameResult(result);
         setShowGameResult(true);
+        BackendWS.sendMessage(JSON.stringify({
+            type: 0x20,
+        }));
     }, [setShowGameScreen, setShowGameTool]);
 
     // Event emitted from the PhaserGame component

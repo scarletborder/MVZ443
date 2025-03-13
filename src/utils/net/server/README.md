@@ -1,0 +1,13 @@
+第一个用户建立ws连接后发送_requestJoin,服务器返回_RoomInfo
+如果_RoomInfo.peer length为0,说明当前没有其他玩家,这是第一个用户
+期间,第二个用户可以进入房间,返回的_RoomInfo.peer 不空,前端知道这个用户只能等待选择不了地图
+接着第一个用户选择地图,发送_requestChooseMap,服务器记录这个信息, 再次广播_RoomInfo   //发送 _ChooseMap 给所有用户
+接着前端收到消息后通知用户开始选择卡片,选择完后用户发送 _requestStartGame, 
+待所有用户选择卡片结束后,用户加载地图,加载完后用户发送_ready
+所有用户_ready后,服务器为所有用户发送_GameStart, 其中每个用户收到的消息的myId不同,seed是服务器随机生成的number
+用户收到_GameStart后游戏正式开始
+进入游戏主循环
+服务器在 接收goroutine 中接受所有用户发来的_requestCardPlant, _requestRemovePlant,  _requestStarShards,
+进行简单的逻辑判断(这里简单设置为最先来的消息占据了某个col,row,如果后续消息中有相同col,row那么失效),如果有效加入一个待发送list
+
+发送goroutine, 每200ms将list组装成json发给每个用户

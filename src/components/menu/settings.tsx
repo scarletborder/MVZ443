@@ -4,7 +4,10 @@ import { useSaveManager } from '../../context/save_ctx';
 import { useSettings } from '../../context/settings_ctx';
 import { debounce } from '../../utils/debounce';
 import i18n from '../../utils/i18n';
-// import { useSave } from './SaveContext';
+// import BackendWS from '../../utils/net/entry_ws';
+import syncer from '../../utils/net/sync';
+import BackendWS from '../../utils/net/sync';
+// import wtClient from '../../utils/net/sync';
 
 interface Props {
     width: number;
@@ -45,6 +48,7 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
     const [isFullscreen, setIsFullscreen] = useState(document.fullscreenElement !== null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const saveManager = useSaveManager();
+    const [isConnected, setIsConnected] = useState(BackendWS.isConnected);
 
     const onBack = () => {
         onBackOriginal();
@@ -94,8 +98,9 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
 
     };
 
+
     // 设置类别和对应的面板数据
-    const settingsData: { [key: string]: SettingPanel[] } = {
+    const settingsData: { [key: string]: (SettingPanel | null)[] } = {
         general: [
             {
                 title: "显示",
@@ -189,54 +194,55 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
                     },
                 ]
             }
+        ],
+        online: [
+            {
+                title: "联机设置",
+                items: [
+                    {
+                        title: "服务器地址",
+                        description: "输入服务器地址",
+                        controlType: "input",
+                        controlProps: {
+                            placeholder: BackendWS.url, onChange: (val) => {
+                                debounce((newVal) => {
+                                    BackendWS.setConnectionUrl(newVal);
+                                }, 50)(val);
+                            }
+                        }
+                    },
+                    {
+                        title: "连接",
+                        description: `连接服务器`,
+                        controlType: "button",
+                        controlProps: {
+                            onClick: () => {
+                                BackendWS.startConnection();
+                                setIsConnected(BackendWS.isConnected);
+                            }
+                        }
+                    },
+                    {
+                        title: "断开",
+                        description: "断开服务器连接",
+                        controlType: "button",
+                        controlProps: {
+                            onClick: () => {
+                                BackendWS.closeConnection();
+                                setIsConnected(BackendWS.isConnected);
+                            }
+                        }
+                    }
+                ]
+            }
         ]
-        // audio: [
-        //     {
-        //         title: "音量设置",
-        //         items: [
-        //             {
-        //                 title: "主音量",
-        //                 description: "调整游戏整体音量",
-        //                 controlType: "input",
-        //                 controlProps: { placeholder: "0-100", onChange: (val) => console.log("主音量:", val) }
-        //             },
-        //             {
-        //                 title: "静音",
-        //                 description: "开启/关闭所有声音",
-        //                 controlType: "switcher",
-        //                 controlProps: { value: false, onToggle: (val) => console.log("静音:", val) }
-        //             }
-        //         ]
-        //     }
-        // ],
-        // controls: [
-        //     {
-        //         title: "控制设置",
-        //         items: [
-        //             {
-        //                 title: "重置按键",
-        //                 description: "恢复默认按键设置",
-        //                 controlType: "button",
-        //                 controlProps: { onClick: () => console.log("重置按键") }
-        //             },
-        //             {
-        //                 title: "灵敏度",
-        //                 description: "调整鼠标灵敏度",
-        //                 controlType: "input",
-        //                 controlProps: { placeholder: "1-10", onChange: (val) => console.log("灵敏度:", val) }
-        //             }
-        //         ]
-        //     }
-        // ]
     };
 
     const menuItems = [
         { name: "通用", key: "general" },
         { name: "游戏性", key: "game" },
-        // { name: "音频", key: "audio" },
-        // { name: "控制", key: "controls" }
+        { name: "联机", key: "online" }
     ];
-
     return (
         <div style={{
             width: `${width}px`,
@@ -336,7 +342,7 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
                 scrollbarColor: "#666 #333",
                 background: "rgba(30, 30, 30, 0.9)"
             }}>
-                {settingsData[selectedCategory].map((panel, index) => (
+                {settingsData[selectedCategory].filter(panel => panel !== null).map((panel, index) => (
                     <div key={index} style={{
                         marginBottom: "30px",
                         border: "1px solid rgba(100, 100, 100, 0.5)",
@@ -463,11 +469,11 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
 
             <style>
                 {`
-                    @keyframes frameFadeIn {
+    @keyframes frameFadeIn {
                         from { opacity: 0; transform: scale(0.95); }
                         to { opacity: 1; transform: scale(1); }
-                    }
-                `}
+    }
+    `}
             </style>
         </div>
     );

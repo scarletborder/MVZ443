@@ -1,6 +1,5 @@
 import Denque from "denque";
 import { Game } from "../scenes/Game";
-import Syncer from "../../utils/net/sync";
 
 // 单人游戏
 interface SingleParams {
@@ -14,7 +13,22 @@ interface MultiParams {
 }
 
 // 消息类型
-type _GameStart = {
+export type _RoomInfo = {
+    // 多人only,服务器告知你房间信息
+    type: 0x00;
+    roomID: number; // 目前无用
+    lordID: number; // 房主的addr
+    myID: number; // 我的id
+    chapterId: number; // 当前章节
+    peer: string[]; // 房间其他人的addr
+}
+
+export type _ChooseMap = {
+    type: 0x10;
+    chapterId: number;
+}
+
+export type _GameStart = {
     type: 0x01;
     seed: number;
     myID: number;
@@ -51,7 +65,7 @@ export type _receiveType = _GameStart | _CardPlant | _RemovePlant | _UseStarShar
 export default class QueueReceive {
     game: Game
     queues: Denque<_receiveType>
-    sync: Syncer | null = null
+    // sync: Syncer | null = null
 
     myID: number = 0
     seed: number = 0
@@ -60,10 +74,10 @@ export default class QueueReceive {
         this.game = game;
         this.queues = new Denque();
         if (params.mode == 'single') {
-            this.sync = null;
+            // this.sync = null;
         } else {
             // 多人
-            this.sync = new Syncer();
+            // this.sync = new Syncer();
         }
     }
 
@@ -93,6 +107,7 @@ export default class QueueReceive {
 
     private _startGame(seed: number, myID: number) {
         // TODO:在启动游戏主进程前,调用发送队列设置发送队列的myID
+        console.log('game start')
         this.game.handleGameStart(seed, myID);
     }
     private _cardPlant(pid: number, col: number, row: number, level: number, uid: number) {

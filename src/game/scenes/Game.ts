@@ -15,6 +15,7 @@ import CreateInnerMenu from '../utils/inner_menu';
 import { StageData } from '../models/IRecord';
 import MineCart from '../presets/bullet/minecart';
 import AddMapFunction from '../game_events/mapfun';
+import BackendWS from '../../utils/net/sync';
 
 
 
@@ -76,8 +77,17 @@ export class Game extends Scene {
         this.monsterSpawner = new MonsterSpawner(this, this.stageData.waves);
 
         // 目前只有单机
-        this.recvQueue = new QueueReceive({ mode: 'single' }, this);
-        this.sendQueue = new QueueSend({ mode: 'single', recvQueue: this.recvQueue.queues });
+        // 判断是否联机
+
+
+        if (!BackendWS.isConnected) {
+            this.recvQueue = new QueueReceive({ mode: 'single' }, this);
+            this.sendQueue = new QueueSend({ mode: 'single', recvQueue: this.recvQueue.queues });
+        } else {
+            this.recvQueue = new QueueReceive({ mode: 'multi' }, this);
+            this.sendQueue = new QueueSend({ mode: 'multi' });
+            BackendWS.setQueue(this.recvQueue, this.sendQueue);
+        }
 
         // 菜单
         CreateInnerMenu(this);
@@ -146,6 +156,9 @@ export class Game extends Scene {
             this.elapsed -= 100; // 保留多余的时间，避免累积误差
         }
         this.sendQueue.Consume();
+        if (BackendWS.isConnected) {
+            BackendWS.consumeSendQueue();
+        }
     }
 
     changeScene() {

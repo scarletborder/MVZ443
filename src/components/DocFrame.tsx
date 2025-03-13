@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { VERSION, announcement, updateContent } from '../../public/constants'
 import LevelSelect from './menu/levelSelect';
 import Pokedex from './menu/pokedex';
@@ -6,6 +6,7 @@ import Settings from './menu/settings';
 import { GameParams } from '../game/models/GameParams';
 import { publicUrl } from '../utils/browser';
 import { useDeviceType } from '../hooks/useDeviceType';
+import BackendWS from '../utils/net/sync';
 
 interface Props {
     width: number,
@@ -30,6 +31,36 @@ export default function DocFrame({ width, height, sceneRef, setGameParams, gameS
         "设置",
         "关于"
     ];
+
+    const [skipToParams, setSkipToParams] = useState(false);
+    const [chosenStage, setChosenStage] = useState<number | null>(null);
+    const [islord, setIslord] = useState(false);
+
+    useEffect(() => {
+        // 处理联机事件
+        const chapterJumpHandler = (event: MessageEvent) => {
+            const data = JSON.parse(event.data);
+            if (data.type === 0x00 && data.lordID !== data.myID) {
+                // 跳转章节,直接到选卡界面
+                const chapterID = data.chapterId;
+                if (chapterID !== undefined && chapterID !== null && chapterID > 0) {
+                    console.log('jump to chapter', chapterID);
+                    setChosenStage(chapterID);
+                    setSkipToParams(true);
+                    setCurrentView('levels');
+                }
+                setIslord(false);
+            } else if (data.type === 0x00 && data.lordID === data.myID) {
+                console.log('i am load')
+                setIslord(true);
+            }
+
+        }
+        BackendWS.addMessageListener(chapterJumpHandler);
+        return () => {
+            BackendWS.delMessageListener(chapterJumpHandler);
+        }
+    }, []);
 
 
     const aboutContent = `
@@ -221,7 +252,9 @@ export default function DocFrame({ width, height, sceneRef, setGameParams, gameS
         <>
             {currentView === 'main' || currentView === 'updates' || currentView === 'about' ? <MainMenu /> : null}
             {currentView === 'levels' && <LevelSelect width={width} height={height} onBack={() => setCurrentView('main')}
-                startGame={gameStart} setGameParams={setGameParams} />}
+                startGame={gameStart} setGameParams={setGameParams} skipToParams={skipToParams} chosenStage={chosenStage}
+                islord={islord}
+            />}
             {currentView === 'pokedex' && <Pokedex sceneRef={sceneRef} width={width} height={height} onBack={() => setCurrentView('main')} />}
             {currentView === 'settings' && <Settings width={width} height={height} onBack={() => setCurrentView('main')} />}
 
