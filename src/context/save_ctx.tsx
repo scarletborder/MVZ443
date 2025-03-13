@@ -18,7 +18,8 @@ interface GameProgress {
     level: Set<number>;
     plants: Plant[];
     zombies: Zombie[];
-    items: Map<number, Item>;
+    items: Map<number, Item>; // 物品id -> Item
+    slotNum: number // 卡槽数量
 }
 class SaveManager {
     private dbName: string = "MVZ443";
@@ -115,7 +116,8 @@ class GameManager {
             level: new Set([1]),
             plants: [{ pid: 1, level: 1 }, { pid: 2, level: 1 }],
             zombies: [],
-            items: new Map<number, Item>()
+            items: new Map<number, Item>(),
+            slotNum: 3,
         };
         this.loadProgress();
     }
@@ -166,6 +168,11 @@ class GameManager {
     // 调用时需要循环对所有要解锁的关卡调用
     setCurrentLevel(level: number): void {
         this.currentProgress.level.add(level);
+    }
+
+    // 更新卡槽数量
+    updateSlotNum(num: number): void {
+        if (num > this.currentProgress.slotNum) this.currentProgress.slotNum = num;
     }
 
     // 保存当前游戏进度

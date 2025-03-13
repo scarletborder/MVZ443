@@ -53,7 +53,7 @@ export default class Gardener {
         });
 
         // 监听事件
-        EventBus.on('pickaxe-click', ()=>{
+        EventBus.on('pickaxe-click', () => {
             if (this.usePickaxe) {
                 this.cancelPickAxe();
             } else {
@@ -106,8 +106,13 @@ export default class Gardener {
         this.usePickaxe = true;
         this.pickaxeSprite.setVisible(true);
         // 移动的光标位置
-        const pointer = this.scene.input.activePointer;
-        this.pickaxeSprite.setPosition(pointer.x, pointer.y);
+        try {
+            const pointer = this.scene.input.activePointer;
+            this.pickaxeSprite.setPosition(pointer.x, pointer.y);
+        } catch {
+            this.pickaxeSprite.setPosition(this.scene.scale.width, 0);
+        }
+
     }
 
     public cancelPickAxe() {
@@ -153,7 +158,7 @@ export default class Gardener {
                 if (index >= 0) {
                     // 找到对象
                     const plantObj = list[index];
-                    plantObj.destroy();
+                    plantObj.destroyPlant();
                     list.splice(index, 1);
                 }
                 if (list.length === 0) {

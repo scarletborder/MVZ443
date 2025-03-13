@@ -15,7 +15,7 @@ interface GameState {
 
 // 定义 Context 值的类型
 interface GameContextValue extends GameState {
-    updateEnergy: (amount: number) => void;
+    updateEnergy: (amount: number, special?: (prev: number) => number) => void;
     setEnergy: (amount: number) => void;
     updateMoney: (amount: number) => void;
     updateWave: (percent: number) => void;
@@ -44,11 +44,19 @@ export function GameProvider(props: GameProviderProps) {
         isPaused: false
     });
 
-    function updateEnergy(amount: number) {
-        setGameState(prev => ({
-            ...prev,
-            energy: Math.max(0, prev.energy + amount)
-        }));
+    function updateEnergy(amount: number, special?: (prev: number) => number) {
+        if (special) {
+            setGameState(prev => ({
+                ...prev,
+                energy: Math.max(0, special(prev.energy))
+            }));
+            return;
+        } else {
+            setGameState(prev => ({
+                ...prev,
+                energy: Math.max(0, prev.energy + amount)
+            }));
+        }
     }
 
     function setEnergy(amount: number) {

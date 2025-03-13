@@ -1,4 +1,5 @@
 import { useGameContext } from "../context/garden_ctx";
+import { useSettings } from "../context/settings_ctx";
 import { EventBus } from "../game/EventBus";
 import { IRefPhaserGame } from "../game/PhaserGame";
 import { publicUrl } from "../utils/browser";
@@ -9,13 +10,16 @@ interface Props {
 
 export default function Pickaxe({ sceneRef }: Props) {
     const { isPaused } = useGameContext();
+    const settings = useSettings();
     const img = `${publicUrl}/assets/sprite/pickaxe.png`;
     const handleClick = () => {
+        if (!sceneRef.current) return;
+        if (isPaused && (!settings.isBluePrint)) return;
         EventBus.emit('pickaxe-click', null);
     }
 
     return (
-        <div className="pickaxe"
+        <div className={`pickaxe ${(isPaused && !settings.isBluePrint) ? 'paused' : ''}`}
             onClick={handleClick}
         >
             <div className="pickaxe-content">

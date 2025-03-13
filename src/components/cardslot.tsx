@@ -33,9 +33,9 @@ export function EnergySlot() {
             updateEnergy(-cost);
         };
         // 更新能量
-        const handleUpdateEnergy = (data: { energyChange: number }) => {
+        const handleUpdateEnergy = (data: { energyChange: number, special?: (prev: number) => number }) => {
             // energy add or decrease
-            updateEnergy(+data.energyChange);
+            updateEnergy(+data.energyChange, data.special);
             // TODO: 增加动画
         };
 

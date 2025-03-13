@@ -14,6 +14,7 @@ import QueueSend from '../utils/queue_send';
 import CreateInnerMenu from '../utils/inner_menu';
 import { StageData } from '../models/IRecord';
 import MineCart from '../presets/bullet/minecart';
+import AddMapFunction from '../game_events/mapfun';
 
 
 
@@ -83,29 +84,7 @@ export class Game extends Scene {
 
         if (this.innerSettings.isDebug) {
             // 网格初始化
-            // 包括镶嵌地板
-            for (let row = 0; row < this.GRID_ROWS; row++) {
-                // this.grid[row] = [];
-                for (let col = 0; col < this.GRID_COLS; col++) {
-                    const { x, y } = this.positionCalc.getGridTopLeft(col, row);
-                    const rect = this.add.rectangle(x, y, this.positionCalc.GRID_SIZEX,
-                        this.positionCalc.GRID_SIZEY, 0, 0.2)
-                        .setOrigin(0, 0).setDepth(3);
-                    rect.setStrokeStyle(1, 0xffffff);
-                }
-            }
             this.physics.world.createDebugGraphic(); // 显示所有物体的碰撞体
-        } else {
-            for (let row = 0; row < this.GRID_ROWS; row++) {
-                // this.grid[row] = [];
-                for (let col = 0; col < this.GRID_COLS; col++) {
-                    const { x, y } = this.positionCalc.getGridTopLeft(col, row);
-                    const rect = this.add.rectangle(x, y, this.positionCalc.GRID_SIZEX,
-                        this.positionCalc.GRID_SIZEY, 0, 0.2)
-                        .setOrigin(0, 0).setDepth(3);
-                    rect.setStrokeStyle(1, 0xffffff, 0.1);
-                }
-            }
         }
         this.physics.resume(); // 恢复物理系统
 
@@ -115,18 +94,8 @@ export class Game extends Scene {
 
         // 添加背景
         this.background = this.add.image(0, 0, 'bgimg');
-        // 获取背景图片的原始尺寸
-        // 计算裁剪区域 (10% 到 70% 的宽度)
-        const cropStartX = this.background.width * 17 / 140;  // 10%
-
-        // 应用裁剪
-        this.background = this.background.setCrop(cropStartX, 0, 960, this.scale.height);
-
         // 拉伸裁剪后的图片以填充整个场景宽度，保持高度比例
-        this.background.setOrigin(0, 0).setDepth(2).setDisplaySize(1260 * this.scaleFactor, this.scale.height * 1.05);
-
-        // 确保位置在左上方
-        this.background.setPosition(-cropStartX * this.scaleFactor, 0);
+        this.background.setOrigin(0, 0).setDepth(2).setDisplaySize(this.scale.width, this.scale.height);
 
         // 调整摄像机位置，确保从 (0, 0) 开始显示
         this.cameras.main.scrollX = 0;
@@ -195,6 +164,7 @@ export class Game extends Scene {
         this.myID = myID;
         this.params.setInitialEnergy(this.stageData.energy);
         this.monsterSpawner.startWave();
+        AddMapFunction(this);
 
         // 设置一排minecart
         for (let i = 0; i < this.GRID_ROWS; i++) {

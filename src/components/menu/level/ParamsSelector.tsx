@@ -28,20 +28,34 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({ stageId, setGameParams,
     const [selectedPlants, setSelectedPlants] = useState<number[]>([]);
     const [difficulty, setDifficulty] = useState<'easy' | 'normal' | 'hard'>('normal');
     const [availablePlants, setAvailablePlants] = useState<PlantElem[]>([]);
+    const [isOverLimit, setIsOverLimit] = useState(false);
     const garden_ctx = useGameContext();
-    const { currentProgress } = useSaveManager();
+    const [selectUpperLimit, setSelectUpperLimit] = useState<number>(0);
+    const saveManager = useSaveManager();
     const settings = useSettings();
 
     const handlePlantToggle = (pid: number) => {
-        setSelectedPlants(prev =>
-            prev.includes(pid) ? prev.filter(p => p !== pid) : [...prev, pid]
-        );
+        setSelectedPlants(prev => {
+            if (prev.includes(pid)) {
+                // Deselecting a plant
+                setIsOverLimit(false);
+                return prev.filter(p => p !== pid);
+            } else {
+                // Selecting a plant
+                if (prev.length >= selectUpperLimit) {
+                    setIsOverLimit(true);
+                    setTimeout(() => setIsOverLimit(false), 400);
+                    return prev;
+                }
+                return [...prev, pid];
+            }
+        });
     };
 
     useEffect(() => {
-        const plantProgress = currentProgress.plants;
+        const plantProgress = saveManager.currentProgress.plants;
         if (!plantProgress || plantProgress.length < 1) {
-            console.log("No plant progress available:", currentProgress);
+            console.log("No plant progress available:", saveManager.currentProgress);
             setAvailablePlants([]);
             return;
         }
@@ -64,7 +78,9 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({ stageId, setGameParams,
         }
         newAvailablePlants = newAvailablePlants.sort((a, b) => a.pid - b.pid);
         setAvailablePlants(newAvailablePlants);
-    }, [currentProgress]);
+
+        setSelectUpperLimit(saveManager.currentProgress.slotNum);
+    }, [saveManager.currentProgress]);
 
     const handleStart = () => {
         const _ = () => { console.log('no gameexit Implemented') };
@@ -95,7 +111,7 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({ stageId, setGameParams,
             boxShadow: '0 0 15px rgba(0, 0, 0, 0.5)',
             display: 'flex'
         }}>
-            {/* 左侧 - 植物选择 */}
+            {/* Left side - Plant selection */}
             <div style={{
                 width: '60%',
                 height: '100%',
@@ -193,7 +209,7 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({ stageId, setGameParams,
                 </div>
             </div>
 
-            {/* 右侧 - 参数和已选择植物 */}
+            {/* Right side - Parameters and selected plants */}
             <div style={{
                 width: '40%',
                 height: '100%',
@@ -222,7 +238,15 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({ stageId, setGameParams,
                     <option value="hard">困难</option>
                 </select>
 
-                <h3>已选择植物</h3>
+                <h3>
+                    已选择植物{' '}
+                    <span style={{
+                        color: isOverLimit ? 'red' : '#ddd',
+                        transition: 'color 0.3s ease'
+                    }}>
+                        {`${selectedPlants.length}/${selectUpperLimit}`}
+                    </span>
+                </h3>
                 <div style={{
                     flex: 1,
                     overflowY: 'auto',
@@ -260,7 +284,6 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({ stageId, setGameParams,
                                         alt={plant.name}
                                         style={{ display: "block", width: "90%", height: "80%" }}
                                         draggable="false"
-
                                     />
                                 </div>
                                 <span style={{ marginLeft: '10px' }}>{plant.name}</span>
@@ -284,7 +307,9 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({ stageId, setGameParams,
                     {`${i18n('start')}`}
                 </button>
             </div>
-        </div>)
+        </div>
+    );
 };
+
 
 export default ParamsSelector;
