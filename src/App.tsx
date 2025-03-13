@@ -51,9 +51,11 @@ function App() {
         // 结算
         setGameResult(result);
         setShowGameResult(true);
-        BackendWS.sendMessage(JSON.stringify({
-            type: 0x20,
-        }));
+        if (BackendWS.isConnected) {
+            BackendWS.sendMessage(JSON.stringify({
+                type: 0x20,
+            }));
+        }
     }, [setShowGameScreen, setShowGameTool]);
 
     // Event emitted from the PhaserGame component

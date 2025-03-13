@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"mvzserver/messages"
 	"sync/atomic"
+	"time"
 
 	"github.com/gofiber/websocket/v2"
 )
@@ -76,8 +77,11 @@ beforegame:
 
 		case messages.MsgTypeRequestEndGame:
 			// 游戏结束
-			destoryAll()
 			fmt.Printf("game end")
+			go func() {
+				time.Sleep(3 * time.Second)
+				destoryAll()
+			}()
 			return
 		}
 	}

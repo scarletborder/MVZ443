@@ -126,7 +126,7 @@ export default class MonsterSpawner {
     spawnMonster() {
         const wave = this.currentWave();
 
-        const totalMonsters: { mid: number }[] = [];
+        let totalMonsters: { mid: number }[] = [];
         const colMax = this.scene.GRID_COLS;
         const rowMax = this.scene.GRID_ROWS - 1;
 
@@ -143,7 +143,7 @@ export default class MonsterSpawner {
         }
 
         // 怪物随机排序
-        this.shuffleArray(totalMonsters)
+        totalMonsters = this.shuffleArray(totalMonsters)
         const duration = wave.duration * 1000;
         const interval = duration / totalMonsters.length;
 
@@ -156,7 +156,7 @@ export default class MonsterSpawner {
             const minLines = Math.min(wave.minLine, rowMax + 1); // 确保不超过最大行数
             const activeRowCount = minLines + Math.floor(this.SeedRandom() * (rowMax + 1 - minLines)); // 随机选择 minLine 到 rowMax 的行数
             activeRows = Array.from({ length: rowMax + 1 }, (_, i) => i); // 所有行 [0, rowMax]
-            Phaser.Utils.Array.Shuffle(activeRows); // 打乱顺序
+            activeRows = this.shuffleArray(activeRows); // 打乱顺序
             activeRows = activeRows.slice(0, activeRowCount); // 取前 activeRowCount 个行作为活跃行
             rowWeights = Array(rowMax + 1).fill(0); // 先全部置为 0
             activeRows.forEach(row => rowWeights[row] = 1); // 仅活跃行初始化权重为 1
