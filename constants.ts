@@ -16,33 +16,51 @@ export const announcement =
     
 当前版本联机功能,每次完成一局游戏需要重新连接,因为后端刷新了状态
 
-使用 go build 构建服务器,并在游戏中地址栏输入 http://127.0.0.1:28080/ws 进行连接
+使用 go build 构建服务器,并在游戏中地址栏输入 ws://127.0.0.1:28080/ws 进行连接
 
 通过过关获得更多器械,目前进度以至chapter1-stage2,剧情仍然在完善中`
 
 
 export const SECKILL = 99889988;
 
-// 护盾器械,铲除上方时铲除,可以和任何非护盾器械兼容
-export const SHIELD_PLANT: number[] = [];
 
 type _ResourceMapData = {
     bgimg: string;
     bgm: string;
 }
 
-const chapter1_day: _ResourceMapData = {
+const chapter1_village: _ResourceMapData = {
     bgimg: 'bg/bgDay.png',
     bgm: 'audio/AREP-0005-03.ogg',
 }
-const chapter1_night: _ResourceMapData = {
+const chapter1_outtermine: _ResourceMapData = {
+    bgimg: 'bg/bgOutterMine.png',
+    bgm: 'audio/AREP-0005-03.ogg',
+}
+const chapter1_innermine: _ResourceMapData = {
     bgimg: 'bg/bgInnerMine.png',
+    bgm: 'audio/AREP-0005-03.ogg',
+}
+const chapter1_deepmine: _ResourceMapData = {
+    bgimg: 'bg/bgDeepMine.png',
+    bgm: 'audio/AREP-0005-03.ogg',
+}
+const chapter1_deepmineWater: _ResourceMapData = {
+    bgimg: 'bg/bgDeepMineWater.png',
+    bgm: 'audio/AREP-0005-03.ogg',
+}
+const chapter1_boss: _ResourceMapData = {
+    bgimg: 'bg/bgBoss.png',
     bgm: 'audio/AREP-0005-03.ogg',
 }
 
 
 // level to data
 export const ResourceMapData: Map<number, _ResourceMapData> = new Map<number, _ResourceMapData>([
-    [1, chapter1_day],
-    [2, chapter1_night],
+    [1, chapter1_village],
+    [2, chapter1_outtermine],
+    [3, chapter1_innermine],
+    [4, chapter1_deepmine],
+    [5, chapter1_deepmineWater],
+    [6, chapter1_boss],
 ]);
