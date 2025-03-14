@@ -30,6 +30,8 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite {
     public isFlying: boolean = false; // 是否在天上
     public isInVoid: boolean = false; // 是否是灵魂状态
 
+    private carryStarShards: boolean = false; // 是否携带星之碎片
+
     // 攻击
     private attackTimer?: Phaser.Time.TimerEvent; // 攻击定时器
     public attackingPlant: IPlant | null = null; // 当前攻击的植物
@@ -244,6 +246,13 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite {
         });
     }
 
+    carryStar() {
+        // 携带星之碎片
+        this.carryStarShards = true;
+        this.zombieAnim.twinkle();
+
+    }
+
     // 覆盖 destroy 方法，确保清理
     destroy(fromScene?: boolean) {
         this.attackTimer?.remove();
@@ -252,6 +261,9 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite {
         // 处理attach
         this.zombieAnim.destroy();
         this.attachSprites.forEach(sprite => sprite.destroy());
+        if (this.carryStarShards) {
+            EventBus.emit('starshards-get');
+        }
         super.destroy(fromScene);
     }
 

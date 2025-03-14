@@ -31,10 +31,15 @@ export default function BottomTools({ width, chapterID }: Props) {
         const handleStarShardsConsume = () => {
             gamectx.updateStarShards(-1);
         };
+        const handleStarShardsGet = () => {
+            gamectx.updateStarShards(1);
+        };
 
         EventBus.on('starshards-consume', handleStarShardsConsume);
+        EventBus.on('starshards-get', handleStarShardsGet);
         return () => {
             EventBus.removeListener('starshards-consume', handleStarShardsConsume);
+            EventBus.removeListener('starshards-get', handleStarShardsGet);
         }
     }, [gamectx.updateStarShards])
 

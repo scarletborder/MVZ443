@@ -32,7 +32,8 @@
             "maxDelay": 50,
             "minDelay": 2,
             "arrangement": 1,
-            "minLine": 1
+            "minLine": 1,
+            "starShards": 0
         },
         {
             "waveId": 1,
@@ -48,7 +49,8 @@
             "maxDelay": 40,
             "minDelay": 15,
             "arrangement": 1,
-            "minLine": 1
+            "minLine": 1,
+            "starShards": 1
         }
     ]
 }

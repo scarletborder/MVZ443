@@ -30,7 +30,8 @@
             "maxDelay": 20,
             "minDelay": 20,
             "arrangement": 1,
-            "minLine": 1
+            "minLine": 1,
+            "starShards": 0
         },
         {
             "waveId": 1,
@@ -46,7 +47,8 @@
             "maxDelay": 40,
             "minDelay": 30,
             "arrangement": 1,
-            "minLine": 1
+            "minLine": 1,
+            "starShards": 0
         },
         {
             "waveId": 2,
@@ -66,7 +68,8 @@
             "maxDelay": 40,
             "minDelay": 25,
             "arrangement": 2,
-            "minLine": 2
+            "minLine": 2,
+            "starShards": 0
         },
         {
             "waveId": 3,
@@ -86,7 +89,8 @@
             "maxDelay": 40,
             "minDelay": 30,
             "arrangement": 2,
-            "minLine": 2
+            "minLine": 2,
+            "starShards": 0
         }
     ]
 }

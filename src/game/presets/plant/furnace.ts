@@ -5,6 +5,7 @@ import { Game } from "../../scenes/Game";
 
 class Furnace extends IPlant {
     game: Game;
+    updateEnergy: number = 50;
     constructor(scene: Game, col: number, row: number, level: number) {
         super(scene, col, row, FurnaceRecord.texture, FurnaceRecord.pid, level);
         this.game = scene;
@@ -20,7 +21,7 @@ class Furnace extends IPlant {
                     this.setFrame(1);
                     scene.time.delayedCall(1000, () => {
                         if (this && this.health && this.health > 0) {
-                            scene.broadCastEnergy(+50);
+                            scene.broadCastEnergy(+this.updateEnergy);
                             this.setFrame(0);
                         }
                     });

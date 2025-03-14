@@ -37,12 +37,14 @@ export interface Wave {
     progress: number; // 进度,一般非常小,同时可以被重置,游戏结束不看这个,只是显示用
     flag: string; // flag 类型,用于标记特殊的wave,如 `normal | elite | boss`
     // 对于一些做精英怪的前期BOSS,初始化的时候带上isFinalBoss来控制死亡时是否触发胜利
+
     monsters: Monster[];
     duration: number; // seconds
     maxDelay: number; // seconds
     minDelay: number; // seconds
     arrangement: 0x01 | 0x02 // 0x01: 均匀, 0x02: 集中
     minLine: number; // 指定最少有多少行应该生成怪物，避免怪物过于集中在一行。
+    starShards: number; // 携带星屑数量
 }
 
 

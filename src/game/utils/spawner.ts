@@ -125,6 +125,7 @@ export default class MonsterSpawner {
 
     spawnMonster() {
         const wave = this.currentWave();
+        const starNumber = wave.starShards;
 
         let totalMonsters: { mid: number }[] = [];
         const colMax = this.scene.GRID_COLS;
@@ -138,31 +139,38 @@ export default class MonsterSpawner {
         });
 
         this.total_count = totalMonsters.length + this.total_count - this.killed_count;
-        if (wave.duration === 0) { // 本轮没有怪物生成,为准备时间,准备时间持续minDelay
+        if (wave.duration === 0) {
             return;
         }
 
-        // 怪物随机排序
-        totalMonsters = this.shuffleArray(totalMonsters)
+        // 1. 确定哪些怪物携带starShards
+        totalMonsters = this.shuffleArray(totalMonsters);
+        const carryingMonsters = new Set<number>();  // 存储携带starShards的怪物索引
+        const maxStars = Math.min(starNumber, totalMonsters.length);  // 确保不超过怪物总数
+
+        // 随机选择starNumber数量的怪物
+        while (carryingMonsters.size < maxStars) {
+            const randomIdx = Math.floor(this.SeedRandom() * totalMonsters.length);
+            carryingMonsters.add(randomIdx);
+        }
+
         const duration = wave.duration * 1000;
         const interval = duration / totalMonsters.length;
 
         // 行权重初始化
         let rowWeights: number[];
-        let activeRows: number[] = []; // 活跃行数组
+        let activeRows: number[] = [];
 
         if (wave.arrangement === 0x02) {
-            // 集中分布模式
-            const minLines = Math.min(wave.minLine, rowMax + 1); // 确保不超过最大行数
-            const activeRowCount = minLines + Math.floor(this.SeedRandom() * (rowMax + 1 - minLines)); // 随机选择 minLine 到 rowMax 的行数
-            activeRows = Array.from({ length: rowMax + 1 }, (_, i) => i); // 所有行 [0, rowMax]
-            activeRows = this.shuffleArray(activeRows); // 打乱顺序
-            activeRows = activeRows.slice(0, activeRowCount); // 取前 activeRowCount 个行作为活跃行
-            rowWeights = Array(rowMax + 1).fill(0); // 先全部置为 0
-            activeRows.forEach(row => rowWeights[row] = 1); // 仅活跃行初始化权重为 1
+            const minLines = Math.min(wave.minLine, rowMax + 1);
+            const activeRowCount = minLines + Math.floor(this.SeedRandom() * (rowMax + 1 - minLines));
+            activeRows = Array.from({ length: rowMax + 1 }, (_, i) => i);
+            activeRows = this.shuffleArray(activeRows);
+            activeRows = activeRows.slice(0, activeRowCount);
+            rowWeights = Array(rowMax + 1).fill(0);
+            activeRows.forEach(row => rowWeights[row] = 1);
         } else {
-            // 默认均匀分布模式 (0x01)
-            rowWeights = Array(rowMax + 1).fill(1); // 所有行权重为 1
+            rowWeights = Array(rowMax + 1).fill(1);
         }
 
         let monsterIndex = 0;
@@ -172,12 +180,19 @@ export default class MonsterSpawner {
             delay: interval,
             repeat: totalMonsters.length - 1,
             callback: () => {
-                const monsterData = totalMonsters[monsterIndex++];
-                const row = this.weightedRandomRow(rowWeights); // 根据权重选择行
+                const monsterData = totalMonsters[monsterIndex];
+                const row = this.weightedRandomRow(rowWeights);
                 const newFunc = MonsterFactoryMap[monsterData.mid].NewFunction;
                 const zomb = newFunc(this.scene, colMax, row);
 
-                // 更新行权重（仅对活跃行生效）
+                // 2. 如果当前怪物索引在carryingMonsters中，则设置携带starShards
+                if (carryingMonsters.has(monsterIndex)) {
+                    zomb.carryStar();
+                }
+
+                monsterIndex++;
+
+                // 更新行权重
                 if (wave.arrangement === 0x02 && activeRows.includes(row)) {
                     rowWeights[row] = Math.max(0.1, rowWeights[row] - 0.3);
                 } else if (wave.arrangement === 0x01) {
@@ -188,7 +203,8 @@ export default class MonsterSpawner {
         });
     }
 
-    //     // 权重再平衡函数 (逐渐恢复未选行的权重),支持活跃行
+
+    // 权重再平衡函数 (逐渐恢复未选行的权重),支持活跃行
     rebalanceRowWeights(weights: number[], activeRows: number[] | null) {
         const recoveryRate = 0.1;
         if (activeRows) {

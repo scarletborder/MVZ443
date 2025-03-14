@@ -40,7 +40,7 @@ export function GameProvider(props: GameProviderProps) {
         money: 0,
         wave: 0,
         bossHealth: -1,
-        starShareds: 2,
+        starShareds: 0,
         isPaused: false
     });
 

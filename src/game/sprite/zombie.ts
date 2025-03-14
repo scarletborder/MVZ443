@@ -189,14 +189,59 @@ export default class IZombieAnim {
         this.legRight.setOrigin(x, 0);
     }
 
+    twinkle() {
+        // Array of all components to twinkle
+        const components = [
+            this.body,
+            this.head,
+            this.armLeft,
+            this.armRight,
+            this.legLeft,
+            this.legRight
+        ];
+
+        // Create a tween to make components twinkle
+        this.scene.tweens.add({
+            targets: components,
+            alpha: { from: 1, to: 0.7 }, // Fade between fully visible and partially transparent
+            duration: 300, // Duration of one fade
+            yoyo: true, // Go back and forth
+            repeat: -1, // Repeat indefinitely
+            ease: 'Sine.easeInOut' // Smooth easing function
+        });
+    }
+
+    setTint(color: number) {
+        this.body.setTint(color);
+        this.head.setTint(color);
+        this.armLeft.setTint(color);
+        this.armRight.setTint(color);
+        this.legLeft.setTint(color);
+        this.legRight.setTint(color);
+    }
+
     destroy() {
+        // Stop any existing tweens before destroying
+        this.scene.tweens.killTweensOf([
+            this.body,
+            this.head,
+            this.armLeft,
+            this.armRight,
+            this.legLeft,
+            this.legRight
+        ]);
+
+        // Destroy all components
         this.body.destroy();
         this.head.destroy();
         this.armLeft.destroy();
         this.armRight.destroy();
         this.legLeft.destroy();
         this.legRight.destroy();
+
+        // Stop and clean up leg and arm tweens
         this.legLeftTween?.stop();
+        this.legRightTween?.stop();
         this.armTween?.stop();
     }
 } 
