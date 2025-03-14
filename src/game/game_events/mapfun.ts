@@ -11,20 +11,33 @@ export default function AddMapFunction(game: Game) {
 
     // dispatch stage or chapter
     if (chapterId === 1) {
-        Chapter1Dispatch(game);
+        Chapter1Dispatch(game, stageId);
     }
 }
 
 
-function Chapter1Dispatch(game: Game) {
-    // 每30s + 25 energy
-    game.time.addEvent({
-        delay: 30000,
-        callback: () => {
-            EventBus.emit('energy-update', { energyChange: 25 });
-        },
-        loop: true
-    });
+function Chapter1Dispatch(game: Game, stageId: number) {
+    // 第一章的
+    // 白天
+    if (stageId === 1 || stageId === 2) {
+        // 每30s + 25 energy
+        game.dayOrNight = true;
+        game.time.addEvent({
+            delay: 30000,
+            callback: () => {
+                EventBus.emit('energy-update', { energyChange: 25 });
+            },
+            loop: true
+        });
+    }
+
+    if (stageId === 3) {
+        // [0][7] = water
+        game.dayOrNight = false;
+        game.gridProperty[0][7] = 'water';
+    }
+
+
 
     // 绘制阴影表格
     // stage1 黑色
@@ -41,16 +54,5 @@ function Chapter1Dispatch(game: Game) {
         }
     }
 
-    // stage2 白色
-    if (game.params.level === 2) {
-        for (let row = 0; row < game.GRID_ROWS; row++) {
-            for (let col = 0; col < game.GRID_COLS; col++) {
-                const { x, y } = game.positionCalc.getGridTopLeft(col, row);
-                const rect = game.add.rectangle(x, y, game.positionCalc.GRID_SIZEX,
-                    game.positionCalc.GRID_SIZEY, 0xffffff, 0.001)
-                    .setOrigin(0, 0).setDepth(3);
-                rect.setStrokeStyle(1, 0xffffff, 0.03);
-            }
-        }
-    }
+
 }

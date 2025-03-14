@@ -29,7 +29,7 @@ export default function Pokedex({ width, height, onBack }: Props) {
             .map((plant, i) => {
                 const plantObj = PlantFactoryMap[plant.pid];
                 return {
-                    name: plantObj.name,
+                    name: `${plantObj.name} LV.${plant.level}`,
                     details: plantObj.description(),
                     image: `${publicUrl}/assets/card/${plantObj.texture}.png`
                 };

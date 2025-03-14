@@ -4,8 +4,10 @@ import { IRecord } from "../../models/IRecord";
 import { Game } from "../../scenes/Game";
 
 class Furnace extends IPlant {
+    game: Game;
     constructor(scene: Game, col: number, row: number, level: number) {
         super(scene, col, row, FurnaceRecord.texture, FurnaceRecord.pid, level);
+        this.game = scene;
         this.setFrame(0);
         this.health = 300;
 
@@ -29,6 +31,11 @@ class Furnace extends IPlant {
         console.log(this.body?.width, this.body?.height)
     }
 
+    public onStarShards(): void {
+        super.onStarShards();
+        // 一次性加能量
+        this.game.broadCastEnergy(+450);
+    }
 
 }
 
@@ -45,7 +52,7 @@ const FurnaceRecord: IRecord = {
     pid: 2,
     name: '熔炉',
     cost: cost,
-    cooldownTime: 7.5,
+    cooldownTime: () => 5,
     NewFunction: NewFurnace,
     texture: 'plant/furnace',
     description: i18n.S('furnace_description')

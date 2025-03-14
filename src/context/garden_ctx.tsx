@@ -40,7 +40,7 @@ export function GameProvider(props: GameProviderProps) {
         money: 0,
         wave: 0,
         bossHealth: -1,
-        starShareds: 0,
+        starShareds: 2,
         isPaused: false
     });
 
@@ -91,7 +91,7 @@ export function GameProvider(props: GameProviderProps) {
     function updateStarShards(amount: number) {
         setGameState(prev => ({
             ...prev,
-            starShareds: prev.starShareds + amount
+            starShareds: Math.min(5, Math.max(0, prev.starShareds + amount))
         }))
     }
 

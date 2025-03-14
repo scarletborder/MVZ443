@@ -6,7 +6,7 @@ import { IZombie } from "./IZombie";
 export interface IRecord {
     pid: number;
     name: string;
-    cooldownTime: number;
+    cooldownTime: ((level?: number) => number);
     cost: ((level?: number) => number);
     NewFunction: (scene: Game, col: number, row: number, level: number) => IPlant;
     texture: string; // 也用于加载

@@ -13,7 +13,9 @@ export const PlantFactoryMap: Record<number, IRecord> = {
     1: PlantPresets.DispenserRecord,
     2: PlantPresets.FurnaceRecord,
     3: PlantPresets.ObsidianRecord,
+    4: PlantPresets.TntMines,
     5: PlantPresets.SmallDispenserRecord,
+    6: PlantPresets.Lily,
 }
 
 
@@ -24,7 +26,7 @@ export const MonsterFactoryMap: Record<number, MIRecord> = {
 
 
 export const ChapterDataRecords: Record<number, ChapterDescription> = {
-    1: { id: 1, name: '村庄', description: 'Steve与坑爹村民前往永夜沼泽后长久未回,Alex非常担心Steve...', stages: [1, 2] },
+    1: { id: 1, name: '村庄', description: 'Steve与坑爹村民前往永夜沼泽后长久未回,Alex非常担心Steve...', stages: [1, 2, 3] },
     // 2: { id: 2, name: 'Chapter 2', description: 'Intermediate challenge, moderate difficulty.', stages: [3, 4] },
     // 3: { id: 3, name: 'Chapter 3', description: 'Advanced chapter, test your strategy.', stages: [5] },
 }
@@ -32,6 +34,7 @@ export const ChapterDataRecords: Record<number, ChapterDescription> = {
 export const StageDataRecords: Record<number, StageDescription> = {
     1: { id: 1, name: '训练关卡1', description: '仅有一只僵尸的测试关卡', chapterID: 1 },
     2: { id: 2, name: '关卡 1-2', description: '稍微复杂一些,多只僵尸多波奖励', chapterID: 1 },
+    3: { id: 3, name: '关卡 1-3', description: '夜晚,一些水道阻碍种植', chapterID: 1 },
     // 3: { id: 3, name: '关卡 2-1', description: '中级挑战。' },
     // 4: { id: 4, name: '关卡 2-2', description: '需要策略。' },
     // 5: { id: 5, name: '关卡 3-1', description: '高级关卡。' },

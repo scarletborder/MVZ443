@@ -117,6 +117,6 @@ export default class QueueReceive {
         this.game.handleRemovePlant(pid, col, row);
     }
     private _useStarShards(pid: number, col: number, row: number, uid: number) {
-        // this.game.handleUseStarShards(pid, col, row, uid);
+        this.game.handleStarShards(pid, col, row, uid);
     }
 }

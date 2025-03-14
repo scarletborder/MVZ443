@@ -21,6 +21,35 @@ interface GameProgress {
     items: Map<number, Item>; // 物品id -> Item
     slotNum: number // 卡槽数量
 }
+
+// 将 GameProgress 转换为可序列化的对象
+function serializeGameProgress(gameProgress: GameProgress): object {
+    return {
+        level: Array.from(gameProgress.level),  // Set 转换为数组
+        plants: gameProgress.plants,  // 数组本身可以直接序列化
+        zombies: gameProgress.zombies,  // 数组本身可以直接序列化
+        items: Array.from(gameProgress.items.entries()).map(([key, value]) => ({
+            id: key,  // Map 的 key 转为 id 字段
+            ...value  // 保留原有的 Item 属性
+        })),
+        slotNum: gameProgress.slotNum,  // 直接序列化
+    };
+}
+
+// 将 JSON 字符串解析回 GameProgress 对象
+function deserializeGameProgress(jsonString: string): GameProgress {
+    const obj = JSON.parse(jsonString);
+
+    return {
+        level: new Set(obj.level),  // 将数组转换回 Set
+        plants: obj.plants,  // 保持原数组格式
+        zombies: obj.zombies,  // 保持原数组格式
+        items: new Map(obj.items.map((item: { id: number, type: number, count: number }) => [item.id, { type: item.type, count: item.count }])),  // Map 转换
+        slotNum: obj.slotNum,  // 直接赋值
+    };
+}
+
+
 class SaveManager {
     private dbName: string = "MVZ443";
     private storeName: string = "game_progress";
@@ -96,7 +125,7 @@ class SaveManager {
 
     importSaveFromJson(jsonString: string): GameProgress | undefined {
         try {
-            const gameProgress: GameProgress = JSON.parse(jsonString);
+            const gameProgress = deserializeGameProgress(jsonString);
             this.saveGameProgress(gameProgress);
             return gameProgress
         } catch (error) {
@@ -117,7 +146,7 @@ class GameManager {
             plants: [{ pid: 1, level: 1 }, { pid: 2, level: 1 }],
             zombies: [],
             items: new Map<number, Item>(),
-            slotNum: 3,
+            slotNum: 6,
         };
         this.loadProgress();
     }
@@ -184,11 +213,11 @@ class GameManager {
     loadProgress(callback?: () => void): void {
         this.saveManager.loadGameProgress((gameProgress) => {
             if (gameProgress) {
-                // 只覆盖更新的部分
-                this.currentProgress.level = new Set([...gameProgress.level]);
-                this.currentProgress.plants = [...gameProgress.plants];
-                this.currentProgress.zombies = [...gameProgress.zombies];
-                this.currentProgress.items = new Map([...gameProgress.items]);
+
+                this.currentProgress.level = gameProgress.level;
+                this.currentProgress.plants = gameProgress.plants;
+                this.currentProgress.zombies = gameProgress.zombies;
+                this.currentProgress.items = gameProgress.items;
 
                 if (callback) {
                     callback();
@@ -211,7 +240,10 @@ class GameManager {
 
     // 导出游戏存档
     exportSave(callback: (jsonString: string) => void): void {
-        let jsonStr = JSON.stringify(this.currentProgress);
+        // 将所有set做成 []
+        // 将所有map做成 []
+        const obj = serializeGameProgress(this.currentProgress);
+        let jsonStr = JSON.stringify(obj);
         callback(jsonStr);
     }
 }

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { EventBus } from "../game/EventBus";
 import { useSettings } from "../context/settings_ctx";
 import { StageDataRecords } from "../game/utils/loader";
+import { publicUrl } from "../utils/browser";
 
 type Props = {
     width: number
@@ -11,68 +12,77 @@ type Props = {
 }
 
 export default function BottomTools({ width, chapterID }: Props) {
-    const { money, wave, bossHealth, starShareds, updateWave, isPaused, setIsPaused } = useGameContext();
-
-    const [starStr, setStarStr] = useState<string>('*');
-    const [starChosen, setStarChosen] = useState<boolean>(false);
+    const gamectx = useGameContext();
     const { isBluePrint } = useSettings();
-
+    const starUri = `${publicUrl}/assets/sprite/star.png`;
 
     useEffect(() => {
         const handleProgress = (data: { progress: number }) => {
-            updateWave(data.progress);
+            gamectx.updateWave(data.progress);
         }
-
         EventBus.on('game-progress', handleProgress);
 
         return () => {
             EventBus.removeListener('game-progress', handleProgress);
         }
-    }, [isBluePrint, updateWave])
+    }, [isBluePrint, gamectx.updateWave])
+
+    useEffect(() => {
+        const handleStarShardsConsume = () => {
+            gamectx.updateStarShards(-1);
+        };
+
+        EventBus.on('starshards-consume', handleStarShardsConsume);
+        return () => {
+            EventBus.removeListener('starshards-consume', handleStarShardsConsume);
+        }
+    }, [gamectx.updateStarShards])
+
+
 
     const handleStarClick = () => {
-        setStarChosen(stat => !stat);
-        EventBus.emit('starShards-chosen');
+        if (gamectx.isPaused) return;
+        if (gamectx.starShareds <= 0) return;
+        EventBus.emit('starshards-click');
     };
 
     const handleSetPause = useCallback(() => {
-        const newPaused = !isPaused;
+        const newPaused = !gamectx.isPaused;
         EventBus.emit('setIsPaused', { paused: newPaused });
-    }, [isPaused]);
+    }, [gamectx.isPaused]);
 
     useEffect(() => {
         EventBus.on('okIsPaused', (data: { paused: boolean }) => {
-            setIsPaused(data.paused);
+            gamectx.setIsPaused(data.paused);
         });
         return () => {
             EventBus.removeListener('okIsPaused');
         }
     }, []); // 不要改
 
-    useEffect(() => {
-        let tmp = 'star';
-        for (let i = 0; i < starShareds; ++i) {
-            tmp += '* ';
-        }
-        setStarStr(tmp);
-    }, [starShareds]);
-
     // 计算进度条百分比
-    const progress = bossHealth !== -1 ?
-        (bossHealth / 100) * 100 :
-        (wave / 100) * 100;
+    const progress = gamectx.bossHealth !== -1 ?
+        (gamectx.bossHealth / 100) * 100 :
+        (gamectx.wave / 100) * 100;
 
     return (
         <div className="bottom" style={{
             width: width,
             height: width / 32,
         }}>
-            <div className="money">{money} $</div>
-            <div className={`stars${starChosen ? ' chosen' : ''}`} onClick={handleStarClick}>{starStr}</div>
-            <div style={{ 'width': '15%' }}></div>
+            <div className="money">{gamectx.money} $</div>
+            <div className={`stars ${gamectx.isPaused ? 'paused' : ''}`} onClick={handleStarClick}>
+                {Array.from({ length: gamectx.starShareds }).map((_, index) => (
+                    <img
+                        key={index}
+                        src={starUri}
+                    />
+                ))}
+            </div>
+
 
             {
-                bossHealth !== -1 ? (
+                gamectx.bossHealth !== -1 ? (
                     <div className="boss-health">
                         <div className="progress-bar">
                             <div

@@ -2,6 +2,7 @@ import DepthManager from "../../utils/depth";
 import { EventBus } from "../EventBus";
 import { Game } from "../scenes/Game";
 import IZombieAnim from "../sprite/zombie";
+import GridClan from "../utils/grid_clan";
 import MonsterSpawner from "../utils/spawner";
 import { IPlant } from "./IPlant";
 
@@ -16,6 +17,7 @@ function setDisplay(spr: IZombie, scene: Game) {
 
 export class IZombie extends Phaser.Physics.Arcade.Sprite {
     public static Group: Phaser.Physics.Arcade.Group;
+    static GridClan: GridClan;
     private Spawner: MonsterSpawner;
 
     // 私有
@@ -58,6 +60,8 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite {
     // 没必要以后特定texture了,因为反正设置了不可见
     constructor(scene: Game, col: number, row: number, texture: string,
         newZombieAnim: (scene: Game, x: number, y: number) => IZombieAnim) {
+        IZombie.GridClan = scene.gardener.GridClan;
+
         const { x, y } = scene.positionCalc.getZombieBottomCenter(col, row);
         super(scene, x, y, texture, 0); // 没必要以后特定texture了,因为反正设置了不可见
         this.setVisible(false);
@@ -110,9 +114,15 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite {
         // 判断优先级,更换attackingPlant
         // 碰撞就会产生的函数
         // 如果在攻击过程中新增了碰撞(正在attacking的不为空),那么判断有了更加优先级的目标(南瓜)
-        if (this.attackingPlant) return;  // 目前直接忽略
+        if (this.attackingPlant) {
+            if (IZombie.GridClan.MorePriorityPlant(this.attackingPlant, plant)) {
+                this.broadcastToPlant();
+                this.attackingPlant = plant;
+            }
+            return;
+        }
 
-
+        // 新的攻击流程开始
         this.attackingPlant = plant;
         this.IsStop = true;
         this.setVelocityX(0);
@@ -130,19 +140,21 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite {
         });
     }
 
+    // 通知正在被攻击的植物,我停止攻击
+    public broadcastToPlant() {
+        this.attackingPlant?.attackingZombie.delete(this);
+        this.attackingPlant = null;
+    }
     // 停止攻击
     public stopAttacking() {
-        // 通知正在被攻击的植物
         this.zombieAnim?.stopArmSwing();
         this.zombieAnim?.startLegSwing();
-        this.attackingPlant?.attackingZombie.delete(this);
-
         if (this.attackTimer) {
             this.attackTimer.remove();
             this.attackTimer.destroy();
             this.attackTimer = undefined;
         }
-        this.attackingPlant = null;
+        this.broadcastToPlant();
         this.IsStop = false;
         this.setVelocityX(-this.speed);
         console.log('Zombie stopped attacking');
@@ -203,18 +215,18 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite {
                 duration: 400,
                 ease: 'Linear',
                 onComplete: () => {
-                    this.playDeathSmokeAnimation();
+                    this.playDeathSmokeAnimation(this.zombieAnim.head.depth);
                     this.destroy();
                 }
             });
         }
     }
 
-    playDeathSmokeAnimation() {
+    playDeathSmokeAnimation(depth: number) {
         // 创建临时的白烟 sprite
         const smoke = this.scene.add.sprite(this.x, this.y, 'anime/death_smoke');
         smoke.setDisplaySize(this.displayWidth, this.displayWidth);
-        smoke.setOrigin(0.5, 1);  // 设置底部为中心
+        smoke.setOrigin(0.5, 1).setDepth(depth);  // 设置底部为中心
 
         // 确保动画只创建一次（全局定义）
         if (!this.scene.anims.exists('death_smoke')) {

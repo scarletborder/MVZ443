@@ -161,7 +161,11 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
                         title: "保存进度",
                         description: "手动保存当前游戏进度",
                         controlType: "button",
-                        controlProps: { onClick: saveManager.saveProgress }
+                        controlProps: {
+                            onClick: () => {
+                                saveManager.saveProgress();
+                            }
+                        }
                     },
                     {
                         title: "导入存档",

@@ -122,24 +122,29 @@ export function CardSlotHorizontal({ sceneRef, gameParams }: slotProps) {
     const { currentProgress } = useSaveManager();
     const [plants, setPlants] = useState<Array<IRecord>>([]);
     // 使用 WeakMap 来记录 pid 到 level 的映射
-    const pidToLevelMap = new Map<number, number>();
+    const [pidToLevelMap, setPidToLevelMap] = useState<Map<number, number>>(new Map());
 
     useEffect(() => {
         if (!gameParams) {
             return;
         }
+
         const newPlants: Array<IRecord> = gameParams.plants.slice(0, MaxCardNumber)
             .map(pid => PlantFactoryMap[pid])
             .filter(Boolean);
 
         setPlants(newPlants);
 
+        const newPidToLevelMap = new Map(pidToLevelMap);
         currentProgress.plants.forEach(plant => {
             if (gameParams.plants.includes(plant.pid)) {
-                pidToLevelMap.set(plant.pid, plant.level);
+                newPidToLevelMap.set(plant.pid, plant.level);
             }
         });
+
+        setPidToLevelMap(newPidToLevelMap);
     }, [gameParams, currentProgress]);
+
 
 
 
@@ -156,7 +161,7 @@ export function CardSlotHorizontal({ sceneRef, gameParams }: slotProps) {
             <Card
                 key={index}
                 plantName={plant.name}
-                cooldownTime={plant.cooldownTime}
+                cooldownTime={plant.cooldownTime((pidToLevelMap.get(plant.pid) || 1))}
                 sceneRef={sceneRef}
                 pid={plant.pid}
                 texture={plant.texture}
@@ -174,24 +179,29 @@ export function CardSlotVertical({ sceneRef, gameParams }: slotProps) {
     const MaxCardNumber = 9;
     const { currentProgress } = useSaveManager();
     const [plants, setPlants] = useState<Array<IRecord>>([]);
-    const pidToLevelMap = new Map<number, number>();
+    const [pidToLevelMap, setPidToLevelMap] = useState<Map<number, number>>(new Map());
 
     useEffect(() => {
         if (!gameParams) {
             return;
         }
+
         const newPlants: Array<IRecord> = gameParams.plants.slice(0, MaxCardNumber)
             .map(pid => PlantFactoryMap[pid])
             .filter(Boolean);
 
         setPlants(newPlants);
 
+        const newPidToLevelMap = new Map(pidToLevelMap);
         currentProgress.plants.forEach(plant => {
             if (gameParams.plants.includes(plant.pid)) {
-                pidToLevelMap.set(plant.pid, plant.level);
+                newPidToLevelMap.set(plant.pid, plant.level);
             }
         });
+
+        setPidToLevelMap(newPidToLevelMap);
     }, [gameParams, currentProgress]);
+
 
     return (
         <div style={{
@@ -207,7 +217,7 @@ export function CardSlotVertical({ sceneRef, gameParams }: slotProps) {
                 <VCard
                     key={index}
                     plantName={plant.name} // 保留参数但不显示
-                    cooldownTime={plant.cooldownTime}
+                    cooldownTime={plant.cooldownTime((pidToLevelMap.get(plant.pid) || 1))}
                     sceneRef={sceneRef}
                     pid={plant.pid}
                     texture={plant.texture}
@@ -222,32 +232,38 @@ export function CardSlotVertical({ sceneRef, gameParams }: slotProps) {
 
 // 永远竖向排列,有pickaxe和剩余的卡片
 export function ViceCardSlot({ sceneRef, gameParams }: slotProps) {
+
+    const ExistedCards = useDeviceType() === 'pc' ? 10 : 9;
     const { currentProgress } = useSaveManager();
     const [plants, setPlants] = useState<Array<IRecord>>([]);
     // 使用 WeakMap 来记录 pid 到 level 的映射
-    const pidToLevelMap = new Map<number, number>();
-    const ExistedCards = useDeviceType() === 'pc' ? 10 : 9;
+    const [pidToLevelMap, setPidToLevelMap] = useState<Map<number, number>>(new Map());
 
     useEffect(() => {
         if (!gameParams) {
             return;
         }
-        // 显示盈余的卡片
+
         if (gameParams.plants.length > ExistedCards) {
-            const newPlants: Array<IRecord> = gameParams.plants
+            const newPlants: Array<IRecord> = gameParams.plants.slice(ExistedCards)
                 .map(pid => PlantFactoryMap[pid])
                 .filter(Boolean);
 
             setPlants(newPlants);
 
+            const newPidToLevelMap = new Map(pidToLevelMap);
             currentProgress.plants.forEach(plant => {
                 if (gameParams.plants.includes(plant.pid)) {
-                    pidToLevelMap.set(plant.pid, plant.level);
+                    newPidToLevelMap.set(plant.pid, plant.level);
                 }
             });
+
+            setPidToLevelMap(newPidToLevelMap);
         } else {
             setPlants([]);
         }
+
+
     }, [gameParams, currentProgress]);
 
     return (
@@ -264,7 +280,7 @@ export function ViceCardSlot({ sceneRef, gameParams }: slotProps) {
                 <Card
                     key={index}
                     plantName={plant.name}
-                    cooldownTime={plant.cooldownTime}
+                    cooldownTime={plant.cooldownTime((pidToLevelMap.get(plant.pid) || 1))}
                     sceneRef={sceneRef}
                     pid={plant.pid}
                     texture={plant.texture}

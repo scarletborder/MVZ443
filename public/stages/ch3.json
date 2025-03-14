@@ -2,12 +2,9 @@
     "type": 1,
     "rows": 5,
     "onWin": {
-        "unLock": [
-            3
-        ],
+        "unLock": [],
         "unLockPlant": [
-            5,
-            6
+            5
         ]
     },
     "rewards": [

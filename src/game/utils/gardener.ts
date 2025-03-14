@@ -1,12 +1,12 @@
 // 管理种植,铲除植物.以及使用星之碎片和激发植物的能力
 
-import { SHIELD_PLANT } from "../../../public/constants";
-
 // Ensure SHIELD_PLANT is typed correctly
 import DepthManager from "../../utils/depth";
 import { EventBus } from "../EventBus";
+import { IExpolsion } from "../models/IExplosion";
 import { IPlant } from "../models/IPlant";
 import { Game } from "../scenes/Game";
+import GridClan from "./grid_clan";
 import { PlantFactoryMap } from "./loader";
 import { PositionCalc } from "./position";
 
@@ -22,14 +22,16 @@ export default class Gardener {
 
     // 卡槽中选中的植物(可为null)
     prePlantPid: [number, number] | null = null; // [pid,level] | null
+    // 种植复杂管理
+    GridClan: GridClan;
     // 星之碎片
     useStarShards: boolean = false;
-
-    // 星之碎片动画管理
+    starSprite: Phaser.GameObjects.Sprite;
 
     // 铁镐
     usePickaxe: boolean = false;
     pickaxeSprite: Phaser.GameObjects.Sprite;
+
 
     // 高光植物和闪烁动画的管理
     private highlightSprite: Phaser.GameObjects.Sprite | null = null;
@@ -38,10 +40,16 @@ export default class Gardener {
     constructor(scene: Game, positionCalc: PositionCalc) {
         this.scene = scene;
         this.positionCalc = positionCalc;
+        this.GridClan = new GridClan(this);
         // scene.add.image()
         this.pickaxeSprite = scene.add.sprite(0, 0, 'pickaxe');
-        this.pickaxeSprite.setDepth(DepthManager.getInGameUIElementDepth(50));
+        this.pickaxeSprite.setDisplaySize(52 * this.positionCalc.scaleFactor, 52 * this.positionCalc.scaleFactor)
+            .setDepth(DepthManager.getInGameUIElementDepth(50));
         this.pickaxeSprite.setVisible(false);
+        this.starSprite = scene.add.sprite(0, 0, 'starshards');
+        this.starSprite.setDisplaySize(52 * this.positionCalc.scaleFactor, 52 * this.positionCalc.scaleFactor)
+            .setDepth(DepthManager.getInGameUIElementDepth(50));
+        this.starSprite.setVisible(false);
 
         // 监听q按键
         this.scene.input.keyboard?.on('keydown-Q', () => {
@@ -60,11 +68,20 @@ export default class Gardener {
                 this.pickAxe();
             }
         });
+
+        EventBus.on('starshards-click', () => {
+            if (this.useStarShards) {
+                this.cancelStarShards();
+            } else {
+                this.setStarShards();
+            }
+        });
     }
 
     // 选择卡片植物后
     // 设置预种植的植物 pid
     public setPrePlantPid(pid: number, level: number) {
+        console.log('l;evel:', level)
         // 如果设置了星之碎片,取消他
         if (this.useStarShards) {
             this.cancelStarShards();
@@ -88,13 +105,48 @@ export default class Gardener {
 
     // 星之碎片选中
     public setStarShards() {
+        this.stopHighlight();
+        this.prePlantPid = null;
+        this.usePickaxe = false;
+
         this.useStarShards = true;
+        this.starSprite.setVisible(true);
+        // 移动的光标位置
+        try {
+            const pointer = this.scene.input.activePointer;
+            this.starSprite.setPosition(pointer.x, pointer.y);
+        } catch {
+            this.starSprite.setPosition(this.scene.scale.width * 1 / 3, this.scene.scale.height);
+        }
     }
 
     // 取消星之碎片
     public cancelStarShards() {
         this.useStarShards = false;
-        // 动画取消
+        this.starSprite.setVisible(false);
+    }
+
+    // 星之碎片使用
+    public launchStarShards(pid: number, col: number, row: number) {
+        console.log('使用')
+        const key = `${col}-${row}`;
+        if (this.planted.has(key)) {
+            const list = this.planted.get(key);
+            if (list) {
+                const index = list.findIndex(plant => plant.pid === pid);
+                if (index >= 0) {
+                    // 找到对象
+                    const plantObj = list[index];
+                    plantObj.onStarShards();
+                    // 通知使用星之碎片
+                }
+                if (list.length === 0) {
+                    this.planted.delete(key);
+                }
+            }
+        }
+
+
     }
 
 
@@ -149,6 +201,7 @@ export default class Gardener {
         }
     }
 
+    // pickaxe 移除
     public removePlant(pid: number, col: number, row: number) {
         const key = `${col}-${row}`;
         if (this.planted.has(key)) {
@@ -166,21 +219,12 @@ export default class Gardener {
                 }
             }
         }
+
     }
 
     // 给定植物是否能够在(col,row)种植,考虑有没有南瓜罩
-    public canPlant(col: number, row: number) {
-        const key = `${col}-${row}`;
-        if (this.planted.has(key)) {
-            const list = this.planted.get(key);
-            if (list && list.length > 0) {
-                // TODO: 记录逻辑,但目前无论如何都返回false种植不了
-                for (const plant of list) {
-                    return false;
-                }
-            }
-        }
-        return true;
+    public canPlant(pid: number, col: number, row: number) {
+        return this.GridClan.CanPlant(pid, col, row);
     }
 
 
@@ -203,7 +247,14 @@ export default class Gardener {
         if (this.useStarShards) {
             // star shards
             // 将星之碎片图标跟随
-
+            const currentX = this.starSprite.x;
+            const currentY = this.starSprite.y;
+            const targetX = pointer.x;
+            const targetY = pointer.y;
+            const speed = 0.6;
+            const newX = Phaser.Math.Linear(currentX, targetX, speed);
+            const newY = Phaser.Math.Linear(currentY, targetY, speed);
+            this.starSprite.setPosition(newX, newY);
             return;
         }
 
@@ -233,6 +284,17 @@ export default class Gardener {
     }
 
 
+    // 得到鼠标指针指向的pid
+    // 当 格子中包含多个植物的时候(护盾和主要植物)此函数根据pointer的y判断应该对哪个目标进行操作
+    // 返回值为pid
+    public gridWisePid(px: number, py: number): {
+        pid: number,
+        col: number,
+        row: number
+    } {
+      return this.GridClan.gridWisePid(px, py);
+    }
+
     // 点击事件
     // 种植,取消种植,使用星之碎片,取消星之碎片
     public onClickUp(pointer: Phaser.Input.Pointer) {
@@ -252,43 +314,24 @@ export default class Gardener {
         }
 
         // 星之碎片事件
-        if (this.useStarShards) { return; }
-
+        if (this.useStarShards) {
+            const { pid, col, row } = this.gridWisePid(pointer.x, pointer.y);
+            if (pid >= 0) {
+                this.scene.sendQueue.sendStarShards(pid, col, row);
+            }
+            this.cancelStarShards();
+            return;
+        }
 
         // pickaxe事件
         if (this.usePickaxe) {
             // 铲除事件
-            const { col, row } = this.positionCalc.getGridByPos(pointer.x, pointer.y);
-            if (col >= 0 && row >= 0 && col < this.positionCalc.Col_Number && row < this.positionCalc.Row_Number) {
-                const { y } = this.positionCalc.getGridCenter(col, row);
-                const removeShield = pointer.y < y;
-                const key = `${col}-${row}`;
-
-                // 获得 pid
-                // TODO: 在后续拓展中，要考虑 axe 在一个格子内部的上下位置来决定铲除
-
-                if (this.planted.has(key)) {
-                    const list = this.planted.get(key) || [];
-
-                    if (list.length > 0) {
-                        if (list.length === 1) {
-                            // 直接铲除唯一的植物
-                            this.scene.sendQueue.sendRemovePlant(list[0].pid, col, row);
-                        } else {
-                            // 处理多个植物情况，优先识别护盾器械
-                            const [firstPlant, secondPlant] = list;
-                            const isFirstShield = SHIELD_PLANT.includes(firstPlant.pid);
-
-                            const shieldPid = isFirstShield ? firstPlant.pid : secondPlant.pid;
-                            const nonShieldPid = isFirstShield ? secondPlant.pid : firstPlant.pid;
-
-                            // 根据指针位置决定移除护盾或非护盾植物
-                            this.scene.sendQueue.sendRemovePlant(removeShield ? shieldPid : nonShieldPid, col, row);
-                        }
-                    }
-                }
-                this.cancelPickAxe();
+            const { pid, row, col } = this.gridWisePid(pointer.x, pointer.y);
+            if (pid >= 0) {
+                this.scene.sendQueue.sendRemovePlant(pid, col, row);
             }
+            this.cancelPickAxe();
+            return;
         }
 
         // 种植事件
@@ -301,7 +344,7 @@ export default class Gardener {
 
             console.log('prepare to plant', this.prePlantPid);
             const { col, row } = this.positionCalc.getGridByPos(pointer.x, pointer.y);
-            if (col >= 0 && row >= 0 && this.canPlant(col, row)) {
+            if (col >= 0 && row >= 0 && this.canPlant(this.prePlantPid[0], col, row)) {
                 this.scene.sendQueue.sendCardPlant(this.prePlantPid[0], col, row, this.prePlantPid[1]);
             }
         }

@@ -6,7 +6,6 @@ import { IBullet } from '../models/IBullet';
 import { PositionCalc } from '../utils/position';
 import Gardener from '../utils/gardener';
 import MonsterSpawner from '../utils/spawner';
-import InnerSettings from '../utils/settings';
 import { GameParams, GameSettings } from '../models/GameParams';
 import { PlantFactoryMap } from '../utils/loader';
 import QueueReceive from '../utils/queue_receive';
@@ -16,6 +15,7 @@ import { StageData } from '../models/IRecord';
 import MineCart from '../presets/bullet/minecart';
 import AddMapFunction from '../game_events/mapfun';
 import BackendWS from '../../utils/net/sync';
+import { IExpolsion } from '../models/IExplosion';
 
 
 
@@ -32,6 +32,7 @@ export class Game extends Scene {
     public monsterSpawner: MonsterSpawner;
     public innerSettings: GameSettings;
 
+    public gridProperty: ("ground" | "water" | "sky")[][]; // gridProperty[row][col]
 
     camera: Phaser.Cameras.Scene2D.Camera;
     background: Phaser.GameObjects.Image;
@@ -44,6 +45,7 @@ export class Game extends Scene {
     params: GameParams;
     private isDestroyed = false; // Track if the scene/game is destroyed
     public stageData: StageData;
+    public dayOrNight: boolean = true; // day = true
 
     music: Phaser.Sound.BaseSound;
 
@@ -73,6 +75,7 @@ export class Game extends Scene {
         this.scaleFactor = this.scale.displaySize.width / 800;
 
         this.GRID_ROWS = this.stageData.rows;
+        this.gridProperty = new Array(this.GRID_ROWS).fill(0).map(() => new Array(this.GRID_COLS).fill('ground')); //  默认全为地板
         this.positionCalc = new PositionCalc(this.scaleFactor, this.GRID_ROWS, this.GRID_COLS);
         this.monsterSpawner = new MonsterSpawner(this, this.stageData.waves);
 
@@ -115,13 +118,15 @@ export class Game extends Scene {
         IPlant.InitGroup(this);
         IZombie.InitGroup(this);
         IBullet.InitGroup(this);
+        IExpolsion.InitGroup(this);
 
 
-        // 设置豌豆与僵尸的碰撞检测
+        // 设置bullet与僵尸的碰撞检测
         this.physics.add.overlap(IBullet.Group, IZombie.Group, damageZombie, null, this);
-        // 设置植物与僵尸的碰撞检测
+        // 设置plant与僵尸的碰撞检测
         this.physics.add.overlap(IPlant.Group, IZombie.Group, damagePlant, null, this);
-
+        // 设置爆炸与僵尸的碰撞检测
+        this.physics.add.overlap(IExpolsion.Group, IZombie.Group, explodeZombie, null, this);
 
         // 监听
         this.gardener = new Gardener(this, this.positionCalc);
@@ -189,7 +194,7 @@ export class Game extends Scene {
 
     handleCardPlant(pid: number, level: number, col: number, row: number, uid: number) {
         // 关于判断能否种,本地已经判断,这里只判断冲突
-        if (this.gardener.canPlant(col, row)) {
+        if (this.gardener.canPlant(pid, col, row)) {
             // 根据 pid 创建具体植物,这里注册函数在preload时候放到game的loader里面
             // 本地种植
             const plantRecord = PlantFactoryMap[pid];
@@ -208,6 +213,14 @@ export class Game extends Scene {
     handleRemovePlant(pid: number, col: number, row: number) {
         // 本地移除
         this.gardener.removePlant(pid, col, row);
+    }
+
+    handleStarShards(pid: number, col: number, row: number, uid: number) {
+        this.gardener.launchStarShards(pid, col, row);
+
+        if (this.myID === uid) {
+            EventBus.emit('starshards-consume');
+        }
     }
 
 
@@ -310,4 +323,10 @@ function damagePlant(plantSprite: Phaser.GameObjects.GameObject, zombieSprite: P
     const zombie = zombieSprite as IZombie;
     // console.log('size', plant.body?.width, plant.body?.height)
     zombie.startAttacking(plant);
+}
+
+function explodeZombie(explosionSprite: Phaser.GameObjects.GameObject, zombieSprite: Phaser.GameObjects.GameObject) {
+    const explosion = explosionSprite as IExpolsion;
+    const zombie = zombieSprite as IZombie;
+    explosion.CollideObject(zombie);
 }

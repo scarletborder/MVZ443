@@ -61,7 +61,10 @@ export class Preloader extends Scene {
             { frameWidth: 64, frameHeight: 64 });
         this.load.spritesheet('plant/obsidian', 'plant/obsidian.png',
             { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('plant/tnt_mines', 'plant/tnt_mines.png',
+            { frameWidth: 64, frameHeight: 64 });
         this.load.image('plant/small_dispenser', 'plant/small_dispenser.png');
+        this.load.image('plant/lily', 'plant/lily.png');
     }
 
     // 加载全部怪物
@@ -81,8 +84,12 @@ export class Preloader extends Scene {
     // 加载全部sprite
     loadAllSprite() {
         this.load.image('pickaxe', 'sprite/pickaxe.png');
+        this.load.image('starshards', 'sprite/star.png');
         this.load.spritesheet('anime/death_smoke', 'anime/death_smoke.png',
             { frameWidth: 16, frameHeight: 16 });
+        this.load.spritesheet('anime/explosion', 'anime/explosion.png',
+            { frameWidth: 32, frameHeight: 32 });
+
 
         this.load.spritesheet('sprZombieBody', 'sprite/zombie/sprZombieBody.png',
             { frameWidth: 19, frameHeight: 35 }); // Adjust frameWidth if needed
