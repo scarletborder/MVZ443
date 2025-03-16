@@ -240,9 +240,7 @@
         }
     ],
     "onWin": {
-        "unLock": [
-            6
-        ],
+        "unLock": [],
         "unLockPlant": [
             10
         ]
