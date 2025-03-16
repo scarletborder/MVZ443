@@ -288,8 +288,10 @@ func saveLocaleFile(filename string, data map[string]string) error {
 		sb.WriteString("    " + key + ": ")
 		lines := strings.Split(value, "\n")
 		if len(lines) > 0 {
+			lines[0] = strings.ReplaceAll(lines[0], ">", ":")
 			sb.WriteString(lines[0] + "\n")
 			for _, line := range lines[1:] {
+				line = strings.ReplaceAll(line, ">", ":")
 				sb.WriteString(line + "\n")
 			}
 		}

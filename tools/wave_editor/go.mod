@@ -2,7 +2,10 @@ module wave_editor
 
 go 1.24.0
 
-require fyne.io/fyne/v2 v2.5.5
+require (
+	fyne.io/fyne/v2 v2.5.5
+	gopkg.in/yaml.v2 v2.4.0
+)
 
 require (
 	fyne.io/systray v1.11.0 // indirect

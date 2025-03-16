@@ -1,6 +1,7 @@
 import { Game } from "../scenes/Game";
 
 export interface ZombieAnimProps {
+    Species: string, // 物种,如僵尸,骷髅等
     bodyKey: string, // 需要是两个,一个正常一个受伤
     headKey: string,
     armKey: string,
@@ -24,6 +25,8 @@ export default class IZombieAnim {
     legLeftTween: Phaser.Tweens.Tween | null;
     legRightTween: Phaser.Tweens.Tween | null;
     armTween: Phaser.Tweens.Tween | null;
+
+    species: string;
 
     // size
     // bodyWidth: number = 19;
@@ -49,6 +52,7 @@ export default class IZombieAnim {
         x = x;
         y = y - scene.positionCalc.gridOffsetY * 5 / 12;
 
+        this.species = props.Species;
         this.scaneFactor = scene.positionCalc.scaleFactor * 1.2;
         this.scene = scene;
         this.x = x;
@@ -59,18 +63,18 @@ export default class IZombieAnim {
 
         // TODO: 动画移动到全局
         this.scene.anims.create({
-            key: 'bodyNormal',
+            key: `${this.species}bodyNormal`,
             frames: [{ key: props.bodyKey, frame: 0 }],
             frameRate: 1,
             repeat: 0
         });
         this.scene.anims.create({
-            key: 'bodyInjured',
+            key: `${this.species}bodyInjured`,
             frames: [{ key: props.bodyKey, frame: 1 }],
             frameRate: 1,
             repeat: 0
         });
-        this.body.anims.play('bodyNormal');
+        this.body.anims.play(`${this.species}bodyNormal`);
 
         this.head = this.scene.add.sprite(x + this.headOffset[0] * this.scaneFactor,
             y + this.headOffset[1] * this.scaneFactor, props.headKey);
@@ -156,9 +160,9 @@ export default class IZombieAnim {
 
     switchBodyFrame(isInjured: boolean) {
         if (isInjured) {
-            this.body.anims.play('bodyInjured');
+            this.body.anims.play(`${this.species}bodyInjured`);
         } else {
-            this.body.anims.play('bodyNormal');
+            this.body.anims.play(`${this.species}bodyNormal`);
         }
     }
 

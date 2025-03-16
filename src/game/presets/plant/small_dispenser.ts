@@ -63,7 +63,7 @@ function NewDispenser(scene: Game, col: number, row: number, level: number): IPl
 function shootSnowBall(scene: Game, shooter: IPlant, maxDistance: number) {
     const level = shooter.level;
     //  根据等级略微提高伤害
-    const damage = 15 + 1 * Math.min(level, 4) + 0.5 * Math.max(0, level - 4);
+    const damage = 18 + 1 * Math.min(level, 4) + 0.5 * Math.max(0, level - 4);
 
     if (!shooter.isSleeping) {
         const arrow = NewSnowBullet(scene, shooter.col, shooter.row, maxDistance, damage);
@@ -90,7 +90,7 @@ const SmallDispenserRecord: IRecord = {
     pid: 5,
     name: '小发射器',
     cost: () => 0,
-    cooldownTime: () => 5,
+    cooldownTime: () => 10,
     NewFunction: NewDispenser,
     texture: 'plant/small_dispenser',
     description: i18n.S('small_dispenser_description')

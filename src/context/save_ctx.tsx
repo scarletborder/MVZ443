@@ -14,7 +14,7 @@ interface Item {
     count: number;
 }
 
-interface GameProgress {
+export interface GameProgress {
     level: Set<number>;
     plants: Plant[];
     zombies: Zombie[];
@@ -143,7 +143,7 @@ class GameManager {
         this.saveManager = new SaveManager();
         this.currentProgress = {
             level: new Set([1]),
-            plants: [{ pid: 1, level: 1 }, { pid: 2, level: 1 }],
+            plants: [{ pid: 1, level: 1 }, { pid: 2, level: 1 }, { pid: 3, level: 1 }, { pid: 4, level: 1 }],
             zombies: [],
             items: new Map<number, Item>(),
             slotNum: 6,

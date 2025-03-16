@@ -5,6 +5,7 @@ import { EventBus } from "../game/EventBus";
 import { useSettings } from "../context/settings_ctx";
 import { StageDataRecords } from "../game/utils/loader";
 import { publicUrl } from "../utils/browser";
+import { useSaveManager } from "../context/save_ctx";
 
 type Props = {
     width: number
@@ -13,6 +14,7 @@ type Props = {
 
 export default function BottomTools({ width, chapterID }: Props) {
     const gamectx = useGameContext();
+    const savectx = useSaveManager();
     const { isBluePrint } = useSettings();
     const starUri = `${publicUrl}/assets/sprite/star.png`;
 
@@ -75,7 +77,7 @@ export default function BottomTools({ width, chapterID }: Props) {
             width: width,
             height: width / 32,
         }}>
-            <div className="money">{gamectx.money} $</div>
+            <div className="money">{savectx.currentProgress.items.get(1) ? savectx.currentProgress.items.get(1)?.count : '0'} $</div>
             <div className={`stars ${gamectx.isPaused ? 'paused' : ''}`} onClick={handleStarClick}>
                 {Array.from({ length: gamectx.starShareds }).map((_, index) => (
                     <img

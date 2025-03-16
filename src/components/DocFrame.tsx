@@ -8,6 +8,7 @@ import { publicUrl } from '../utils/browser';
 import { useDeviceType } from '../hooks/useDeviceType';
 import BackendWS from '../utils/net/sync';
 import i18n from '../utils/i18n';
+import Shop from './shop/shop';
 
 interface Props {
     width: number,
@@ -23,11 +24,12 @@ export default function DocFrame({ width, height, sceneRef, setGameParams, gameS
     }
 
     // 状态管理
-    const [currentView, setCurrentView] = useState('main'); // main, levels, pokedex, export, updates, about
+    const [currentView, setCurrentView] = useState('main'); // main, levels, pokedex, shop, export, updates, about
     const menuItems = [
         "主页",
         "选择关卡",
         "图鉴",
+        "商店",
         "更新记录",
         "设置",
         "关于"
@@ -150,6 +152,7 @@ export default function DocFrame({ width, height, sceneRef, setGameParams, gameS
                         onClick={() => {
                             if (item === "选择关卡") setCurrentView('levels');
                             else if (item === "图鉴") setCurrentView('pokedex');
+                            else if (item === "商店") setCurrentView('shop');
                             else if (item === "更新记录") setCurrentView('updates');
                             else if (item === "设置") setCurrentView('settings');
                             else if (item === "关于") setCurrentView('about');
@@ -263,6 +266,7 @@ export default function DocFrame({ width, height, sceneRef, setGameParams, gameS
                 islord={islord}
             />}
             {currentView === 'pokedex' && <Pokedex sceneRef={sceneRef} width={width} height={height} onBack={() => setCurrentView('main')} />}
+            {currentView === 'shop' && <Shop width={width} height={height} onBack={() => setCurrentView('main')} />} 
             {currentView === 'settings' && <Settings width={width} height={height} onBack={() => setCurrentView('main')} />}
 
             <style>

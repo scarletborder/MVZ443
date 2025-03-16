@@ -57,7 +57,7 @@ class dispenser extends IPlant {
         return this.game.time.addEvent({
             callback: () => {
                 if (this.health > 0) {
-                    shootArrow(this.game, this);
+                    const arrow = shootArrow(this.game, this, 35);
                 }
             },
             repeat: totalArrows - 1,
@@ -71,13 +71,14 @@ function NewDispenser(scene: Game, col: number, row: number, level: number): IPl
     return peashooter;
 }
 
-function shootArrow(scene: Game, shooter: IPlant) {
+function shootArrow(scene: Game, shooter: IPlant, baseDamage: number = 20) {
     const level = shooter.level;
     //  根据等级略微提高伤害
-    const damage = 15 + 1.2 * Math.min(level, 3) + 0.8 * Math.max(level - 3, 0);
+    const damage = baseDamage + 1.2 * Math.min(level, 3) + 0.8 * Math.max(level - 3, 0);
     const penetrate = shooter.level >= 9 ? 5 : 1;
     const arrow = NewArrow(scene, shooter.col, shooter.row, scene.positionCalc.GRID_SIZEX * 32, damage);
     arrow.penetrate = penetrate;
+    return arrow;
 }
 
 
@@ -88,7 +89,7 @@ const DispenserRecord: IRecord = {
         if (level && level >= 5) return 75;
         return 100;
     },
-    cooldownTime: () => 5,
+    cooldownTime: () => 6,
     NewFunction: NewDispenser,
     texture: 'plant/dispenser',
     description: i18n.S('dispenser_description')

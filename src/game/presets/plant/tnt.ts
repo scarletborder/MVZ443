@@ -38,35 +38,66 @@ class _Tnt extends IPlant {
 
     public onStarShards(): void {
         super.onStarShards();
-        let leftCount = 2;
-        // 从第一排开始尝试放置准备好的炸弹
-        for (let preCol = this.game.GRID_COLS - 1; preCol >= 0; preCol--) {
-            for (let preRow = 0; preRow < this.game.GRID_ROWS; preRow++) {
-                // 查看是否有位置(炸弹是排他的)
-                const key = `${preCol}-${preRow}`;
+        let remaining = 2; // 需要放置的 TNT 数量，根据需求调整
+        const usedRows = new Set<number>();
+        const usedCols = new Set<number>();
+
+        // 第一遍：寻找满足条件且行、列唯一的格子
+        for (let col = this.game.GRID_COLS - 1; col >= 0 && remaining > 0; col--) {
+            for (let row = 0; row < this.game.GRID_ROWS && remaining > 0; row++) {
+                // 检查该格子是否满足放置 TNT 的条件
+                const key = `${col}-${row}`;
+                let canPlace = true;
                 if (this.game.gardener.planted.has(key)) {
                     const list = this.game.gardener.planted.get(key);
                     if (list && list.length > 0) {
-                        let couldPlant = true;
                         for (const plant of list) {
                             const pid = plant.pid;
-                            // 可以有shield,承载物
-                            if (SHIELD_PLANT.includes(pid) || pid === Lily.pid) continue; // 看来是可以的
-                            // 其他的都不行
-                            couldPlant = false;
-                            break;
+                            // 允许存在 shield 或 Lily
+                            if (!SHIELD_PLANT.includes(pid) && pid !== Lily.pid) {
+                                canPlace = false;
+                                break;
+                            }
                         }
-
-                        if (!couldPlant) continue; // 有植物
                     }
                 }
-                // 可以放置
-                const newmine = NewTnt(this.game, preCol, preRow, this.level);
-                leftCount--;
-                if (leftCount === 0) return;
+                // 同时要求不在已放置 TNT 的行或列中
+                if (canPlace && !usedRows.has(row) && !usedCols.has(col)) {
+                    NewTnt(this.game, col, row, this.level);
+                    remaining--;
+                    usedRows.add(row);
+                    usedCols.add(col);
+                }
+            }
+        }
+
+        // 第二遍：如果第一遍放置不足，则不再考虑行、列的唯一性限制
+        if (remaining > 0) {
+            for (let col = this.game.GRID_COLS - 1; col >= 0 && remaining > 0; col--) {
+                for (let row = 0; row < this.game.GRID_ROWS && remaining > 0; row++) {
+                    const key = `${col}-${row}`;
+                    let canPlace = true;
+                    if (this.game.gardener.planted.has(key)) {
+                        const list = this.game.gardener.planted.get(key);
+                        if (list && list.length > 0) {
+                            for (const plant of list) {
+                                const pid = plant.pid;
+                                if (!SHIELD_PLANT.includes(pid) && pid !== Lily.pid) {
+                                    canPlace = false;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    if (canPlace) {
+                        NewTnt(this.game, col, row, this.level);
+                        remaining--;
+                    }
+                }
             }
         }
     }
+
 }
 
 function NewTnt(scene: Game, col: number, row: number, level: number): IPlant {
@@ -85,7 +116,8 @@ const TntRecord: IRecord = {
     cooldownTime: () => 30,
     NewFunction: NewTnt,
     texture: 'plant/tnt',
-    description: i18n.S('tnt_description')
+    description: i18n.S('tnt_description'),
+    needFirstCoolDown: true
 };
 
 export default TntRecord;

@@ -5,6 +5,7 @@ import { EventBus } from '../game/EventBus';
 import { useGameContext } from '../context/garden_ctx';
 import { useSettings } from '../context/settings_ctx';
 import { publicUrl } from '../utils/browser';
+import PlantFactoryMap from '../game/presets/plant';
 
 interface CardProps {
     pid: number;
@@ -17,8 +18,9 @@ interface CardProps {
 }
 
 export default function Card({ pid, texture, plantName, cooldownTime, sceneRef, cost, level }: CardProps) {
-    const [isCoolingDown, setIsCoolingDown] = useState(false);
-    const [remainingTime, setRemainingTime] = useState(0);
+    const needFirstCoolDown = PlantFactoryMap[pid].needFirstCoolDown || false;
+    const [isCoolingDown, setIsCoolingDown] = useState(needFirstCoolDown);
+    const [remainingTime, setRemainingTime] = useState(needFirstCoolDown ? cooldownTime : 0);
     const [isChosen, setIsChosen] = useState(false);
     const { energy, isPaused } = useGameContext();
     const [pausedTime, setPausedTime] = useState(0);

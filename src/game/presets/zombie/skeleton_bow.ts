@@ -1,10 +1,8 @@
 // 在pickaxe 耐久用完之前,伤害非常高
 
-import { IPlant } from "../../models/IPlant";
 import { MIRecord } from "../../models/IRecord";
 import { IZombie } from "../../models/IZombie";
 import { Game } from "../../scenes/Game";
-import Gardener from "../../utils/gardener";
 import NewArrow from "../bullet/arrow";
 import { EnhancedSkeleton } from "./skeleton";
 
@@ -57,6 +55,10 @@ class MinerZombie extends EnhancedSkeleton {
             loop: true
         });
 
+    }
+    destroy(fromScene?: boolean): void {
+        this.Timer?.remove();
+        super.destroy(fromScene);
     }
 
     setDepth() {

@@ -13,7 +13,7 @@ class Furnace extends IPlant {
         this.setHealthFirstly(300);
 
         this.Timer = scene.time.addEvent({
-            delay: 18000, // 每25秒生产能量
+            delay: 18000, // 每18秒生产能量
             startAt: 13500,
             loop: true,
             callback: () => {
@@ -53,7 +53,7 @@ const FurnaceRecord: IRecord = {
     pid: 2,
     name: '熔炉',
     cost: cost,
-    cooldownTime: () => 5,
+    cooldownTime: () => 6,
     NewFunction: NewFurnace,
     texture: 'plant/furnace',
     description: i18n.S('furnace_description')

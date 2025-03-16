@@ -12,6 +12,7 @@ export interface IRecord {
     texture: string; // 也用于加载
     brief?: () => string; // 游戏内卡片描述
     description: () => string; // 图鉴描述
+    needFirstCoolDown?: boolean; // 是否需要第一次冷却
 }
 
 

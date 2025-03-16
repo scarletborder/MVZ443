@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -14,7 +15,37 @@ import (
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/storage"
 	"fyne.io/fyne/v2/widget"
+	"gopkg.in/yaml.v2"
 )
+
+// -------------- 配置结构体 --------------
+
+type Config struct {
+	MonsterNames    map[int]string `yaml:"monsterNames"`
+	RewardTypeNames map[int]string `yaml:"rewardTypeNames"`
+	StageTypeNames  map[int]string `yaml:"stageTypeNames"`
+}
+
+// loadConfig 从可执行文件所在目录读取 config.yaml
+func loadConfig() error {
+	exePath, err := os.Executable()
+	if err != nil {
+		return err
+	}
+	configPath := filepath.Join(filepath.Dir(exePath), "config.yaml")
+	data, err := ioutil.ReadFile(configPath)
+	if err != nil {
+		return err
+	}
+	var cfg Config
+	if err := yaml.Unmarshal(data, &cfg); err != nil {
+		return err
+	}
+	monsterNames = cfg.MonsterNames
+	rewardTypeNames = cfg.RewardTypeNames
+	stageTypeNames = cfg.StageTypeNames
+	return nil
+}
 
 // -------------- 数据结构定义 --------------
 
@@ -66,7 +97,7 @@ type StageData struct {
 
 var stageData *StageData
 
-// 映射配置：若配置了值（非空）则在列表中显示对应名称
+// 映射配置：通过 config.yaml 进行初始化
 var monsterNames = map[int]string{}    // mid -> monster name
 var rewardTypeNames = map[int]string{} // reward type -> name
 var stageTypeNames = map[int]string{}  // stage type -> name
@@ -77,6 +108,12 @@ var mainSplit *container.Split
 // -------------- 主函数 --------------
 
 func main() {
+	// 尝试加载 config.yaml 配置
+	if err := loadConfig(); err != nil {
+		fmt.Printf("加载配置失败: %v\n", err)
+		// 若加载失败，则仍使用默认空映射
+	}
+
 	a := app.New()
 	w := a.NewWindow("Stage Editor")
 	w.Resize(fyne.NewSize(1000, 600))

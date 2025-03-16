@@ -154,6 +154,7 @@ export default class MonsterSpawner {
 
         const duration = wave.duration * 1000;
         const interval = duration / totalMonsters.length;
+        console.log('interval', interval, 'duration', duration);
 
         // 行权重初始化
         let rowWeights: number[];

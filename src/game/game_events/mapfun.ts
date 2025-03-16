@@ -21,10 +21,11 @@ function Chapter1Dispatch(game: Game, stageId: number) {
     const { width, height } = game.scale;
     // 白天
     if (stageId === 1 || stageId === 2) {
-        // 每30s + 25 energy
+        // 每25s + 25 energy
         game.dayOrNight = true;
         game.time.addEvent({
-            delay: 30000,
+            startAt: 15000,
+            delay: 25000,
             callback: () => {
                 EventBus.emit('energy-update', { energyChange: 25 });
             },

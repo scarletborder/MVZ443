@@ -166,7 +166,7 @@ export class Game extends Scene {
         EventBus.on('starShards-chosen', () => { console.log('pick shards') });
         EventBus.on('game-fail', this.handleExit, this);
 
-        this.music = this.sound.add('bgm');
+        this.music = this.sound.add('bgm', { loop: true });
         this.sendQueue.sendReady();
     }
 
@@ -199,7 +199,7 @@ export class Game extends Scene {
         this.params.setInitialEnergy(this.stageData.energy);
         this.monsterSpawner.startWave();
         AddMapFunction(this);
-
+        EventBus.emit('game-progress', { progress: 0 });
         // 设置一排minecart
         for (let i = 0; i < this.GRID_ROWS; i++) {
             new MineCart(this, -1, i);

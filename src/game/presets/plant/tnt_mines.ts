@@ -29,26 +29,50 @@ class _TntMines extends IPlant {
     public onStarShards(): void {
         super.onStarShards();
         let leftCount = 2;
-        // 立刻出土,并且从第一排开始尝试放置准备好的炸弹
+        // 立刻出土
         this.wakeup();
 
-        for (let preCol = this.game.GRID_COLS - 1; preCol >= 0; preCol--) {
-            for (let preRow = 0; preRow < this.game.GRID_ROWS; preRow++) {
-                // 查看是否有位置(炸弹是排他的)
-                const key = `${preCol}-${preRow}`;
+        // 用于记录已经使用过的行和列
+        const usedRows = new Set<number>();
+        const usedCols = new Set<number>();
+
+        // 第一遍：保证放置的 TNT Mines 分布在不同的行和列中
+        for (let col = this.game.GRID_COLS - 1; col >= 0 && leftCount > 0; col--) {
+            for (let row = 0; row < this.game.GRID_ROWS && leftCount > 0; row++) {
+                const key = `${col}-${row}`;
+                // 检查是否有植物占据该格子
                 if (this.game.gardener.planted.has(key)) {
                     const list = this.game.gardener.planted.get(key);
-                    if (list && list.length > 0) continue; // 有植物
+                    if (list && list.length > 0) continue; // 该格子有植物
                 }
-                // 可以放置
-                const newmine = NewTntMines(this.game, preCol, preRow, this.level);
+                // 保证 TNT Mines 不在同一行或同一列
+                if (usedRows.has(row) || usedCols.has(col)) continue;
+
+                // 可以放置 TNT Mines
+                const newmine = NewTntMines(this.game, col, row, this.level);
                 newmine.wakeup();
                 leftCount--;
-                if (leftCount === 0) return;
+                usedRows.add(row);
+                usedCols.add(col);
+            }
+        }
+
+        // 第二遍：如果第一遍放置不足，则放宽行、列唯一性限制
+        if (leftCount > 0) {
+            for (let col = this.game.GRID_COLS - 1; col >= 0 && leftCount > 0; col--) {
+                for (let row = 0; row < this.game.GRID_ROWS && leftCount > 0; row++) {
+                    const key = `${col}-${row}`;
+                    if (this.game.gardener.planted.has(key)) {
+                        const list = this.game.gardener.planted.get(key);
+                        if (list && list.length > 0) continue; // 该格子有植物
+                    }
+                    const newmine = NewTntMines(this.game, col, row, this.level);
+                    newmine.wakeup();
+                    leftCount--;
+                }
             }
         }
     }
-
 
 
     public wakeup(): void {
@@ -90,7 +114,8 @@ const TntMines: IRecord = {
     cooldownTime: () => 30,
     NewFunction: NewTntMines,
     texture: 'plant/tnt_mines',
-    description: i18n.S('tnt_mines_description')
+    description: i18n.S('tnt_mines_description'),
+    needFirstCoolDown: true
 };
 
 export default TntMines;

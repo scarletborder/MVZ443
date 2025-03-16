@@ -12,11 +12,13 @@ class MinerHelmetZombie extends EnhancedZombie {
 
     axeDurability: number = 375;
     currentHatState = 0;
+    game: Game;
 
     pickaxeSwing: Phaser.Tweens.Tween | null = null;
 
     constructor(scene: Game, col: number, row: number, texture: string) {
         super(scene, col, row, texture);
+        this.game = scene;
         this.speed = 20 * scene.positionCalc.scaleFactor;
 
         this.axeDurability = 32;
@@ -90,14 +92,16 @@ class MinerHelmetZombie extends EnhancedZombie {
         if (this.axeDurability > 0) {
             if (!this.pickaxeSwing) {
                 const sprite = this.attachSprites.get('pickaxe');
-                this.pickaxeSwing = plant.game.tweens.add({
-                    targets: sprite,
-                    angle: -15,           // 设置目标角度
-                    duration: 200,      // 动画持续时间
-                    yoyo: true,          // 启用yoyo效果
-                    repeat: -1,          // 无限循环
-                    ease: 'Sine.easeInOut' // 选择一个平滑的缓动函数
-                });
+                if (this.game.tweens) {
+                    this.pickaxeSwing = this.game.tweens.add({
+                        targets: sprite,
+                        angle: -15,           // 设置目标角度
+                        duration: 200,      // 动画持续时间
+                        yoyo: true,          // 启用yoyo效果
+                        repeat: -1,          // 无限循环
+                        ease: 'Sine.easeInOut' // 选择一个平滑的缓动函数
+                    });
+                }
             }
         }
 

@@ -72,7 +72,8 @@ const ObsidianRecord: IRecord = {
     cooldownTime: () => 32,
     NewFunction: NewObsidian,
     texture: 'plant/obsidian',
-    description: i18n.S('obsidian_description')
+    description: i18n.S('obsidian_description'),
+    needFirstCoolDown: true
 };
 
 export default ObsidianRecord;

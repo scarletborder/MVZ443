@@ -1,24 +1,7 @@
 {
-    "type": 1,
+    "comment": "1-3,mine passage,体验版",
     "rows": 5,
-    "onWin": {
-        "unLock": [
-            4
-        ],
-        "unLockPlant": [
-            5
-        ]
-    },
-    "rewards": [
-        {
-            "progress": 50,
-            "reward": {
-                "type": 1,
-                "count": 1
-            }
-        }
-    ],
-    "energy": 100,
+    "type": 1,
     "waves": [
         {
             "waveId": 0,
@@ -26,15 +9,16 @@
             "flag": "normal",
             "monsters": [],
             "duration": 0,
-            "maxDelay": 20,
-            "minDelay": 20,
+            "maxDelay": 32,
+            "minDelay": 29,
             "arrangement": 1,
             "minLine": 1,
-            "starShards": 0
+            "starShards": 0,
+            "exceptLine": null
         },
         {
             "waveId": 1,
-            "progress": 30,
+            "progress": 10,
             "flag": "normal",
             "monsters": [
                 {
@@ -42,54 +26,165 @@
                     "count": 2
                 }
             ],
-            "duration": 3,
-            "maxDelay": 40,
-            "minDelay": 30,
+            "duration": 6,
+            "maxDelay": 24,
+            "minDelay": 18,
             "arrangement": 1,
             "minLine": 1,
-            "starShards": 0
+            "starShards": 0,
+            "exceptLine": null
         },
         {
             "waveId": 2,
+            "progress": 20,
+            "flag": "normal",
+            "monsters": [
+                {
+                    "mid": 1,
+                    "count": 8
+                },
+                {
+                    "mid": 2,
+                    "count": 3
+                },
+                {
+                    "mid": 4,
+                    "count": 1
+                }
+            ],
+            "duration": 60,
+            "maxDelay": 76,
+            "minDelay": 68,
+            "arrangement": 1,
+            "minLine": 1,
+            "starShards": 1,
+            "exceptLine": null
+        },
+        {
+            "waveId": 3,
+            "progress": 40,
+            "flag": "normal",
+            "monsters": [
+                {
+                    "mid": 4,
+                    "count": 2
+                },
+                {
+                    "mid": 3,
+                    "count": 1
+                },
+                {
+                    "mid": 7,
+                    "count": 2
+                }
+            ],
+            "duration": 30,
+            "maxDelay": 50,
+            "minDelay": 42,
+            "arrangement": 1,
+            "minLine": 1,
+            "starShards": 1,
+            "exceptLine": null
+        },
+        {
+            "waveId": 4,
             "progress": 60,
             "flag": "normal",
             "monsters": [
                 {
-                    "mid": 1,
+                    "mid": 7,
                     "count": 3
                 },
                 {
-                    "mid": 2,
-                    "count": 1
+                    "mid": 5,
+                    "count": 2
                 }
             ],
-            "duration": 6,
-            "maxDelay": 40,
-            "minDelay": 25,
+            "duration": 8,
+            "maxDelay": 49,
+            "minDelay": 45,
             "arrangement": 2,
-            "minLine": 2,
-            "starShards": 0
+            "minLine": 3,
+            "starShards": 1,
+            "exceptLine": null
         },
         {
-            "waveId": 3,
-            "progress": 100,
+            "waveId": 5,
+            "progress": 80,
             "flag": "normal",
             "monsters": [
                 {
                     "mid": 1,
-                    "count": 6
+                    "count": 8
                 },
                 {
                     "mid": 2,
-                    "count": 3
+                    "count": 5
+                },
+                {
+                    "mid": 5,
+                    "count": 1
                 }
             ],
-            "duration": 6,
-            "maxDelay": 40,
-            "minDelay": 30,
-            "arrangement": 2,
-            "minLine": 2,
-            "starShards": 0
+            "duration": 44,
+            "maxDelay": 65,
+            "minDelay": 55,
+            "arrangement": 1,
+            "minLine": 1,
+            "starShards": 2,
+            "exceptLine": null
+        },
+        {
+            "waveId": 6,
+            "progress": 100,
+            "flag": "normal",
+            "monsters": [
+                {
+                    "mid": 4,
+                    "count": 5
+                },
+                {
+                    "mid": 5,
+                    "count": 2
+                },
+                {
+                    "mid": 7,
+                    "count": 5
+                }
+            ],
+            "duration": 4,
+            "maxDelay": 20,
+            "minDelay": 20,
+            "arrangement": 1,
+            "minLine": 1,
+            "starShards": 0,
+            "exceptLine": null
+        }
+    ],
+    "onWin": {
+        "unLock": [
+            4
+        ],
+        "unLockPlant": [
+            7,
+            8
+        ]
+    },
+    "energy": 50,
+    "rewards": [
+        {
+            "progress": 45,
+            "reward": {
+                "type": 1,
+                "count": 20
+            }
+        },
+        {
+            "progress": 85,
+            "reward": {
+                "type": 1,
+                "count": 40
+            }
         }
     ]
 }

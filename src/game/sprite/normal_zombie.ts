@@ -2,6 +2,7 @@ import { Game } from "../scenes/Game";
 import IZombieAnim, { ZombieAnimProps } from "./zombie";
 
 const NormalZombieAnimProps: ZombieAnimProps = {
+    Species: 'Zombie',
     bodyKey: 'sprZombieBody',
     headKey: 'sprZombieHead',
     armKey: 'sprZombieArm',
@@ -20,6 +21,7 @@ export function newNormalZombieAnim(scene: Game, x: number, y: number) {
 };
 
 const NormalSkeletonAnimProps: ZombieAnimProps = {
+    Species: 'Skeleton',
     bodyKey: 'sprSkeletonBody',
     headKey: 'sprSkeletonHead',
     armKey: 'sprSkeletonArm',

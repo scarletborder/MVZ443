@@ -1,0 +1,16 @@
+monsterNames:
+  1: "普通僵尸"
+  2: "帽子僵尸"
+  3: "铁盔僵尸"
+  4: "矿工僵尸"
+  5: "铁盔矿工僵尸"
+  6: "骷髅"
+  7: "骷髅弓箭手"
+
+rewardTypeNames:
+  1: "Gold"
+
+stageTypeNames:
+  1: "Forest"
+  2: "Dungeon"
+  3: "Castle"

@@ -21,7 +21,7 @@ class MagicPowder extends IPlant {
         // 直接秒杀敌人(碰撞)
         if (zombie && !this.hasKill) {
             this.hasKill = true;
-            zombie.destroyZombie();
+            zombie.takeDamage(2000, 'laser');
             this.destroyPlant();
             EventBus.emit('starshards-get');
         }
@@ -77,7 +77,7 @@ const MagicPowderRecord: IRecord = {
     pid: 10,
     name: '魔术粉',
     cost: cost,
-    cooldownTime: () => 5,
+    cooldownTime: () => 40,
     NewFunction: NewMagicPowder,
     texture: 'plant/magic_powder',
     description: i18n.S('magic_powder_description')
