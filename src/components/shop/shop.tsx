@@ -59,7 +59,7 @@ const ShopSelector: React.FC<ShopSelectorProps> = ({
             gameManager.updateItemCount(priceItem.type, -priceItem.count);
         });
 
-        good.afterBought(good.id, gameManager.currentProgress);
+        good.afterBought(good.id, gameManager);
         handlePurchaseCallback(good.id); // Trigger re-render and save
     }, [gameManager, couldAfford, canPurchase, handlePurchaseCallback]);
 

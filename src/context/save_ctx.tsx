@@ -14,7 +14,7 @@ interface Item {
     count: number;
 }
 
-export interface GameProgress {
+interface GameProgress {
     level: Set<number>;
     plants: Plant[];
     zombies: Zombie[];
@@ -213,11 +213,11 @@ class GameManager {
     loadProgress(callback?: () => void): void {
         this.saveManager.loadGameProgress((gameProgress) => {
             if (gameProgress) {
-
                 this.currentProgress.level = gameProgress.level;
                 this.currentProgress.plants = gameProgress.plants;
                 this.currentProgress.zombies = gameProgress.zombies;
                 this.currentProgress.items = gameProgress.items;
+                this.currentProgress.slotNum = gameProgress.slotNum;
 
                 if (callback) {
                     callback();

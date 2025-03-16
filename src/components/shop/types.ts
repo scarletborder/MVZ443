@@ -1,5 +1,5 @@
 // src/types/shop.ts
-import { GameProgress } from "../../context/save_ctx";
+import { GameManager, GameProgress } from "../../context/save_ctx";
 
 export interface item {
     type: number;
@@ -16,7 +16,7 @@ export interface IGoods {
     price: number;
     description: () => string;
     hasBought: (id: number, progress: GameProgress) => boolean;
-    afterBought: (id: number, progress: GameProgress) => void;
+    afterBought: (id: number, save: GameManager) => void;
     getPriceStructure: () => price;
     canPurchase: (progress: GameProgress) => boolean; // Added to interface
 }
@@ -36,10 +36,10 @@ class SeventhSlot implements IGoods {
     hasBought = (id: number, progress: GameProgress) => {
         return this.purchasedIds.has(id) || progress.slotNum >= 7;
     };
-    afterBought = (id: number, progress: GameProgress) => {
+    afterBought = (id: number, save: GameManager) => {
         this.purchasedIds.add(id);
         this.onPurchase(id);
-        progress.slotNum = 7;
+        save.updateSlotNum(7);
     };
     getPriceStructure = (): price => ({
         items: [{ type: 1, count: this.price }]
@@ -64,10 +64,10 @@ class EighthSlot implements IGoods {
     hasBought = (id: number, progress: GameProgress) => {
         return this.purchasedIds.has(id) || progress.slotNum >= 8;
     };
-    afterBought = (id: number, progress: GameProgress) => {
+    afterBought = (id: number, save: GameManager) => {
         this.purchasedIds.add(id);
         this.onPurchase(id);
-        progress.slotNum = 8;
+        save.updateSlotNum(8);
     };
     getPriceStructure = (): price => ({
         items: [{ type: 1, count: this.price }]
