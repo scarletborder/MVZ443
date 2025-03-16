@@ -14,16 +14,13 @@ class _TntMines extends IPlant {
         this.isBuried = true;
         this.game = scene;
         this.setFrame(0);
-        this.health = 300;
+        this.setHealthFirstly(300);
 
         this.Timer = scene.time.addEvent({
             delay: buriedTime, // 出土时间
             loop: false,
             callback: () => {
-                if (this.health > 0) {
-                    this.setFrame(1);
-                    this.isBuried = false;
-                }
+                this.wakeup();
             },
             callbackScope: this,
         });
@@ -31,6 +28,13 @@ class _TntMines extends IPlant {
 
     public onStarShards(): void {
         super.onStarShards();
+    }
+
+    public wakeup(): void {
+        if (this.health > 0 && this.isBuried) {
+            this.setFrame(1);
+            this.isBuried = false;
+        }
     }
 
     public takeDamage(amount: number, zombie: IZombie): void {

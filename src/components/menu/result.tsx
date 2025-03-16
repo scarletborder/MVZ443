@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSaveManager } from '../../context/save_ctx';
 import { OnWin, ProgressReward } from '../../game/models/IRecord';
-import { ChapterDataRecords, PlantFactoryMap, StageDataRecords } from '../../game/utils/loader';
+import { ChapterDataRecords, StageDataRecords } from '../../game/utils/loader';
+import PlantFactoryMap from '../../game/presets/plant';
 
 
 interface Props {

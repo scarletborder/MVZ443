@@ -31,23 +31,23 @@ type _ResourceMapData = {
 
 const chapter1_village: _ResourceMapData = {
     bgimg: 'bg/bgDay.png',
-    bgm: 'audio/AREP-0005-03.ogg',
+    bgm: 'audio/QLCK-002-05.mp3',
 }
 const chapter1_outtermine: _ResourceMapData = {
     bgimg: 'bg/bgOutterMine.png',
-    bgm: 'audio/AREP-0005-03.ogg',
+    bgm: 'audio/QLCK-002-05.mp3',
 }
 const chapter1_innermine: _ResourceMapData = {
     bgimg: 'bg/bgInnerMine.png',
-    bgm: 'audio/AREP-0005-03.ogg',
+    bgm: 'audio/ARCD-0036-09.ogg',
 }
 const chapter1_deepmine: _ResourceMapData = {
     bgimg: 'bg/bgDeepMine.png',
-    bgm: 'audio/AREP-0005-03.ogg',
+    bgm: 'audio/OLJA-0021-08.ogg',
 }
 const chapter1_deepmineWater: _ResourceMapData = {
     bgimg: 'bg/bgDeepMineWater.png',
-    bgm: 'audio/AREP-0005-03.ogg',
+    bgm: 'audio/OLJA-0021-08.ogg',
 }
 const chapter1_boss: _ResourceMapData = {
     bgimg: 'bg/bgBoss.png',

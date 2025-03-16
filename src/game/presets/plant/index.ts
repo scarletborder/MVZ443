@@ -1,7 +1,27 @@
 // plants/index.ts
-export { default as DispenserRecord } from "./dispenser";
-export { default as FurnaceRecord } from "./furnace";
-export { default as ObsidianRecord } from "./obsidian";
-export { default as SmallDispenserRecord } from "./small_dispenser";
-export { default as TntMines } from "./tnt_mines";
-export { default as Lily } from "./lily";
+import { IRecord } from "../../models/IRecord";
+import DispenserRecord from "./dispenser";
+import FurnaceRecord from "./furnace";
+import GeneratorRecord from "./generator";
+import Lily from "./lily";
+import MagicPowderRecord from "./magic_powder";
+import ObsidianRecord from "./obsidian";
+import PumpkinRecord from "./pumkin";
+import SmallDispenserRecord from "./small_dispenser";
+import TntRecord from "./tnt";
+import TntMines from "./tnt_mines";
+
+const PlantFactoryMap: Record<number, IRecord> = {
+    1: DispenserRecord,
+    2: FurnaceRecord,
+    3: ObsidianRecord,
+    4: TntMines,
+    5: SmallDispenserRecord,
+    6: Lily,
+    7: TntRecord,
+    8: GeneratorRecord,
+    9: PumpkinRecord,
+    10: MagicPowderRecord,
+}
+
+export default PlantFactoryMap;

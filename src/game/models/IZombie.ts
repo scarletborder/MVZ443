@@ -23,7 +23,7 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite {
     // 私有
     // 属性
     public health: number;
-    public speed: number;
+    public speed: number; // 默认情况速度,(静态值,不受buff影响)
     public IsFrozen: boolean = false;
     public IsStop: boolean = false;
 
@@ -31,12 +31,13 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite {
     public isInVoid: boolean = false; // 是否是灵魂状态
 
     private carryStarShards: boolean = false; // 是否携带星之碎片
+    public summoned: boolean = true; // 是否是召唤的僵尸(击杀不计数)
 
     // 攻击
     private attackTimer?: Phaser.Time.TimerEvent; // 攻击定时器
     public attackingPlant: IPlant | null = null; // 当前攻击的植物
-    private attackInterval: number = 160; // 攻击间隔
-    private attackDamage: number = 15; // 攻击伤害
+    public attackInterval: number = 160; // 攻击间隔
+    public attackDamage: number = 15; // 攻击伤害
 
     // 附加物体
     public zombieAnim: IZombieAnim;
@@ -66,12 +67,14 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite {
 
         const { x, y } = scene.positionCalc.getZombieBottomCenter(col, row);
         super(scene, x, y, texture, 0); // 没必要以后特定texture了,因为反正设置了不可见
+        this.game = scene;
         this.setVisible(false);
 
         this.zombieAnim = newZombieAnim(scene, x, y);
         this.offsetX = Math.random() * scene.positionCalc.GRID_SIZEX / 5;
         this.offsetY = Math.random() * scene.positionCalc.GRID_SIZEY / 10;
         this.baseDepth = DepthManager.getZombieBasicDepth(row, this.offsetY);
+        this.speed = 20 * scene.positionCalc.scaleFactor;
         this.setDepth();
 
         this.zombieAnim.startLegSwing();
@@ -104,7 +107,7 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite {
     }
 
     // 受到伤害
-    public takeDamage(amount: number) {
+    public takeDamage(amount: number, projectileType?: "bullet" | "laser" | "explosion" | "trajectory") {
         this.setHealth(this.health - amount);
     }
 
@@ -112,14 +115,14 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite {
     public startAttacking(plant: IPlant) {
         if (this.attackingPlant === plant) return; // 就是正在攻击碰到的植物,避免重复启动
 
-        // TODO: 由别的植物导致的碰撞
+        // 由别的植物导致的碰撞
         // 判断优先级,更换attackingPlant
         // 碰撞就会产生的函数
         // 如果在攻击过程中新增了碰撞(正在attacking的不为空),那么判断有了更加优先级的目标(南瓜)
         if (this.attackingPlant) {
             if (IZombie.GridClan.MorePriorityPlant(this.attackingPlant, plant)) {
-                this.broadcastToPlant();
-                this.attackingPlant = plant;
+                this.broadcastToPlant(); // 停止攻击原有的植物
+                this.attackingPlant = plant; // 更换新植物
             }
             return;
         }
@@ -127,14 +130,14 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite {
         // 新的攻击流程开始
         this.attackingPlant = plant;
         this.IsStop = true;
-        this.setVelocityX(0);
+        this.StopMove();
         plant.attackingZombie.add(this);
         console.log('Zombie started attacking plant');
         this.zombieAnim.startArmSwing();
         this.zombieAnim.stopLegSwing();
 
         // 启动攻击定时器
-        this.attackTimer = this.scene.time.addEvent({
+        this.attackTimer = this.game.time.addEvent({
             startAt: this.attackInterval * 4 / 5,
             delay: this.attackInterval,
             callback: () => this.hurtPlant(),
@@ -158,12 +161,22 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite {
         }
         this.broadcastToPlant();
         this.IsStop = false;
-        this.setVelocityX(-this.speed);
+        this.StartMove();
         console.log('Zombie stopped attacking');
     }
 
+    // 移动相关
+    public StartMove() {
+        //TODO: 考虑debuff
+        this.setVelocityX(-this.speed);
+    }
+
+    public StopMove() {
+        this.setVelocityX(0);
+    }
+
     setVelocityX(speed: number) {
-        if (!super.setVelocityX) {
+        if (!super.setVelocityX || (this.health <= 0 && this.isDying)) {
             return this;
         }
         super.setVelocityX(speed);
@@ -175,7 +188,7 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite {
     }
 
     // 伤害植物
-    private hurtPlant() {
+    public hurtPlant() {
         if (this.attackingPlant && this.attackingPlant.active) {
             this.attackingPlant.takeDamage(this.attackDamage, this);
             if (!this.attackingPlant) return;
@@ -184,7 +197,7 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite {
     }
 
     // 销毁僵尸
-    private destroyZombie() {
+    public destroyZombie() {
         // 通知正在收到攻击的植物
         this.attackingPlant?.attackingZombie.delete(this);
 
@@ -204,12 +217,12 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite {
         // 移除物理效果
         if (this.body) {
             this.body.enable = false;
-            this.scene.physics.world.remove(this.body);
+            this.game.physics.world.remove(this.body);
 
             this.setOrigin(0.5, 1);
             this.zombieAnim.setOrigin(0.5, 1); // Sync origin with physics sprite
 
-            this.scene.tweens.add({
+            this.game.tweens.add({
                 targets: [this, this.zombieAnim.body, this.zombieAnim.head,
                     this.zombieAnim.armLeft, this.zombieAnim.armRight,
                     this.zombieAnim.legLeft, this.zombieAnim.legRight],
@@ -226,15 +239,15 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite {
 
     playDeathSmokeAnimation(depth: number) {
         // 创建临时的白烟 sprite
-        const smoke = this.scene.add.sprite(this.x, this.y, 'anime/death_smoke');
+        const smoke = this.game.add.sprite(this.x, this.y, 'anime/death_smoke');
         smoke.setDisplaySize(this.displayWidth, this.displayWidth);
         smoke.setOrigin(0.5, 1).setDepth(depth);  // 设置底部为中心
 
         // 确保动画只创建一次（全局定义）
-        if (!this.scene.anims.exists('death_smoke')) {
-            this.scene.anims.create({
+        if (!this.game.anims.exists('death_smoke')) {
+            this.game.anims.create({
                 key: 'death_smoke',
-                frames: this.scene.anims.generateFrameNumbers('anime/death_smoke', { start: 0, end: 7 }),
+                frames: this.game.anims.generateFrameNumbers('anime/death_smoke', { start: 0, end: 7 }),
                 frameRate: 16,  // 0.5秒播放8帧
                 repeat: 0
             });

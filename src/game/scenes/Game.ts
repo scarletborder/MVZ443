@@ -7,7 +7,7 @@ import { PositionCalc } from '../utils/position';
 import Gardener from '../utils/gardener';
 import MonsterSpawner from '../utils/spawner';
 import { GameParams, GameSettings } from '../models/GameParams';
-import { PlantFactoryMap } from '../utils/loader';
+import PlantFactoryMap from '../presets/plant';
 import QueueReceive from '../utils/queue_receive';
 import QueueSend from '../utils/queue_send';
 import CreateInnerMenu from '../utils/inner_menu';
@@ -16,6 +16,7 @@ import MineCart from '../presets/bullet/minecart';
 import AddMapFunction from '../game_events/mapfun';
 import BackendWS from '../../utils/net/sync';
 import { IExpolsion } from '../models/IExplosion';
+import { ILaser } from '../models/ILaser';
 
 
 
@@ -119,14 +120,26 @@ export class Game extends Scene {
         IZombie.InitGroup(this);
         IBullet.InitGroup(this);
         IExpolsion.InitGroup(this);
+        ILaser.InitGroup(this);
 
 
         // 设置bullet与僵尸的碰撞检测
+        // @ts-ignore 
         this.physics.add.overlap(IBullet.Group, IZombie.Group, damageZombie, null, this);
+        // @ts-ignore
+        this.physics.add.overlap(IBullet.Group, IPlant.Group, damagePlantByBullet, null, this);
         // 设置plant与僵尸的碰撞检测
-        this.physics.add.overlap(IPlant.Group, IZombie.Group, damagePlant, null, this);
+        // @ts-ignore
+        this.physics.add.overlap(IPlant.Group, IZombie.Group, damagePlantByZombie, null, this);
         // 设置爆炸与僵尸的碰撞检测
+        // @ts-ignore
         this.physics.add.overlap(IExpolsion.Group, IZombie.Group, explodeZombie, null, this);
+        // 设置激光与僵尸的碰撞检测
+        // @ts-ignore
+        this.physics.add.overlap(ILaser.Group, IZombie.Group, laserZombie, null, this);
+        // 设置激光与植物的碰撞检测
+        // @ts-ignore
+
 
         // 监听
         this.gardener = new Gardener(this, this.positionCalc);
@@ -316,9 +329,15 @@ function damageZombie(bulletSprite: Phaser.GameObjects.GameObject, zombieSprite:
     bullet.CollideObject(zombie);
 }
 
+// bullet与植物碰撞的伤害判定
+function damagePlantByBullet(bulletSprite: Phaser.GameObjects.GameObject, plantSprite: Phaser.GameObjects.GameObject) {
+    const bullet = bulletSprite as IBullet;
+    const plant = plantSprite as IPlant;
+    bullet.CollideObject(plant);
+}
 
 // 植物受到伤害的处理
-function damagePlant(plantSprite: Phaser.GameObjects.GameObject, zombieSprite: Phaser.GameObjects.GameObject) {
+function damagePlantByZombie(plantSprite: Phaser.GameObjects.GameObject, zombieSprite: Phaser.GameObjects.GameObject) {
     const plant = plantSprite as IPlant;
     const zombie = zombieSprite as IZombie;
     // console.log('size', plant.body?.width, plant.body?.height)
@@ -329,4 +348,10 @@ function explodeZombie(explosionSprite: Phaser.GameObjects.GameObject, zombieSpr
     const explosion = explosionSprite as IExpolsion;
     const zombie = zombieSprite as IZombie;
     explosion.CollideObject(zombie);
+}
+
+function laserZombie(laserSprite: Phaser.GameObjects.GameObject, zombieSprite: Phaser.GameObjects.GameObject) {
+    const laser = laserSprite as ILaser;
+    const zombie = zombieSprite as IZombie;
+    laser.CollideObject(zombie);
 }

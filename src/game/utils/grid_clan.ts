@@ -7,10 +7,12 @@ import { IPlant } from "../models/IPlant";
 import Gardener from "./gardener";
 
 // 护盾器械,铲除上方时铲除,可以和任何非护盾器械兼容
-const SHIELD_PLANT: number[] = [];
-const GROUND_ONLY_PLANT: number[] = [4];
-const WATER_ONLY_PLANT: number[] = [6];
-const SKY_ONLY_PLANT: number[] = [100];
+const SHIELD_PLANT: number[] = []; // 护盾植物
+const GROUND_ONLY_PLANT: number[] = [4];// 地面植物,只能种植在地面
+const WATER_ONLY_PLANT: number[] = [6];// 水中植物,只能种植在水中
+const SKY_ONLY_PLANT: number[] = [100]; // 船只,只能种植在天空中
+const POWDER_PLANT: number[] = [10]; // 粉尘植物,可以随意种植
+
 const lilyPid = 6;
 const boatPid = 100;
 
@@ -84,6 +86,10 @@ export default class GridClan {
         return pid === lilyPid || pid === boatPid;
     }
 
+    public isPowder(pid: number): boolean {
+        return POWDER_PLANT.includes(pid);
+    }
+
     public CanPlant(pid: number, col: number, row: number): boolean {
         const key = `${col}-${row}`;
         const plants = this.gardener.planted.get(key) || [];
@@ -91,6 +97,11 @@ export default class GridClan {
         // 不考虑任何承载物的情况下,指定plant能否放置
         const canPlant = (pid: number, plants: IPlant[]) => {
             // 先考虑所有特殊植物
+            // 粉尘植物,随意种植
+            if (POWDER_PLANT.includes(pid)) {
+                return true;
+            }
+
             // lily,只能在水体放置,并且要求该gird 无其他植物
             if (pid === lilyPid) {
                 return this.gardener.scene.gridProperty[row][col] === 'water' && plants.length === 0;

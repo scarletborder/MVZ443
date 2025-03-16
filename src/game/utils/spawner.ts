@@ -1,7 +1,7 @@
 import { Wave } from "../models/IRecord";
 import { IZombie } from "../models/IZombie";
 import { Game } from "../scenes/Game";
-import { MonsterFactoryMap } from "./loader";
+import MonsterFactoryMap from "../presets/zombie";
 import seedrandom from 'seedrandom';
 // 出怪实例
 // 使用一个刷怪表进行实例化
@@ -66,10 +66,8 @@ export default class MonsterSpawner {
     nextWave() {
         // 无论如何都到达了下一波,那么开始进度记录
         if (this.current_wave_idx >= 0) {
-            if (this.progress < this.currentWave().progress) { // 新进度
-                this.progress = this.currentWave().progress;
-                this.scene.broadCastProgress(this.currentWave().progress);
-            }
+            this.progress = this.currentWave().progress;
+            this.scene.broadCastProgress(this.currentWave().progress);
         }
 
         this.current_wave_idx++;
@@ -168,9 +166,24 @@ export default class MonsterSpawner {
             activeRows = this.shuffleArray(activeRows);
             activeRows = activeRows.slice(0, activeRowCount);
             rowWeights = Array(rowMax + 1).fill(0);
+            // 只允许 activeRows 刷怪
             activeRows.forEach(row => rowWeights[row] = 1);
         } else {
             rowWeights = Array(rowMax + 1).fill(1);
+        }
+
+        // 新机制：排除指定行 (wave.exceptLine)
+        if (wave.exceptLine && wave.exceptLine.length > 0) {
+            // 当模式为0x02时，将不允许刷怪的行从 activeRows 中剔除
+            if (wave.arrangement === 0x02) {
+                activeRows = activeRows.filter(row => !wave.exceptLine.includes(row));
+            }
+            // 将排除的行的权重设置为0
+            wave.exceptLine.forEach(exceptRow => {
+                if (exceptRow >= 0 && exceptRow < rowWeights.length) {
+                    rowWeights[exceptRow] = 0;
+                }
+            });
         }
 
         let monsterIndex = 0;
@@ -184,6 +197,7 @@ export default class MonsterSpawner {
                 const row = this.weightedRandomRow(rowWeights);
                 const newFunc = MonsterFactoryMap[monsterData.mid].NewFunction;
                 const zomb = newFunc(this.scene, colMax, row);
+                zomb.summoned = false; // 非召唤物
 
                 // 2. 如果当前怪物索引在carryingMonsters中，则设置携带starShards
                 if (carryingMonsters.has(monsterIndex)) {
@@ -193,12 +207,23 @@ export default class MonsterSpawner {
                 monsterIndex++;
 
                 // 更新行权重
+                // 如果选择的行在允许刷怪的 activeRows 中，减少其权重
                 if (wave.arrangement === 0x02 && activeRows.includes(row)) {
                     rowWeights[row] = Math.max(0.1, rowWeights[row] - 0.3);
                 } else if (wave.arrangement === 0x01) {
                     rowWeights[row] = Math.max(0.1, rowWeights[row] - 0.3);
                 }
+
                 this.rebalanceRowWeights(rowWeights, wave.arrangement === 0x02 ? activeRows : null);
+
+                // 确保排除行的权重始终为0（对于默认模式下，可能会在重平衡时恢复）
+                if (wave.exceptLine && wave.exceptLine.length > 0) {
+                    wave.exceptLine.forEach(exceptRow => {
+                        if (exceptRow >= 0 && exceptRow < rowWeights.length) {
+                            rowWeights[exceptRow] = 0;
+                        }
+                    });
+                }
             }
         });
     }
@@ -256,6 +281,7 @@ export default class MonsterSpawner {
         return weights.length - 1;
     }
 
+
     // 怪物生成注册
     registerMonster(monster: IZombie) {
         const key = `${monster.row}`;
@@ -281,7 +307,9 @@ export default class MonsterSpawner {
                 }
             }
         }
-        this.onMonsterKilled();
+        if (!monster.summoned) {
+            this.onMonsterKilled(); // 非召唤物僵尸杀了才计数
+        }
     }
 
     onMonsterKilled() {

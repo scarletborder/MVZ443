@@ -4,11 +4,13 @@ import Gardener from "../utils/gardener";
 import { IZombie } from "./IZombie";
 
 export class IPlant extends Phaser.Physics.Arcade.Sprite {
+    scene: Game;
     public static Group: Phaser.Physics.Arcade.Group;
     gardener: Gardener;
 
     public pid: number;
     public health: number;
+    public maxhealth: number;
     public level: number;
     public Timer?: Phaser.Time.TimerEvent;
     public attackingZombie: Set<IZombie> = new Set<IZombie>();
@@ -35,7 +37,7 @@ export class IPlant extends Phaser.Physics.Arcade.Sprite {
         // TODO: texture逻辑还是要的,通过New某个植物的时候,传入对应的texture
         const { x, y } = scene.positionCalc.getPlantBottomCenter(col, row);
         super(scene, x, y, texture, 0);
-
+        this.scene = scene;
 
         this.pid = pid;
         this.level = level;
@@ -69,6 +71,11 @@ export class IPlant extends Phaser.Physics.Arcade.Sprite {
         console.log('Plant created', this.depth);
     }
 
+    public setHealthFirstly(value: number) {
+        this.health = value;
+        this.maxhealth = value;
+    }
+
     public setHealth(value: number) {
         this.health = value;
         // console.log(`Plant health updated to: ${this.health}`);
@@ -83,7 +90,7 @@ export class IPlant extends Phaser.Physics.Arcade.Sprite {
      * @param amount update offset number
      * @param zombie 造成伤害的来源,未来可能拓展如反叛等
      */
-    public takeDamage(amount: number, zombie: IZombie) {
+    public takeDamage(amount: number, zombie: IZombie | null = null) {
         this.setHealth(this.health - amount);
     }
 

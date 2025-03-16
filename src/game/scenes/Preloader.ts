@@ -1,6 +1,7 @@
 import { Scene } from 'phaser';
 import { GameParams } from '../models/GameParams';
 import { ResourceMapData } from '../../../public/constants';
+import { EventBus } from '../EventBus';
 
 export class Preloader extends Scene {
     constructor() {
@@ -51,6 +52,9 @@ export class Preloader extends Scene {
 
         //  Move to the MainMenu. You could also swap this for a Scene Transition, such as a camera fade.
         // this.loadbg.destroy();
+        for (let i = 0; i < 10; ++i) {
+            EventBus.emit('starshards-consume');
+        }
         this.scene.start('Game');
     }
 
@@ -65,6 +69,11 @@ export class Preloader extends Scene {
             { frameWidth: 64, frameHeight: 64 });
         this.load.image('plant/small_dispenser', 'plant/small_dispenser.png');
         this.load.image('plant/lily', 'plant/lily.png');
+        this.load.image('plant/tnt', 'plant/tnt.png');
+        this.load.image('plant/generator', 'plant/generator.png');
+        this.load.spritesheet('plant/pumpkin', 'plant/pumpkin.png',
+            { frameWidth: 64, frameHeight: 64 });
+        this.load.image('plant/magic_powder', 'plant/magic_powder.png');
     }
 
     // 加载全部怪物
@@ -72,6 +81,12 @@ export class Preloader extends Scene {
         this.load.image('zombie/zombie', 'zombie/zombie.png');
         this.load.spritesheet('attach/cap', 'attach/cap.png',
             { frameWidth: 33, frameHeight: 14 });
+        this.load.spritesheet('attach/helmet', 'attach/helmet.png',
+            { frameWidth: 33, frameHeight: 14 });
+        this.load.image('attach/hd_pickaxe', `attach/hd_pickaxe.png`);
+        this.load.image('attach/hd_bow', `attach/hd_bow.png`);
+
+
     }
 
     // 加载全部发射物
@@ -96,6 +111,13 @@ export class Preloader extends Scene {
         this.load.image('sprZombieHead', 'sprite/zombie/sprZombieHead.png');
         this.load.image('sprZombieArm', 'sprite/zombie/sprZombieArm.png'); // Single image, no sprite sheet
         this.load.image('sprZombieLeg', 'sprite/zombie/sprZombieLeg.png'); // Single image, no sprite sheet
+
+        this.load.spritesheet('sprSkeletonBody', `sprite/skeleton/sprSkeletonBody.png`,
+            { frameWidth: 19, frameHeight: 35 });
+        this.load.image('sprSkeletonHead', `sprite/skeleton/sprSkeletonHead.png`);
+        this.load.image('sprSkeletonArm', `sprite/skeleton/sprSkeletonArm.png`);
+        this.load.image('sprSkeletonLeg', `sprite/skeleton/sprSkeletonLeg.png`);
+
     }
 
     // 加载bgimg和bgm 

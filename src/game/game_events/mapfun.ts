@@ -18,6 +18,7 @@ export default function AddMapFunction(game: Game) {
 
 function Chapter1Dispatch(game: Game, stageId: number) {
     // 第一章的
+    const { width, height } = game.scale;
     // 白天
     if (stageId === 1 || stageId === 2) {
         // 每30s + 25 energy
@@ -35,6 +36,22 @@ function Chapter1Dispatch(game: Game, stageId: number) {
         // [0][7] = water
         game.dayOrNight = false;
         game.gridProperty[0][7] = 'water';
+        const darkOverlay = game.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.3).setDepth(2);
+    }
+
+    if (stageId === 4) {
+        game.dayOrNight = false;
+        const darkOverlay = game.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.5).setDepth(2);
+    }
+
+    if (stageId === 5) {
+        game.dayOrNight = false;
+        const darkOverlay = game.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.5).setDepth(2);
+        // row:2, 3  = water
+        for (let col = 0; col < game.GRID_COLS; col++) {
+            game.gridProperty[2][col] = 'water';
+            game.gridProperty[3][col] = 'water';
+        }
     }
 
 
@@ -53,6 +70,9 @@ function Chapter1Dispatch(game: Game, stageId: number) {
             }
         }
     }
+
+    // stage 4,5 手动暗淡
+
 
 
 }

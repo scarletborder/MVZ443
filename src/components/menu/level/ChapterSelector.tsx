@@ -99,7 +99,7 @@ const ChapterSelector: React.FC<ChapterSelectorProps> = ({ onSelect, onBack }) =
                 overflowY: 'auto',
                 background: 'rgba(30, 30, 30, 0.9)',
             }}>
-                {selectedChapter ? ChapterDataRecords[selectedChapter].description : '请选择一个章节'}
+                {selectedChapter ? ChapterDataRecords[selectedChapter].description() : '请选择一个章节'}
                 {/* 下一步按钮 */}
                 <button
                     style={{

@@ -105,7 +105,7 @@ const StageSelector: React.FC<StageSelectorProps> = ({ chapterId, onSelect, onBa
                 overflowY: 'auto',
                 background: 'rgba(30, 30, 30, 0.9)',
             }}>
-                {selectedStage ? StageDataRecords[selectedStage].description : '请选择一个关卡'}
+                {selectedStage ? StageDataRecords[selectedStage].description() : '请选择一个关卡'}
                 {/* 下一步按钮 */}
                 <button
                     style={{

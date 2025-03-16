@@ -4,12 +4,12 @@ import { Game } from "../../scenes/Game";
 
 class SnowBall extends IBullet {
     originalX: number;
-    maxDistance: number = 100;
+    maxDistance: number;
 
-    constructor(scene: Game, col: number, row: number, texture: string, damage: number, maxDistance: number) {
-        super(scene, col, row, texture);
-        this.damage = damage;
-        this, maxDistance = maxDistance;
+    constructor(scene: Game, col: number, row: number, texture: string,
+        damage: number, maxDistance: number, target: 'plant' | 'zombie' = 'zombie') {
+        super(scene, col, row, texture, damage, target);
+        this.maxDistance = maxDistance;
 
         this.originalX = this.x;
         this.setVelocityX(400 * scene.positionCalc.scaleFactor); // 一定要在add    之后设置速度
@@ -17,19 +17,19 @@ class SnowBall extends IBullet {
 
     update(...args: any[]): void {
         super.update();
+        console.log(this.x, this.originalX, this.maxDistance);
         if ((this.x - this.originalX) > this.maxDistance) {
             this.destroy();
         }
     }
 }
 
-function NewSnowBullet(scene: Game, col: number, row: number, maxDistance: number, damage?: number): IBullet {
-    if (!damage) {
-        damage = 15;
+function NewSnowBullet(scene: Game, col: number, row: number,
+    maxDistance?: number, damage: number = 15, target: 'plant' | 'zombie' = 'zombie'): IBullet {
+    if (!maxDistance) {
+        maxDistance = scene.positionCalc.GRID_SIZEX * 32;
     }
-    const snowball = new SnowBall(scene, col, row, 'bullet/snowball', damage, maxDistance);
-
-
+    const snowball = new SnowBall(scene, col, row, 'bullet/snowball', damage, maxDistance, target);
     return snowball;
 }
 

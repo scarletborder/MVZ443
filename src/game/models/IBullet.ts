@@ -9,6 +9,7 @@ export class IBullet extends Phaser.Physics.Arcade.Sprite {
 
     // 为每个preset子弹设置group
     public static Group: Phaser.Physics.Arcade.Group;
+    public targetCamp: 'plant' | 'zombie' = 'zombie'; // 默认打击僵尸
 
     // 私有属性
     public damage: number;
@@ -28,23 +29,26 @@ export class IBullet extends Phaser.Physics.Arcade.Sprite {
         });
     }
 
-    constructor(scene: Game, col: number, row: number, texture: string, damage: number = 5) {
+    constructor(scene: Game, col: number, row: number, texture: string,
+        damage: number = 5, target: 'plant' | 'zombie' = 'zombie') {
         const { x, y } = scene.positionCalc.getBulletCenter(col, row);
         super(scene, x, y, texture);
 
         this.ScreenWidth = scene.sys.canvas.width;
         this.ScreenHeight = scene.sys.canvas.height;
 
+        this.targetCamp = target;
+        this.damage = damage;
+
         scene.physics.add.existing(this);
         scene.add.existing(this);
-        IBullet.Group.add(this, true);
 
         let size = scene.positionCalc.getBulletBodySize();
         size = scene.positionCalc.getBulletDisplaySize();
         this.setDisplaySize(size.sizeX, size.sizeY);
 
         this.setOrigin(0.5, 0.5);
-        this.damage = damage;
+        IBullet.Group.add(this, true);
 
         this.baseDepth = DepthManager.getProjectileDepth('bullet', col);
         this.setDepth(this.baseDepth);
@@ -54,34 +58,35 @@ export class IBullet extends Phaser.Physics.Arcade.Sprite {
         const damage = this.damage;
         if (this.hasPenetrated.has(object)) return; // 已经穿透过了
 
-        if (object instanceof IZombie) {
+        if (object instanceof IZombie && this.targetCamp === 'zombie') {
             // 如果子弹的实际位置不再天上打不到isFlying
             if (object.isFlying && !this.isFlying) return;
 
             // 如果isInVoid,也打不到
             if (object.isInVoid) return;
 
-
             // 可以打
             // 穿透次数和销毁
             this.penetrate--;
-            this.hasPenetrated.add(object);
+            this.hasPenetrated.add(object);// 记录穿透过的对象
+            if (this.penetrate <= 0) {
+                this.destroy();
+            }
+            object.takeDamage(damage, "bullet");
+        } else if (object instanceof IPlant && this.targetCamp === 'plant') {
+            this.penetrate--;
+            this.hasPenetrated.add(object);// 记录穿透过的对象
+
             if (this.penetrate <= 0) {
                 this.destroy();
             }
             object.takeDamage(damage);
-        } else if (object instanceof IPlant) {
-            console.log('bullet hit plant, function not implemented');
-            this.penetrate--;
-            if (this.penetrate <= 0) {
-                this.destroy();
-            }
         }
     }
 
     update(...args: any[]): void {
         // 超越边界销毁
-        if (this.x > this.ScreenWidth * 1.2 || this.x < -this.ScreenWidth * 0.2) {
+        if (this.x > this.ScreenWidth * 1.5 || this.x < -this.ScreenWidth * 0.5) {
             this.destroy();
         }
     }

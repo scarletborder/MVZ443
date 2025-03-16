@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { VERSION, announcement, updateContent } from '../../public/constants'
+import { VERSION, announcement } from '../../public/constants'
 import LevelSelect from './menu/levelSelect';
 import Pokedex from './menu/pokedex';
 import Settings from './menu/settings';
@@ -7,6 +7,7 @@ import { GameParams } from '../game/models/GameParams';
 import { publicUrl } from '../utils/browser';
 import { useDeviceType } from '../hooks/useDeviceType';
 import BackendWS from '../utils/net/sync';
+import i18n from '../utils/i18n';
 
 interface Props {
     width: number,
@@ -35,6 +36,7 @@ export default function DocFrame({ width, height, sceneRef, setGameParams, gameS
     const [skipToParams, setSkipToParams] = useState(false);
     const [chosenStage, setChosenStage] = useState<number | null>(null);
     const [islord, setIslord] = useState(false);
+    const [update_log, setUpdate_log] = useState(i18n.S('update_log')());
 
     useEffect(() => {
         // 处理联机事件
@@ -60,6 +62,11 @@ export default function DocFrame({ width, height, sceneRef, setGameParams, gameS
         return () => {
             BackendWS.delMessageListener(chapterJumpHandler);
         }
+    }, []);
+
+    // 处理更新日志
+    useEffect(() => {
+        setTimeout(() => { console.log(i18n.S('update_log')()); setUpdate_log(i18n.S('update_log')()); }, 1000);
     }, []);
 
 
@@ -240,7 +247,7 @@ export default function DocFrame({ width, height, sceneRef, setGameParams, gameS
                         scrollbarColor: "#666 #333",
                         whiteSpace: "pre-wrap" // 保留换行和空格
                     }}>
-                        {currentView === 'updates' ? updateContent : aboutContent}
+                        {currentView === 'updates' ? update_log : aboutContent}
                     </div>
                 )}
             </div>

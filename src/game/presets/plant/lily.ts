@@ -6,7 +6,7 @@ import i18n from "../../../utils/i18n";
 class _Lily extends IPlant {
     constructor(scene: Game, col: number, row: number, texture: string, pid: number, level: number) {
         super(scene, col, row, texture, pid, level);
-        this.health = 300;
+        this.setHealthFirstly(300);
     }
 }
 

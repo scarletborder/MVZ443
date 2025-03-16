@@ -44,6 +44,7 @@ export interface Wave {
     minDelay: number; // seconds
     arrangement: 0x01 | 0x02 // 0x01: 均匀, 0x02: 集中
     minLine: number; // 指定最少有多少行应该生成怪物，避免怪物过于集中在一行。
+    exceptLine: number[]; // 指定不生成怪物的行数
     starShards: number; // 携带星屑数量
 }
 

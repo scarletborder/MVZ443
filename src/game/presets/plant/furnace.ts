@@ -5,12 +5,12 @@ import { Game } from "../../scenes/Game";
 
 class Furnace extends IPlant {
     game: Game;
-    updateEnergy: number = 50;
+    updateEnergy: number = 25;
     constructor(scene: Game, col: number, row: number, level: number) {
         super(scene, col, row, FurnaceRecord.texture, FurnaceRecord.pid, level);
         this.game = scene;
         this.setFrame(0);
-        this.health = 300;
+        this.setHealthFirstly(300);
 
         this.Timer = scene.time.addEvent({
             delay: 18000, // 每25秒生产能量

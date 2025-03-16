@@ -43,7 +43,7 @@ const LevelSelector: React.FC<LevelSelectorProps> = ({ setGameParams, startGame,
             const data = JSON.parse(event.data);
             if (data.type === 0x00 && !islord) {
                 const chapterID = data.chapterId;
-                  // 不选卡了
+                // 不选卡了
                 if (chapterID === 0) {
                     console.log('get back');
                     onBack();
@@ -65,7 +65,8 @@ const LevelSelector: React.FC<LevelSelectorProps> = ({ setGameParams, startGame,
             overflow: "hidden",
             border: "2px solid #444",
             boxShadow: "0 0 15px rgba(0, 0, 0, 0.5)",
-            animation: "frameFadeIn 0.5s ease-out"
+            animation: "frameFadeIn 0.5s ease-out",
+            whiteSpace: "pre-wrap"
         }}>
             {currentStep === 'chapter' && (
                 <ChapterSelector

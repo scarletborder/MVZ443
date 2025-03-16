@@ -5,13 +5,12 @@ import { IZombie } from "../../models/IZombie";
 import { Game } from "../../scenes/Game";
 
 class Obsidian extends IPlant {
-    maxhealth: number = 4000;
     shieldHealth: number = 0;
     maxShieldHealth: number = 4000;
     constructor(scene: Game, col: number, row: number, level: number) {
         super(scene, col, row, ObsidianRecord.texture, ObsidianRecord.pid, level);
         this.setFrame(0);
-        this.health = 4000;
+        this.setHealthFirstly(4000);
     }
 
     public takeDamage(amount: number, zombie: IZombie): void {

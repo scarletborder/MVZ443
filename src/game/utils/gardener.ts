@@ -3,11 +3,10 @@
 // Ensure SHIELD_PLANT is typed correctly
 import DepthManager from "../../utils/depth";
 import { EventBus } from "../EventBus";
-import { IExpolsion } from "../models/IExplosion";
 import { IPlant } from "../models/IPlant";
 import { Game } from "../scenes/Game";
 import GridClan from "./grid_clan";
-import { PlantFactoryMap } from "./loader";
+import PlantFactoryMap from '../presets/plant';
 import { PositionCalc } from "./position";
 
 export default class Gardener {
@@ -292,7 +291,7 @@ export default class Gardener {
         col: number,
         row: number
     } {
-      return this.GridClan.gridWisePid(px, py);
+        return this.GridClan.gridWisePid(px, py);
     }
 
     // 点击事件
@@ -389,6 +388,27 @@ export default class Gardener {
         }
         this.prevCol = -1;
         this.prevRow = -1;
+    }
+
+
+    // 给外部object使用的
+    // 某一row中,画面的坐标X <= 给定x的位置有没有植物
+    hasPlantBeforeX(row: number, x: number, maxDistance: number = 99999): boolean {
+        // 首先判断 x 是第几 col
+        const col = this.positionCalc.getGridByPos(x, this.positionCalc.gridOffsetY + 5).col;
+        // 判断maxDistance到的位置
+        let firstCol = this.positionCalc.getGridByPos(x - maxDistance, 0).col;
+        if (firstCol < 0) { firstCol = 0; }
+
+        for (let i = firstCol; i <= col; i++) {
+            const key = `${i}-${row}`;
+            if (this.planted.has(key)) {
+                const list = this.planted.get(key);
+                if (list && list.length > 0) return true;
+            }
+
+        }
+        return false;
     }
 
 } 

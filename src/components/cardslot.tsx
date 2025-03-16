@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { IRefPhaserGame } from '../game/PhaserGame';
 import Card from './card';
-import { PlantFactoryMap } from '../game/utils/loader';
+import PlantFactoryMap from '../game/presets/plant';
 import { useGameContext } from '../context/garden_ctx';
 import { EventBus } from '../game/EventBus';
 import { IRecord } from '../game/models/IRecord';

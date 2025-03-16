@@ -3,7 +3,8 @@ import React, { useEffect, useState } from 'react';
 import { GameParams } from '../../../game/models/GameParams';
 import { useGameContext } from '../../../context/garden_ctx';
 import { useSaveManager } from '../../../context/save_ctx';
-import { PlantFactoryMap, StageDataRecords } from '../../../game/utils/loader';
+import { StageDataRecords } from '../../../game/utils/loader';
+import PlantFactoryMap from '../../../game/presets/plant';
 import { publicUrl } from '../../../utils/browser';
 import i18n from '../../../utils/i18n';
 import { useSettings } from '../../../context/settings_ctx';
@@ -26,7 +27,6 @@ interface PlantElem {
 
 const ParamsSelector: React.FC<ParamsSelectorProps> = ({ stageId, setGameParams, startGame, onBack }) => {
     const [selectedPlants, setSelectedPlants] = useState<number[]>([]);
-    const [difficulty, setDifficulty] = useState<'easy' | 'normal' | 'hard'>('normal');
     const [availablePlants, setAvailablePlants] = useState<PlantElem[]>([]);
     const [isOverLimit, setIsOverLimit] = useState(false);
     const garden_ctx = useGameContext();
@@ -88,7 +88,6 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({ stageId, setGameParams,
         const params: GameParams = {
             level: stageId,
             plants: selectedPlants,
-            difficulty,
             gameExit: _,
             setInitialEnergy: garden_ctx.setEnergy,
             gameSettings: {
@@ -219,25 +218,6 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({ stageId, setGameParams,
                 display: 'flex',
                 flexDirection: 'column'
             }}>
-                <h3>难度选择</h3>
-                <select
-                    value={difficulty}
-                    onChange={(e) => setDifficulty(e.target.value as 'easy' | 'normal' | 'hard')}
-                    style={{
-                        padding: '5px',
-                        background: 'rgba(255, 255, 255, 0.1)',
-                        border: '1px solid #666',
-                        color: '#ddd',
-                        width: '100%',
-                        borderRadius: '3px',
-                        marginBottom: '1%'
-                    }}
-                >
-                    <option value="easy">简单</option>
-                    <option value="normal">普通</option>
-                    <option value="hard">困难</option>
-                </select>
-
                 <h3>
                     已选择植物{' '}
                     <span style={{
@@ -250,7 +230,7 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({ stageId, setGameParams,
                 <div style={{
                     flex: 1,
                     overflowY: 'auto',
-                    maxHeight: '63%',
+                    maxHeight: '80%',
                 }}>
                     {selectedPlants.map(pid => {
                         const plant = availablePlants.find(p => p.pid === pid);

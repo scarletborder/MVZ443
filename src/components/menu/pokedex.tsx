@@ -1,7 +1,7 @@
 // pokedex.tsx
 import { useEffect, useState } from 'react';
 import { useSaveManager } from '../../context/save_ctx';
-import { PlantFactoryMap } from '../../game/utils/loader';
+import PlantFactoryMap from '../../game/presets/plant';
 import GenericView from './genericView';
 import { IRefPhaserGame } from '../../game/PhaserGame';
 import { publicUrl } from '../../utils/browser';

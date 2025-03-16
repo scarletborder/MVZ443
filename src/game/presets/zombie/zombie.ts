@@ -8,11 +8,6 @@ import { newNormalZombieAnim } from '../../sprite/normal_zombie';
 export class EnhancedZombie extends IZombie {
     constructor(scene: Game, col: number, row: number, texture: string) {
         super(scene, col, row, texture, newNormalZombieAnim);
-        // TODO: Y 根据真实offset进行修改
-        // let x = this.x + 10 * scene.positionCalc.scaleFactor;
-        // let y = this.y - 50 * scene.positionCalc.scaleFactor;
-
-
         this.health = 180;
         this.speed = 20 * scene.positionCalc.scaleFactor;
     }
@@ -44,9 +39,7 @@ export class EnhancedZombie extends IZombie {
 
 function NewZombie(scene: Game, x: number, y: number): IZombie {
     const zombie = new EnhancedZombie(scene, x, y, 'zombie/zombie');
-
-    zombie.setVelocityX(-zombie.speed); // 初始向左移动
-
+    zombie.StartMove();
     console.log('New Zombie created');
     return zombie;
 }

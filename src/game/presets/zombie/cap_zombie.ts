@@ -59,7 +59,7 @@ class CapZombie extends EnhancedZombie {
 
 function NewZombie(scene: Game, x: number, y: number): IZombie {
     const zombie = new CapZombie(scene, x, y, 'zombie/zombie');
-    zombie.setVelocityX(-zombie.speed);
+    zombie.StartMove();
     return zombie;
 }
 
