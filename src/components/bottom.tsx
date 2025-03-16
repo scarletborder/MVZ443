@@ -48,6 +48,7 @@ export default function BottomTools({ width, chapterID }: Props) {
 
 
     const handleStarClick = () => {
+        EventBus.emit('card-deselected', { pid: null }); // 通知卡片取消选中
         if (gamectx.isPaused) return;
         if (gamectx.starShareds <= 0) return;
         EventBus.emit('starshards-click');

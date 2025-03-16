@@ -14,7 +14,7 @@ interface Item {
     count: number;
 }
 
-interface GameProgress {
+export interface GameProgress {
     level: Set<number>;
     plants: Plant[];
     zombies: Zombie[];
@@ -135,7 +135,7 @@ class SaveManager {
 }
 
 
-class GameManager {
+export class GameManager {
     saveManager: SaveManager;
     currentProgress: GameProgress;
 

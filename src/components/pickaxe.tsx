@@ -12,7 +12,9 @@ export default function Pickaxe({ sceneRef }: Props) {
     const { isPaused } = useGameContext();
     const settings = useSettings();
     const img = `${publicUrl}/assets/sprite/pickaxe.png`;
+    
     const handleClick = () => {
+        EventBus.emit('card-deselected', { pid: null }); // 通知卡片取消选中
         if (!sceneRef.current) return;
         if (isPaused && (!settings.isBluePrint)) return;
         EventBus.emit('pickaxe-click', null);

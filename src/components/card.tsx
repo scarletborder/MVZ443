@@ -54,6 +54,7 @@ export default function Card({ pid, texture, plantName, cooldownTime, sceneRef, 
     useEffect(() => {
         const handleDeselect = (data: { pid: number | null }) => {
             if (data.pid !== pid) {
+                console.log('deselect');
                 setIsChosen(false);
             }
         };
