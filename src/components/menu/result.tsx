@@ -3,6 +3,7 @@ import { useSaveManager } from '../../context/save_ctx';
 import { OnWin, ProgressReward } from '../../game/models/IRecord';
 import { ChapterDataRecords, StageDataRecords } from '../../game/utils/loader';
 import PlantFactoryMap from '../../game/presets/plant';
+import Stuff from '../../constants/stuffs';
 
 
 interface Props {
@@ -156,7 +157,7 @@ export default function GameResultView({ width, height, isWin, onWin, progressRe
                         (myProgress >= reward.progress) &&
                         (<div key={index} style={{ marginBottom: "15px" }}>
                             <p>进度: {reward.progress}%</p>
-                            <p>奖励: 类型 {reward.reward.type}, 数量 {reward.reward.count}</p>
+                            <p>奖励: {Stuff(reward.reward.type)}: {reward.reward.count}</p>
                         </div>)
                     ))
                 ) : (
