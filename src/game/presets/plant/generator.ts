@@ -13,6 +13,27 @@ class Generator extends INightPlant {
         this.game = scene;
     }
 
+    public onStarShards(): void {
+        super.onStarShards();
+        // 唤醒自己和周围的plant,并恢复血量
+        for (let i = this.col - 1; i <= this.col + 1; i++) {
+            for (let j = this.row - 1; j <= this.row + 1; j++) {
+                if (i >= 0 && i < this.game.positionCalc.Col_Number && j >= 0 && j < this.game.positionCalc.Row_Number) {
+                    const key = `${i}-${j}`;
+                    // 查找list
+                    if (this.game.gardener.planted.has(key)) {
+                        const list = this.game.gardener.planted.get(key);
+                        if (list) {
+                            for (const plant of list) plant.setSleeping(false);
+                        }
+                    }
+                }
+            }
+        }
+
+        this.setHealth(this.maxhealth);
+    }
+
     public takeDamage(amount: number, zombie: IZombie): void {
         if (this.isSleeping) {
             this.game.broadCastEnergy(Math.ceil(amount / 20));

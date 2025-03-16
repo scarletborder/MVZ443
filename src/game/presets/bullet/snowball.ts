@@ -2,13 +2,15 @@ import { IBullet } from "../../models/IBullet";
 import { Game } from "../../scenes/Game";
 
 
-class SnowBall extends IBullet {
+export class SnowBall extends IBullet {
     originalX: number;
     maxDistance: number;
+    game : Game;
 
     constructor(scene: Game, col: number, row: number, texture: string,
         damage: number, maxDistance: number, target: 'plant' | 'zombie' = 'zombie') {
         super(scene, col, row, texture, damage, target);
+        this.game = scene;
         this.maxDistance = maxDistance;
 
         this.originalX = this.x;

@@ -34,6 +34,9 @@ export class IBullet extends Phaser.Physics.Arcade.Sprite {
         const { x, y } = scene.positionCalc.getBulletCenter(col, row);
         super(scene, x, y, texture);
 
+        this.col = col;
+        this.row = row;
+
         this.ScreenWidth = scene.sys.canvas.width;
         this.ScreenHeight = scene.sys.canvas.height;
 

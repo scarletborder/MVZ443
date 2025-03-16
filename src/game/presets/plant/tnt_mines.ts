@@ -28,7 +28,28 @@ class _TntMines extends IPlant {
 
     public onStarShards(): void {
         super.onStarShards();
+        let leftCount = 2;
+        // 立刻出土,并且从第一排开始尝试放置准备好的炸弹
+        this.wakeup();
+
+        for (let preCol = this.game.GRID_COLS - 1; preCol >= 0; preCol--) {
+            for (let preRow = 0; preRow < this.game.GRID_ROWS; preRow++) {
+                // 查看是否有位置(炸弹是排他的)
+                const key = `${preCol}-${preRow}`;
+                if (this.game.gardener.planted.has(key)) {
+                    const list = this.game.gardener.planted.get(key);
+                    if (list && list.length > 0) continue; // 有植物
+                }
+                // 可以放置
+                const newmine = NewTntMines(this.game, preCol, preRow, this.level);
+                newmine.wakeup();
+                leftCount--;
+                if (leftCount === 0) return;
+            }
+        }
     }
+
+
 
     public wakeup(): void {
         if (this.health > 0 && this.isBuried) {
@@ -52,10 +73,10 @@ class _TntMines extends IPlant {
     }
 }
 
-function NewTntMines(scene: Game, col: number, row: number, level: number): IPlant {
+function NewTntMines(scene: Game, col: number, row: number, level: number): _TntMines {
     const buriedTime = 16000;
-    const furnace = new _TntMines(scene, col, row, level, buriedTime);
-    return furnace;
+    const mine = new _TntMines(scene, col, row, level, buriedTime);
+    return mine;
 }
 
 function cost(level?: number): number {

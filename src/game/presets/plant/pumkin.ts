@@ -11,6 +11,22 @@ class pumkin extends INightPlant {
 
     public onStarShards(): void {
         super.onStarShards();
+
+        if (this.Timer) {
+            this.Timer.remove();
+        }
+
+        // master spark
+        this.sparkShoot();
+        this.game.time.delayedCall(2000, () => {
+            if (this && this.health > 0) {
+                this.setFrame(0);
+                if (this.isSleeping) {
+                    this.setSleeping(false);
+                }
+                this.Timer = this.normalShootEvent(); // resume normal shoot
+            }
+        });
     }
 
     constructor(scene: Game, col: number, row: number, texture: string, level: number) {
@@ -41,6 +57,14 @@ class pumkin extends INightPlant {
             loop: true,
             delay: 2050,  // 每隔1秒发射一次
         });
+    }
+
+    sparkShoot() {
+        this.setFrame(1);
+        const col = this.col;
+        for (let i = 0; i < this.game.positionCalc.Row_Number; i++) {
+            NewLaserByGrid(this.game, col, i, 12, 1200, 'zombie', 1000);
+        }
     }
 }
 

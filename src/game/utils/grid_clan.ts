@@ -7,11 +7,11 @@ import { IPlant } from "../models/IPlant";
 import Gardener from "./gardener";
 
 // 护盾器械,铲除上方时铲除,可以和任何非护盾器械兼容
-const SHIELD_PLANT: number[] = []; // 护盾植物
-const GROUND_ONLY_PLANT: number[] = [4];// 地面植物,只能种植在地面
-const WATER_ONLY_PLANT: number[] = [6];// 水中植物,只能种植在水中
-const SKY_ONLY_PLANT: number[] = [100]; // 船只,只能种植在天空中
-const POWDER_PLANT: number[] = [10]; // 粉尘植物,可以随意种植
+export const SHIELD_PLANT: number[] = []; // 护盾植物
+export const GROUND_ONLY_PLANT: number[] = [4];// 地面植物,只能种植在地面
+export const WATER_ONLY_PLANT: number[] = [6];// 水中植物,只能种植在水中
+export const SKY_ONLY_PLANT: number[] = [100]; // 船只,只能种植在天空中
+export const POWDER_PLANT: number[] = [10]; // 粉尘植物,可以随意种植
 
 const lilyPid = 6;
 const boatPid = 100;

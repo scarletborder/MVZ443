@@ -33,7 +33,10 @@ export class Game extends Scene {
     public monsterSpawner: MonsterSpawner;
     public innerSettings: GameSettings;
 
-    public gridProperty: ("ground" | "water" | "sky")[][]; // gridProperty[row][col]
+    /**
+     * gridProperty[row][col]
+     */
+    public gridProperty: ("ground" | "water" | "sky")[][];
 
     camera: Phaser.Cameras.Scene2D.Camera;
     background: Phaser.GameObjects.Image;

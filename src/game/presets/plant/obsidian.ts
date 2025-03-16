@@ -13,6 +13,13 @@ class Obsidian extends IPlant {
         this.setHealthFirstly(4000);
     }
 
+    public onStarShards(): void {
+        super.onStarShards();
+        // 设置护盾
+        this.shieldHealth = this.maxShieldHealth;
+        this.setHealth(this.maxhealth);
+    }
+
     public takeDamage(amount: number, zombie: IZombie): void {
         if (this.shieldHealth > amount) {
             this.shieldHealth -= amount;

@@ -19,7 +19,7 @@
             }
         }
     ],
-    "energy": 100,
+    "energy": 1000,
     "waves": [
         {
             "waveId": 0,

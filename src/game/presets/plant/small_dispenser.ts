@@ -1,12 +1,14 @@
 import i18n from "../../../utils/i18n";
+import { IExpolsion } from "../../models/IExplosion";
 import { IPlant, INightPlant } from "../../models/IPlant";
 import { IRecord } from "../../models/IRecord";
 import { Game } from "../../scenes/Game";
-import NewSnowBullet from "../bullet/snowball";
+import NewSnowBullet, { SnowBall } from "../bullet/snowball";
 
 class smallDispenser extends INightPlant {
     maxDistance: number; // 画面的绝对坐标,非格子
     damage: number;
+    game: Game
     constructor(scene: Game, col: number, row: number, texture: string, level: number) {
         let maxDistance = (3.8 * scene.positionCalc.GRID_SIZEX);
         // 精英1, 提升攻击范围
@@ -15,6 +17,7 @@ class smallDispenser extends INightPlant {
         }
 
         super(scene, col, row, texture, SmallDispenserRecord.pid, level);
+        this.game = scene;
         this.setHealthFirstly(300);
         this.maxDistance = maxDistance;
 
@@ -31,6 +34,20 @@ class smallDispenser extends INightPlant {
             delay: 1350,  // 每隔1秒发射一次
         });
         console.log(this.Timer.getRemaining())
+    }
+
+    public onStarShards(): void {
+        super.onStarShards();
+
+        if (this.isSleeping) this.setSleeping(false);
+
+        // 射出一个炸弹雪球
+
+        const snowball = new BombSnowBall(this.game, this.col, this.row, 'bullet/snowball',
+            0, this.game.positionCalc.GRID_SIZEY * 12, 'zombie');
+
+
+
     }
 }
 
@@ -52,6 +69,22 @@ function shootSnowBall(scene: Game, shooter: IPlant, maxDistance: number) {
         const arrow = NewSnowBullet(scene, shooter.col, shooter.row, maxDistance, damage);
     }
 }
+
+
+class BombSnowBall extends SnowBall {
+    destroy(): void {
+        super.destroy();
+        // 生成大爆炸
+        new IExpolsion(this.game, this.x, this.row, {
+            damage: 500,
+            rightGrid: 1.5,
+            leftGrid: 1.5,
+            upGrid: 1,
+        })
+    }
+}
+
+
 
 const SmallDispenserRecord: IRecord = {
     pid: 5,

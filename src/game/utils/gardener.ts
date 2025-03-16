@@ -11,7 +11,12 @@ import { PositionCalc } from "./position";
 
 export default class Gardener {
     scene: Game;
+
+    /**
+     * key = `${col}-${row}`;
+     */
     planted: Map<string, Array<IPlant>> = new Map();
+
     positionCalc: PositionCalc;
     prevCol: number = -1;
     prevRow: number = -1;
