@@ -2,12 +2,14 @@ import { Game } from "../../scenes/Game";
 import { IPlant } from "../../models/IPlant";
 import { IRecord } from "../../models/IRecord";
 import i18n from "../../../utils/i18n";
+import { item } from "../../../components/shop/types";
+import { GetIncValue } from "../../../utils/numbervalue";
 
 class _Lily extends IPlant {
     game: Game;
     constructor(scene: Game, col: number, row: number, texture: string, pid: number, level: number) {
         super(scene, col, row, texture, pid, level);
-        this.setHealthFirstly(300);
+        this.setHealthFirstly(GetIncValue(300, 2, level));
         this.game = scene;
     }
 
@@ -45,12 +47,17 @@ class _Lily extends IPlant {
 
 
 function cost(level?: number): number {
+    if ((level || 1) >= 5) return 0;
     return 25;
 }
 
 function NewLily(scene: Game, col: number, row: number, level: number): IPlant {
     const lily = new _Lily(scene, col, row, 'plant/lily', Lily.pid, level);
     return lily;
+}
+
+function levelAndstuff(level: number): item[] {
+    return [];
 }
 
 const Lily: IRecord = {
@@ -60,7 +67,8 @@ const Lily: IRecord = {
     cooldownTime: () => 4,
     NewFunction: NewLily,
     texture: 'plant/lily',
-    description: i18n.S('lily_description')
+    description: i18n.S('lily_description'),
+    NextLevelStuff: levelAndstuff
 };
 
 export default Lily;

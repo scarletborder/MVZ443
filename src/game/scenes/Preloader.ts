@@ -1,6 +1,6 @@
 import { Scene } from 'phaser';
 import { GameParams } from '../models/GameParams';
-import { ResourceMapData } from '../../../public/constants';
+import { ResourceMapData } from '../../constants/map_data';
 import { EventBus } from '../EventBus';
 
 export class Preloader extends Scene {

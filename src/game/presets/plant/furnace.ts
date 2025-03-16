@@ -1,4 +1,6 @@
+import { item } from "../../../components/shop/types";
 import i18n from "../../../utils/i18n";
+import { GetDecValue } from "../../../utils/numbervalue";
 import { IPlant } from "../../models/IPlant";
 import { IRecord } from "../../models/IRecord";
 import { Game } from "../../scenes/Game";
@@ -12,9 +14,15 @@ class Furnace extends IPlant {
         this.setFrame(0);
         this.setHealthFirstly(300);
 
+        if (level >= 9) {
+            this.updateEnergy = 40;
+        }
+
+        const cooldownTime = GetDecValue(18000, 0.7, level);
+
         this.Timer = scene.time.addEvent({
-            delay: 18000, // 每18秒生产能量
-            startAt: 13500,
+            delay: cooldownTime, // 每18秒生产能量
+            startAt: cooldownTime * 0.7,
             loop: true,
             callback: () => {
                 if (this.health > 0) {
@@ -46,7 +54,11 @@ function NewFurnace(scene: Game, col: number, row: number, level: number): IPlan
 }
 
 function cost(level?: number): number {
+    if ((level || 1) >= 5) return 35;
     return 50;
+}
+function levelAndstuff(level: number): item[] {
+    return [];
 }
 
 const FurnaceRecord: IRecord = {
@@ -56,7 +68,8 @@ const FurnaceRecord: IRecord = {
     cooldownTime: () => 6,
     NewFunction: NewFurnace,
     texture: 'plant/furnace',
-    description: i18n.S('furnace_description')
+    description: i18n.S('furnace_description'),
+    NextLevelStuff: levelAndstuff
 };
 
 export default FurnaceRecord;

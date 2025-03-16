@@ -9,7 +9,7 @@ export class EnhancedSkeleton extends IZombie {
     constructor(scene: Game, col: number, row: number, texture: string) {
         super(scene, col, row, texture, newNormalSkeletonAnim);
         this.health = 180;
-        this.speed = 20 * scene.positionCalc.scaleFactor;
+        this.SetSpeedFirstly(20 * scene.positionCalc.scaleFactor);
     }
 
 

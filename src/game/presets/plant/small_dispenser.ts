@@ -1,3 +1,4 @@
+import { item } from "../../../components/shop/types";
 import i18n from "../../../utils/i18n";
 import { IExpolsion } from "../../models/IExplosion";
 import { IPlant, INightPlant } from "../../models/IPlant";
@@ -84,7 +85,9 @@ class BombSnowBall extends SnowBall {
     }
 }
 
-
+function levelAndstuff(level: number): item[] {
+    return [];
+}
 
 const SmallDispenserRecord: IRecord = {
     pid: 5,
@@ -93,7 +96,8 @@ const SmallDispenserRecord: IRecord = {
     cooldownTime: () => 10,
     NewFunction: NewDispenser,
     texture: 'plant/small_dispenser',
-    description: i18n.S('small_dispenser_description')
+    description: i18n.S('small_dispenser_description'),
+    NextLevelStuff: levelAndstuff
 };
 
 export default SmallDispenserRecord;

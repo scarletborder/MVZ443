@@ -1,4 +1,6 @@
+import { item } from "../../../components/shop/types";
 import i18n from "../../../utils/i18n";
+import { GetIncValue } from "../../../utils/numbervalue";
 import { IPlant } from "../../models/IPlant";
 import { IRecord } from "../../models/IRecord";
 import { Game } from "../../scenes/Game";
@@ -57,7 +59,7 @@ class dispenser extends IPlant {
         return this.game.time.addEvent({
             callback: () => {
                 if (this.health > 0) {
-                    const arrow = shootArrow(this.game, this, 35);
+                    const arrow = shootArrow(this.game, this, 35, true);
                 }
             },
             repeat: totalArrows - 1,
@@ -71,16 +73,31 @@ function NewDispenser(scene: Game, col: number, row: number, level: number): IPl
     return peashooter;
 }
 
-function shootArrow(scene: Game, shooter: IPlant, baseDamage: number = 20) {
+function shootArrow(scene: Game, shooter: IPlant, baseDamage: number = 20, isStar: boolean = false) {
     const level = shooter.level;
     //  根据等级略微提高伤害
-    const damage = baseDamage + 1.2 * Math.min(level, 3) + 0.8 * Math.max(level - 3, 0);
-    const penetrate = shooter.level >= 9 ? 5 : 1;
+    const damage = GetIncValue(baseDamage, level, 1.6);
+    let penetrate = 1;
+    if (level >= 3) {
+        penetrate += 1;
+        if (level >= 7) {
+            penetrate += 1;
+        }
+        if (level >= 5 && isStar) {
+            penetrate += 1;
+        }
+    }
+
     const arrow = NewArrow(scene, shooter.col, shooter.row, scene.positionCalc.GRID_SIZEX * 32, damage);
     arrow.penetrate = penetrate;
     return arrow;
 }
-
+function levelAndstuff(level: number): item[] {
+    return [{
+        type: 1,
+        count: 100
+    }];
+}
 
 const DispenserRecord: IRecord = {
     pid: 1,
@@ -92,7 +109,8 @@ const DispenserRecord: IRecord = {
     cooldownTime: () => 6,
     NewFunction: NewDispenser,
     texture: 'plant/dispenser',
-    description: i18n.S('dispenser_description')
+    description: i18n.S('dispenser_description'),
+    NextLevelStuff: levelAndstuff
 };
 
 export default DispenserRecord;

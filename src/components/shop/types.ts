@@ -42,7 +42,7 @@ class SeventhSlot implements IGoods {
         save.updateSlotNum(7);
     };
     getPriceStructure = (): price => ({
-        items: [{ type: 1, count: this.price }]
+        items: [{ type: 1, count: this.price }, { type: 2, count: 1 }]
     });
     canPurchase = (progress: GameProgress) => {
         if (progress.level.has(4) && progress.slotNum === 6) return true;

@@ -1,5 +1,7 @@
 import { SECKILL } from "../../../../public/constants";
+import { item } from "../../../components/shop/types";
 import i18n from "../../../utils/i18n";
+import { GetIncValue } from "../../../utils/numbervalue";
 import { EventBus } from "../../EventBus";
 import { IPlant } from "../../models/IPlant";
 import { IRecord } from "../../models/IRecord";
@@ -9,19 +11,22 @@ import { Game } from "../../scenes/Game";
 class MagicPowder extends IPlant {
     game: Game;
     hasKill: boolean;
+    damage: number = 2000;
     constructor(scene: Game, col: number, row: number, level: number) {
         super(scene, col, row, MagicPowderRecord.texture, MagicPowderRecord.pid, level);
         this.game = scene;
         this.setHealthFirstly(SECKILL);
         this.hasKill = false;
         this.createRects();
+
+        this.damage = GetIncValue(2000, 1.3, level);
     }
 
     public takeDamage(amount: number, zombie?: IZombie | null): void {
         // 直接秒杀敌人(碰撞)
         if (zombie && !this.hasKill) {
             this.hasKill = true;
-            zombie.takeDamage(2000, 'laser');
+            zombie.takeDamage(this.damage, 'laser');
             this.destroyPlant();
             EventBus.emit('starshards-get');
         }
@@ -70,17 +75,28 @@ function NewMagicPowder(scene: Game, col: number, row: number, level: number): I
 }
 
 function cost(level?: number): number {
+    if ((level || 1) >= 5) return 125;
     return 175;
+}
+
+function cooldownTime(level?: number): number {
+    if ((level || 1) >= 9) return 30;
+    return 40;
+}
+
+function levelAndstuff(level: number): item[] {
+    return [];
 }
 
 const MagicPowderRecord: IRecord = {
     pid: 10,
     name: '魔术粉',
     cost: cost,
-    cooldownTime: () => 40,
+    cooldownTime: cooldownTime,
     NewFunction: NewMagicPowder,
     texture: 'plant/magic_powder',
-    description: i18n.S('magic_powder_description')
+    description: i18n.S('magic_powder_description'),
+    NextLevelStuff: levelAndstuff
 };
 
 export default MagicPowderRecord;

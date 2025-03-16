@@ -37,6 +37,10 @@ export default class IZombieAnim {
     leftLgetOffset: Array<number> = [2, -5];
     rightLegOffset: Array<number> = [-2, -10];
 
+
+    // Effect
+    private slowEffectTimer?: Phaser.Time.TimerEvent;
+
     setScale() {
         // 在创建完所有组件后进行全部组件的setScale
         console.log(this.scaneFactor)
@@ -215,6 +219,88 @@ export default class IZombieAnim {
         });
     }
 
+    highlight() {
+        // 计算绘制效果所需参数
+        const depth = this.body.depth + 1;  // 根据实际情况调整深度
+        const centerX = this.x;
+        // 因为僵尸的 body 原点为 (0.5, 1)，这里将中心点向上偏移一半的 GRID_SIZEY
+        const centerY = this.y - this.scene.positionCalc.GRID_SIZEY / 2;
+
+        const rangeWidth = this.scene.positionCalc.GRID_SIZEX;   // 横向范围
+        const rangeHeight = this.scene.positionCalc.GRID_SIZEY;    // 纵向范围
+        const textSize = this.scene.positionCalc.GRID_SIZEX / 5;    // 字体大小
+        const textCount = 6;   // 文本数量
+
+        for (let i = 0; i < textCount; i++) {
+            // 在范围内随机生成文本的中心坐标
+            let posX = Phaser.Math.Between(centerX - rangeWidth / 3, centerX + rangeWidth / 2);
+            let posY = Phaser.Math.Between(centerY - rangeHeight / 2, centerY + rangeHeight / 2);
+
+            // 根据 i 的奇偶性选择不同的颜色（这里使用十六进制字符串形式）
+            const color = i % 2 === 0 ? "#C5B59B" : "#A79A8A";
+            const ffont = i % 2 === 0 ? "X" : "+";
+
+            // 创建文本对象，显示字符 "X"
+            let textObj = this.scene.add.text(posX, posY, ffont, { fontSize: textSize + "px", color: color }).setDepth(depth);
+            textObj.setOrigin(0.5, 0.5);
+            this.scene.tweens.add({
+                targets: textObj,
+                alpha: 0.6,
+                duration: 600,
+                ease: 'Linear',
+                onComplete: () => {
+                    textObj.destroy();
+                }
+            });
+        }
+    }
+
+    // Start slow effect animation (blue '*' symbol)
+    public startSlowEffect() {
+        if (this.slowEffectTimer) {
+            return;
+        }
+
+        this.slowEffectTimer = this.scene.time.addEvent({
+            delay: 1000,  // Emit every second
+            loop: true,
+            callback: () => {
+                const depth = this.body.depth + 1;
+                const centerX = this.x;
+                const centerY = this.y - this.scene.positionCalc.GRID_SIZEY / 2;
+                const rangeWidth = this.scene.positionCalc.GRID_SIZEX;
+                const rangeHeight = this.scene.positionCalc.GRID_SIZEY;
+                const textSize = this.scene.positionCalc.GRID_SIZEX / 5;
+                const textCount = 6;
+
+                for (let i = 0; i < textCount; i++) {
+                    let posX = Phaser.Math.Between(centerX - rangeWidth / 3, centerX + rangeWidth / 2);
+                    let posY = Phaser.Math.Between(centerY - rangeHeight / 2, centerY + rangeHeight / 2);
+
+                    let textObj = this.scene.add.text(posX, posY, '*', { fontSize: textSize + "px", color: "#4A90E2" }).setDepth(depth);
+                    textObj.setOrigin(0.5, 0.5);
+                    this.scene.tweens.add({
+                        targets: textObj,
+                        alpha: 0.6,
+                        duration: 600,
+                        ease: 'Linear',
+                        onComplete: () => {
+                            textObj.destroy();
+                        }
+                    });
+                }
+            }
+        });
+    }
+
+    // Stop slow effect animation
+    public stopSlowEffect() {
+        if (this.slowEffectTimer) {
+            this.slowEffectTimer.remove();
+            this.slowEffectTimer = undefined;
+        }
+    }
+
     setTint(color: number) {
         this.body.setTint(color);
         this.head.setTint(color);
@@ -247,5 +333,8 @@ export default class IZombieAnim {
         this.legLeftTween?.stop();
         this.legRightTween?.stop();
         this.armTween?.stop();
+
+        // 动画特效
+        this.stopSlowEffect();
     }
 } 

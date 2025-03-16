@@ -9,7 +9,7 @@ class CapZombie extends EnhancedZombie {
 
     constructor(scene: Game, col: number, row: number, texture: string) {
         super(scene, col, row, texture);
-        this.speed = 20 * scene.positionCalc.scaleFactor;
+        this.SetSpeedFirstly(20 * scene.positionCalc.scaleFactor);
         this.capHealth = 325;
 
         const topX = this.x + this.offsetX;

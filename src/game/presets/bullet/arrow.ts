@@ -16,7 +16,7 @@ class Arrow extends IBullet {
         size.sizeX *= 2;
         size.sizeY /= 2;
         this.setDisplaySize(size.sizeX, size.sizeY);
-        this.setVelocityX(+200 * scene.positionCalc.scaleFactor); // 一定要在add    之后设置速度
+        this.setVelocityX(+300 * scene.positionCalc.scaleFactor); // 一定要在add    之后设置速度
 
         this.originalX = this.x;
     }

@@ -2,6 +2,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { item, IGoods, NewGoodLists } from './types';
 import { GameProgress, useSaveManager } from '../../context/save_ctx';
+import StuffList from './stuff_list';
 
 interface ShopSelectorProps {
     width: number;
@@ -173,7 +174,11 @@ const ShopSelector: React.FC<ShopSelectorProps> = ({
                         <div>
                             <h2>{selectedGood.name}</h2>
                             <p>{selectedGood.description()}</p>
-                            <p>Price: {selectedGood.price}</p>
+                            <StuffList
+                                items={selectedGood.getPriceStructure().items}
+                                currentItems={getCurrentItems()}
+                            />
+
                             {purchaseAllowed ? (
                                 <button
                                     disabled={hasBought || !canAfford}

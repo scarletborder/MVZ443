@@ -1,3 +1,4 @@
+import { item } from "../../components/shop/types";
 import { Game } from "../scenes/Game";
 import { IPlant } from "./IPlant";
 import { IZombie } from "./IZombie";
@@ -13,6 +14,7 @@ export interface IRecord {
     brief?: () => string; // 游戏内卡片描述
     description: () => string; // 图鉴描述
     needFirstCoolDown?: boolean; // 是否需要第一次冷却
+    NextLevelStuff: (level: number) => item[],
 }
 
 

@@ -1,3 +1,4 @@
+import { item } from "../../../components/shop/types";
 import i18n from "../../../utils/i18n";
 import { IExpolsion } from "../../models/IExplosion";
 import { IPlant } from "../../models/IPlant";
@@ -107,6 +108,10 @@ function cost(level?: number): number {
     return 25;
 }
 
+function levelAndstuff(level: number): item[] {
+    return [];
+}
+
 const TntMines: IRecord = {
     pid: 4,
     name: 'TNT地雷',
@@ -115,7 +120,8 @@ const TntMines: IRecord = {
     NewFunction: NewTntMines,
     texture: 'plant/tnt_mines',
     description: i18n.S('tnt_mines_description'),
-    needFirstCoolDown: true
+    needFirstCoolDown: true,
+    NextLevelStuff: levelAndstuff
 };
 
 export default TntMines;

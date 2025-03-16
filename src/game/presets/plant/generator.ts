@@ -1,15 +1,16 @@
+import { item } from "../../../components/shop/types";
 import i18n from "../../../utils/i18n";
+import { GetIncValue } from "../../../utils/numbervalue";
 import { INightPlant, IPlant } from "../../models/IPlant";
 import { IRecord } from "../../models/IRecord";
 import { IZombie } from "../../models/IZombie";
 import { Game } from "../../scenes/Game";
 
 class Generator extends INightPlant {
-    maxhealth: number = 800;
     game: Game;
     constructor(scene: Game, col: number, row: number, level: number) {
         super(scene, col, row, GeneratorRecord.texture, GeneratorRecord.pid, level);
-        this.setHealthFirstly(800);
+        this.setHealthFirstly(GetIncValue(800, level, 1.25));
         this.game = scene;
     }
 
@@ -30,15 +31,16 @@ class Generator extends INightPlant {
                 }
             }
         }
-
         this.setHealth(this.maxhealth);
     }
 
     public takeDamage(amount: number, zombie: IZombie): void {
         if (this.isSleeping) {
-            this.game.broadCastEnergy(Math.ceil(amount / 20));
+            const ratio = (this.level >= 5) ? (this.level >= 9 ? 6 : 7.5) : 10;
+            this.game.broadCastEnergy(Math.ceil(amount / ratio));
         } else {
-            this.game.broadCastEnergy(Math.ceil(amount / 5));
+            const ratio = (this.level >= 9) ? 5 : 5.8;
+            this.game.broadCastEnergy(Math.ceil(amount / ratio));
         }
         super.takeDamage(amount, zombie);
     }
@@ -50,7 +52,9 @@ function NewGenerator(scene: Game, col: number, row: number, level: number): IPl
 }
 
 
-
+function levelAndstuff(level: number): item[] {
+    return [];
+}
 const GeneratorRecord: IRecord = {
     pid: 8,
     name: '生物质发电机',
@@ -58,7 +62,8 @@ const GeneratorRecord: IRecord = {
     cooldownTime: () => 32,
     NewFunction: NewGenerator,
     texture: 'plant/generator',
-    description: i18n.S('generator_description')
+    description: i18n.S('generator_description'),
+    NextLevelStuff: levelAndstuff
 };
 
 export default GeneratorRecord;

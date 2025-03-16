@@ -23,7 +23,11 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite {
     // 私有
     // 属性
     public health: number;
-    public speed: number; // 默认情况速度,(静态值,不受buff影响)
+    public originalSpeed: number; // 默认情况速度,(静态值,不受buff影响)
+    public speed: number; // 当前速度+
+    private debuffs: { [key: string]: { remaining: number, timer: Phaser.Time.TimerEvent } } = {};  // 存储每个debuff的剩余时间和定时器
+
+
     public IsFrozen: boolean = false;
     public IsStop: boolean = false;
 
@@ -74,7 +78,7 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite {
         this.offsetX = Math.random() * scene.positionCalc.GRID_SIZEX / 5;
         this.offsetY = Math.random() * scene.positionCalc.GRID_SIZEY / 10;
         this.baseDepth = DepthManager.getZombieBasicDepth(row, this.offsetY);
-        this.speed = 20 * scene.positionCalc.scaleFactor;
+        this.originalSpeed = 20 * scene.positionCalc.scaleFactor;
         this.setDepth();
 
         this.zombieAnim.startLegSwing();
@@ -108,6 +112,7 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite {
 
     // 受到伤害
     public takeDamage(amount: number, projectileType?: "bullet" | "laser" | "explosion" | "trajectory") {
+        this.zombieAnim.highlight();
         this.setHealth(this.health - amount);
     }
 
@@ -166,8 +171,48 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite {
     }
 
     // 移动相关
+    // catchDebuff函数，处理增加debuff
+    public catchDebuff(debuff: 'slow', duration: number) {
+        console.log('slow')
+        this.zombieAnim.startSlowEffect();
+        // 如果debuff已存在，更新剩余时间和定时器
+        if (this.debuffs[debuff]) {
+            // 重新设置剩余时间为最大值
+            this.debuffs[debuff].remaining = Math.max(this.debuffs[debuff].remaining, duration);
+            // 重置定时器的时间
+            this.debuffs[debuff].timer.reset({ delay: this.debuffs[debuff].remaining, callback: () => this.removeDebuff(debuff), callbackScope: this });
+        } else {
+            // 新增debuff，设置剩余时间和创建新的定时器
+            this.debuffs[debuff] = {
+                remaining: duration,
+                timer: this.game.time.delayedCall(duration, () => this.removeDebuff(debuff), [], this)
+            };
+        }
+
+        if (debuff === 'slow') {
+            this.speed = this.originalSpeed * 0.6;  // 应用减速效果 (速度为原来的60%)
+            if (!this.attackingPlant)
+                this.setVelocityX(-this.speed);  // 立即更新移动速度
+        }
+    }
+
+    // 移除debuff并恢复速度
+    private removeDebuff(debuff: 'slow') {
+        if (this.debuffs[debuff]) {
+            delete this.debuffs[debuff];  // 删除debuff
+            this.speed = this.originalSpeed;  // 恢复原始速度
+            if (!this.attackingPlant)
+                this.setVelocityX(-this.speed);  // 恢复移动速度
+            this.zombieAnim.stopSlowEffect();
+        }
+    }
+
+    public SetSpeedFirstly(speed: number) {
+        this.originalSpeed = speed;
+        this.speed = speed;
+    }
+
     public StartMove() {
-        //TODO: 考虑debuff
         this.setVelocityX(-this.speed);
     }
 

@@ -1,4 +1,6 @@
+import { item } from "../../../components/shop/types";
 import i18n from "../../../utils/i18n";
+import { GetIncValue } from "../../../utils/numbervalue";
 import { IPlant } from "../../models/IPlant";
 import { IRecord } from "../../models/IRecord";
 import { IZombie } from "../../models/IZombie";
@@ -10,7 +12,7 @@ class Obsidian extends IPlant {
     constructor(scene: Game, col: number, row: number, level: number) {
         super(scene, col, row, ObsidianRecord.texture, ObsidianRecord.pid, level);
         this.setFrame(0);
-        this.setHealthFirstly(4000);
+        this.setHealthFirstly(GetIncValue(4000, 1.4, level));
     }
 
     public onStarShards(): void {
@@ -21,10 +23,11 @@ class Obsidian extends IPlant {
     }
 
     public takeDamage(amount: number, zombie: IZombie): void {
+        const shieldRatio = (this.level >= 9) ? 0.8 : 1;
         if (this.shieldHealth > amount) {
-            this.shieldHealth -= amount;
+            this.shieldHealth -= amount * shieldRatio;
         } else {
-            amount -= this.shieldHealth;
+            amount -= Math.ceil(this.shieldHealth * (1 / shieldRatio));
             this.shieldHealth = 0;
             super.takeDamage(amount, zombie);
         }
@@ -63,17 +66,25 @@ function NewObsidian(scene: Game, col: number, row: number, level: number): IPla
     return furnace;
 }
 
+function levelAndstuff(level: number): item[] {
+    return [];
+}
 
+function cooldownTime(level?: number): number {
+    if ((level || 1) >= 5) return 24;
+    return 32;
+}
 
 const ObsidianRecord: IRecord = {
     pid: 3,
     name: '黑曜石',
     cost: () => 50,
-    cooldownTime: () => 32,
+    cooldownTime: cooldownTime,
     NewFunction: NewObsidian,
     texture: 'plant/obsidian',
     description: i18n.S('obsidian_description'),
-    needFirstCoolDown: true
+    needFirstCoolDown: true,
+    NextLevelStuff: levelAndstuff
 };
 
 export default ObsidianRecord;

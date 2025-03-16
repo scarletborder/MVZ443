@@ -1,13 +1,15 @@
+import { item } from "../../../components/shop/types";
 import i18n from "../../../utils/i18n";
+import { GetDecValue, GetIncValue } from "../../../utils/numbervalue";
 import { NewLaserByGrid } from "../../models/ILaser";
 import { INightPlant, IPlant } from "../../models/IPlant";
 import { IRecord } from "../../models/IRecord";
 import { Game } from "../../scenes/Game";
-import NewArrow from "../bullet/arrow";
 
 class pumkin extends INightPlant {
     game: Game;
     maxDistance: number; // 画面的绝对坐标,非格子
+    attackInterval: number = 2050;
 
     public onStarShards(): void {
         super.onStarShards();
@@ -31,6 +33,9 @@ class pumkin extends INightPlant {
 
     constructor(scene: Game, col: number, row: number, texture: string, level: number) {
         super(scene, col, row, texture, PumpkinRecord.pid, level);
+
+        this.attackInterval = GetDecValue(2050, 0.6, level);
+
         this.game = scene;
         this.setHealthFirstly(300);
         this.setFrame(0);
@@ -41,7 +46,7 @@ class pumkin extends INightPlant {
 
     normalShootEvent(): Phaser.Time.TimerEvent {
         return this.game.time.addEvent({
-            startAt: 1200, // 已经使用的时间,即开始时间
+            startAt: this.attackInterval / 2, // 已经使用的时间,即开始时间
             callback: () => {
                 if (this.health > 0 && this.isSleeping === false &&
                     this.scene.monsterSpawner.hasMonsterInRowAfterX(this.row, this.x, this.maxDistance)) {
@@ -55,7 +60,7 @@ class pumkin extends INightPlant {
                 }
             },
             loop: true,
-            delay: 2050,  // 每隔1秒发射一次
+            delay: this.attackInterval,  // 每隔1秒发射一次
         });
     }
 
@@ -63,7 +68,8 @@ class pumkin extends INightPlant {
         this.setFrame(1);
         const col = this.col;
         for (let i = 0; i < this.game.positionCalc.Row_Number; i++) {
-            NewLaserByGrid(this.game, col, i, 12, 1200, 'zombie', 1000);
+            NewLaserByGrid(this.game, col, i, 12,
+                GetIncValue(1200, 1.35, this.level), 'zombie', 1000);
         }
     }
 }
@@ -78,11 +84,24 @@ function NewPumpkin(scene: Game, col: number, row: number, level: number): IPlan
 }
 
 function shootLaser(scene: Game, shooter: IPlant) {
-    const laser = NewLaserByGrid(scene, shooter.col, shooter.row,
-        attackDistance(), 35, 'zombie');
+    const level = shooter.level;
+    const damage = GetIncValue(35, 1.4, level);
+
+    if (level < 9) {
+        const laser = NewLaserByGrid(scene, shooter.col, shooter.row,
+            attackDistance(), damage, 'zombie');
+    } else {
+        const laser = NewLaserByGrid(scene, shooter.col, shooter.row,
+            attackDistance(), damage, 'zombie', 400, {
+            debuff: 'slow', duration: 3000
+        });
+    }
 
 }
 
+function levelAndstuff(level: number): item[] {
+    return [];
+}
 
 const PumpkinRecord: IRecord = {
     pid: 9,
@@ -91,7 +110,9 @@ const PumpkinRecord: IRecord = {
     cooldownTime: () => 5,
     NewFunction: NewPumpkin,
     texture: 'plant/pumpkin',
-    description: i18n.S('pumpkin_description')
+    description: i18n.S('pumpkin_description'),
+    NextLevelStuff: levelAndstuff
+
 };
 
 export default PumpkinRecord;

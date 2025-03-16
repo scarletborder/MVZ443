@@ -1,4 +1,5 @@
 import { SECKILL } from "../../../../public/constants";
+import { item } from "../../../components/shop/types";
 import i18n from "../../../utils/i18n";
 import { IExpolsion } from "../../models/IExplosion";
 import { IPlant } from "../../models/IPlant";
@@ -109,6 +110,10 @@ function cost(level?: number): number {
     return 150;
 }
 
+function levelAndstuff(level: number): item[] {
+    return [];
+}
+
 const TntRecord: IRecord = {
     pid: 7,
     name: '瞬炸TNT',
@@ -117,7 +122,8 @@ const TntRecord: IRecord = {
     NewFunction: NewTnt,
     texture: 'plant/tnt',
     description: i18n.S('tnt_description'),
-    needFirstCoolDown: true
+    needFirstCoolDown: true,
+    NextLevelStuff: levelAndstuff
 };
 
 export default TntRecord;
