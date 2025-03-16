@@ -104,6 +104,7 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite {
 
     // 设置生命值并监听
     public setHealth(value: number) {
+        if (value < this.health) this.zombieAnim.highlight();
         this.health = value;
         if (this.health <= 0) {
             this.destroyZombie();
@@ -112,7 +113,6 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite {
 
     // 受到伤害
     public takeDamage(amount: number, projectileType?: "bullet" | "laser" | "explosion" | "trajectory") {
-        this.zombieAnim.highlight();
         this.setHealth(this.health - amount);
     }
 
