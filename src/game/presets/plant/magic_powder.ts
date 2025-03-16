@@ -85,6 +85,20 @@ function cooldownTime(level?: number): number {
 }
 
 function levelAndstuff(level: number): item[] {
+    switch (level) {
+        case 1:
+            return [{
+                type: 1,
+                count: 200
+            }, {
+                type: 3,
+                count: 2
+            }];
+    }
+    return [{
+        type: SECKILL,
+        count: 1
+    }];
     return [];
 }
 

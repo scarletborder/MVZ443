@@ -1,5 +1,7 @@
+import { SECKILL } from "../../../../public/constants";
 import { item } from "../../../components/shop/types";
 import i18n from "../../../utils/i18n";
+import { GetDecValue } from "../../../utils/numbervalue";
 import { IExpolsion } from "../../models/IExplosion";
 import { IPlant } from "../../models/IPlant";
 import { IRecord } from "../../models/IRecord";
@@ -29,7 +31,7 @@ class _TntMines extends IPlant {
 
     public onStarShards(): void {
         super.onStarShards();
-        let leftCount = 2;
+        let leftCount = (this.level >= 7) ? 3 : 2;
         // 立刻出土
         this.wakeup();
 
@@ -87,9 +89,10 @@ class _TntMines extends IPlant {
         if (this.isBuried) {
             super.takeDamage(amount, zombie);
         } else {
+            const rightDistance = this.level >= 9 ? 1.5 : 1;
             new IExpolsion(this.game, this.x, this.row, {
                 damage: 2000,
-                rightGrid: 1,
+                rightGrid: rightDistance,
                 leftGrid: 0.5,
                 upGrid: 0
             });
@@ -99,7 +102,7 @@ class _TntMines extends IPlant {
 }
 
 function NewTntMines(scene: Game, col: number, row: number, level: number): _TntMines {
-    const buriedTime = 16000;
+    const buriedTime = GetDecValue(16000, 0.8, level);
     const mine = new _TntMines(scene, col, row, level, buriedTime);
     return mine;
 }
@@ -108,7 +111,38 @@ function cost(level?: number): number {
     return 25;
 }
 
+function cooldownTime(level?: number): number {
+    if (level || 1 >= 5) return 25;
+    return 30;
+}
+
+
 function levelAndstuff(level: number): item[] {
+    switch (level) {
+        case 1:
+            return [{
+                type: 1,
+                count: 120
+            }, {
+                type: 3,
+                count: 1
+            }];
+        case 2:
+            return [{
+                type: 1,
+                count: 160
+            }, {
+                type: 2,
+                count: 5
+            }, {
+                type: 3,
+                count: 1
+            }];
+    }
+    return [{
+        type: SECKILL,
+        count: 1
+    }];
     return [];
 }
 
@@ -116,7 +150,7 @@ const TntMines: IRecord = {
     pid: 4,
     name: 'TNT地雷',
     cost: cost,
-    cooldownTime: () => 30,
+    cooldownTime: cooldownTime,
     NewFunction: NewTntMines,
     texture: 'plant/tnt_mines',
     description: i18n.S('tnt_mines_description'),

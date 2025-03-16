@@ -1,3 +1,4 @@
+import { SECKILL } from "../../../../public/constants";
 import { item } from "../../../components/shop/types";
 import i18n from "../../../utils/i18n";
 import { GetIncValue } from "../../../utils/numbervalue";
@@ -67,6 +68,28 @@ function NewObsidian(scene: Game, col: number, row: number, level: number): IPla
 }
 
 function levelAndstuff(level: number): item[] {
+    switch (level) {
+        case 1:
+            return [{
+                type: 1,
+                count: 120
+            }, {
+                type: 3,
+                count: 1
+            }];
+        case 2:
+            return [{
+                type: 1,
+                count: 190
+            }, {
+                type: 3,
+                count: 3
+            }];
+    }
+    return [{
+        type: SECKILL,
+        count: 1
+    }];
     return [];
 }
 

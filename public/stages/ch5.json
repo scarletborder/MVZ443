@@ -63,16 +63,46 @@
                     "count": 1
                 }
             ],
-            "duration": 60,
-            "maxDelay": 89,
-            "minDelay": 75,
+            "duration": 50,
+            "maxDelay": 69,
+            "minDelay": 55,
             "arrangement": 2,
             "minLine": 3,
             "starShards": 1,
-            "exceptLine": null
+            "exceptLine": [
+                2,
+                3
+            ]
         },
         {
             "waveId": 3,
+            "progress": 20,
+            "flag": "normal",
+            "monsters": [
+                {
+                    "mid": 1,
+                    "count": 2
+                },
+                {
+                    "mid": 2,
+                    "count": 3
+                }
+            ],
+            "duration": 16,
+            "maxDelay": 22,
+            "minDelay": 17,
+            "arrangement": 2,
+            "minLine": 3,
+            "starShards": 1,
+            "exceptLine": [
+                0,
+                1,
+                4,
+                5
+            ]
+        },
+        {
+            "waveId": 4,
             "progress": 40,
             "flag": "normal",
             "monsters": [
@@ -86,7 +116,7 @@
                 },
                 {
                     "mid": 7,
-                    "count": 4
+                    "count": 3
                 }
             ],
             "duration": 30,
@@ -95,10 +125,13 @@
             "arrangement": 2,
             "minLine": 4,
             "starShards": 1,
-            "exceptLine": null
+            "exceptLine": [
+                2,
+                3
+            ]
         },
         {
-            "waveId": 4,
+            "waveId": 5,
             "progress": 60,
             "flag": "normal",
             "monsters": [
@@ -124,7 +157,7 @@
             "exceptLine": null
         },
         {
-            "waveId": 5,
+            "waveId": 6,
             "progress": 80,
             "flag": "normal",
             "monsters": [
@@ -154,7 +187,7 @@
             "exceptLine": null
         },
         {
-            "waveId": 6,
+            "waveId": 7,
             "progress": 90,
             "flag": "normal",
             "monsters": [
@@ -180,7 +213,7 @@
             "exceptLine": null
         },
         {
-            "waveId": 7,
+            "waveId": 8,
             "progress": 100,
             "flag": "normal",
             "monsters": [
@@ -217,17 +250,17 @@
     "energy": 50,
     "rewards": [
         {
-            "progress": 45,
+            "progress": 75,
             "reward": {
-                "type": 1,
-                "count": 20
+                "type": 2,
+                "count": 3
             }
         },
         {
-            "progress": 85,
+            "progress": 95,
             "reward": {
                 "type": 1,
-                "count": 40
+                "count": 120
             }
         }
     ]

@@ -1,3 +1,4 @@
+import { SECKILL } from "../../../../public/constants";
 import { item } from "../../../components/shop/types";
 import i18n from "../../../utils/i18n";
 import { GetDecValue, GetIncValue } from "../../../utils/numbervalue";
@@ -100,6 +101,20 @@ function shootLaser(scene: Game, shooter: IPlant) {
 }
 
 function levelAndstuff(level: number): item[] {
+    switch (level) {
+        case 1:
+            return [{
+                type: 1,
+                count: 200
+            }, {
+                type: 2,
+                count: 3
+            }];
+    }
+    return [{
+        type: SECKILL,
+        count: 1
+    }];
     return [];
 }
 

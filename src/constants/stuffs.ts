@@ -5,7 +5,7 @@ const idToName = new Map<number, string>(
     [2, 'Leather'],
     [3, 'Iron'],
 
-    [SECKILL, '版本未开放'],
+    [SECKILL, '黯绯结晶'],
     ]);
 
 export default function Stuff(id: number) {

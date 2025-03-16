@@ -1,3 +1,4 @@
+import { SECKILL } from "../../../../public/constants";
 import { item } from "../../../components/shop/types";
 import i18n from "../../../utils/i18n";
 import { GetIncValue } from "../../../utils/numbervalue";
@@ -93,9 +94,30 @@ function shootArrow(scene: Game, shooter: IPlant, baseDamage: number = 20, isSta
     return arrow;
 }
 function levelAndstuff(level: number): item[] {
+    switch (level) {
+        case 1:
+            return [{
+                type: 1,
+                count: 100
+            }, {
+                type: 2,
+                count: 1
+            }];
+        case 2:
+            return [{
+                type: 1,
+                count: 200
+            }, {
+                type: 2,
+                count: 4
+            }, {
+                type: 3,
+                count: 1
+            }];
+    }
     return [{
-        type: 1,
-        count: 100
+        type: SECKILL,
+        count: 1
     }];
 }
 

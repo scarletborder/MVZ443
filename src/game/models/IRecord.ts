@@ -14,6 +14,11 @@ export interface IRecord {
     brief?: () => string; // 游戏内卡片描述
     description: () => string; // 图鉴描述
     needFirstCoolDown?: boolean; // 是否需要第一次冷却
+    /**
+     * 传入当前等级,升级到level+1需要的材料
+     * @param level 当前等级
+     * @returns 物品列表
+     */
     NextLevelStuff: (level: number) => item[],
 }
 

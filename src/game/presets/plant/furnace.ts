@@ -1,3 +1,4 @@
+import { SECKILL } from "../../../../public/constants";
 import { item } from "../../../components/shop/types";
 import i18n from "../../../utils/i18n";
 import { GetDecValue } from "../../../utils/numbervalue";
@@ -58,7 +59,31 @@ function cost(level?: number): number {
     return 50;
 }
 function levelAndstuff(level: number): item[] {
-    return [];
+    switch (level) {
+        case 1:
+            return [{
+                type: 1,
+                count: 180
+            }, {
+                type: 3,
+                count: 1
+            }];
+        case 2:
+            return [{
+                type: 1,
+                count: 230
+            }, {
+                type: 2,
+                count: 3
+            }, {
+                type: 3,
+                count: 2
+            }];
+    }
+    return [{
+        type: SECKILL,
+        count: 1
+    }];
 }
 
 const FurnaceRecord: IRecord = {

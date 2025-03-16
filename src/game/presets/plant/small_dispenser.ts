@@ -1,5 +1,7 @@
+import { SECKILL } from "../../../../public/constants";
 import { item } from "../../../components/shop/types";
 import i18n from "../../../utils/i18n";
+import { GetIncValue } from "../../../utils/numbervalue";
 import { IExpolsion } from "../../models/IExplosion";
 import { IPlant, INightPlant } from "../../models/IPlant";
 import { IRecord } from "../../models/IRecord";
@@ -64,7 +66,7 @@ function NewDispenser(scene: Game, col: number, row: number, level: number): IPl
 function shootSnowBall(scene: Game, shooter: IPlant, maxDistance: number) {
     const level = shooter.level;
     //  根据等级略微提高伤害
-    const damage = 18 + 1 * Math.min(level, 4) + 0.5 * Math.max(0, level - 4);
+    const damage = GetIncValue(18, level, 1.5);
 
     if (!shooter.isSleeping) {
         const arrow = NewSnowBullet(scene, shooter.col, shooter.row, maxDistance, damage);
@@ -86,6 +88,31 @@ class BombSnowBall extends SnowBall {
 }
 
 function levelAndstuff(level: number): item[] {
+    switch (level) {
+        case 1:
+            return [{
+                type: 1,
+                count: 140
+            }, {
+                type: 3,
+                count: 1
+            }];
+        case 2:
+            return [{
+                type: 1,
+                count: 200
+            }, {
+                type: 2,
+                count: 2
+            }, {
+                type: 3,
+                count: 1
+            }];
+    }
+    return [{
+        type: SECKILL,
+        count: 1
+    }];
     return [];
 }
 

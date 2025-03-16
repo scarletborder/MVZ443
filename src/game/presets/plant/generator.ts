@@ -1,3 +1,4 @@
+import { SECKILL } from "../../../../public/constants";
 import { item } from "../../../components/shop/types";
 import i18n from "../../../utils/i18n";
 import { GetIncValue } from "../../../utils/numbervalue";
@@ -53,6 +54,28 @@ function NewGenerator(scene: Game, col: number, row: number, level: number): IPl
 
 
 function levelAndstuff(level: number): item[] {
+    switch (level) {
+        case 1:
+            return [{
+                type: 1,
+                count: 250
+            }, {
+                type: 3,
+                count: 3
+            }];
+        case 2:
+            return [{
+                type: 1,
+                count: 360
+            }, {
+                type: 2,
+                count: 4
+            }];
+    }
+    return [{
+        type: SECKILL,
+        count: 1
+    }];
     return [];
 }
 const GeneratorRecord: IRecord = {
