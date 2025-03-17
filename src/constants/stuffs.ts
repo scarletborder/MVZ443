@@ -1,13 +1,18 @@
 import { SECKILL } from "../../public/constants";
+import i18n from "../utils/i18n";
 
 const idToName = new Map<number, string>(
-    [[1, 'Gold'],
-    [2, 'Leather'],
-    [3, 'Iron'],
+    [[1, 'gold'],
+    [2, 'leather'],
+    [3, 'iron'],
 
-    [SECKILL, '黯绯结晶'],
+    [SECKILL, 'scb'],
     ]);
 
+function stuffLocale(key: string) {
+    return i18n(key);
+}
+
 export default function Stuff(id: number) {
-    return idToName.get(id) || 'Unknown';
+    return stuffLocale(idToName.get(id) || 'unknown');
 }
