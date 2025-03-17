@@ -193,6 +193,7 @@ export class Game extends Scene {
 
     // 游戏开始
     handleGameStart(seed: number, myID: number) {
+        this.music.play();
         this.monsterSpawner.setRandomSeed(seed);
         EventBus.emit('current-scene-ready', this);
         this.myID = myID;
@@ -205,7 +206,7 @@ export class Game extends Scene {
             new MineCart(this, -1, i);
         }
         this.isGameEnd = false;
-        this.music.play();
+        EventBus.emit('okIsPaused', { paused: false });
     }
 
     handleCardPlant(pid: number, level: number, col: number, row: number, uid: number) {

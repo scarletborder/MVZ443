@@ -4,6 +4,7 @@ import { OnWin, ProgressReward } from '../../game/models/IRecord';
 import { ChapterDataRecords, StageDataRecords } from '../../game/utils/loader';
 import PlantFactoryMap from '../../game/presets/plant';
 import Stuff from '../../constants/stuffs';
+import { useGameContext } from '../../context/garden_ctx';
 
 
 interface Props {
@@ -18,7 +19,12 @@ interface Props {
 
 export default function GameResultView({ width, height, isWin, onWin, progressRewards, myProgress, onBack }: Props) {
     const saveManager = useSaveManager();
+    const { setIsPaused } = useGameContext();
     const hasSavedRef = useRef(false); // 使用 ref 替代状态
+
+    useEffect(() => {
+        setIsPaused(true);
+    }, [setIsPaused])
 
     useEffect(() => {
         if (!hasSavedRef.current) {

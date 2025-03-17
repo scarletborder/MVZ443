@@ -41,7 +41,7 @@ export function GameProvider(props: GameProviderProps) {
         wave: 0,
         bossHealth: -1,
         starShareds: 0,
-        isPaused: false
+        isPaused: true
     });
 
     function updateEnergy(amount: number, special?: (prev: number) => number) {
