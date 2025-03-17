@@ -34,7 +34,7 @@ class SeventhSlot implements IGoods {
         private onPurchase: (id: number) => void
     ) { }
 
-    description = () => "七槽\n需要通过chapter1-stage4解锁";
+    description = () => "七槽\n解锁chapter1-stage4";
     hasBought = (id: number, progress: GameProgress) => {
         return this.purchasedIds.has(id) || progress.slotNum >= 7;
     };
@@ -62,7 +62,7 @@ class EighthSlot implements IGoods {
         private onPurchase: (id: number) => void
     ) { }
 
-    description = () => "8槽\n需要通过chapter1-stage5解锁";
+    description = () => "8槽\n解锁chapter1-stage5";
     hasBought = (id: number, progress: GameProgress) => {
         return this.purchasedIds.has(id) || progress.slotNum >= 8;
     };
@@ -90,7 +90,7 @@ class Cp1Kit implements IGoods {
         private onPurchase: (id: number) => void
     ) { }
 
-    description = () => "Chapter 1 Kit\n随机获得第一章普通关卡的升级材料(leather or iron)3件\n需要通过chapter1-3解锁";
+    description = () => "Chapter 1 Kit\n随机获得第一章普通关卡的升级材料(leather or iron)3件\n解锁chapter1-3";
     hasBought = (id: number, progress: GameProgress) => {
         return false;
     };
@@ -124,7 +124,7 @@ class ScarletborderCrystal implements IGoods {
         private onPurchase: (id: number) => void
     ) { }
 
-    description = () => "体验版专属物品\n用于升级器械\n体验版限制了升级器械的等级上限，使用黯绯结晶可以解除这一限制\n注意:升级后的器械严重超出体验版设计的强度\n通关stage1-5解锁";
+    description = () => "体验版专属物品\n用于升级器械\n体验版限制了升级器械的等级上限，使用黯绯结晶可以解除这一限制\n注意:升级后的器械严重超出体验版设计的强度\n解锁stage1-5";
     hasBought = (id: number, progress: GameProgress) => {
         return false;
     };

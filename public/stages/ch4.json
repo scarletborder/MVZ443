@@ -31,8 +31,8 @@
                 }
             ],
             "duration": 7,
-            "maxDelay": 25,
-            "minDelay": 19,
+            "maxDelay": 37,
+            "minDelay": 35,
             "arrangement": 1,
             "minLine": 1,
             "starShards": 0,
@@ -63,7 +63,7 @@
                     "count": 1
                 }
             ],
-            "duration": 60,
+            "duration": 65,
             "maxDelay": 89,
             "minDelay": 75,
             "arrangement": 2,

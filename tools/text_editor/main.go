@@ -196,86 +196,77 @@ func getSortedKeys(m map[string]string) []string {
 	return keys
 }
 
-// parseLocaleFile 解析 ts 文件，提取 key → string 对，同时记录字符串定界符
+// parseLocaleFile 使用状态机方式解析 js 文件中 export default 对象的 key-value 对
 func parseLocaleFile(filename string) (map[string]string, map[string]string, error) {
 	data, err := ioutil.ReadFile(filename)
 	if err != nil {
-		if os.IsNotExist(err) {
-			return make(map[string]string), make(map[string]string), nil
-		}
 		return nil, nil, err
 	}
 	content := strings.TrimSpace(string(data))
-	if strings.HasPrefix(content, "export default") {
-		idx := strings.Index(content, "{")
-		if idx >= 0 {
-			content = content[idx+1:]
-		}
+	// 提取大括号内的内容
+	start := strings.Index(content, "{")
+	end := strings.LastIndex(content, "}")
+	if start < 0 || end < 0 || start > end {
+		return nil, nil, fmt.Errorf("文件格式错误")
 	}
-	if strings.HasSuffix(content, "}") {
-		content = content[:len(content)-1]
-	}
-	lines := strings.Split(content, "\n")
+	content = content[start+1 : end]
+
 	result := make(map[string]string)
 	delimMap := make(map[string]string)
-	var currentKey string
-	var currentValue []string
-	for _, line := range lines {
-		trimmed := strings.TrimSpace(line)
-		if trimmed == "" {
-			continue
+
+	i := 0
+	n := len(content)
+	for i < n {
+		// 跳过空格、换行及逗号
+		for i < n && (content[i] == ' ' || content[i] == '\n' || content[i] == '\t' || content[i] == ',') {
+			i++
 		}
-		// 检测以 key: 开头的行（假设 key 不含空格）
-		if colonIndex := strings.Index(trimmed, ":"); colonIndex != -1 {
-			potentialKey := strings.TrimSpace(trimmed[:colonIndex])
-			if !strings.Contains(potentialKey, " ") {
-				// 如果已有未结束的 key，则先保存
-				if currentKey != "" {
-					// 移除末尾可能存在的逗号
-					if len(currentValue) > 0 {
-						currentValue[len(currentValue)-1] = strings.TrimSuffix(currentValue[len(currentValue)-1], ",")
-					}
-					raw := strings.Join(currentValue, "\n")
-					result[currentKey] = raw
-					_, d := extractStringContent(raw)
-					delimMap[currentKey] = d
-					currentKey = ""
-					currentValue = []string{}
-				}
-				currentKey = potentialKey
-				valuePart := strings.TrimSpace(trimmed[colonIndex+1:])
-				currentValue = append(currentValue, valuePart)
-				if strings.HasSuffix(trimmed, ",") {
-					currentValue[len(currentValue)-1] = strings.TrimSuffix(currentValue[len(currentValue)-1], ",")
-					raw := strings.Join(currentValue, "\n")
-					result[currentKey] = raw
-					_, d := extractStringContent(raw)
-					delimMap[currentKey] = d
-					currentKey = ""
-					currentValue = []string{}
-				}
-				continue
-			}
+		if i >= n {
+			break
 		}
-		// 否则认为是当前 key 的续行
-		if currentKey != "" {
-			currentValue = append(currentValue, trimmed)
-			if strings.HasSuffix(trimmed, ",") {
-				currentValue[len(currentValue)-1] = strings.TrimSuffix(currentValue[len(currentValue)-1], ",")
-				raw := strings.Join(currentValue, "\n")
-				result[currentKey] = raw
-				_, d := extractStringContent(raw)
-				delimMap[currentKey] = d
-				currentKey = ""
-				currentValue = []string{}
-			}
+		// 读取 key，直到遇到冒号
+		keyStart := i
+		for i < n && content[i] != ':' {
+			i++
 		}
-	}
-	if currentKey != "" {
-		raw := strings.Join(currentValue, "\n")
-		result[currentKey] = raw
-		_, d := extractStringContent(raw)
-		delimMap[currentKey] = d
+		if i >= n {
+			break
+		}
+		key := strings.TrimSpace(content[keyStart:i])
+		i++ // 跳过冒号
+
+		// 跳过冒号后空白字符
+		for i < n && (content[i] == ' ' || content[i] == '\n' || content[i] == '\t') {
+			i++
+		}
+		if i >= n {
+			break
+		}
+		// 期望下一个字符是定界符
+		delim := string(content[i])
+		if delim != "`" && delim != "\"" && delim != "'" {
+			return nil, nil, fmt.Errorf("未知的字符串定界符: %v", delim)
+		}
+		i++ // 跳过开始定界符
+		// 从这里开始读取 value，直到遇到相同定界符
+		valueStart := i
+		for i < n && string(content[i]) != delim {
+			i++
+		}
+		if i >= n {
+			return nil, nil, fmt.Errorf("Key: %s 缺少结束定界符", key)
+		}
+		value := content[valueStart:i]
+		i++ // 跳过结束定界符
+
+		// 保存解析结果（保持定界符以便后续保存时使用原格式）
+		result[key] = delim + value + delim
+		delimMap[key] = delim
+
+		// 跳过结束定界符后可能的逗号及空白字符
+		for i < n && (content[i] == ' ' || content[i] == '\n' || content[i] == '\t' || content[i] == ',') {
+			i++
+		}
 	}
 	return result, delimMap, nil
 }

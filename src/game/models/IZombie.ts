@@ -24,7 +24,7 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite {
     // 属性
     public health: number;
     public originalSpeed: number; // 默认情况速度,(静态值,不受buff影响)
-    public speed: number; // 当前速度+
+    public speed: number; // 当前速度
     private debuffs: { [key: string]: { remaining: number, timer: Phaser.Time.TimerEvent } } = {};  // 存储每个debuff的剩余时间和定时器
 
 
@@ -172,38 +172,83 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite {
 
     // 移动相关
     // catchDebuff函数，处理增加debuff
-    public catchDebuff(debuff: 'slow', duration: number) {
-        console.log('slow')
-        this.zombieAnim.startSlowEffect();
-        // 如果debuff已存在，更新剩余时间和定时器
-        if (this.debuffs[debuff]) {
-            // 重新设置剩余时间为最大值
-            this.debuffs[debuff].remaining = Math.max(this.debuffs[debuff].remaining, duration);
-            // 重置定时器的时间
-            this.debuffs[debuff].timer.reset({ delay: this.debuffs[debuff].remaining, callback: () => this.removeDebuff(debuff), callbackScope: this });
-        } else {
-            // 新增debuff，设置剩余时间和创建新的定时器
-            this.debuffs[debuff] = {
-                remaining: duration,
-                timer: this.game.time.delayedCall(duration, () => this.removeDebuff(debuff), [], this)
-            };
-        }
-
+    public catchDebuff(debuff: 'slow' | 'frozen', duration: number) {
         if (debuff === 'slow') {
-            this.speed = this.originalSpeed * 0.6;  // 应用减速效果 (速度为原来的60%)
-            if (!this.attackingPlant)
-                this.setVelocityX(-this.speed);  // 立即更新移动速度
+            console.log('slow');
+            this.zombieAnim.startSlowEffect();
+            // 如果 debuff 已存在，则更新剩余时间和定时器
+            if (this.debuffs[debuff]) {
+                this.debuffs[debuff].remaining = Math.max(this.debuffs[debuff].remaining, duration);
+                this.debuffs[debuff].timer.reset({
+                    delay: this.debuffs[debuff].remaining,
+                    callback: () => this.removeDebuff(debuff),
+                    callbackScope: this
+                });
+            } else {
+                this.debuffs[debuff] = {
+                    remaining: duration,
+                    timer: this.game.time.delayedCall(duration, () => this.removeDebuff(debuff), [], this)
+                };
+            }
+            // 仅在不处于 frozen 状态下应用 slow 效果
+            if (!this.IsFrozen) {
+                this.speed = this.originalSpeed * 0.6;
+                if (!this.attackingPlant)
+                    this.setVelocityX(-this.speed);
+            }
+        } else if (debuff === 'frozen') {
+            console.log('frozen');
+            this.zombieAnim.startFrozenEffect();
+            // 如果 frozen 已存在，则更新剩余时间和定时器
+            if (this.debuffs[debuff]) {
+                this.debuffs[debuff].remaining = Math.max(this.debuffs[debuff].remaining, duration);
+                this.debuffs[debuff].timer.reset({
+                    delay: this.debuffs[debuff].remaining,
+                    callback: () => this.removeDebuff(debuff),
+                    callbackScope: this
+                });
+            } else {
+                this.debuffs[debuff] = {
+                    remaining: duration,
+                    timer: this.game.time.delayedCall(duration, () => this.removeDebuff(debuff), [], this)
+                };
+            }
+            // frozen 的优先级更高：直接冻结
+            this.IsFrozen = true;
+            this.speed = 0;
+            this.stopAttacking();
+            this.StopMove();
         }
     }
 
-    // 移除debuff并恢复速度
-    private removeDebuff(debuff: 'slow') {
-        if (this.debuffs[debuff]) {
-            delete this.debuffs[debuff];  // 删除debuff
-            this.speed = this.originalSpeed;  // 恢复原始速度
-            if (!this.attackingPlant)
-                this.setVelocityX(-this.speed);  // 恢复移动速度
+    // 修改 removeDebuff，处理 frozen 移除后的恢复逻辑
+    private removeDebuff(debuff: 'slow' | 'frozen') {
+        if (debuff === 'slow') {
+            if (this.debuffs[debuff]) {
+                delete this.debuffs[debuff];
+            }
+            // 如果当前不处于 frozen 状态，则恢复速度
+            if (!this.IsFrozen) {
+                this.speed = this.originalSpeed;
+                if (!this.attackingPlant)
+                    this.setVelocityX(-this.speed);
+            }
             this.zombieAnim.stopSlowEffect();
+        } else if (debuff === 'frozen') {
+            if (this.debuffs[debuff]) {
+                delete this.debuffs[debuff];
+            }
+            // 清除 frozen 效果
+            this.IsFrozen = false;
+            this.zombieAnim.stopFrozenEffect();
+            // 判断是否还有 slow 存在：有则恢复 slow 速度，否则恢复原速
+            if (this.debuffs['slow']) {
+                this.speed = this.originalSpeed * 0.6;
+            } else {
+                this.speed = this.originalSpeed;
+            }
+            if (!this.attackingPlant)
+                this.setVelocityX(-this.speed);
         }
     }
 

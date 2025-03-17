@@ -301,6 +301,14 @@ export default class IZombieAnim {
         }
     }
 
+    public startFrozenEffect() {
+        this.setTint(0x00FFFF);
+    }
+
+    public stopFrozenEffect() {
+        this.setTint(0xFFFFFF);
+    }
+
     setTint(color: number) {
         this.body.setTint(color);
         this.head.setTint(color);

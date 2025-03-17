@@ -35,7 +35,7 @@ class pumkin extends INightPlant {
     constructor(scene: Game, col: number, row: number, texture: string, level: number) {
         super(scene, col, row, texture, PumpkinRecord.pid, level);
 
-        this.attackInterval = GetDecValue(2050, 0.6, level);
+        this.attackInterval = GetDecValue(2450, 0.6, level);
 
         this.game = scene;
         this.setHealthFirstly(300);
@@ -70,7 +70,7 @@ class pumkin extends INightPlant {
         const col = this.col;
         for (let i = 0; i < this.game.positionCalc.Row_Number; i++) {
             NewLaserByGrid(this.game, col, i, 12,
-                GetIncValue(1200, 1.35, this.level), 'zombie', 1000);
+                GetIncValue(600, 1.35, this.level), 'zombie', 1000);
         }
     }
 }
@@ -121,8 +121,8 @@ function levelAndstuff(level: number): item[] {
 const PumpkinRecord: IRecord = {
     pid: 9,
     name: '阴森南瓜头',
-    cost: () => 75,
-    cooldownTime: () => 5,
+    cost: () => 100,
+    cooldownTime: () => 16,
     NewFunction: NewPumpkin,
     texture: 'plant/pumpkin',
     description: i18n.S('pumpkin_description'),
