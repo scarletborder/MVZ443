@@ -62,8 +62,12 @@
             "flag": "normal",
             "monsters": [
                 {
+                    "mid": 8,
+                    "count": 1
+                },
+                {
                     "mid": 2,
-                    "count": 3
+                    "count": 2
                 },
                 {
                     "mid": 3,
@@ -107,11 +111,15 @@
             "monsters": [
                 {
                     "mid": 1,
-                    "count": 12
+                    "count": 10
                 },
                 {
                     "mid": 2,
                     "count": 6
+                },
+                {
+                    "mid": 9,
+                    "count": 2
                 }
             ],
             "duration": 12,
@@ -128,8 +136,16 @@
             "flag": "normal",
             "monsters": [
                 {
+                    "mid": 1,
+                    "count": 6
+                },
+                {
+                    "mid": 8,
+                    "count": 1
+                },
+                {
                     "mid": 2,
-                    "count": 4
+                    "count": 3
                 },
                 {
                     "mid": 3,

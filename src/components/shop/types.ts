@@ -142,6 +142,44 @@ class ScarletborderCrystal implements IGoods {
     }
 }
 
+class PumpkinWan implements IGoods {
+    id: number = 4;
+    name: string = "Mr. Pumpkin Wan";
+    price: number = 600;
+
+    constructor(
+        private purchasedIds: Set<number>,
+        private onPurchase: (id: number) => void
+    ) { }
+
+    description = () => "广域南瓜派(胖平文先生)\n光敏器械,对周围一圈造成高频激光伤害\n需要阴森南瓜头作为基座\n解锁chapter1-stage5";
+    hasBought = (id: number, progress: GameProgress) => {
+        const plants = progress.plants;
+        let hasBought = false;
+        for (let i = 0; i < plants.length; i++) {
+            if (plants[i].pid === 11) {
+                hasBought = true;
+                break;
+            }
+        }
+        return this.purchasedIds.has(id) || hasBought;
+    };
+    afterBought = (id: number, save: GameManager) => {
+        this.purchasedIds.add(id);
+        this.onPurchase(id);
+        save.currentProgress.plants.push({ pid: 11, level: 1 });
+    };
+    getPriceStructure = (): price => ({
+        items: [{ type: 1, count: this.price },
+        { type: 2, count: 5 },
+        { type: 3, count: 5 }]
+    });
+    canPurchase = (progress: GameProgress) => {
+        if (progress.level.has(5)) return true;
+        return false;
+    }
+}
+
 
 
 
@@ -150,6 +188,7 @@ export function NewGoodLists(purchasedIds: Set<number>, onPurchase: (id: number)
         new SeventhSlot(purchasedIds, onPurchase),
         new EighthSlot(purchasedIds, onPurchase),
         new Cp1Kit(purchasedIds, onPurchase),
-        new ScarletborderCrystal(purchasedIds, onPurchase)
+        new ScarletborderCrystal(purchasedIds, onPurchase),
+        new PumpkinWan(purchasedIds, onPurchase)
     ];
 }

@@ -104,8 +104,8 @@ export default class IZombieAnim {
 
     setDepth(base: number) {
         // 部件不在本地管
-        this.head.setDepth(base + 9);
-        this.armLeft.setDepth(base + 8);
+        this.armLeft.setDepth(base + 9);
+        this.head.setDepth(base + 8);
         this.armRight.setDepth(base + 6);
         this.body.setDepth(base + 7);
         this.legLeft.setDepth(base + 2);
@@ -154,6 +154,18 @@ export default class IZombieAnim {
         }
     }
 
+    startArmDance() {
+        if (!this.armTween || !this.armTween.isPlaying()) {
+            this.armTween = this.scene.tweens.add({
+                targets: [this.armLeft, this.armRight],
+                angle: { from: +105, to: +65 },
+                duration: 500,
+                yoyo: true,
+                repeat: -1
+            });
+        }
+    }
+
     stopArmSwing() {
         if (this.armTween && this.armTween.isPlaying()) {
             this.armTween.stop();
@@ -162,6 +174,9 @@ export default class IZombieAnim {
         }
     }
 
+    /**
+     * @param isInjured 是否受伤
+     */
     switchBodyFrame(isInjured: boolean) {
         if (isInjured) {
             this.body.anims.play(`${this.species}bodyInjured`);

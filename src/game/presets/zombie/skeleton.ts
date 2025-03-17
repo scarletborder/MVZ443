@@ -2,7 +2,7 @@
 import { Game } from '../../scenes/Game';
 import { IZombie } from '../../models/IZombie';
 import { MIRecord } from '../../models/IRecord';
-import { newNormalSkeletonAnim, newNormalZombieAnim } from '../../sprite/normal_zombie';
+import { newNormalSkeletonAnim } from '../../sprite/normal_zombie';
 
 
 export class EnhancedSkeleton extends IZombie {

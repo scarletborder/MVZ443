@@ -36,6 +36,7 @@ class MinerZombie extends EnhancedSkeleton {
         this.Timer = scene.time.addEvent({
             delay: 2000,
             callback: () => {
+                if (this.hasDebuff('frozen') > 0) return; // 冰冻状态不射箭
                 // 如果正在近战攻击,放弃
                 if (this.attackingPlant) return;
                 // 500ms判断前方有无敌人

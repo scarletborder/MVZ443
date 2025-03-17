@@ -178,7 +178,7 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite {
             this.zombieAnim.startSlowEffect();
             // 如果 debuff 已存在，则更新剩余时间和定时器
             if (this.debuffs[debuff]) {
-                this.debuffs[debuff].remaining = Math.max(this.debuffs[debuff].remaining, duration);
+                this.debuffs[debuff].remaining = Math.max(this.debuffs[debuff].timer.getRemaining(), duration);
                 this.debuffs[debuff].timer.reset({
                     delay: this.debuffs[debuff].remaining,
                     callback: () => this.removeDebuff(debuff),
@@ -201,7 +201,7 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite {
             this.zombieAnim.startFrozenEffect();
             // 如果 frozen 已存在，则更新剩余时间和定时器
             if (this.debuffs[debuff]) {
-                this.debuffs[debuff].remaining = Math.max(this.debuffs[debuff].remaining, duration);
+                this.debuffs[debuff].remaining = Math.max(this.debuffs[debuff].timer.getRemaining(), duration);
                 this.debuffs[debuff].timer.reset({
                     delay: this.debuffs[debuff].remaining,
                     callback: () => this.removeDebuff(debuff),
@@ -249,6 +249,21 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite {
             }
             if (!this.attackingPlant)
                 this.setVelocityX(-this.speed);
+        }
+    }
+
+    /**
+     * 根据debuff名字判断是否有debuff,如果有返回对应剩余时间(否则为0)
+     * @param name debuff name
+     * @returns 剩余时间(0表示没有debuff)
+     */
+    public hasDebuff(name: 'slow' | 'frozen'): number {
+        try {
+            if (this.debuffs[name]) {
+                this.debuffs[name].remaining = Math.max(this.debuffs[name].timer.getRemaining(), 0);
+            }
+        } finally {
+            return this.debuffs[name]?.remaining || 0;
         }
     }
 
@@ -377,7 +392,7 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite {
             this.zombieAnim.updatePosition(this.x + this.offsetX, this.y + this.offsetY);
         }
         // 超越边界销毁
-        if (this.x < 0) {
+        if (this.x < - IZombie.GridClan.gardener.positionCalc.GRID_SIZEX * 1) {
             console.log('Zombie out of boundary');
             // 游戏直接失败,结束游戏
             // 矿车可以被碰撞,如果丢,早丢了

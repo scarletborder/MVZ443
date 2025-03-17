@@ -2,6 +2,7 @@ import { Scene } from 'phaser';
 import { GameParams } from '../models/GameParams';
 import { ResourceMapData } from '../../constants/map_data';
 import { EventBus } from '../EventBus';
+import PlantFactoryMap from '../presets/plant';
 
 export class Preloader extends Scene {
     constructor() {
@@ -9,8 +10,6 @@ export class Preloader extends Scene {
     }
 
     loadbg: Phaser.GameObjects.Image
-    loadprogress: any
-
 
 
     init() {
@@ -43,7 +42,7 @@ export class Preloader extends Scene {
         const params = this.game.registry.get('gameParams') as GameParams;
         //  Load the assets for the game - Replace with your own assets
         this.load.setPath('assets');
-        this.loadStage(params.level);
+        this.loadStage(params);
     }
 
     create() {
@@ -59,23 +58,13 @@ export class Preloader extends Scene {
     }
 
     // 加载全部器械
-    loadAllPlant() {
-        this.load.image('plant/dispenser', 'plant/dispenser.png');
-        this.load.spritesheet('plant/furnace', 'plant/furnace.png',
-            { frameWidth: 64, frameHeight: 64 });
-        this.load.spritesheet('plant/obsidian', 'plant/obsidian.png',
-            { frameWidth: 64, frameHeight: 64 });
-        this.load.spritesheet('plant/tnt_mines', 'plant/tnt_mines.png',
-            { frameWidth: 64, frameHeight: 64 });
-        this.load.image('plant/small_dispenser', 'plant/small_dispenser.png');
-        this.load.image('plant/lily', 'plant/lily.png');
-        this.load.image('plant/tnt', 'plant/tnt.png');
-        this.load.image('plant/generator', 'plant/generator.png');
-        this.load.spritesheet('plant/pumpkin', 'plant/pumpkin.png',
-            { frameWidth: 64, frameHeight: 64 });
-        this.load.image('plant/magic_powder', 'plant/magic_powder.png');
-        this.load.spritesheet('plant/pumpkin_wan', 'plant/pumpkin_wan.png',
-            { frameWidth: 64, frameHeight: 64 });
+    loadAllPlant(ids: number[]) {
+        for (const id of ids) {
+            const texture = PlantFactoryMap[id].texture;
+            this.load.spritesheet(texture, texture + '.png', {
+                frameWidth: 64, frameHeight: 64
+            });
+        }
     }
 
     // 加载全部怪物
@@ -87,6 +76,8 @@ export class Preloader extends Scene {
             { frameWidth: 33, frameHeight: 14 });
         this.load.image('attach/hd_pickaxe', `attach/hd_pickaxe.png`);
         this.load.image('attach/hd_bow', `attach/hd_bow.png`);
+        this.load.image('attach/hd_stick', `attach/hd_stick.png`);
+        this.load.image('attach/hd_axe', `attach/hd_axe.png`);
 
 
     }
@@ -120,6 +111,18 @@ export class Preloader extends Scene {
         this.load.image('sprSkeletonArm', `sprite/skeleton/sprSkeletonArm.png`);
         this.load.image('sprSkeletonLeg', `sprite/skeleton/sprSkeletonLeg.png`);
 
+        this.load.spritesheet('sprEvokerBody', `sprite/evoker/sprEvokerBody.png`,
+            { frameWidth: 19, frameHeight: 35 });
+        this.load.image('sprEvokerHead', `sprite/evoker/sprEvokerHead.png`);
+        this.load.image('sprEvokerArm', `sprite/evoker/sprEvokerArm.png`);
+        this.load.image('sprEvokerLeg', `sprite/evoker/sprEvokerLeg.png`);
+
+        this.load.spritesheet('sprVindicatorBody', `sprite/vindicator/sprVindicatorBody.png`,
+            { frameWidth: 19, frameHeight: 35 });
+        this.load.image('sprVindicatorHead', `sprite/evoker/sprEvokerHead.png`);
+        this.load.image('sprVindicatorArm', `sprite/vindicator/sprVindicatorArm.png`);
+        this.load.image('sprVindicatorLeg', `sprite/vindicator/sprVindicatorLeg.png`);
+
     }
 
     // 加载bgimg和bgm 
@@ -132,14 +135,15 @@ export class Preloader extends Scene {
     }
 
     // 加载指定关卡
-    loadStage(stageId: number) {
+    loadStage(params: GameParams) {
+        const stageId = params.level;
         console.log(`Loading stage ${stageId}`);
         // 1. 加载关卡数据
         this.load.json(`ch${stageId}`, `../stages/ch${stageId}.json`);
         // 2. 加载关卡怪物
         this.loadAllMonster();
         // 3. 加载关卡植物
-        this.loadAllPlant();
+        this.loadAllPlant(params.plants);
         // 4. 加载关卡发射物
         this.loadAllProjectile();
         // 5. 加载关卡地图

@@ -193,7 +193,11 @@
             "monsters": [
                 {
                     "mid": 4,
-                    "count": 12
+                    "count": 6
+                },
+                {
+                    "mid": 10,
+                    "count": 4
                 },
                 {
                     "mid": 5,
@@ -204,7 +208,7 @@
                     "count": 12
                 }
             ],
-            "duration": 9,
+            "duration": 22,
             "maxDelay": 55,
             "minDelay": 40,
             "arrangement": 1,
@@ -228,9 +232,13 @@
                 {
                     "mid": 5,
                     "count": 6
+                },
+                {
+                    "mid": 9,
+                    "count": 2
                 }
             ],
-            "duration": 9,
+            "duration": 12,
             "maxDelay": 20,
             "minDelay": 20,
             "arrangement": 1,
