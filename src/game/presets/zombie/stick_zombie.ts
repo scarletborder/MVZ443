@@ -48,10 +48,15 @@ class StickZombie extends EnhancedZombie {
     }
 
     update(): void {
-        if (this.x < this.vaultTargetX) {
+        if (this.x < this.vaultTargetX && this.isFlying) {
             // 越过了
             this.isFlying = false;
             this.attachSprites.get('stick')?.setVisible(false);
+            // 减速
+            this.SetSpeedFirstly(20 * this.game.positionCalc.scaleFactor);
+            if (this.health > 0 && !this.IsFrozen) {
+                this.setVelocityX(-this.speed);
+            }
         }
         if (this.isFlying) {
             this.zombieAnim.updatePosition(this.x + this.offsetX,

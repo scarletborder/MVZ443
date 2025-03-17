@@ -77,7 +77,7 @@ function NewDispenser(scene: Game, col: number, row: number, level: number): IPl
 function shootArrow(scene: Game, shooter: IPlant, baseDamage: number = 20, isStar: boolean = false) {
     const level = shooter.level;
     //  根据等级略微提高伤害
-    const damage = GetIncValue(baseDamage, level, 1.6);
+    const damage = GetIncValue(baseDamage, level, 1.5);
     let penetrate = 1;
     if (level >= 3) {
         penetrate += 1;

@@ -250,7 +250,8 @@
     "onWin": {
         "unLock": [],
         "unLockPlant": [
-            10
+            10,
+            12
         ]
     },
     "energy": 50,
