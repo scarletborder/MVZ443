@@ -47,6 +47,7 @@ export class Game extends Scene {
     exitText: Phaser.GameObjects.Text;
 
     params: GameParams;
+    public seed: number = 0;
     private isDestroyed = false; // Track if the scene/game is destroyed
     public stageData: StageData;
     public dayOrNight: boolean = true; // day = true
@@ -193,6 +194,7 @@ export class Game extends Scene {
 
     // 游戏开始
     handleGameStart(seed: number, myID: number) {
+        this.seed = seed;
         this.music.play();
         this.monsterSpawner.setRandomSeed(seed);
         EventBus.emit('current-scene-ready', this);

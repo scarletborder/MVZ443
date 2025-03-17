@@ -166,3 +166,8 @@ export class IExpolsion extends Phaser.Physics.Arcade.Sprite {
 
 
 }
+
+export function NewExplosionByGrid(scene: Game, col: number, row: number, params: explosionParams, onCompleteCallback?: () => void) {
+    const x = (col + 1 / 2) * scene.positionCalc.GRID_SIZEX + scene.positionCalc.gridOffsetX;
+    return new IExpolsion(scene, x, row, params, onCompleteCallback);
+}

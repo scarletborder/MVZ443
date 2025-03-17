@@ -1,3 +1,4 @@
+import seedrandom from "seedrandom";
 import { SECKILL } from "../../../../public/constants";
 import { item } from "../../../components/shop/types";
 import i18n from "../../../utils/i18n";
@@ -11,9 +12,11 @@ import { Game } from "../../scenes/Game";
 class _TntMines extends IPlant {
     game: Game;
     isBuried: boolean = true;
+    random: seedrandom.PRNG;
 
     constructor(scene: Game, col: number, row: number, level: number, buriedTime: number) {
         super(scene, col, row, TntMines.texture, TntMines.pid, level);
+        this.random = seedrandom.alea(String(scene.seed));
         this.isBuried = true;
         this.game = scene;
         this.setFrame(0);
@@ -41,7 +44,12 @@ class _TntMines extends IPlant {
 
         // 第一遍：保证放置的 TNT Mines 分布在不同的行和列中
         for (let col = this.game.GRID_COLS - 1; col >= 0 && leftCount > 0; col--) {
-            for (let row = 0; row < this.game.GRID_ROWS && leftCount > 0; row++) {
+            // 构造行号数组并随机打乱顺序
+            const rows = Array.from({ length: this.game.GRID_ROWS }, (_, i) => i);
+            rows.sort(() => this.random() - 0.5);
+
+            for (const row of rows) {
+                if (leftCount <= 0) break;
                 const key = `${col}-${row}`;
                 // 检查是否有植物占据该格子
                 if (this.game.gardener.planted.has(key)) {
@@ -63,7 +71,12 @@ class _TntMines extends IPlant {
         // 第二遍：如果第一遍放置不足，则放宽行、列唯一性限制
         if (leftCount > 0) {
             for (let col = this.game.GRID_COLS - 1; col >= 0 && leftCount > 0; col--) {
-                for (let row = 0; row < this.game.GRID_ROWS && leftCount > 0; row++) {
+                // 同样随机打乱行顺序
+                const rows = Array.from({ length: this.game.GRID_ROWS }, (_, i) => i);
+                rows.sort(() => this.random() - 0.5);
+
+                for (const row of rows) {
+                    if (leftCount <= 0) break;
                     const key = `${col}-${row}`;
                     if (this.game.gardener.planted.has(key)) {
                         const list = this.game.gardener.planted.get(key);

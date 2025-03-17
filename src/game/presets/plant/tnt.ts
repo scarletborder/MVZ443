@@ -1,8 +1,9 @@
+import seedrandom from "seedrandom";
 import { SECKILL } from "../../../../public/constants";
 import { item } from "../../../components/shop/types";
 import i18n from "../../../utils/i18n";
 import { GetDecValue, GetIncValue } from "../../../utils/numbervalue";
-import { IExpolsion } from "../../models/IExplosion";
+import { IExpolsion, NewExplosionByGrid } from "../../models/IExplosion";
 import { IPlant } from "../../models/IPlant";
 import { IRecord } from "../../models/IRecord";
 import { Game } from "../../scenes/Game";
@@ -12,16 +13,19 @@ import Lily from "./lily";
 class _Tnt extends IPlant {
     game: Game;
     damage: number = 3000;
+    random: seedrandom.PRNG;
+
 
     constructor(scene: Game, col: number, row: number, level: number) {
         super(scene, col, row, TntRecord.texture, TntRecord.pid, level);
         this.game = scene;
         this.setHealthFirstly(SECKILL);
         this.damage = GetIncValue(3000, 1.5, level);
+        this.damage *= (level >= 5 ? 1.3 : 1);
+        this.random = seedrandom.alea(String(scene.seed))
 
         const x = this.x;
         const _row = this.row;
-        const dmg = this.damage * (level >= 5 ? 1.3 : 1);
 
         // 设定闪烁效果，并添加回调函数
         scene.tweens.add({
@@ -32,90 +36,86 @@ class _Tnt extends IPlant {
             repeat: 3,                    // 重复5次（从原状态到高光，再回来，总共3次）
             ease: 'Sine.easeInOut',       // 缓动效果
             onComplete: () => {           // 动画完成后触发的回调函数
-                this.destroyPlant();
                 new IExpolsion(this.game, x, _row, {
-                    damage: dmg,
+                    damage: this.damage,
                     rightGrid: 1.5,
                     leftGrid: 1.5,
                     upGrid: 1
-                })
-                // 你可以在这里调用其他的函数或者执行额外的逻辑
+                });
+                this.eliteClusterBomb();
+                this.destroyPlant();
             }
         });
-        if (level >= 7) {
-            scene.time.delayedCall(3900, () => {
-                new IExpolsion(this.game, x, _row, {
-                    damage: dmg / 3,
+
+    }
+
+    public onStarShards(): void {
+        super.onStarShards();
+        function getExplosionTargets(game: Game, col: number, row: number) {
+            const targets = [];
+            if (col === game.GRID_COLS - 1) {
+                // 最右边的列：在左侧生成爆炸，针对上下边缘分别处理
+                if (row === 0) {
+                    targets.push([col - 2, row]);
+                    targets.push([col, row + 2]);
+                } else if (row === game.GRID_ROWS - 1) {
+                    targets.push([col - 2, row]);
+                    targets.push([col, row - 2]);
+                } else {
+                    targets.push([col - 1, Math.max(row - 2, 0)]);
+                    targets.push([col - 1, Math.min(row + 2, game.GRID_ROWS - 1)]);
+                }
+            } else {
+                // 非最右边的列：向前生成爆炸
+                const newCol = Math.min(col + 2, game.GRID_COLS - 1);
+                if (row === 0) {
+                    targets.push([newCol, row]);
+                    targets.push([newCol, row + 2]);
+                } else if (row === game.GRID_ROWS - 1) {
+                    targets.push([newCol, row]);
+                    targets.push([newCol, row - 2]);
+                } else {
+                    targets.push([newCol, Math.max(row - 2, 0)]);
+                    targets.push([newCol, Math.min(row + 2, game.GRID_ROWS - 1)]);
+                }
+            }
+            return targets;
+        }
+
+        // 使用辅助函数生成爆炸效果
+        const targets = getExplosionTargets(this.game, this.col, this.row);
+        targets.forEach(([targetCol, targetRow]) => {
+            NewExplosionByGrid(this.game, targetCol, targetRow, {
+                damage: this.damage,
+                rightGrid: 1.5,
+                leftGrid: 1.5,
+                upGrid: 1
+            });
+            this.game.time.delayedCall(3900, () => {
+                NewExplosionByGrid(this.game, targetCol, targetRow, {
+                    damage: this.damage / 3,
+                    rightGrid: 1.5,
+                    leftGrid: 1.5,
+                    upGrid: 1
+                });
+            });
+        });
+
+    }
+
+    public eliteClusterBomb() {
+        if (this.level >= 7) {
+            this.game.time.delayedCall(3900, () => {
+                new IExpolsion(this.game, this.x, this.row, {
+                    damage: this.damage / 3,
                     rightGrid: 1.5,
                     leftGrid: 1.5,
                     upGrid: 1
                 })
             })
         }
+
     }
-
-    public onStarShards(): void {
-        super.onStarShards();
-        let remaining = 2; // 需要放置的 TNT 数量，根据需求调整
-        const usedRows = new Set<number>();
-        const usedCols = new Set<number>();
-
-        // 第一遍：寻找满足条件且行、列唯一的格子
-        for (let col = this.game.GRID_COLS - 1; col >= 0 && remaining > 0; col--) {
-            for (let row = 0; row < this.game.GRID_ROWS && remaining > 0; row++) {
-                // 检查该格子是否满足放置 TNT 的条件
-                const key = `${col}-${row}`;
-                let canPlace = true;
-                if (this.game.gardener.planted.has(key)) {
-                    const list = this.game.gardener.planted.get(key);
-                    if (list && list.length > 0) {
-                        for (const plant of list) {
-                            const pid = plant.pid;
-                            // 允许存在 shield 或 Lily
-                            if (!SHIELD_PLANT.includes(pid) && pid !== Lily.pid) {
-                                canPlace = false;
-                                break;
-                            }
-                        }
-                    }
-                }
-                // 同时要求不在已放置 TNT 的行或列中
-                if (canPlace && !usedRows.has(row) && !usedCols.has(col)) {
-                    NewTnt(this.game, col, row, this.level);
-                    remaining--;
-                    usedRows.add(row);
-                    usedCols.add(col);
-                }
-            }
-        }
-
-        // 第二遍：如果第一遍放置不足，则不再考虑行、列的唯一性限制
-        if (remaining > 0) {
-            for (let col = this.game.GRID_COLS - 1; col >= 0 && remaining > 0; col--) {
-                for (let row = 0; row < this.game.GRID_ROWS && remaining > 0; row++) {
-                    const key = `${col}-${row}`;
-                    let canPlace = true;
-                    if (this.game.gardener.planted.has(key)) {
-                        const list = this.game.gardener.planted.get(key);
-                        if (list && list.length > 0) {
-                            for (const plant of list) {
-                                const pid = plant.pid;
-                                if (!SHIELD_PLANT.includes(pid) && pid !== Lily.pid) {
-                                    canPlace = false;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                    if (canPlace) {
-                        NewTnt(this.game, col, row, this.level);
-                        remaining--;
-                    }
-                }
-            }
-        }
-    }
-
 }
 
 function NewTnt(scene: Game, col: number, row: number, level: number): IPlant {
