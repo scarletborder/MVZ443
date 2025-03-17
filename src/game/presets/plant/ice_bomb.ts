@@ -1,6 +1,7 @@
 import { SECKILL } from "../../../../public/constants";
 import { item } from "../../../components/shop/types";
 import i18n from "../../../utils/i18n";
+import { GetIncValue } from "../../../utils/numbervalue";
 import { NewLaserByGrid } from "../../models/ILaser";
 import { IPlant } from "../../models/IPlant";
 import { IRecord } from "../../models/IRecord";
@@ -16,8 +17,11 @@ class IceBomb extends IPlant {
         this.setHealthFirstly(SECKILL);
         this.hasKill = false;
         this.createRects();
+        this.damage = GetIncValue(5, 10, level);
+        if (level >= 5) {
+            this.damage = 75;
+        }
 
-        this.damage = level >= 9 ? 180 : 5;
         // 发射大道隐藏激光
         for (let row = 0; row < this.game.positionCalc.Row_Number; row++) {
             const laser = NewLaserByGrid(this.game, -1, row, 12,
@@ -39,7 +43,7 @@ class IceBomb extends IPlant {
             // 发射大道隐藏激光,slow
             for (let row = 0; row < this.game.positionCalc.Row_Number; row++) {
                 const laser = NewLaserByGrid(this.game, -1, row, 12,
-                    1, 'zombie', 90, {
+                    this.damage, 'zombie', 90, {
                     debuff: 'slow',
                     duration: 7000
                 }, {
