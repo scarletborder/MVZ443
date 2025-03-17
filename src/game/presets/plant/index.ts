@@ -3,6 +3,7 @@ import { IRecord } from "../../models/IRecord";
 import DispenserRecord from "./dispenser";
 import FurnaceRecord from "./furnace";
 import GeneratorRecord from "./generator";
+import IceBombRecord from "./ice_bomb";
 import Lily from "./lily";
 import MagicPowderRecord from "./magic_powder";
 import ObsidianRecord from "./obsidian";
@@ -23,7 +24,8 @@ const PlantFactoryMap: Record<number, IRecord> = {
     8: GeneratorRecord,
     9: PumpkinRecord,
     10: MagicPowderRecord,
-    11: PumpkinWanRecord
+    11: PumpkinWanRecord,
+    12: IceBombRecord
 }
 
 export default PlantFactoryMap;

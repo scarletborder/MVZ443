@@ -5,8 +5,10 @@ import { Game } from "../scenes/Game";
 import { IPlant } from "./IPlant";
 import { IZombie } from "./IZombie";
 
+type _Typedebuffs = 'slow' | 'frozen' | null;
+
 type LaserParams = {
-    debuff?: 'slow' | null,
+    debuff?: _Typedebuffs,
     duration?: number,
 }
 
@@ -25,7 +27,7 @@ export class ILaser extends Phaser.GameObjects.Rectangle {
     public hasPenetrated: Set<Phaser.Physics.Arcade.Sprite> = new Set(); // 已经穿透的目标
 
     // buff
-    public debuff: 'slow' | null = null;
+    public debuff: _Typedebuffs = null;
     public duration: number = 0;
 
     // 视觉
@@ -42,7 +44,7 @@ export class ILaser extends Phaser.GameObjects.Rectangle {
 
     constructor(scene: Game, x1: number, y1: number, x2: number, y2: number,
         damage: number = 5, target: 'plant' | 'zombie' = 'zombie', duration: number = 400,
-        params?: LaserParams) {
+        params?: LaserParams, invisible: boolean = false) {
         // 计算欧几里得距离作为激光的长边
         const distance = Phaser.Math.Distance.Between(x1, y1, x2, y2);
         // 计算激光中心位置（取起点和终点的平均）
@@ -69,6 +71,14 @@ export class ILaser extends Phaser.GameObjects.Rectangle {
         scene.physics.add.existing(this);
         scene.add.existing(this);
         ILaser.Group.add(this, true);
+
+        if (invisible) {
+            this.alpha = 0;
+            scene.time.delayedCall(105, () => {
+                this.destroy(); // 悄悄删除
+            });
+            return;
+        }
 
         // Tween 动画：400ms 内将 alpha 从 0 渐变到 0.5，动画结束后销毁激光对象
         scene.tweens.add({
@@ -126,12 +136,12 @@ export function NewLaserByPos(scene: Game, x: number, y: number,
  * 横线激光
  */
 export function NewLaserByGrid(scene: Game, col: number, row: number,
-    distance: number = 10, damage: number = 10, target: 'plant' | 'zombie' = 'zombie',
-    duration = 400, params?: LaserParams): ILaser {
+    distance: number = 12, damage: number = 10, target: 'plant' | 'zombie' = 'zombie',
+    duration = 400, params?: LaserParams, invisible: boolean = false): ILaser {
     const { x, y } = scene.positionCalc.getBulletCenter(col, row);
     const x2 = x + distance * scene.positionCalc.GRID_SIZEX;
     const y2 = y;
-    const laser = new ILaser(scene, x, y, x2, y2, damage, target, duration, params);
+    const laser = new ILaser(scene, x, y, x2, y2, damage, target, duration, params, invisible);
 
 
     laser.baseDepth = DepthManager.getProjectileDepth('laser', row);

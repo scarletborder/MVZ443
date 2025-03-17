@@ -120,6 +120,8 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite {
     public startAttacking(plant: IPlant) {
         if (this.attackingPlant === plant) return; // 就是正在攻击碰到的植物,避免重复启动
 
+        if (this.IsFrozen) return; // 冻结状态不能攻击
+
         // 由别的植物导致的碰撞
         // 判断优先级,更换attackingPlant
         // 碰撞就会产生的函数
@@ -248,7 +250,7 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite {
                 this.speed = this.originalSpeed;
             }
             if (!this.attackingPlant)
-                this.setVelocityX(-this.speed);
+                this.StartMove();
         }
     }
 
@@ -274,10 +276,12 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite {
 
     public StartMove() {
         this.setVelocityX(-this.speed);
+        this.zombieAnim.startLegSwing();
     }
 
     public StopMove() {
         this.setVelocityX(0);
+        this.zombieAnim.stopLegSwing();
     }
 
     setVelocityX(speed: number) {
