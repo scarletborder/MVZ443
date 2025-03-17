@@ -80,8 +80,8 @@ function cost(level?: number): number {
 }
 
 function cooldownTime(level?: number): number {
-    if ((level || 1) >= 9) return 30;
-    return 40;
+    if ((level || 1) >= 9) return 45;
+    return 55;
 }
 
 function levelAndstuff(level: number): item[] {

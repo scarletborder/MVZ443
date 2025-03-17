@@ -7,6 +7,7 @@ import Lily from "./lily";
 import MagicPowderRecord from "./magic_powder";
 import ObsidianRecord from "./obsidian";
 import PumpkinRecord from "./pumkin";
+import PumpkinWanRecord from "./pumkin_wan";
 import SmallDispenserRecord from "./small_dispenser";
 import TntRecord from "./tnt";
 import TntMines from "./tnt_mines";
@@ -22,6 +23,7 @@ const PlantFactoryMap: Record<number, IRecord> = {
     8: GeneratorRecord,
     9: PumpkinRecord,
     10: MagicPowderRecord,
+    11: PumpkinWanRecord
 }
 
 export default PlantFactoryMap;

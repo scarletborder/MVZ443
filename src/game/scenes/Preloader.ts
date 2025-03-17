@@ -74,6 +74,8 @@ export class Preloader extends Scene {
         this.load.spritesheet('plant/pumpkin', 'plant/pumpkin.png',
             { frameWidth: 64, frameHeight: 64 });
         this.load.image('plant/magic_powder', 'plant/magic_powder.png');
+        this.load.spritesheet('plant/pumpkin_wan', 'plant/pumpkin_wan.png',
+            { frameWidth: 64, frameHeight: 64 });
     }
 
     // 加载全部怪物

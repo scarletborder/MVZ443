@@ -35,7 +35,7 @@ class pumkin extends INightPlant {
     constructor(scene: Game, col: number, row: number, texture: string, level: number) {
         super(scene, col, row, texture, PumpkinRecord.pid, level);
 
-        this.attackInterval = GetDecValue(2450, 0.6, level);
+        this.attackInterval = GetDecValue(2450, 0.75, level);
 
         this.game = scene;
         this.setHealthFirstly(300);
@@ -53,7 +53,7 @@ class pumkin extends INightPlant {
                     this.scene.monsterSpawner.hasMonsterInRowAfterX(this.row, this.x, this.maxDistance)) {
                     this.setFrame(1);
                     shootLaser(this.game, this);
-                    this.scene.time.delayedCall(400, () => {
+                    this.scene.time.delayedCall(750, () => {
                         if (this && this.health && this.health > 0) {
                             this.setFrame(0);
                         }
@@ -86,14 +86,14 @@ function NewPumpkin(scene: Game, col: number, row: number, level: number): IPlan
 
 function shootLaser(scene: Game, shooter: IPlant) {
     const level = shooter.level;
-    const damage = GetIncValue(35, 1.4, level);
+    const damage = GetIncValue(40, 1.4, level);
 
     if (level < 9) {
         const laser = NewLaserByGrid(scene, shooter.col, shooter.row,
-            attackDistance(), damage, 'zombie');
+            attackDistance(), damage, 'zombie', 750);
     } else {
         const laser = NewLaserByGrid(scene, shooter.col, shooter.row,
-            attackDistance(), damage, 'zombie', 400, {
+            attackDistance(), damage, 'zombie', 750, {
             debuff: 'slow', duration: 3000
         });
     }

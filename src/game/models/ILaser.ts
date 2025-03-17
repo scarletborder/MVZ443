@@ -41,7 +41,8 @@ export class ILaser extends Phaser.GameObjects.Rectangle {
     }
 
     constructor(scene: Game, x1: number, y1: number, x2: number, y2: number,
-        damage: number = 5, target: 'plant' | 'zombie' = 'zombie', duration: number = 400, params?: LaserParams) {
+        damage: number = 5, target: 'plant' | 'zombie' = 'zombie', duration: number = 400,
+        params?: LaserParams) {
         // 计算欧几里得距离作为激光的长边
         const distance = Phaser.Math.Distance.Between(x1, y1, x2, y2);
         // 计算激光中心位置（取起点和终点的平均）
@@ -72,8 +73,8 @@ export class ILaser extends Phaser.GameObjects.Rectangle {
         // Tween 动画：400ms 内将 alpha 从 0 渐变到 0.5，动画结束后销毁激光对象
         scene.tweens.add({
             targets: this,
-            alpha: 0.7,
-            duration: 400,
+            alpha: 0.5,
+            duration: duration,
             onComplete: () => {
                 this.destroy();
             }
@@ -107,32 +108,26 @@ export class ILaser extends Phaser.GameObjects.Rectangle {
             object.takeDamage(damage);
         }
     }
-
-    update(...args: any[]): void {
-        // 超越边界销毁
-        if (this.x > this.ScreenWidth * 1.5 || this.x < -this.ScreenWidth * 0.5) {
-            this.destroy();
-        }
-    }
 }
 
 /**
  * 横线激光
  */
 export function NewLaserByPos(scene: Game, x: number, y: number,
-    distance: number = 5, damage: number = 5, target: 'plant' | 'zombie' = 'plant'): ILaser {
+    distance: number = 5, damage: number = 5, target: 'plant' | 'zombie' = 'plant',
+    duration: number = 400, params?: LaserParams): ILaser {
     const newY = y - scene.positionCalc.GRID_SIZEY * 0.7;
     const x2 = x + distance * scene.positionCalc.GRID_SIZEX;
     const y2 = newY;
-    return new ILaser(scene, x, newY, x2, y2, damage, target);
+    return new ILaser(scene, x, newY, x2, y2, damage, target, duration, params);
 }
 
 /**
  * 横线激光
  */
 export function NewLaserByGrid(scene: Game, col: number, row: number,
-    distance: number = 10, damage: number = 10, target: 'plant' | 'zombie' = 'zombie', duration = 400,
-    params?: LaserParams): ILaser {
+    distance: number = 10, damage: number = 10, target: 'plant' | 'zombie' = 'zombie',
+    duration = 400, params?: LaserParams): ILaser {
     const { x, y } = scene.positionCalc.getBulletCenter(col, row);
     const x2 = x + distance * scene.positionCalc.GRID_SIZEX;
     const y2 = y;
