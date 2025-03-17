@@ -24,7 +24,12 @@ class IceBomb extends IPlant {
                 this.damage, 'zombie', 90, {
                 debuff: 'frozen',
                 duration: 5000
-            }, true
+            }, {
+                invisible: true,
+                color: 0x00ffff,
+                alphaFrom: 0,
+                alphaTo: 0
+            }
             );
         }
 
@@ -37,7 +42,12 @@ class IceBomb extends IPlant {
                     1, 'zombie', 90, {
                     debuff: 'slow',
                     duration: 7000
-                }, true
+                }, {
+                    invisible: true,
+                    color: 0x00ffff,
+                    alphaFrom: 0,
+                    alphaTo: 0
+                }
                 );
             }
         });

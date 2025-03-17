@@ -12,6 +12,12 @@ type LaserParams = {
     duration?: number,
 }
 
+interface VisionParams {
+    invisible: boolean;
+    color: number;
+    alphaFrom: number;
+    alphaTo: number;
+}
 
 export class ILaser extends Phaser.GameObjects.Rectangle {
     public ScreenWidth: number = 1024;
@@ -44,7 +50,8 @@ export class ILaser extends Phaser.GameObjects.Rectangle {
 
     constructor(scene: Game, x1: number, y1: number, x2: number, y2: number,
         damage: number = 5, target: 'plant' | 'zombie' = 'zombie', duration: number = 400,
-        params?: LaserParams, invisible: boolean = false) {
+        params?: LaserParams,
+        visionParams: VisionParams = { invisible: false, color: 0xffffff, alphaFrom: 0.2, alphaTo: 0.5 }) {
         // 计算欧几里得距离作为激光的长边
         const distance = Phaser.Math.Distance.Between(x1, y1, x2, y2);
         // 计算激光中心位置（取起点和终点的平均）
@@ -54,7 +61,8 @@ export class ILaser extends Phaser.GameObjects.Rectangle {
         const angle = Phaser.Math.Angle.Between(x1, y1, x2, y2);
 
         // 调用父类构造函数：宽度设为欧几里得距离，高度设为 gridSizeY，初始 alpha 为 0（全透明）
-        super(scene, centerX, centerY, distance, scene.positionCalc.GRID_SIZEY * 0.6, 0xffffff, 0.2);
+        super(scene, centerX, centerY, distance, scene.positionCalc.GRID_SIZEY * 0.6,
+            visionParams.color, visionParams.alphaFrom);
         this.setRotation(angle); // 设置激光旋转到正确角度
 
         this.ScreenWidth = scene.sys.canvas.width;
@@ -72,7 +80,7 @@ export class ILaser extends Phaser.GameObjects.Rectangle {
         scene.add.existing(this);
         ILaser.Group.add(this, true);
 
-        if (invisible) {
+        if (visionParams.invisible) {
             this.alpha = 0;
             scene.time.delayedCall(105, () => {
                 this.destroy(); // 悄悄删除
@@ -83,7 +91,7 @@ export class ILaser extends Phaser.GameObjects.Rectangle {
         // Tween 动画：400ms 内将 alpha 从 0 渐变到 0.5，动画结束后销毁激光对象
         scene.tweens.add({
             targets: this,
-            alpha: 0.5,
+            alpha: visionParams.alphaTo,
             duration: duration,
             onComplete: () => {
                 this.destroy();
@@ -125,11 +133,12 @@ export class ILaser extends Phaser.GameObjects.Rectangle {
  */
 export function NewLaserByPos(scene: Game, x: number, y: number,
     distance: number = 5, damage: number = 5, target: 'plant' | 'zombie' = 'plant',
-    duration: number = 400, params?: LaserParams): ILaser {
+    duration: number = 400, params?: LaserParams,
+    visionParams: VisionParams = { invisible: false, color: 0xffFFff, alphaFrom: 0.2, alphaTo: 0.5 }): ILaser {
     const newY = y - scene.positionCalc.GRID_SIZEY * 0.7;
     const x2 = x + distance * scene.positionCalc.GRID_SIZEX;
     const y2 = newY;
-    return new ILaser(scene, x, newY, x2, y2, damage, target, duration, params);
+    return new ILaser(scene, x, newY, x2, y2, damage, target, duration, params, visionParams);
 }
 
 /**
@@ -137,11 +146,12 @@ export function NewLaserByPos(scene: Game, x: number, y: number,
  */
 export function NewLaserByGrid(scene: Game, col: number, row: number,
     distance: number = 12, damage: number = 10, target: 'plant' | 'zombie' = 'zombie',
-    duration = 400, params?: LaserParams, invisible: boolean = false): ILaser {
+    duration = 400, params?: LaserParams,
+    visionParams: VisionParams = { invisible: false, color: 0xffFFff, alphaFrom: 0.2, alphaTo: 0.5 }): ILaser {
     const { x, y } = scene.positionCalc.getBulletCenter(col, row);
     const x2 = x + distance * scene.positionCalc.GRID_SIZEX;
     const y2 = y;
-    const laser = new ILaser(scene, x, y, x2, y2, damage, target, duration, params, invisible);
+    const laser = new ILaser(scene, x, y, x2, y2, damage, target, duration, params, visionParams);
 
 
     laser.baseDepth = DepthManager.getProjectileDepth('laser', row);
