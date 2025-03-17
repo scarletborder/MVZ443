@@ -41,7 +41,7 @@
             "monsters": [
                 {
                     "mid": 1,
-                    "count": 8
+                    "count": 5
                 },
                 {
                     "mid": 2,
@@ -50,6 +50,10 @@
                 {
                     "mid": 4,
                     "count": 1
+                },
+                {
+                    "mid": 8,
+                    "count": 2
                 }
             ],
             "duration": 60,
@@ -76,11 +80,15 @@
                 {
                     "mid": 7,
                     "count": 2
+                },
+                {
+                    "mid": 9,
+                    "count": 1
                 }
             ],
-            "duration": 30,
+            "duration": 45,
             "maxDelay": 50,
-            "minDelay": 42,
+            "minDelay": 46,
             "arrangement": 1,
             "minLine": 1,
             "starShards": 1,
@@ -141,15 +149,23 @@
             "monsters": [
                 {
                     "mid": 4,
-                    "count": 5
+                    "count": 2
                 },
                 {
                     "mid": 5,
-                    "count": 2
+                    "count": 1
+                },
+                {
+                    "mid": 8,
+                    "count": 1
                 },
                 {
                     "mid": 7,
                     "count": 5
+                },
+                {
+                    "mid": 9,
+                    "count": 1
                 }
             ],
             "duration": 4,

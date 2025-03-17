@@ -130,7 +130,7 @@
             "monsters": [
                 {
                     "mid": 1,
-                    "count": 12
+                    "count": 6
                 },
                 {
                     "mid": 2,
@@ -138,6 +138,14 @@
                 },
                 {
                     "mid": 5,
+                    "count": 3
+                },
+                {
+                    "mid": 7,
+                    "count": 2
+                },
+                {
+                    "mid": 8,
                     "count": 3
                 }
             ],
