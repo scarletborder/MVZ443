@@ -146,7 +146,6 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
                         controlType: "switcher",
                         controlProps: {
                             value: settingManager.isDebug, onToggle: (val) => {
-                                console.log(val);
                                 debounce((newVal) => settingManager.setIsDebug(newVal), 50)(val);
                             }
                         }
@@ -190,7 +189,6 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
                         controlType: "switcher",
                         controlProps: {
                             value: settingManager.isBluePrint, onToggle: (val) => {
-                                console.log(val);
                                 debounce((newVal) => settingManager.setIsBluePrint(newVal), 50)(val);
                             }
                         }

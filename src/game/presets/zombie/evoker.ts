@@ -11,8 +11,8 @@ export class EnhancedEvoker extends IZombie {
     summonTimes: number = 3;
     scene: Game;
 
-    constructor(scene: Game, col: number, row: number, texture: string) {
-        super(scene, col, row, texture, newNormalEvokerAnim);
+    constructor(scene: Game, col: number, row: number, texture: string, waveID: number) {
+        super(scene, col, row, texture, waveID, newNormalEvokerAnim);
         this.health = 320;
         this.summonTimes = 3;
         this.scene = scene;
@@ -20,12 +20,12 @@ export class EnhancedEvoker extends IZombie {
         this.SetSpeedFirstly(25 * scene.positionCalc.scaleFactor);
 
         this.Timer = scene.time.addEvent({
-            delay: 24000,
-            startAt: 20000,
+            delay: 28000,
+            startAt: 24000,
             callback: () => {
                 if (this.hasDebuff('frozen') === 0) this.summonVindicator();
             },
-            repeat: 5,
+            repeat: 3,
         });
     }
 
@@ -48,30 +48,28 @@ export class EnhancedEvoker extends IZombie {
             summons.push(this.addVindicator(col - 1, row));
         }
         summons.push(this.addVindicator(col + 1, row));
-        this.game.time.delayedCall(2500, () => {
+        this.scene.time.delayedCall(3000, () => {
             if (this && this.health > 0) {
                 this.zombieAnim.stopArmSwing();
                 this.zombieAnim.startLegSwing();
                 if (this.hasDebuff('frozen') === 0) this.StartMove();
-
-                for (const summon of summons) {
-                    if (summon && summon.health > 0 && summon.hasDebuff('frozen') === 0) {
-                        summon.StartMove();
-                        summon.zombieAnim.startLegSwing();
-                    }
-                }
             }
         });
     }
 
     private addVindicator(col: number, row: number) {
-
+        if (row < 0) row = 0;
+        if (row > this.scene.positionCalc.Row_Number - 1) row = this.scene.positionCalc.Row_Number - 1;
         const vindicatorMid = 10;
-        const mob = MonsterFactoryMap[vindicatorMid].NewFunction(this.scene, col, row);
-        mob.summoned = true; // 标记为召唤出来的怪物
-        mob.zombieAnim.stopLegSwing();
-        mob.StopMove()
-        return mob;
+        const summon_mob = MonsterFactoryMap[vindicatorMid].NewFunction(this.scene, col, row, -10); // -10 标记为召唤出来的怪物
+        summon_mob.StopMove();
+
+        this.scene.time.delayedCall(2000, () => {
+            if (summon_mob && summon_mob.health > 0 && summon_mob.hasDebuff('frozen') === 0) {
+                summon_mob.StartMove();
+            }
+        });
+        return summon_mob;
     }
 
     // 处理血量变化并更新伤口位置
@@ -98,8 +96,10 @@ export class EnhancedEvoker extends IZombie {
     }
 }
 
-function NewEvoker(scene: Game, x: number, y: number): IZombie {
-    const zombie = new EnhancedEvoker(scene, x, y, 'zombie/zombie');
+function NewEvoker(scene: Game, col: number, row: number, waveID: number): IZombie {
+    if (row < 0) row = 0;
+    if (row > scene.positionCalc.Row_Number - 1) row = scene.positionCalc.Row_Number - 1;
+    const zombie = new EnhancedEvoker(scene, col, row, 'zombie/zombie', waveID);
     zombie.StartMove();
     return zombie;
 }

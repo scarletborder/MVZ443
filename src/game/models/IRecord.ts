@@ -27,7 +27,7 @@ export interface IRecord {
 export interface MIRecord {
     mid: number;
     name: string;
-    NewFunction: (Game: Game, col: number, row: number) => IZombie;
+    NewFunction: (Game: Game, col: number, row: number, waveID: number) => IZombie;
     texture: string;
     brief?: () => string;
     description?: () => string;

@@ -34,8 +34,6 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({ stageId, setGameParams,
     const saveManager = useSaveManager();
     const settings = useSettings();
 
-    console.log(saveManager.currentProgress);
-
     const handlePlantToggle = (pid: number) => {
         setSelectedPlants(prev => {
             if (prev.includes(pid)) {

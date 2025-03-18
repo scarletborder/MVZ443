@@ -19,7 +19,6 @@ export class SnowBall extends IBullet {
 
     update(...args: any[]): void {
         super.update();
-        console.log(this.x, this.originalX, this.maxDistance);
         if ((this.x - this.originalX) > this.maxDistance) {
             this.destroy();
         }

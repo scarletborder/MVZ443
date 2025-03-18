@@ -13,8 +13,8 @@ class MinerZombie extends EnhancedZombie {
 
     pickaxeSwing: Phaser.Tweens.Tween | null = null;
 
-    constructor(scene: Game, col: number, row: number, texture: string) {
-        super(scene, col, row, texture);
+    constructor(scene: Game, col: number, row: number, texture: string, waveID: number) {
+        super(scene, col, row, texture, waveID);
         this.SetSpeedFirstly(20 * scene.positionCalc.scaleFactor);
         this.axeDurability = 32;
         this.attackDamage = 60;
@@ -88,8 +88,8 @@ class MinerZombie extends EnhancedZombie {
 }
 
 
-function NewZombie(scene: Game, x: number, y: number): IZombie {
-    const zombie = new MinerZombie(scene, x, y, 'zombie/zombie');
+function NewZombie(scene: Game, x: number, y: number, waveID: number): IZombie {
+    const zombie = new MinerZombie(scene, x, y, 'zombie/zombie', waveID);
     zombie.StartMove();
     return zombie;
 }

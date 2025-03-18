@@ -6,8 +6,8 @@ import { newNormalSkeletonAnim } from '../../sprite/normal_zombie';
 
 
 export class EnhancedSkeleton extends IZombie {
-    constructor(scene: Game, col: number, row: number, texture: string) {
-        super(scene, col, row, texture, newNormalSkeletonAnim);
+    constructor(scene: Game, col: number, row: number, texture: string, waveID: number) {
+        super(scene, col, row, texture, waveID, newNormalSkeletonAnim);
         this.health = 160;
         this.SetSpeedFirstly(20 * scene.positionCalc.scaleFactor);
     }
@@ -37,8 +37,8 @@ export class EnhancedSkeleton extends IZombie {
     }
 }
 
-function NewSkeleton(scene: Game, x: number, y: number): IZombie {
-    const zombie = new EnhancedSkeleton(scene, x, y, 'zombie/zombie');
+function NewSkeleton(scene: Game, col: number, row: number, waveID: number): IZombie {
+    const zombie = new EnhancedSkeleton(scene, col, row, 'zombie/zombie', waveID);
     zombie.StartMove();
     return zombie;
 }

@@ -68,7 +68,6 @@ export class IPlant extends Phaser.Physics.Arcade.Sprite {
 
         this.baseDepth = DepthManager.getPlantBasicDepth(row);
         this.setDepth(this.baseDepth);
-        console.log('Plant created', this.depth);
     }
 
     public setHealthFirstly(value: number) {

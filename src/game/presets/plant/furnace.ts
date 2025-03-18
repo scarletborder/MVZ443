@@ -38,7 +38,6 @@ class Furnace extends IPlant {
             },
             callbackScope: this,
         });
-        console.log(this.body?.width, this.body?.height)
     }
 
     public onStarShards(): void {

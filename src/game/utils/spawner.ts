@@ -12,12 +12,14 @@ export default class MonsterSpawner {
     private SeedRandom: seedrandom.PRNG;
 
     private waves: Wave[];
+    private wavesLeng: number;
     private current_wave_idx: number = 0;
 
     private SpawnTimer: Phaser.Time.TimerEvent; // 出怪
     private Timer: Phaser.Time.TimerEvent; // 波数
     private prev_wave_time: number = 0;
 
+    private tmpKilled_count = 0;// 两波之间存击杀数
     private killed_count = 0; // 怪物击杀数
     private total_count = 0; // 怪物总数
 
@@ -30,6 +32,7 @@ export default class MonsterSpawner {
     constructor(game: Game, waves_json: any, randomSeed?: number) {
         this.scene = game;
         this.waves = waves_json;
+        this.wavesLeng = this.waves.length;
         if (!randomSeed) randomSeed = Math.random();
         this.setRandomSeed(randomSeed);
     }
@@ -44,7 +47,7 @@ export default class MonsterSpawner {
         this.SeedRandom = seedrandom.alea(String(seed))
     }
 
-    // 整局,触发开始,唯一
+    // 整局,触发开始,一局游戏只能调用一次
     startWave() {
         if (this.Timer) {
             this.Timer.remove();
@@ -64,26 +67,32 @@ export default class MonsterSpawner {
 
     // Next
     nextWave() {
+        console.log('time now:', this.scene.time.now);
+
         // 无论如何都到达了下一波,那么开始进度记录
         if (this.current_wave_idx >= 0) {
+            // 第一波之后(idx>0),播报当前进度
             this.progress = this.currentWave().progress;
             this.scene.broadCastProgress(this.currentWave().progress);
         }
 
         this.current_wave_idx++;
-        console.log('next wave', this.current_wave_idx, this.waves.length);
+        console.log('next wave', this.current_wave_idx, '/', this.wavesLeng);
         if (this.current_wave_idx >= this.waves.length) {
             // 游戏结束,不应该在这里出现
             console.log('the game should have been ended');
             return;
         }
 
-        this.prev_wave_time = this.scene.time.now;
-        // total_count 如果没有杀完,加上原来的
+        this.prev_wave_time = this.scene.time.now; // 更新时间
 
         // 怪物生成流程
+        this.tmpKilled_count = this.killed_count;
+        this.killed_count = 0; // 清空当前击杀数字,在生成怪物之间可能会发生击杀怪物事件
         this.spawnMonster();
-        this.killed_count = 0;
+        this.killed_count += this.tmpKilled_count;
+        this.onKilledCountUpdate();
+
 
         // 启动定时器
         // 先销毁原来的timer
@@ -124,6 +133,9 @@ export default class MonsterSpawner {
     spawnMonster() {
         const wave = this.currentWave();
         const starNumber = wave.starShards;
+        // Acquire current wave's monster number
+        const currentMonsters = wave.monsters.reduce((acc, m) => acc + m.count, 0);
+        this.total_count += currentMonsters; // 当前波id下的僵尸数量
 
         let totalMonsters: { mid: number }[] = [];
         const colMax = this.scene.GRID_COLS;
@@ -136,7 +148,6 @@ export default class MonsterSpawner {
             }
         });
 
-        this.total_count = totalMonsters.length + this.total_count - this.killed_count;
         if (wave.duration === 0) {
             return;
         }
@@ -197,8 +208,7 @@ export default class MonsterSpawner {
                 const monsterData = totalMonsters[monsterIndex];
                 const row = this.weightedRandomRow(rowWeights);
                 const newFunc = MonsterFactoryMap[monsterData.mid].NewFunction;
-                const zomb = newFunc(this.scene, colMax, row);
-                zomb.summoned = false; // 非召唤物
+                const zomb = newFunc(this.scene, colMax, row, wave.waveId);
 
                 // 2. 如果当前怪物索引在carryingMonsters中，则设置携带starShards
                 if (carryingMonsters.has(monsterIndex)) {
@@ -308,14 +318,14 @@ export default class MonsterSpawner {
                 }
             }
         }
-        if (!monster.summoned) {
-            this.onMonsterKilled(); // 非召唤物僵尸杀了才计数
+        if (monster.waveID >= 0) {
+            this.killed_count++;
+            this.onKilledCountUpdate(); // 非召唤物僵尸(waveId >= 0)杀了才计数
         }
     }
 
-    onMonsterKilled() {
+    onKilledCountUpdate() {
         if (this.scene.isGameEnd) return; // 结束了,避免结束杀人
-        this.killed_count++;
         console.log('kill', this.killed_count, '/', this.total_count);
 
         // 检查是否所有怪物都被击杀
@@ -323,13 +333,15 @@ export default class MonsterSpawner {
             console.log('All monsters in current wave killed!');
 
             // 如果是最后一波
-            if (this.current_wave_idx === this.waves.length - 1) {
+            if (this.current_wave_idx >= this.wavesLeng - 1) {
                 const waveObj = this.currentWave();
-                if (waveObj.flag === 'boss') {
+                if (waveObj.flag === 'boss' || waveObj.flag === 'elite') {
+                    // TODO: 实践
                     console.log('Last wave is boss wave, waiting');
                     return;
                 }
 
+                // 普通
                 console.log('Last wave detected, starting victory check timer...');
 
                 // 启动一个每1.5秒检查一次的定时器
@@ -337,7 +349,7 @@ export default class MonsterSpawner {
                     delay: 1500, // 1.5秒
                     loop: true, // 循环执行
                     callback: () => {
-                        // 检查场上是否还有怪物
+                        // 检查场上是否还有怪物(防止召唤物在场)
                         if (this.monstered.size === 0) {
                             console.log('No monsters left on the field, game victory!');
                             this.scene.handleExit(true);
@@ -348,7 +360,7 @@ export default class MonsterSpawner {
                         }
                     }
                 });
-            } else {
+            } else if (this.current_wave_idx >= 0 && this.current_wave_idx < this.wavesLeng - 1) {
                 // 非最后一波，继续下一波逻辑
                 const now = this.scene.time.now;
                 if (now - this.prev_wave_time > this.currentWave().minDelay * 1000) {
@@ -362,6 +374,10 @@ export default class MonsterSpawner {
                         }
                     });
                 }
+            } else {
+                // 你怎么会在这里?
+                console.log('you should not be here');
+                this.scene.handleExit(false);
             }
         }
     }

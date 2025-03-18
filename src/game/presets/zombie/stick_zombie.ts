@@ -12,8 +12,8 @@ class StickZombie extends EnhancedZombie {
     game: Game;
     vaultTargetX: number = 0;  // Target position for vaulting
 
-    constructor(scene: Game, col: number, row: number, texture: string) {
-        super(scene, col, row, texture);
+    constructor(scene: Game, col: number, row: number, texture: string, waveID: number) {
+        super(scene, col, row, texture, waveID);
         this.SetSpeedFirstly(40 * scene.positionCalc.scaleFactor);
         this.hasStick = true;
         this.attackDamage = 30;
@@ -75,8 +75,8 @@ class StickZombie extends EnhancedZombie {
 }
 
 
-function NewZombie(scene: Game, x: number, y: number): IZombie {
-    const zombie = new StickZombie(scene, x, y, 'zombie/zombie');
+function NewZombie(scene: Game, x: number, y: number, waveID: number): IZombie {
+    const zombie = new StickZombie(scene, x, y, 'zombie/zombie', waveID);
     zombie.StartMove();
     return zombie;
 }

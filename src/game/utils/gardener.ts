@@ -85,7 +85,6 @@ export default class Gardener {
     // 选择卡片植物后
     // 设置预种植的植物 pid
     public setPrePlantPid(pid: number, level: number) {
-        console.log('l;evel:', level)
         // 如果设置了星之碎片,取消他
         if (this.useStarShards) {
             this.cancelStarShards();
@@ -96,7 +95,6 @@ export default class Gardener {
         }
 
         this.prePlantPid = [pid, level];
-        console.log(`Pre-plant PID set to: ${pid}`);
     }
 
     // 取消预种植
@@ -104,7 +102,6 @@ export default class Gardener {
         this.prePlantPid = null;
         this.stopHighlight();
         this.scene.broadCastCancelPrePlant();
-        console.log('Pre-plant canceled');
     }
 
     // 星之碎片选中
@@ -346,7 +343,6 @@ export default class Gardener {
                 return;
             }
 
-            console.log('prepare to plant', this.prePlantPid);
             const { col, row } = this.positionCalc.getGridByPos(pointer.x, pointer.y);
             if (col >= 0 && row >= 0 && this.canPlant(this.prePlantPid[0], col, row)) {
                 this.scene.sendQueue.sendCardPlant(this.prePlantPid[0], col, row, this.prePlantPid[1]);

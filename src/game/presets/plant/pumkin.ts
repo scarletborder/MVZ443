@@ -35,7 +35,7 @@ class pumkin extends INightPlant {
     constructor(scene: Game, col: number, row: number, texture: string, level: number) {
         super(scene, col, row, texture, PumpkinRecord.pid, level);
 
-        this.attackInterval = GetDecValue(2450, 0.75, level);
+        this.attackInterval = GetDecValue(1950, 0.75, level);
 
         this.game = scene;
         this.setHealthFirstly(300);
@@ -47,7 +47,7 @@ class pumkin extends INightPlant {
 
     normalShootEvent(): Phaser.Time.TimerEvent {
         return this.game.time.addEvent({
-            startAt: this.attackInterval / 2, // 已经使用的时间,即开始时间
+            startAt: this.attackInterval * 3 / 4, // 已经使用的时间,即开始时间
             callback: () => {
                 if (this.health > 0 && this.isSleeping === false &&
                     this.scene.monsterSpawner.hasMonsterInRowAfterX(this.row, this.x, this.maxDistance)) {

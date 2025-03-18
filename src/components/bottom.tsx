@@ -82,6 +82,7 @@ export default function BottomTools({ width, chapterID }: Props) {
             <div className={`stars ${gamectx.isPaused ? 'paused' : ''}`} onClick={handleStarClick}>
                 {Array.from({ length: gamectx.starShareds }).map((_, index) => (
                     <img
+                        draggable={false}
                         key={index}
                         src={starUri}
                     />

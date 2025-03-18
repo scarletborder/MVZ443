@@ -65,7 +65,6 @@ function App() {
 
     // 监听键盘事件
     useEffect(() => {
-        console.log(deviceType)
         const handleKeyDown = (event: KeyboardEvent) => {
             if (event.key === "F1" || event.key === "F2" || event.key === "F3" || event.key === "F4"
                 || event.key === "F5" || event.key === "F6" || event.key === "F7" || event.key === "F8"

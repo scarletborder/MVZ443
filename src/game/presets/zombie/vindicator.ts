@@ -9,8 +9,8 @@ import { IPlant } from '../../models/IPlant';
 export class EnhancedVindicator extends IZombie {
     axeSwing: Phaser.Tweens.Tween | null = null;
 
-    constructor(scene: Game, col: number, row: number, texture: string) {
-        super(scene, col, row, texture, newNormalVindicatorAnim);
+    constructor(scene: Game, col: number, row: number, texture: string, waveID: number) {
+        super(scene, col, row, texture, waveID, newNormalVindicatorAnim);
         this.health = 220;
         this.attackDamage = 45;
         this.SetSpeedFirstly(30 * scene.positionCalc.scaleFactor);
@@ -89,8 +89,8 @@ export class EnhancedVindicator extends IZombie {
     }
 }
 
-function NewVindicator(scene: Game, x: number, y: number): IZombie {
-    const zombie = new EnhancedVindicator(scene, x, y, 'zombie/zombie');
+function NewVindicator(scene: Game, x: number, y: number, waveID: number): IZombie {
+    const zombie = new EnhancedVindicator(scene, x, y, 'zombie/zombie', waveID);
     zombie.StartMove();
     return zombie;
 }

@@ -41,7 +41,7 @@ class dispenser extends IPlant {
 
     normalShootEvent(): Phaser.Time.TimerEvent {
         return this.game.time.addEvent({
-            startAt: 1200, // 已经使用的时间,即开始时间
+            startAt: 1000, // 已经使用的时间,即开始时间
             callback: () => {
                 if (this.health > 0) {
                     // 判断本行之前有没有敌人(TODO:或者背后有并且之前有可反弹的物体)
@@ -51,7 +51,7 @@ class dispenser extends IPlant {
                 }
             },
             loop: true,
-            delay: 1350,  // 每隔1秒发射一次
+            delay: 1050,  // 每隔1秒发射一次
         });
     }
 

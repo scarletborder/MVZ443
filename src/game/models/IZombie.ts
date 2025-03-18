@@ -18,7 +18,10 @@ function setDisplay(spr: IZombie, scene: Game) {
 export class IZombie extends Phaser.Physics.Arcade.Sprite {
     public static Group: Phaser.Physics.Arcade.Group;
     static GridClan: GridClan;
+
     private Spawner: MonsterSpawner;
+    game: Game;
+    waveID: number;
 
     // 私有
     // 属性
@@ -35,7 +38,7 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite {
     public isInVoid: boolean = false; // 是否是灵魂状态
 
     private carryStarShards: boolean = false; // 是否携带星之碎片
-    public summoned: boolean = true; // 是否是召唤的僵尸(击杀不计数)
+    // 是否是召唤的僵尸(击杀不计数), waveID < 0 即召唤物
 
     // 攻击
     private attackTimer?: Phaser.Time.TimerEvent; // 攻击定时器
@@ -65,12 +68,14 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite {
     }
 
     // 没必要以后特定texture了,因为反正设置了不可见
-    constructor(scene: Game, col: number, row: number, texture: string,
+    constructor(scene: Game, col: number, row: number, texture: string, waveID: number,
         newZombieAnim: (scene: Game, x: number, y: number) => IZombieAnim) {
         IZombie.GridClan = scene.gardener.GridClan;
 
         const { x, y } = scene.positionCalc.getZombieBottomCenter(col, row);
         super(scene, x, y, texture, 0); // 没必要以后特定texture了,因为反正设置了不可见
+
+        this.waveID = waveID;
         this.game = scene;
         this.setVisible(false);
 
@@ -301,7 +306,6 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite {
         if (this.attackingPlant && this.attackingPlant.active) {
             this.attackingPlant.takeDamage(this.attackDamage, this);
             if (!this.attackingPlant) return;
-            // console.log(`Zombie hurt plant, plant health: ${this.attackingPlant.health}`);
         }
     }
 

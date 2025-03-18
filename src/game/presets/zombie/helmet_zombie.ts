@@ -8,8 +8,8 @@ class HelmetZombie extends EnhancedZombie {
     capHealth: number = 1100;
     currentHatState = 0;
 
-    constructor(scene: Game, col: number, row: number, texture: string) {
-        super(scene, col, row, texture);
+    constructor(scene: Game, col: number, row: number, texture: string, waveID: number) {
+        super(scene, col, row, texture, waveID);
         this.SetSpeedFirstly(20 * scene.positionCalc.scaleFactor);
         this.capHealth = HelmetZombie.maxCapHealth;
 
@@ -58,8 +58,8 @@ class HelmetZombie extends EnhancedZombie {
 }
 
 
-function NewZombie(scene: Game, x: number, y: number): IZombie {
-    const zombie = new HelmetZombie(scene, x, y, 'zombie/zombie');
+function NewZombie(scene: Game, col: number, row: number, waveID: number): IZombie {
+    const zombie = new HelmetZombie(scene, col, row, 'zombie/zombie', waveID);
     zombie.StartMove();
     return zombie;
 }

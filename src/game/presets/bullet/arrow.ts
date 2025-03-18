@@ -12,7 +12,7 @@ class Arrow extends IBullet {
         super(scene, col, row, texture, damage, target);
         this.maxDistance = maxDistance;
 
-        let size = scene.positionCalc.getBulletDisplaySize();
+        const size = scene.positionCalc.getBulletDisplaySize();
         size.sizeX *= 2;
         size.sizeY /= 2;
         this.setDisplaySize(size.sizeX, size.sizeY);

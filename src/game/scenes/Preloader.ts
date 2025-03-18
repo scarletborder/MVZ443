@@ -127,7 +127,7 @@ export class Preloader extends Scene {
 
     // 加载bgimg和bgm 
     loadBackground(stageId: number) {
-        let mapdata = ResourceMapData.get(stageId);
+        const mapdata = ResourceMapData.get(stageId);
         this.load.image('bgimg', mapdata?.bgimg);
         this.load.audio('bgm', mapdata?.bgm);
         // this.load.image('bgpix1', 'bg/bgPaper1.png');
