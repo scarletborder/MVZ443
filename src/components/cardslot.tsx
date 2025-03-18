@@ -11,6 +11,7 @@ import VCard from './vcard';
 import { publicUrl } from '../utils/browser';
 import { useDeviceType } from '../hooks/useDeviceType';
 import Pickaxe from './pickaxe';
+import useDarkMode from '../hooks/useDarkMode';
 
 interface slotProps {
     sceneRef: React.MutableRefObject<IRefPhaserGame | null>;
@@ -23,6 +24,7 @@ interface Styles {
 }
 
 export function EnergySlot() {
+    const isDarkMode = useDarkMode();
     const { energy, updateEnergy } = useGameContext();
 
     useEffect(() => {
@@ -52,7 +54,7 @@ export function EnergySlot() {
             flexDirection: "column",
             justifyContent: "center",  // 让内容垂直居中
             alignItems: "center",
-            backgroundColor: '#f0f0f0',
+            backgroundColor: isDarkMode ? '#333' : '#f0f0f0', // 夜色模式背景
             width: '6%',
             minWidth: "6%",
             maxWidth: '150px', // 避免过窄
@@ -65,6 +67,7 @@ export function EnergySlot() {
                 style={{ width: '40px', height: '40px', marginBottom: '10px' }} draggable="false" />
             <p style={{
                 fontSize: '1.6em',
+                color: isDarkMode ? '#e0e0e0' : 'black',
                 margin: 0  // 去除默认外边距
             }}>{energy}</p>
         </div>
@@ -73,6 +76,7 @@ export function EnergySlot() {
 
 
 export function VerticalEnergySlot() {
+    const isDarkMode = useDarkMode();
     const { energy, updateEnergy } = useGameContext();
 
     useEffect(() => {
@@ -101,7 +105,7 @@ export function VerticalEnergySlot() {
             display: "flex",  // 关键：使用 Flexbox 布局
             flexDirection: "row",
             alignItems: "center",
-            backgroundColor: '#f0f0f0',
+            backgroundColor: isDarkMode ? '#333' : '#f0f0f0', // 夜色模式背景
             width: '100%',
             padding: '10px',
             color: 'black',
@@ -110,13 +114,14 @@ export function VerticalEnergySlot() {
         }}>
             <img src={`${publicUrl}/assets/sprite/redstone.png`} alt="energy"
                 style={{ width: '40px', height: '40px' }} draggable="false" />
-            <p style={{ margin: 0, fontSize: '1.5em' }}>{energy}</p>
+            <p style={{ margin: 0, fontSize: '1.5em', color: isDarkMode ? '#e0e0e0' : 'black', }}>{energy}</p>
         </div>
 
     )
 }
 
 export function CardSlotHorizontal({ sceneRef, gameParams }: slotProps) {
+    const isDarkMode = useDarkMode();
     // PC 用主要卡槽
     const MaxCardNumber = 10;
     const { currentProgress } = useSaveManager();
@@ -153,6 +158,7 @@ export function CardSlotHorizontal({ sceneRef, gameParams }: slotProps) {
         flexDirection: "row",
         backgroundColor: '#f0f0f0',
         justifyContent: 'flex-start',
+        backgroundColor: isDarkMode ? '#333' : '#f0f0f0', // 夜色模式背景
         width: '100%',
         height: "100%",
         alignItems: "center",
@@ -175,6 +181,7 @@ export function CardSlotHorizontal({ sceneRef, gameParams }: slotProps) {
 
 
 export function CardSlotVertical({ sceneRef, gameParams }: slotProps) {
+    const isDarkMode = useDarkMode();
     // Mobile 用主要卡槽
     const MaxCardNumber = 9;
     const { currentProgress } = useSaveManager();
@@ -207,11 +214,11 @@ export function CardSlotVertical({ sceneRef, gameParams }: slotProps) {
         <div style={{
             display: 'flex',
             flexDirection: "column", /* 保持垂直排列 */
-            backgroundColor: '#f0f0f0',
             justifyContent: 'flex-start',
             alignItems: 'flex-start',
             width: '120%', /* 调整宽度以适应横向卡片 */
             height: "91%",
+            backgroundColor: isDarkMode ? '#333' : '#f0f0f0', // 夜色模式背景
         }}>
             {plants.map((plant, index) => (
                 <VCard
@@ -232,6 +239,7 @@ export function CardSlotVertical({ sceneRef, gameParams }: slotProps) {
 
 // 永远竖向排列,有pickaxe和剩余的卡片
 export function ViceCardSlot({ sceneRef, gameParams }: slotProps) {
+    const isDarkMode = useDarkMode();
 
     const ExistedCards = useDeviceType() === 'pc' ? 10 : 9;
     const { currentProgress } = useSaveManager();
@@ -270,10 +278,10 @@ export function ViceCardSlot({ sceneRef, gameParams }: slotProps) {
         <div style={{
             display: 'flex',
             flexDirection: "row",
-            backgroundColor: '#f0f0f0',
             justifyContent: 'flex-start',
             width: '100%',
             height: "100%",
+            backgroundColor: isDarkMode ? '#333' : '#f0f0f0', // 夜色模式背景
         }} >
             <Pickaxe sceneRef={sceneRef} />
             {plants.map((plant, index) => (
