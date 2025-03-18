@@ -37,7 +37,7 @@ class StickZombie extends EnhancedZombie {
         if (this.hasStick) {
             this.hasStick = false;
             // 进行翻阅操作
-            this.vaultTargetX = this.x - this.game.positionCalc.GRID_SIZEX * 1.4;
+            this.vaultTargetX = this.game.positionCalc.gridOffsetX + (plant.col - 0.2) * this.game.positionCalc.GRID_SIZEX;
             this.isFlying = true;
         } else if (this.isFlying) {
             return; // 正在飞行中,不进行攻击
