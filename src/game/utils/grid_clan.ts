@@ -4,6 +4,7 @@
  */
 
 import { IPlant } from "../models/IPlant";
+import MagicPowderRecord from "../presets/plant/magic_powder";
 import Gardener from "./gardener";
 
 export const SHIELD_PLANT: number[] = []; // 护盾植物,铲除上方时铲除,可以和任何非护盾器械兼容
@@ -257,6 +258,10 @@ export default class GridClan {
         }
         // 新plant是护盾,如果prev不是护盾,转
         if (SHIELD_PLANT.includes(newPlant.pid) && !SHIELD_PLANT.includes(prevPlant.pid)) {
+            return true;
+        }
+        // 是以下特殊植物(魔术粉)
+        if (newPlant.pid === MagicPowderRecord.pid) {
             return true;
         }
         return false;
