@@ -123,7 +123,7 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
                         description: "选择游戏分辨率,移动端推荐选择画面缩小50%并选用924x693",
                         controlType: "selections",
                         controlProps: {
-                            options: ["800x600", "924x693", "1024x768", "1200x900", "1600x1200", "600x450"], selected: `${width}x${width / 4 * 3}`, onSelect: (val) => {
+                            options: ["800x600", "924x693", "1024x768", "1200x900", "1600x1200"], selected: `${width}x${width / 4 * 3}`, onSelect: (val) => {
                                 let twidth = parseInt(val);
                                 settingManager.setWidth(twidth);
                             }
