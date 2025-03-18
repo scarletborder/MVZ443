@@ -96,7 +96,7 @@ function NewVindicator(scene: Game, x: number, y: number): IZombie {
 }
 
 const VindicatorRecord: MIRecord = {
-    mid: 6,
+    mid: 10,
     name: 'Vindicator',
     NewFunction: NewVindicator,
     texture: 'zombie/zombie',

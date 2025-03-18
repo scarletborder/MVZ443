@@ -156,7 +156,6 @@ export function CardSlotHorizontal({ sceneRef, gameParams }: slotProps) {
     return (<div style={{
         display: 'flex',
         flexDirection: "row",
-        backgroundColor: '#f0f0f0',
         justifyContent: 'flex-start',
         backgroundColor: isDarkMode ? '#333' : '#f0f0f0', // 夜色模式背景
         width: '100%',

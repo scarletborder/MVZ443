@@ -111,7 +111,7 @@ const PumpkinWanRecord: IRecord = {
     pid: 11,
     name: '广域南瓜派',
     cost: () => 325,
-    cooldownTime: () => 75,
+    cooldownTime: () => 52,
     NewFunction: NewPumpkinWan,
     texture: 'plant/pumpkin_wan',
     description: i18n.S('pumpkin_wan_description'),

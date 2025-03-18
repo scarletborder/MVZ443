@@ -10,24 +10,29 @@ import { Game } from "../../scenes/Game";
 
 class MagicPowder extends IPlant {
     game: Game;
-    hasKill: boolean;
-    damage: number = 2000;
+    damage: number;
+    hasGotStarShards: boolean = false;
     constructor(scene: Game, col: number, row: number, level: number) {
         super(scene, col, row, MagicPowderRecord.texture, MagicPowderRecord.pid, level);
         this.game = scene;
+        this.hasGotStarShards = false;
         this.setHealthFirstly(SECKILL);
-        this.hasKill = false;
         this.createRects();
 
-        this.damage = GetIncValue(2000, 1.3, level);
+        this.damage = GetIncValue(4000, 1.3, level);
+        scene.time.delayedCall(400, () => {
+            this.destroyPlant();
+        });
     }
 
     public takeDamage(amount: number, zombie?: IZombie | null): void {
         // 直接秒杀敌人(碰撞)
-        if (zombie && !this.hasKill) {
-            this.hasKill = true;
-            zombie.takeDamage(this.damage, 'laser');
-            this.destroyPlant();
+        if (zombie && zombie.health > 0) {
+            zombie.takeDamage(this.damage, 'explosion');
+        }
+
+        if (!this.hasGotStarShards) {
+            this.hasGotStarShards = true;
             EventBus.emit('starshards-get');
         }
     }
@@ -55,13 +60,10 @@ class MagicPowder extends IPlant {
             this.game.tweens.add({
                 targets: graphics,
                 alpha: 0.2,
-                duration: 600,
+                duration: 1600,
                 ease: 'Linear',
                 onComplete: () => {
                     graphics.destroy();
-                    if (this && this.health && this.health > 0) {
-                        this.destroyPlant();
-                    }
                 }
             });
         }
@@ -80,8 +82,8 @@ function cost(level?: number): number {
 }
 
 function cooldownTime(level?: number): number {
-    if ((level || 1) >= 9) return 45;
-    return 55;
+    if ((level || 1) >= 9) return 42;
+    return 50;
 }
 
 function levelAndstuff(level: number): item[] {

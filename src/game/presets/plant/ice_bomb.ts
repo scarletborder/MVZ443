@@ -82,7 +82,7 @@ class IceBomb extends IPlant {
             this.game.tweens.add({
                 targets: graphics,
                 alpha: 0.2,
-                duration: 600,
+                duration: 1600,
                 ease: 'Linear',
                 onComplete: () => {
                     graphics.destroy();

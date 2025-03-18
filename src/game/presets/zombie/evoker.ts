@@ -98,16 +98,16 @@ export class EnhancedEvoker extends IZombie {
     }
 }
 
-function NewSkeleton(scene: Game, x: number, y: number): IZombie {
+function NewEvoker(scene: Game, x: number, y: number): IZombie {
     const zombie = new EnhancedEvoker(scene, x, y, 'zombie/zombie');
     zombie.StartMove();
     return zombie;
 }
 
 const EvokerRecord: MIRecord = {
-    mid: 6,
+    mid: 9,
     name: 'evoker',
-    NewFunction: NewSkeleton,
+    NewFunction: NewEvoker,
     texture: 'zombie/zombie',
 }
 
