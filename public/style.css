@@ -6,6 +6,10 @@ body {
     font-family: Arial, Helvetica, sans-serif;
 }
 
+img {
+    filter: invert(0) !important;
+}
+
 #app {
     width: 100%;
     height: 100vh;

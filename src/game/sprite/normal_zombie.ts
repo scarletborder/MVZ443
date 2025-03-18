@@ -18,7 +18,7 @@ class NormalZombieAnim extends IZombieAnim {
 
 export function newNormalZombieAnim(scene: Game, x: number, y: number) {
     return new NormalZombieAnim(scene, x, y);
-};
+}
 
 const NormalSkeletonAnimProps: ZombieAnimProps = {
     Species: 'Skeleton',
@@ -50,6 +50,19 @@ class NormalEvokerAnim extends IZombieAnim {
     constructor(scene: Game, x: number, y: number) {
         super(scene, x, y, NormalEvokerAnimProps);
     }
+
+
+    startArmSwing() {
+        if (!this.armTween || !this.armTween.isPlaying()) {
+            this.armTween = this.scene.tweens.add({
+                targets: [this.armRight],
+                angle: { from: +15, to: -15 },
+                duration: 500,
+                yoyo: true,
+                repeat: -1
+            });
+        }
+    }
 }
 
 export function newNormalEvokerAnim(scene: Game, x: number, y: number) {
@@ -67,6 +80,19 @@ const NormalVindicatorAnimProps: ZombieAnimProps = {
 class NormalVindicatorAnim extends IZombieAnim {
     constructor(scene: Game, x: number, y: number) {
         super(scene, x, y, NormalVindicatorAnimProps);
+    }
+
+
+    startArmSwing() {
+        if (!this.armTween || !this.armTween.isPlaying()) {
+            this.armTween = this.scene.tweens.add({
+                targets: [this.armRight],
+                angle: { from: +15, to: -15 },
+                duration: 500,
+                yoyo: true,
+                repeat: -1
+            });
+        }
     }
 }
 
