@@ -6,12 +6,11 @@ import PlantFactoryMap from '../../game/presets/plant';
 import Stuff from '../../constants/stuffs';
 import { useGameContext } from '../../context/garden_ctx';
 
-
 interface Props {
     width: number;
     height: number;
     isWin: boolean;
-    onWin?: OnWin; // Optional if the game is won
+    onWin?: OnWin; // 游戏胜利时的奖励数据
     progressRewards: ProgressReward[] | undefined;
     myProgress: number;
     onBack: () => void;
@@ -20,17 +19,21 @@ interface Props {
 export default function GameResultView({ width, height, isWin, onWin, progressRewards, myProgress, onBack }: Props) {
     const saveManager = useSaveManager();
     const { setIsPaused } = useGameContext();
-    const hasSavedRef = useRef(false); // 使用 ref 替代状态
+    const hasSavedRef = useRef(false);
+
+    // 状态存储计算好的字符串显示
+    const [unlockedLevelsStr, setUnlockedLevelsStr] = useState<string>("无");
+    const [unlockedPlantsStr, setUnlockedPlantsStr] = useState<string>("无");
 
     useEffect(() => {
         setIsPaused(true);
-    }, [setIsPaused])
+    }, [setIsPaused]);
 
     useEffect(() => {
         if (!hasSavedRef.current) {
-            if (progressRewards === undefined) return; // 未初始化好
+            if (progressRewards === undefined) return; // 进度奖励未初始化
             console.log("保存进度奖励");
-            hasSavedRef.current = true; // 设置标志，防止重复保存
+            hasSavedRef.current = true;
 
             if (isWin) {
                 onWin?.unLockPlant.forEach(plant => {
@@ -47,10 +50,41 @@ export default function GameResultView({ width, height, isWin, onWin, progressRe
                 }
             });
             saveManager.saveProgress();
-            // 可以确保每次结算领取一次,并且不刷新网页情况可以每开新关卡领取一次
         }
-    }, [progressRewards, onWin, isWin]); // 移除 hasSaved 依赖
+    }, [progressRewards, onWin, isWin]);
 
+    // 使用 useEffect 计算解锁关卡和解锁器械的字符串，避免在 JSX 中进行计算
+    useEffect(() => {
+        if (onWin) {
+            let levelsStr = "无";
+            let plantsStr = "无";
+
+            if (onWin.unLock && onWin.unLock.length > 0) {
+                const computedLevels = onWin.unLock.map((cpid) => {
+                    if (saveManager.currentProgress.level.has(cpid)) {
+                        return "";
+                    }
+                    const stage = StageDataRecords[cpid];
+                    const chapter = ChapterDataRecords[stage.chapterID];
+                    return `${chapter.name} - ${stage.name}`;
+                }).filter(item => item !== "");
+                levelsStr = computedLevels.length > 0 ? computedLevels.join(" ") : "无";
+            }
+
+            if (onWin.unLockPlant && onWin.unLockPlant.length > 0) {
+                const computedPlants = onWin.unLockPlant.map((pid) => {
+                    if (saveManager.currentProgress.plants.some(p => p.pid === pid)) {
+                        return "";
+                    }
+                    return PlantFactoryMap[pid].name;
+                }).filter(item => item !== "");
+                plantsStr = computedPlants.length > 0 ? computedPlants.join(" ") : "无";
+            }
+
+            setUnlockedLevelsStr(levelsStr);
+            setUnlockedPlantsStr(plantsStr);
+        }
+    }, [onWin, saveManager.currentProgress]);
 
     return (
         <div style={{
@@ -63,7 +97,7 @@ export default function GameResultView({ width, height, isWin, onWin, progressRe
             boxShadow: "0 0 15px rgba(0, 0, 0, 0.5)",
             animation: "frameFadeIn 0.5s ease-out"
         }}>
-            {/* Back to Home Button */}
+            {/* 返回主页按钮 */}
             <button
                 style={{
                     position: "absolute",
@@ -90,7 +124,7 @@ export default function GameResultView({ width, height, isWin, onWin, progressRe
                 返回主页
             </button>
 
-            {/* Left Side - Game Result */}
+            {/* 左侧：游戏结果 */}
             <div style={{
                 width: "40%",
                 height: "100%",
@@ -113,26 +147,8 @@ export default function GameResultView({ width, height, isWin, onWin, progressRe
                         <p style={{ fontSize: "18px", marginBottom: "10px" }}>胜利！</p>
                         {onWin && (
                             <>
-                                <p>解锁关卡: {onWin.unLock.length > 0 ?
-
-                                    Array.from(onWin.unLock, (cpid) => {
-                                        if (saveManager.currentProgress.level.has(cpid)) {
-                                            return null;
-                                        }
-                                        const stage = StageDataRecords[cpid];
-                                        const chapter = ChapterDataRecords[stage.chapterID];
-                                        return `${chapter.name} - ${stage.name}`;
-                                    }).join(" ")
-                                    : "无"}</p>
-                                <p>解锁器械: {onWin.unLockPlant.length > 0 ?
-                                    Array.from(onWin.unLockPlant, (pid) => {
-                                        if (saveManager.currentProgress.plants.some(p => p.pid === pid)) {
-                                            // 已有
-                                            return null;
-                                        }
-                                        return PlantFactoryMap[pid].name;
-                                    }).join(" ")
-                                    : "无"}</p>
+                                <p>解锁关卡: {unlockedLevelsStr}</p>
+                                <p>解锁器械: {unlockedPlantsStr}</p>
                             </>
                         )}
                     </div>
@@ -141,7 +157,7 @@ export default function GameResultView({ width, height, isWin, onWin, progressRe
                 )}
             </div>
 
-            {/* Right Side - Progress Rewards */}
+            {/* 右侧：进度奖励 */}
             <div style={{
                 width: "50%",
                 height: "100%",

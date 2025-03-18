@@ -21,12 +21,12 @@ class pumkin_wan extends INightPlant {
         const row = this.row;
 
         game.time.addEvent({
-            delay: 5000,
-            repeat: 6,
-            startAt: 4500,
+            delay: 2000,
+            repeat: 4,
+            startAt: 1800,
             callback: () => {
                 NewExplosionByGrid(game, col, row, {
-                    damage: 250,
+                    damage: 300,
                     upGrid: 1,
                     leftGrid: 1.5,
                     rightGrid: 1.5,
