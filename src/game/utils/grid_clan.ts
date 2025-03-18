@@ -193,7 +193,7 @@ export default class GridClan {
         const { col, row } = this.gardener.positionCalc.getGridByPos(px, py);
         if (col >= 0 && row >= 0 && col < this.gardener.positionCalc.Col_Number && row < this.gardener.positionCalc.Row_Number) {
             const { y } = this.gardener.positionCalc.getGridCenter(col, row);
-            const removeShield = py < y; // 鼠标在格子上方,优先移除护盾
+            const removeShield = py > y; // 鼠标在格子下方,优先移除护盾
             const key = `${col}-${row}`;
             // 获得 pid
             if (this.gardener.planted.has(key)) {
@@ -217,7 +217,7 @@ export default class GridClan {
                             }
                         }
                         // 有护盾,Normal plant(以及还有承载物)
-                        if (removeShield) {
+                        if (removeShield) { // 鼠标在grid下方,remove shield
                             for (const plant of list) {
                                 if (SHIELD_PLANT.includes(plant.pid)) {
                                     return {
@@ -228,7 +228,7 @@ export default class GridClan {
                                 }
                             }
                         } else {
-                            // 即使是移除下面的目标,如果只有承载物和护盾,也会在上面的逻辑中返回护盾
+                            // 即使是移除上面的目标,如果只有承载物和护盾,也会在上面的逻辑中返回护盾
                             for (const plant of list) {
                                 if (!SHIELD_PLANT.includes(plant.pid) && (!this.isCarrier(plant.pid))) {
                                     return {
