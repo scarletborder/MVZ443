@@ -9,8 +9,8 @@
             "flag": "normal",
             "monsters": [],
             "duration": 0,
-            "maxDelay": 20,
-            "minDelay": 18,
+            "maxDelay": 15,
+            "minDelay": 10,
             "arrangement": 1,
             "minLine": 1,
             "starShards": 0,
@@ -172,7 +172,7 @@
             4
         ]
     },
-    "energy": 100,
+    "energy": 1000,
     "rewards": [
         {
             "progress": 45,
