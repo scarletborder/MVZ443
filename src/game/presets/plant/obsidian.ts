@@ -9,7 +9,7 @@ import { Game } from "../../scenes/Game";
 
 class Obsidian extends IPlant {
     shieldHealth: number = 0;
-    maxShieldHealth: number = 4000;
+    maxShieldHealth: number = 6000;
     constructor(scene: Game, col: number, row: number, level: number) {
         super(scene, col, row, ObsidianRecord.texture, ObsidianRecord.pid, level);
         this.setFrame(0);

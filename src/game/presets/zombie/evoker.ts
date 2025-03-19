@@ -13,10 +13,10 @@ export class EnhancedEvoker extends IZombie {
 
     constructor(scene: Game, col: number, row: number, texture: string, waveID: number) {
         super(scene, col, row, texture, waveID, newNormalEvokerAnim);
-        this.health = 320;
+        this.health = 400;
         this.summonTimes = 3;
         this.scene = scene;
-        this.attackDamage = 15;
+        this.attackDamage = 20;
         this.SetSpeedFirstly(25 * scene.positionCalc.scaleFactor);
 
         this.Timer = scene.time.addEvent({

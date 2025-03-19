@@ -21,7 +21,7 @@ class _TntMines extends IPlant {
         this.isBuried = true;
         this.game = scene;
         this.setFrame(0);
-        this.setHealthFirstly(300);
+        this.setHealthFirstly(400);
 
         this.Timer = scene.time.addEvent({
             delay: buriedTime, // 出土时间
@@ -115,7 +115,7 @@ class _TntMines extends IPlant {
         } else {
             const rightDistance = this.level >= 9 ? 1.5 : 1;
             new IExpolsion(this.game, this.x, this.row, {
-                damage: 2000,
+                damage: 1000,
                 rightGrid: rightDistance,
                 leftGrid: 0.5,
                 upGrid: 0
@@ -126,7 +126,7 @@ class _TntMines extends IPlant {
 }
 
 function NewTntMines(scene: Game, col: number, row: number, level: number): _TntMines {
-    const buriedTime = GetDecValue(16000, 0.8, level);
+    const buriedTime = GetDecValue(15000, 0.8, level);
     const mine = new _TntMines(scene, col, row, level, buriedTime);
     return mine;
 }

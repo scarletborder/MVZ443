@@ -16,8 +16,8 @@ class MinerZombie extends EnhancedZombie {
     constructor(scene: Game, col: number, row: number, texture: string, waveID: number) {
         super(scene, col, row, texture, waveID);
         this.SetSpeedFirstly(20 * scene.positionCalc.scaleFactor);
-        this.axeDurability = 32;
-        this.attackDamage = 50;
+        this.axeDurability = 24;
+        this.attackDamage = 60;
         this.game = scene;
 
         // 添加pickaxe attackment

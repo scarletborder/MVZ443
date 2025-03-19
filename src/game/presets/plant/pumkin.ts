@@ -71,7 +71,7 @@ class pumkin extends INightPlant {
         const row = this.row;
         for (let i = Math.max(0, row - 1); i <= Math.min(this.game.positionCalc.Row_Number - 1, row + 1); i++) {
             NewLaserByGrid(this.game, col, i, 12,
-                GetIncValue(375, 1.35, this.level), 'zombie', 1000);
+                GetIncValue(425, 1.35, this.level), 'zombie', 1000);
         }
     }
 }
@@ -87,7 +87,7 @@ function NewPumpkin(scene: Game, col: number, row: number, level: number): IPlan
 
 function shootLaser(scene: Game, shooter: IPlant) {
     const level = shooter.level;
-    const damage = GetIncValue(35, 1.5, level);
+    const damage = GetIncValue(42, 1.5, level);
 
     if (level < 9) {
         const laser = NewLaserByGrid(scene, shooter.col, shooter.row,

@@ -17,9 +17,9 @@ class IceBomb extends IPlant {
         this.setHealthFirstly(SECKILL);
         this.hasKill = false;
         this.createRects();
-        this.damage = GetIncValue(5, 10, level);
+        this.damage = GetIncValue(14, 10, level);
         if (level >= 5) {
-            this.damage = 75;
+            this.damage = 152;
         }
 
         // 发射大道隐藏激光

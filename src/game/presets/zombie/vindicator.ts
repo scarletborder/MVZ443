@@ -11,8 +11,8 @@ export class EnhancedVindicator extends IZombie {
 
     constructor(scene: Game, col: number, row: number, texture: string, waveID: number) {
         super(scene, col, row, texture, waveID, newNormalVindicatorAnim);
-        this.health = 220;
-        this.attackDamage = 35;
+        this.health = 360;
+        this.attackDamage = 32;
         this.SetSpeedFirstly(30 * scene.positionCalc.scaleFactor);
 
         const topX = this.x + this.offsetX - scene.positionCalc.GRID_SIZEX * 0.42;
@@ -30,9 +30,9 @@ export class EnhancedVindicator extends IZombie {
 
     // 处理血量变化并更新伤口位置
     private handleHealthChange(health: number) {
-        if (this.health <= 110 && this.health > 0) {
+        if (this.health <= 180 && this.health > 0) {
             this.zombieAnim.switchBodyFrame(true);
-        } else if (this.health > 110) {
+        } else if (this.health > 180) {
             this.zombieAnim.switchBodyFrame(false);
         }
         // <0 给到别的逻辑处理

@@ -41,7 +41,7 @@ class dispenser extends IPlant {
 
     normalShootEvent(): Phaser.Time.TimerEvent {
         return this.game.time.addEvent({
-            startAt: 1000, // 已经使用的时间,即开始时间
+            startAt: 830, // 已经使用的时间,即开始时间
             callback: () => {
                 if (this.health > 0) {
                     // 判断本行之前有没有敌人(TODO:或者背后有并且之前有可反弹的物体)
@@ -51,7 +51,7 @@ class dispenser extends IPlant {
                 }
             },
             loop: true,
-            delay: 1050,  // 每隔1秒发射一次
+            delay: 930,  // 每隔1秒发射一次
         });
     }
 
@@ -60,7 +60,7 @@ class dispenser extends IPlant {
         return this.game.time.addEvent({
             callback: () => {
                 if (this.health > 0) {
-                    const arrow = shootArrow(this.game, this, 30, true);
+                    const arrow = shootArrow(this.game, this, 32, true);
                 }
             },
             repeat: totalArrows - 1,
@@ -74,7 +74,7 @@ function NewDispenser(scene: Game, col: number, row: number, level: number): IPl
     return peashooter;
 }
 
-function shootArrow(scene: Game, shooter: IPlant, baseDamage: number = 22, isStar: boolean = false) {
+function shootArrow(scene: Game, shooter: IPlant, baseDamage: number = 28, isStar: boolean = false) {
     const level = shooter.level;
     //  根据等级略微提高伤害
     const damage = GetIncValue(baseDamage, level, 1.5);

@@ -8,7 +8,7 @@ import { newNormalSkeletonAnim } from '../../sprite/normal_zombie';
 export class EnhancedSkeleton extends IZombie {
     constructor(scene: Game, col: number, row: number, texture: string, waveID: number) {
         super(scene, col, row, texture, waveID, newNormalSkeletonAnim);
-        this.health = 160;
+        this.health = 250;
         this.SetSpeedFirstly(20 * scene.positionCalc.scaleFactor);
     }
 

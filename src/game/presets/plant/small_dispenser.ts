@@ -25,7 +25,7 @@ class smallDispenser extends INightPlant {
         this.maxDistance = maxDistance;
 
         this.Timer = scene.time.addEvent({
-            startAt: 1000, // 已经使用的时间,即开始时间
+            startAt: 1200, // 已经使用的时间,即开始时间
             callback: () => {
                 if (this.health > 0) {
                     if (scene.monsterSpawner.hasMonsterInRowAfterX(this.row, this.x, this.maxDistance)) {
@@ -34,7 +34,7 @@ class smallDispenser extends INightPlant {
                 }
             },
             loop: true,
-            delay: 1050,  // 每隔1秒发射一次
+            delay: 1400,  // 每隔1秒发射一次
         });
         console.log(this.Timer.getRemaining())
     }
@@ -63,7 +63,7 @@ function NewDispenser(scene: Game, col: number, row: number, level: number): IPl
 function shootSnowBall(scene: Game, shooter: IPlant, maxDistance: number) {
     const level = shooter.level;
     //  根据等级略微提高伤害
-    const damage = GetIncValue(20, level, 1.45);
+    const damage = GetIncValue(43, level, 1.45);
 
     if (!shooter.isSleeping) {
         const arrow = NewSnowBullet(scene, shooter.col, shooter.row, maxDistance, damage);

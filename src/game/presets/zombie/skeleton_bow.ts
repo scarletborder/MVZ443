@@ -15,7 +15,7 @@ class MinerZombie extends EnhancedSkeleton {
     constructor(scene: Game, col: number, row: number, texture: string, waveID: number) {
         super(scene, col, row, texture, waveID);
         this.SetSpeedFirstly(20 * scene.positionCalc.scaleFactor);
-        this.attackDamage = 15;
+        this.attackDamage = 25;
 
         // 添加pickaxe attackment
 
@@ -34,7 +34,7 @@ class MinerZombie extends EnhancedSkeleton {
 
         // 监听射箭和停止射箭
         this.Timer = scene.time.addEvent({
-            delay: 2000,
+            delay: 3500,
             callback: () => {
                 if (this.hasDebuff('frozen') > 0) return; // 冰冻状态不射箭
                 // 如果正在近战攻击,放弃
@@ -70,7 +70,7 @@ class MinerZombie extends EnhancedSkeleton {
     }
 
     shootArrow(scene: Game) {
-        const damage = 45;
+        const damage = 70;
         const arrow = NewArrow(scene, 10, this.row,
             scene.positionCalc.GRID_SIZEX * 32, damage, 'plant');
         arrow.setX(this.x);

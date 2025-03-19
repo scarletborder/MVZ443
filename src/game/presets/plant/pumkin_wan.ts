@@ -26,7 +26,7 @@ class pumkin_wan extends INightPlant {
             startAt: 1800,
             callback: () => {
                 NewExplosionByGrid(game, col, row, {
-                    damage: 300,
+                    damage: 350,
                     upGrid: 1,
                     leftGrid: 1.5,
                     rightGrid: 1.5,
@@ -55,7 +55,7 @@ class pumkin_wan extends INightPlant {
         this.attackInterval = 1050;
 
         this.game = scene;
-        this.setHealthFirstly(350);
+        this.setHealthFirstly(400);
         this.setFrame(0);
         this.maxDistance = 3 * scene.positionCalc.GRID_SIZEX;
 
@@ -90,7 +90,7 @@ function NewPumpkinWan(scene: Game, col: number, row: number, level: number): IP
 
 function shootLaser(scene: Game, shooter: IPlant) {
     const level = shooter.level;
-    const damage = GetIncValue(37, 1.4, level);
+    const damage = GetIncValue(45, 1.4, level);
     const start = (level >= 9 ? 2.6 : 1.6);
     const distance = (level >= 9 ? 5.2 : 3.2);
 

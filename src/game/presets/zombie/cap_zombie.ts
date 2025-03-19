@@ -11,7 +11,7 @@ class CapZombie extends EnhancedZombie {
         super(scene, col, row, texture, waveID);
         this.waveID = waveID;
         this.SetSpeedFirstly(20 * scene.positionCalc.scaleFactor);
-        this.capHealth = 325;
+        this.capHealth = 370;
 
         const topX = this.x + this.offsetX;
         const topY = this.y - scene.positionCalc.GRID_SIZEY * 1.15 + this.offsetY;

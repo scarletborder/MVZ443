@@ -8,16 +8,16 @@ import { newNormalZombieAnim } from '../../sprite/normal_zombie';
 export class EnhancedZombie extends IZombie {
     constructor(scene: Game, col: number, row: number, texture: string, waveID: number) {
         super(scene, col, row, texture, waveID, newNormalZombieAnim);
-        this.health = 180;
+        this.health = 300;
         this.SetSpeedFirstly(20 * scene.positionCalc.scaleFactor);
     }
 
 
     // 处理血量变化并更新伤口位置
     private handleHealthChange(health: number) {
-        if (this.health <= 100 && this.health > 0) {
+        if (this.health <= 150 && this.health > 0) {
             this.zombieAnim.switchBodyFrame(true);
-        } else if (this.health > 100) {
+        } else if (this.health > 150) {
             this.zombieAnim.switchBodyFrame(false);
         }
         // <0 给到别的逻辑处理

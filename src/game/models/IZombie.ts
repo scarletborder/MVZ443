@@ -45,8 +45,8 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite {
     // 攻击
     private attackTimer?: Phaser.Time.TimerEvent; // 攻击定时器
     public attackingPlant: IPlant | null = null; // 当前攻击的植物
-    public attackInterval: number = 160; // 攻击间隔
-    public attackDamage: number = 15; // 攻击伤害
+    public attackInterval: number = 200; // 攻击间隔
+    public attackDamage: number = 20; // 攻击伤害
 
     // 附加物体
     public zombieAnim: IZombieAnim;
@@ -150,7 +150,7 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite {
 
         // 启动攻击定时器
         this.attackTimer = this.game.time.addEvent({
-            startAt: this.attackInterval * 4 / 5,
+            startAt: this.attackInterval * 9 / 10,
             delay: this.attackInterval,
             callback: () => this.hurtPlant(),
             loop: true,

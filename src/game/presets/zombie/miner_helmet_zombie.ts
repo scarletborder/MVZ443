@@ -21,8 +21,8 @@ class MinerHelmetZombie extends EnhancedZombie {
         this.game = scene;
         this.SetSpeedFirstly(20 * scene.positionCalc.scaleFactor);
 
-        this.axeDurability = 32;
-        this.attackDamage = 50;
+        this.axeDurability = 24;
+        this.attackDamage = 60;
 
         this.capHealth = MinerHelmetZombie.maxCapHealth;
 
