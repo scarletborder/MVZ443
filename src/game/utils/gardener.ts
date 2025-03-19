@@ -42,6 +42,9 @@ export default class Gardener {
     private highlightTween: Phaser.Tweens.Tween | null = null;
 
     constructor(scene: Game, positionCalc: PositionCalc) {
+        this.usePickaxe = false;
+        this.useStarShards = false;
+
         this.scene = scene;
         this.positionCalc = positionCalc;
         this.GridClan = new GridClan(this);
@@ -55,25 +58,11 @@ export default class Gardener {
             .setDepth(DepthManager.getInGameUIElementDepth(50));
         this.starSprite.setVisible(false);
 
-        // 监听q按键
-        this.scene.input.keyboard?.on('keydown-Q', () => {
-            if (this.usePickaxe) {
-                this.cancelPickAxe();
-            } else {
-                this.pickAxe();
-            }
-        });
-
-        this.scene.input.keyboard?.on('keydown-W', () => {
-            if (this.useStarShards) {
-                this.cancelStarShards();
-            } else {
-                this.setStarShards();
-            }
-        });
-
         // 监听事件
         EventBus.on('pickaxe-click', () => {
+            // 取消其他的
+            this.cancelStarShards();
+            this.cancelPrePlant();
             if (this.usePickaxe) {
                 this.cancelPickAxe();
             } else {
@@ -82,6 +71,8 @@ export default class Gardener {
         });
 
         EventBus.on('starshards-click', () => {
+            this.cancelPickAxe();
+            this.cancelPrePlant();
             if (this.useStarShards) {
                 this.cancelStarShards();
             } else {
@@ -311,7 +302,6 @@ export default class Gardener {
 
         // 右键,取消种植/取消星之碎片
         if (pointer.rightButtonReleased()) {
-            console.log('cancel right click');
             if (this.useStarShards) {
                 this.cancelStarShards();
             } else if (this.usePickaxe) {

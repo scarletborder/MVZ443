@@ -88,6 +88,24 @@ export default function BottomTools({ width, chapterID }: Props) {
         }
     }, []); // 不要改
 
+    // 添加键盘事件监听
+    useEffect(() => {
+        const handleKeyPress = (event: { key: string; }) => {
+            if (event.key === 'w' || event.key === 'W') { // 支持小写和大写 "q"
+                handleStarClick(); // 按下 q 键时调用 handleClick
+            }
+        };
+
+        // 绑定键盘事件
+        window.addEventListener('keydown', handleKeyPress);
+
+        // 清理函数，在组件卸载时移除事件监听器
+        return () => {
+            window.removeEventListener('keydown', handleKeyPress);
+        };
+    }, [handleStarClick]); // 依赖项，确保相关状态变化时重新绑定
+
+
     // 计算进度条百分比
     const progress = gamectx.bossHealth !== -1 ?
         (bossHealth) :
