@@ -252,6 +252,10 @@ export default class GridClan {
     }
     // 僵尸攻击plant,如果有新的接触plant,判断是否应该转移
     public MorePriorityPlant(prevPlant: IPlant, newPlant: IPlant): boolean {
+        // 是自己,不转
+        if (prevPlant.pid === newPlant.pid) {
+            return false;
+        }
         // 承载物之上有了新的植物,无条件转移
         if (this.isCarrier(prevPlant.pid) && !this.isCarrier(newPlant.pid)) {
             return true;

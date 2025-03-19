@@ -185,7 +185,7 @@ export class IPlant extends Phaser.Physics.Arcade.Sprite {
 
     // 调用摧毁
     public destroyPlant() {
-        // 通知正在攻击的僵尸
+        // // 通知正在攻击的僵尸
         this.attackingZombie.forEach(zombie => {
             zombie.stopAttacking();
         });

@@ -164,6 +164,8 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite {
     }
     // 停止攻击
     public stopAttacking() {
+        this.attackingPlant = null;
+
         this.zombieAnim?.stopArmSwing();
         this.zombieAnim?.startLegSwing();
         if (this.attackTimer) {
@@ -303,9 +305,14 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite {
 
     // 伤害植物
     public hurtPlant() {
-        if (this.attackingPlant && this.attackingPlant.active) {
+        if (this.attackingPlant && this.attackingPlant.active && this.attackingPlant.health > 0) {
             this.attackingPlant.takeDamage(this.attackDamage, this);
             if (!this.attackingPlant) return;
+            if (this.attackingPlant.health <= 0) {
+                this.stopAttacking();
+            }
+        } else if (!this.attackingPlant || this.attackingPlant.health <= 0) {
+            this.stopAttacking();
         }
     }
 
