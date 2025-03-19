@@ -1,5 +1,6 @@
 import { item } from "../../components/shop/types";
 import { Game } from "../scenes/Game";
+import IGolem from "./IGolem";
 import { IPlant } from "./IPlant";
 import { IZombie } from "./IZombie";
 
@@ -27,8 +28,8 @@ export interface IRecord {
 export interface MIRecord {
     mid: number;
     name: string;
-    NewFunction: (Game: Game, col: number, row: number, waveID: number) => IZombie;
-    texture: string;
+    NewFunction: (Game: Game, col: number, row: number, waveID: number) => IZombie | IGolem;
+    texture: string; // placeholder
     brief?: () => string;
     description?: () => string;
 }

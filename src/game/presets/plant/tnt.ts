@@ -9,6 +9,7 @@ import { IRecord } from "../../models/IRecord";
 import { Game } from "../../scenes/Game";
 import { SHIELD_PLANT } from "../../utils/grid_clan";
 import Lily from "./lily";
+import { StartArc } from "../../utils/arc";
 
 class _Tnt extends IPlant {
     game: Game;
@@ -22,7 +23,7 @@ class _Tnt extends IPlant {
         this.setHealthFirstly(SECKILL);
         this.damage = GetIncValue(3000, 1.5, level);
         this.damage *= (level >= 5 ? 1.3 : 1);
-        this.random = seedrandom.alea(String(scene.seed))
+        this.random = seedrandom.alea(String(scene.seed * 5));
 
         const x = this.x;
         const _row = this.row;
@@ -85,19 +86,25 @@ class _Tnt extends IPlant {
         // 使用辅助函数生成爆炸效果
         const targets = getExplosionTargets(this.game, this.col, this.row);
         targets.forEach(([targetCol, targetRow]) => {
-            NewExplosionByGrid(this.game, targetCol, targetRow, {
-                damage: this.damage,
-                rightGrid: 1.5,
-                leftGrid: 1.5,
-                upGrid: 1
-            });
-            this.game.time.delayedCall(3900, () => {
+            const { x, y } = this.gardener.positionCalc.getPlantBottomCenter(targetCol, targetRow);
+            StartArc(this.game, this.x, this.y, x, y, 'plant/tnt', 800, () => {
                 NewExplosionByGrid(this.game, targetCol, targetRow, {
-                    damage: this.damage / 3,
+                    damage: this.damage,
                     rightGrid: 1.5,
                     leftGrid: 1.5,
                     upGrid: 1
                 });
+
+                if ((this.level || 1) >= 7) {
+                    this.game.time.delayedCall(3900, () => {
+                        NewExplosionByGrid(this.game, targetCol, targetRow, {
+                            damage: this.damage / 3,
+                            rightGrid: 1.5,
+                            leftGrid: 1.5,
+                            upGrid: 1
+                        });
+                    });
+                }
             });
         });
 

@@ -17,6 +17,8 @@ import AddMapFunction from '../game_events/mapfun';
 import BackendWS from '../../utils/net/sync';
 import { IExpolsion } from '../models/IExplosion';
 import { ILaser } from '../models/ILaser';
+import IGolem from '../models/IGolem';
+import IObstacle from '../presets/obstacle/IObstacle';
 
 
 
@@ -125,6 +127,8 @@ export class Game extends Scene {
         IBullet.InitGroup(this);
         IExpolsion.InitGroup(this);
         ILaser.InitGroup(this);
+        IGolem.InitGroup(this);
+        IObstacle.InitGroup(this);
 
 
         // 设置bullet与僵尸的碰撞检测
@@ -143,6 +147,28 @@ export class Game extends Scene {
         this.physics.add.overlap(ILaser.Group, IZombie.Group, laserZombie, null, this);
         // 设置激光与植物的碰撞检测
         // @ts-ignore
+
+
+        // golem
+        // 设置bullet与僵尸的碰撞检测
+        // @ts-ignore 
+        this.physics.add.overlap(IBullet.Group, IGolem.Group, damageZombie, null, this);
+        // 设置爆炸与僵尸的碰撞检测
+        // @ts-ignore
+        this.physics.add.overlap(IExpolsion.Group, IGolem.Group, explodeZombie, null, this);
+        // 设置激光与僵尸的碰撞检测
+        // @ts-ignore
+        this.physics.add.overlap(ILaser.Group, IGolem.Group, laserZombie, null, this);
+
+        // obstacle
+        // @ts-ignore 
+        this.physics.add.overlap(IBullet.Group, IObstacle.Group, damageZombie, null, this);
+        // @ts-ignore
+        this.physics.add.overlap(IExpolsion.Group, IObstacle.Group, explodeZombie, null, this);
+        // @ts-ignore
+        this.physics.add.overlap(ILaser.Group, IObstacle.Group, laserZombie, null, this);
+
+
 
 
         // 监听
@@ -330,7 +356,7 @@ export class Game extends Scene {
 // bullet与僵尸碰撞的伤害判定
 function damageZombie(bulletSprite: Phaser.GameObjects.GameObject, zombieSprite: Phaser.GameObjects.GameObject) {
     const bullet = bulletSprite as IBullet;
-    const zombie = zombieSprite as IZombie;
+    const zombie = zombieSprite as IZombie | IGolem | IObstacle;
 
     bullet.CollideObject(zombie);
 }
@@ -352,12 +378,12 @@ function damagePlantByZombie(plantSprite: Phaser.GameObjects.GameObject, zombieS
 
 function explodeZombie(explosionSprite: Phaser.GameObjects.GameObject, zombieSprite: Phaser.GameObjects.GameObject) {
     const explosion = explosionSprite as IExpolsion;
-    const zombie = zombieSprite as IZombie;
+    const zombie = zombieSprite as IZombie | IGolem | IObstacle;
     explosion.CollideObject(zombie);
 }
 
 function laserZombie(laserSprite: Phaser.GameObjects.GameObject, zombieSprite: Phaser.GameObjects.GameObject) {
     const laser = laserSprite as ILaser;
-    const zombie = zombieSprite as IZombie;
+    const zombie = zombieSprite as IZombie | IGolem | IObstacle;
     laser.CollideObject(zombie);
 }

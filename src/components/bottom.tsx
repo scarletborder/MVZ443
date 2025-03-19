@@ -18,6 +18,8 @@ export default function BottomTools({ width, chapterID }: Props) {
     const { isBluePrint } = useSettings();
     const starUri = `${publicUrl}/assets/sprite/star.png`;
 
+    const [bossHealth, setBossHealth] = useState<number>(-1);
+
     useEffect(() => {
         const handleProgress = (data: { progress: number }) => {
             gamectx.updateWave(data.progress);
@@ -27,7 +29,25 @@ export default function BottomTools({ width, chapterID }: Props) {
         return () => {
             EventBus.removeListener('game-progress', handleProgress);
         }
-    }, [isBluePrint, gamectx.updateWave])
+    }, [isBluePrint, gamectx.updateWave]);
+
+    useEffect(() => {
+        // boss health 实际上是百分比[0,100]
+        const handleBossHealth = (data: { health: number }) => {
+            gamectx.updateBossHealth(data.health);
+            setBossHealth(data.health);
+        }
+        const handleBossDead = () => {
+            gamectx.updateBossHealth(-1);
+            setBossHealth(-1);
+        }
+        EventBus.on('boss-dead', handleBossDead);
+        EventBus.on('boss-health', handleBossHealth);
+        return () => {
+            EventBus.removeListener('boss-health', handleBossHealth);
+            EventBus.removeListener('boss-dead', handleBossDead);
+        }
+    }, [isBluePrint, gamectx.updateBossHealth])
 
     useEffect(() => {
         const handleStarShardsConsume = () => {
@@ -70,7 +90,7 @@ export default function BottomTools({ width, chapterID }: Props) {
 
     // 计算进度条百分比
     const progress = gamectx.bossHealth !== -1 ?
-        (gamectx.bossHealth / 100) * 100 :
+        (bossHealth) :
         (gamectx.wave / 100) * 100;
 
     return (

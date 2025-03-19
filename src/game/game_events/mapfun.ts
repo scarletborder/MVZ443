@@ -33,7 +33,21 @@ function Chapter1Dispatch(game: Game, stageId: number) {
         });
     }
 
-    if (stageId === 3) {
+    if (stageId === 1) {
+        game.handleCardPlant(1, 1, 0, 0, 9961);
+        game.handleCardPlant(1, 1, 0, 4, 9961);
+        game.handleCardPlant(2, 1, 1, 1, 9961);
+        game.handleCardPlant(2, 1, 1, 2, 9961);
+        game.handleCardPlant(2, 1, 1, 3, 9961);
+    }
+
+    if (stageId === 6) {
+        game.handleCardPlant(2, 1, 1, 1, 9961);
+        game.handleCardPlant(2, 1, 1, 2, 9961);
+        game.handleCardPlant(2, 1, 1, 3, 9961);
+    }
+
+    if (stageId === 3 || stageId === 6) {
         // [0][7] = water
         game.dayOrNight = false;
         game.gridProperty[0][7] = 'water';
@@ -45,7 +59,7 @@ function Chapter1Dispatch(game: Game, stageId: number) {
         const darkOverlay = game.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.5).setDepth(2);
     }
 
-    if (stageId === 5) {
+    if (stageId === 5 || stageId === 7) {
         game.dayOrNight = false;
         const darkOverlay = game.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.5).setDepth(2);
         // row:2, 3  = water

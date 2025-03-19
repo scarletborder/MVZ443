@@ -3,7 +3,7 @@ import { Game } from '../../scenes/Game';
 import { IZombie } from '../../models/IZombie';
 import { MIRecord } from '../../models/IRecord';
 import { newNormalEvokerAnim } from '../../sprite/normal_zombie';
-import MonsterFactoryMap from '.';
+import { MonsterFactoryMap } from '..';
 
 
 export class EnhancedEvoker extends IZombie {
@@ -57,11 +57,11 @@ export class EnhancedEvoker extends IZombie {
         });
     }
 
-    private addVindicator(col: number, row: number) {
+    private addVindicator(col: number, row: number): IZombie {
         if (row < 0) row = 0;
         if (row > this.scene.positionCalc.Row_Number - 1) row = this.scene.positionCalc.Row_Number - 1;
         const vindicatorMid = 10;
-        const summon_mob = MonsterFactoryMap[vindicatorMid].NewFunction(this.scene, col, row, -10); // -10 标记为召唤出来的怪物
+        const summon_mob = MonsterFactoryMap[vindicatorMid].NewFunction(this.scene, col, row, -10) as IZombie; // -10 标记为召唤出来的怪物
         summon_mob.StopMove();
 
         this.scene.time.delayedCall(2000, () => {

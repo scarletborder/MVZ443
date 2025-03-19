@@ -1,5 +1,7 @@
 import DepthManager from "../../utils/depth";
+import IObstacle from "../presets/obstacle/IObstacle";
 import { Game } from "../scenes/Game";
+import IGolem from "./IGolem";
 import { IPlant } from "./IPlant";
 import { IZombie } from "./IZombie";
 
@@ -57,7 +59,7 @@ export class IBullet extends Phaser.Physics.Arcade.Sprite {
         this.setDepth(this.baseDepth);
     }
 
-    CollideObject(object: IZombie | IPlant) {
+    CollideObject(object: IZombie | IPlant | IGolem | IObstacle) {
         const damage = this.damage;
         if (this.hasPenetrated.has(object)) return; // 已经穿透过了
 
@@ -84,6 +86,22 @@ export class IBullet extends Phaser.Physics.Arcade.Sprite {
                 this.destroy();
             }
             object.takeDamage(damage);
+        } else if (object instanceof IGolem && this.targetCamp === 'zombie') {
+            this.penetrate--;
+            this.hasPenetrated.add(object);// 记录穿透过的对象
+
+            if (this.penetrate <= 0) {
+                this.destroy();
+            }
+            object.takeDamage(damage, "bullet");
+        } else if (object instanceof IObstacle && this.targetCamp === 'zombie') {
+            this.penetrate--;
+            this.hasPenetrated.add(object);// 记录穿透过的对象
+
+            if (this.penetrate <= 0) {
+                this.destroy();
+            }
+            object.takeDamage(damage, "bullet");
         }
     }
 

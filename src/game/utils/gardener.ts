@@ -64,6 +64,14 @@ export default class Gardener {
             }
         });
 
+        this.scene.input.keyboard?.on('keydown-W', () => {
+            if (this.useStarShards) {
+                this.cancelStarShards();
+            } else {
+                this.setStarShards();
+            }
+        });
+
         // 监听事件
         EventBus.on('pickaxe-click', () => {
             if (this.usePickaxe) {

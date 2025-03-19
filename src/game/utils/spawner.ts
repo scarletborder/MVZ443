@@ -1,14 +1,17 @@
 import { Wave } from "../models/IRecord";
 import { IZombie } from "../models/IZombie";
 import { Game } from "../scenes/Game";
-import MonsterFactoryMap from "../presets/zombie";
+import { MonsterFactoryMap } from "../presets";
 import seedrandom from 'seedrandom';
+import IGolem from "../models/IGolem";
+import IObstacle from "../presets/obstacle/IObstacle";
+import { EventBus } from "../EventBus";
 // 出怪实例
 // 使用一个刷怪表进行实例化
 
 export default class MonsterSpawner {
     public scene: Game;
-    monstered: Map<string, Array<IZombie>> = new Map();
+    monstered: Map<string, Array<IZombie | IGolem | IObstacle>> = new Map();
     private SeedRandom: seedrandom.PRNG;
 
     private waves: Wave[];
@@ -72,7 +75,7 @@ export default class MonsterSpawner {
         // 无论如何都到达了下一波,那么开始进度记录
         if (this.current_wave_idx >= 0) {
             // 第一波之后(idx>0),播报当前进度
-            this.progress = this.currentWave().progress;
+            this.progress = this.currentWave().progress; // 上一波的进度到达完成!
             this.scene.broadCastProgress(this.currentWave().progress);
         }
 
@@ -91,11 +94,17 @@ export default class MonsterSpawner {
         this.killed_count = 0; // 清空当前击杀数字,在生成怪物之间可能会发生击杀怪物事件
         this.spawnMonster();
         this.killed_count += this.tmpKilled_count;
-        this.onKilledCountUpdate();
+        this.onKilledCountUpdate(this.current_wave_idx - 1); // 之前杀的,更新击杀数
 
+        // 如果当前波为精英或BOSS, 则不启用下一波定时器，
+        // 等待精英/BOSS被击杀后由 onKilledCountUpdate 触发下一波或游戏胜利逻辑
+        if (this.currentWave().flag === 'elite' || this.currentWave().flag === 'boss') {
+            // 设置外部的progress为boss health bar,不影响 this.progress(wave 进度)
+            EventBus.emit('boss-health', { health: 100 });
+            return;
+        }
 
-        // 启动定时器
-        // 先销毁原来的timer
+        // 启动定时器（仅适用于普通波）
         if (this.current_wave_idx >= this.waves.length - 1) return; // 没下一波了
         if (this.Timer) {
             this.Timer.reset({
@@ -105,7 +114,6 @@ export default class MonsterSpawner {
                     this.nextWave();
                 }
             });
-
         } else {
             this.Timer = this.scene.time.addEvent({
                 delay: this.currentWave().minDelay * 1000,
@@ -115,8 +123,8 @@ export default class MonsterSpawner {
                 }
             });
         }
-
     }
+
 
     shuffleArray<T>(array: T[]): T[] {
         const rng = this.SeedRandom(); // 创建一个基于种子的随机数生成器
@@ -211,7 +219,7 @@ export default class MonsterSpawner {
                 const zomb = newFunc(this.scene, colMax, row, wave.waveId);
 
                 // 2. 如果当前怪物索引在carryingMonsters中，则设置携带starShards
-                if (carryingMonsters.has(monsterIndex)) {
+                if (carryingMonsters.has(monsterIndex) && zomb instanceof IZombie) {
                     zomb.carryStar();
                 }
 
@@ -294,7 +302,7 @@ export default class MonsterSpawner {
 
 
     // 怪物生成注册
-    registerMonster(monster: IZombie) {
+    registerMonster(monster: IZombie | IGolem | IObstacle) {
         const key = `${monster.row}`;
         if (!this.monstered.has(key)) {
             this.monstered.set(key, [monster]);
@@ -304,7 +312,7 @@ export default class MonsterSpawner {
     }
 
     // 怪物注册销毁
-    registerDestroy(monster: IZombie) {
+    registerDestroy(monster: IZombie | IGolem | IObstacle) {
         const key = `${monster.row}`;
         if (this.monstered.has(key)) {
             const list = this.monstered.get(key);
@@ -318,42 +326,52 @@ export default class MonsterSpawner {
                 }
             }
         }
+        console.log('monster destroyed', monster.waveID);
         if (monster.waveID >= 0) {
             this.killed_count++;
-            this.onKilledCountUpdate(); // 非召唤物僵尸(waveId >= 0)杀了才计数
+            this.onKilledCountUpdate(monster.waveID); // 非召唤物僵尸(waveId >= 0)杀了才计数
         }
     }
 
-    onKilledCountUpdate() {
+    onKilledCountUpdate(m_waveID: number = -10) {
         if (this.scene.isGameEnd) return; // 结束了,避免结束杀人
         console.log('kill', this.killed_count, '/', this.total_count);
+        const waveObj = this.currentWave();
 
-        // 检查是否所有怪物都被击杀
+        // 如果是BOSS或精英波
+        if (waveObj.flag === 'boss' || waveObj.flag === 'elite') {
+            // 当击杀的怪物属于当前精英或BOSS时
+            if (m_waveID === waveObj.waveId) {
+                EventBus.emit('boss-dead');
+                if (waveObj.flag === 'elite') {
+                    console.log('精英怪已击杀, 立即开始下一波');
+                    this.scene.time.delayedCall(11000, () => {
+                        this.nextWave();
+                    });
+                } else if (waveObj.flag === 'boss') {
+                    console.log('BOSS已击杀, 游戏胜利！');
+                    this.scene.handleExit(true);
+                }
+            }
+            return;
+        }
+
+        // 普通波逻辑：检查是否所有怪物都被击杀
         if (this.killed_count >= this.total_count) {
             console.log('All monsters in current wave killed!');
 
             // 如果是最后一波
             if (this.current_wave_idx >= this.wavesLeng - 1) {
-                const waveObj = this.currentWave();
-                if (waveObj.flag === 'boss' || waveObj.flag === 'elite') {
-                    // TODO: 实践
-                    console.log('Last wave is boss wave, waiting');
-                    return;
-                }
-
-                // 普通
                 console.log('Last wave detected, starting victory check timer...');
-
                 // 启动一个每1.5秒检查一次的定时器
                 const victoryCheckTimer = this.scene.time.addEvent({
                     delay: 1500, // 1.5秒
-                    loop: true, // 循环执行
+                    loop: true,
                     callback: () => {
-                        // 检查场上是否还有怪物(防止召唤物在场)
                         if (this.monstered.size === 0) {
                             console.log('No monsters left on the field, game victory!');
                             this.scene.handleExit(true);
-                            victoryCheckTimer.remove(); // 移除定时器
+                            victoryCheckTimer.remove();
                             victoryCheckTimer.destroy();
                         } else {
                             console.log('Monsters still on field:', this.monstered.size);
@@ -381,6 +399,7 @@ export default class MonsterSpawner {
             }
         }
     }
+
 
 }
 

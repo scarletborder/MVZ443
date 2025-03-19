@@ -233,6 +233,8 @@ func parseLocaleFile(filename string) (map[string]string, map[string]string, err
 			break
 		}
 		key := strings.TrimSpace(content[keyStart:i])
+		key = strings.ReplaceAll(key, ",", "")
+		key = strings.TrimSpace(key)
 		i++ // 跳过冒号
 
 		// 跳过冒号后空白字符

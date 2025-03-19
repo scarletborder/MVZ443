@@ -94,9 +94,15 @@ function shootLaser(scene: Game, shooter: IPlant) {
     const start = (level >= 9 ? 2.6 : 1.6);
     const distance = (level >= 9 ? 5.2 : 3.2);
 
-    NewLaserByGrid(scene, shooter.col - start, shooter.row - 1, distance, damage, 'zombie', 550);
-    NewLaserByGrid(scene, shooter.col - start, shooter.row, distance, damage, 'zombie', 550);
-    NewLaserByGrid(scene, shooter.col - start, shooter.row + 1, distance, damage, 'zombie', 550);
+    NewLaserByGrid(scene, shooter.col - start, shooter.row - 1, distance, damage, 'zombie', 550, {
+        toSky: (level >= 7 ? true : false)
+    });
+    NewLaserByGrid(scene, shooter.col - start, shooter.row, distance, damage, 'zombie', 550, {
+        toSky: (level >= 7 ? true : false)
+    });
+    NewLaserByGrid(scene, shooter.col - start, shooter.row + 1, distance, damage, 'zombie', 550, {
+        toSky: (level >= 7 ? true : false)
+    });
 }
 
 function levelAndstuff(level: number): item[] {
@@ -107,10 +113,15 @@ function levelAndstuff(level: number): item[] {
     return [];
 }
 
+function cost(level?: number): number {
+    if ((level || 1) >= 9) return 275;
+    return 325;
+}
+
 const PumpkinWanRecord: IRecord = {
     pid: 11,
     name: '广域南瓜派',
-    cost: () => 325,
+    cost: cost,
     cooldownTime: () => 52,
     NewFunction: NewPumpkinWan,
     texture: 'plant/pumpkin_wan',

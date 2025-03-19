@@ -78,6 +78,8 @@ export class Preloader extends Scene {
         this.load.image('attach/hd_bow', `attach/hd_bow.png`);
         this.load.image('attach/hd_stick', `attach/hd_stick.png`);
         this.load.image('attach/hd_axe', `attach/hd_axe.png`);
+        this.load.spritesheet('attach/hd_shield', `attach/hd_shield.png`,
+            { frameWidth: 32, frameHeight: 32 });
 
 
     }
@@ -123,6 +125,13 @@ export class Preloader extends Scene {
         this.load.image('sprVindicatorArm', `sprite/vindicator/sprVindicatorArm.png`);
         this.load.image('sprVindicatorLeg', `sprite/vindicator/sprVindicatorLeg.png`);
 
+        this.load.spritesheet('obsidianBody', 'sprite/obsidian_golem/obsidianBody.png',
+            { frameWidth: 19, frameHeight: 35 });
+        this.load.image('obsidianHead', 'sprite/obsidian_golem/obsidianHead.png');
+        this.load.image('obsidianArm', 'sprite/obsidian_golem/obsidianArm.png');
+        this.load.image('obsidianLeg', 'sprite/obsidian_golem/obsidianLeg.png');
+
+        this.load.image('zombie/mob_obsidian', 'zombie/mob_obsidian.png');
     }
 
     // 加载bgimg和bgm 
@@ -151,5 +160,27 @@ export class Preloader extends Scene {
 
         this.loadAllSprite();
 
+        // 关卡特定加载
+        this.loadStageSpecified(stageId);
+    }
+
+    loadStageSpecified(stageId: number) {
+        if (stageId === 1 || stageId === 6) {
+            // 加载熔炉和发射器
+            if (!this.textures.exists('plant/furnace')) {
+                this.load.spritesheet('plant/furnace', 'plant/furnace.png', {
+                    frameWidth: 64,
+                    frameHeight: 64
+                });
+            }
+
+            if (!this.textures.exists('plant/dispenser')) {
+                this.load.spritesheet('plant/dispenser', 'plant/dispenser.png', {
+                    frameWidth: 64,
+                    frameHeight: 64
+                });
+            }
+
+        }
     }
 }

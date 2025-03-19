@@ -1,7 +1,9 @@
 // 激光
 
 import DepthManager from "../../utils/depth";
+import IObstacle from "../presets/obstacle/IObstacle";
 import { Game } from "../scenes/Game";
+import IGolem from "./IGolem";
 import { IPlant } from "./IPlant";
 import { IZombie } from "./IZombie";
 
@@ -10,6 +12,7 @@ type _Typedebuffs = 'slow' | 'frozen' | null;
 type LaserParams = {
     debuff?: _Typedebuffs,
     duration?: number,
+    toSky?: boolean,
 }
 
 interface VisionParams {
@@ -69,6 +72,7 @@ export class ILaser extends Phaser.GameObjects.Rectangle {
         this.ScreenHeight = scene.sys.canvas.height;
 
         this.targetCamp = target;
+        this.isFlying = params?.toSky || false;
         this.damage = damage;
 
         if (params) {
@@ -99,7 +103,7 @@ export class ILaser extends Phaser.GameObjects.Rectangle {
         });
     }
 
-    CollideObject(object: IZombie | IPlant) {
+    CollideObject(object: IZombie | IPlant | IGolem | IObstacle) {
         const damage = this.damage;
         if (this.hasPenetrated.has(object)) return; // 已经穿透过了
 
@@ -124,6 +128,12 @@ export class ILaser extends Phaser.GameObjects.Rectangle {
             this.hasPenetrated.add(object); // 记录穿透过的对象
 
             object.takeDamage(damage);
+        } else if (object instanceof IGolem && this.targetCamp === 'zombie') {
+            this.hasPenetrated.add(object); // 记录穿透过的对象
+            object.takeDamage(damage, "laser");
+        } else if (object instanceof IObstacle && this.targetCamp === 'zombie') {
+            this.hasPenetrated.add(object); // 记录穿透过的对象
+            object.takeDamage(damage, "laser");
         }
     }
 }

@@ -19,9 +19,11 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite {
     public static Group: Phaser.Physics.Arcade.Group;
     static GridClan: GridClan;
 
-    private Spawner: MonsterSpawner;
+    // 全局
+    protected Spawner: MonsterSpawner;
     game: Game;
     waveID: number;
+    Rank: 'normal' | 'elite' | 'boss' = 'normal'; // 等级
 
     // 私有
     // 属性
@@ -93,16 +95,14 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite {
 
         setDisplay(this, scene);
 
-
-        IZombie.Group.add(this, true);
-        this.health = 20; // 默认血量
-
         this.col = col;
         this.row = row;
         this.isDying = false;
         this.isFlying = false;
         this.isInVoid = false;
+        this.health = 20; // 默认血量
 
+        IZombie.Group.add(this, true);
         this.Spawner = scene.monsterSpawner;
         this.Spawner.registerMonster(this);
     }
@@ -395,12 +395,11 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite {
 
     // 每帧更新
     update() {
-        // TODO: boss, elite 可能在x < 0时,不直接失败
         if (!this.isDying) {
             this.zombieAnim.updatePosition(this.x + this.offsetX, this.y + this.offsetY);
         }
         // 超越边界销毁
-        if (this.x < - IZombie.GridClan.gardener.positionCalc.GRID_SIZEX * 1) {
+        if (this.Rank === 'normal' && this.x < - IZombie.GridClan.gardener.positionCalc.GRID_SIZEX * 1) {
             console.log('Zombie out of boundary');
             // 游戏直接失败,结束游戏
             // 矿车可以被碰撞,如果丢,早丢了

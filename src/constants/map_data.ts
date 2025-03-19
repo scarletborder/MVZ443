@@ -36,5 +36,7 @@ export const ResourceMapData: Map<number, _ResourceMapData> = new Map<number, _R
     [3, chapter1_innermine],
     [4, chapter1_deepmine],
     [5, chapter1_deepmineWater],
-    [6, chapter1_boss],
+    [6, chapter1_innermine],
+    [7, chapter1_deepmine],
+    [8, chapter1_boss],
 ]);

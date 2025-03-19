@@ -152,7 +152,7 @@ class PumpkinWan implements IGoods {
         private onPurchase: (id: number) => void
     ) { }
 
-    description = () => "广域南瓜派(胖平文先生)\n光敏器械,对周围一圈造成高频激光伤害\n需要阴森南瓜头作为基座\n解锁chapter1-stage5";
+    description = () => "广域南瓜派(胖平文先生)\n光敏器械,对周围一圈造成高频激光伤害\n需要阴森南瓜头作为基座\n解锁chapter1-stage5,体验版提前开放该器械购买权.";
     hasBought = (id: number, progress: GameProgress) => {
         const plants = progress.plants;
         let hasBought = false;

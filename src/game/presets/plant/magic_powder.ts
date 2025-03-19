@@ -3,6 +3,7 @@ import { item } from "../../../components/shop/types";
 import i18n from "../../../utils/i18n";
 import { GetIncValue } from "../../../utils/numbervalue";
 import { EventBus } from "../../EventBus";
+import { NewLaserByGrid } from "../../models/ILaser";
 import { IPlant } from "../../models/IPlant";
 import { IRecord } from "../../models/IRecord";
 import { IZombie } from "../../models/IZombie";
@@ -18,24 +19,19 @@ class MagicPowder extends IPlant {
         this.hasGotStarShards = false;
         this.setHealthFirstly(SECKILL);
         this.createRects();
+        this.damage = GetIncValue(1500, 1.3, level);
 
-        this.damage = GetIncValue(4000, 1.3, level);
+        // 立刻创建一道激光
+        NewLaserByGrid(scene, col - 0.6, row, 1.3, this.damage, 'zombie', 200, { toSky: true },
+            { invisible: true, color: 0, alphaFrom: 0.2, alphaTo: 0.1 });
+
         scene.time.delayedCall(400, () => {
+            EventBus.emit('starshards-get');
             this.destroyPlant();
         });
     }
 
-    public takeDamage(amount: number, zombie?: IZombie | null): void {
-        // 直接秒杀敌人(碰撞)
-        if (zombie && zombie.health > 0) {
-            zombie.takeDamage(this.damage, 'explosion');
-        }
-
-        if (!this.hasGotStarShards) {
-            this.hasGotStarShards = true;
-            EventBus.emit('starshards-get');
-        }
-    }
+    public takeDamage(amount: number, zombie?: IZombie | null): void { }
 
     createRects() {
         const depth = this.baseDepth + 1;

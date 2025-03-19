@@ -8,6 +8,7 @@ import { IPlant } from "../../models/IPlant";
 import { IRecord } from "../../models/IRecord";
 import { IZombie } from "../../models/IZombie";
 import { Game } from "../../scenes/Game";
+import { StartArc } from "../../utils/arc";
 
 class _TntMines extends IPlant {
     game: Game;
@@ -16,7 +17,7 @@ class _TntMines extends IPlant {
 
     constructor(scene: Game, col: number, row: number, level: number, buriedTime: number) {
         super(scene, col, row, TntMines.texture, TntMines.pid, level);
-        this.random = seedrandom.alea(String(scene.seed));
+        this.random = seedrandom.alea(String(scene.seed * 3));
         this.isBuried = true;
         this.game = scene;
         this.setFrame(0);
@@ -60,8 +61,14 @@ class _TntMines extends IPlant {
                 if (usedRows.has(row) || usedCols.has(col)) continue;
 
                 // 可以放置 TNT Mines
-                const newmine = NewTntMines(this.game, col, row, this.level);
-                newmine.wakeup();
+
+                const { x: tmpx, y: tmpy } = this.gardener.positionCalc.getPlantBottomCenter(col, row);
+                StartArc(this.game, this.x, this.y, tmpx, tmpy, 'plant/tnt_mines', 1000, () => {
+                    const newmine = NewTntMines(this.game, col, row, this.level);
+                    newmine.wakeup();
+                })
+
+
                 leftCount--;
                 usedRows.add(row);
                 usedCols.add(col);
@@ -82,8 +89,12 @@ class _TntMines extends IPlant {
                         const list = this.game.gardener.planted.get(key);
                         if (list && list.length > 0) continue; // 该格子有植物
                     }
-                    const newmine = NewTntMines(this.game, col, row, this.level);
-                    newmine.wakeup();
+                    const { x: tmpx, y: tmpy } = this.gardener.positionCalc.getPlantBottomCenter(col, row);
+                    StartArc(this.game, this.x, this.y, tmpx, tmpy, 'plant/tnt_mines', 1000, () => {
+                        const newmine = NewTntMines(this.game, col, row, this.level);
+                        newmine.wakeup();
+                    })
+
                     leftCount--;
                 }
             }

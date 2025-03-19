@@ -1,0 +1,5 @@
+僵尸放置的障碍物方块
+
+因为特殊的性质,不会放到monsterFactoryMap中
+
+请全部`export default`
