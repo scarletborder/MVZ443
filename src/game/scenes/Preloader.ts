@@ -180,7 +180,10 @@ export class Preloader extends Scene {
                     frameHeight: 64
                 });
             }
+        }
 
+        if (stageId === 6) {
+            this.load.audio('ZCDS-0014-05', 'audio/ZCDS-0014-05.ogg');
         }
     }
 }

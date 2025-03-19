@@ -55,6 +55,7 @@ export class Game extends Scene {
     public dayOrNight: boolean = true; // day = true
 
     music: Phaser.Sound.BaseSound;
+    dumpMusic: Phaser.Sound.BaseSound | null = null;
 
     // command queue
     private elapsed: number = 0;

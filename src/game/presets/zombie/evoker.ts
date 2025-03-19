@@ -34,8 +34,8 @@ export class EnhancedEvoker extends IZombie {
         this.StopMove();
         this.zombieAnim.stopLegSwing();
         this.zombieAnim.startArmDance();
-        let { col, row } = this.scene.positionCalc.getGridByPos(this.x, this.y);
-        row -= 1; // 修正位置
+        let col = this.scene.positionCalc.getColByX(this.x);
+        let row = this.scene.positionCalc.getRowByY(this.y);
         // 判断四个方向的坐标是否合法
         const summons: IZombie[] = [];
         if (row - 1 >= 0) {

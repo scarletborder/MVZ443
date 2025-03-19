@@ -10,7 +10,7 @@
             "monsters": [],
             "duration": 0,
             "maxDelay": 15,
-            "minDelay": 10,
+            "minDelay": 1,
             "arrangement": 1,
             "minLine": 1,
             "starShards": 0,
@@ -22,11 +22,11 @@
             "flag": "normal",
             "monsters": [
                 {
-                    "mid": 1,
-                    "count": 1
+                    "mid": 9,
+                    "count": 2
                 }
             ],
-            "duration": 1,
+            "duration": 10,
             "maxDelay": 50,
             "minDelay": 35,
             "arrangement": 1,

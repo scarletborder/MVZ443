@@ -139,12 +139,12 @@ export class PositionCalc {
         }
     }
 
-    // 根据x计算col
+    // 根据x计算col(自动考虑误差)
     public getColByX(x: number) {
         return Math.floor((x - this.gridOffsetX - 1) / this.GRID_SIZEX);
     }
 
-    // 根据y计算row
+    // 根据y计算row(自动考虑误差)
     public getRowByY(y: number) {
         console.log('y:', y, 'gridOffsetY:', this.gridOffsetY, 'GRID_SIZEY:', this.GRID_SIZEY);
         return Math.floor((y - this.gridOffsetY - 1) / this.GRID_SIZEY);

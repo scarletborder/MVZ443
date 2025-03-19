@@ -45,11 +45,11 @@
                 },
                 {
                     "mid": 2,
-                    "count": 3
+                    "count": 4
                 },
                 {
                     "mid": 4,
-                    "count": 1
+                    "count": 3
                 },
                 {
                     "mid": 8,
@@ -58,7 +58,7 @@
             ],
             "duration": 55,
             "maxDelay": 70,
-            "minDelay": 63,
+            "minDelay": 53,
             "arrangement": 1,
             "minLine": 1,
             "starShards": 1,
@@ -71,15 +71,15 @@
             "monsters": [
                 {
                     "mid": 4,
-                    "count": 2
+                    "count": 4
                 },
                 {
                     "mid": 3,
-                    "count": 1
+                    "count": 3
                 },
                 {
                     "mid": 7,
-                    "count": 2
+                    "count": 5
                 },
                 {
                     "mid": 9,
@@ -88,7 +88,7 @@
             ],
             "duration": 45,
             "maxDelay": 50,
-            "minDelay": 46,
+            "minDelay": 36,
             "arrangement": 1,
             "minLine": 1,
             "starShards": 1,
@@ -101,16 +101,16 @@
             "monsters": [
                 {
                     "mid": 7,
-                    "count": 3
+                    "count": 5
                 },
                 {
                     "mid": 5,
-                    "count": 2
+                    "count": 3
                 }
             ],
             "duration": 8,
             "maxDelay": 49,
-            "minDelay": 45,
+            "minDelay": 25,
             "arrangement": 2,
             "minLine": 3,
             "starShards": 1,
@@ -123,19 +123,19 @@
             "monsters": [
                 {
                     "mid": 1,
-                    "count": 8
+                    "count": 11
                 },
                 {
                     "mid": 2,
-                    "count": 5
+                    "count": 7
                 },
                 {
                     "mid": 5,
-                    "count": 1
+                    "count": 5
                 },
                 {
-                    "mid": 10,
-                    "count": 2
+                    "mid": 11,
+                    "count": 4
                 }
             ],
             "duration": 44,
@@ -153,15 +153,15 @@
             "monsters": [
                 {
                     "mid": 4,
-                    "count": 2
+                    "count": 5
                 },
                 {
                     "mid": 5,
-                    "count": 1
+                    "count": 4
                 },
                 {
                     "mid": 8,
-                    "count": 1
+                    "count": 3
                 },
                 {
                     "mid": 7,
@@ -174,7 +174,7 @@
             ],
             "duration": 10,
             "maxDelay": 55,
-            "minDelay": 45,
+            "minDelay": 35,
             "arrangement": 1,
             "minLine": 1,
             "starShards": 0,
@@ -204,11 +204,15 @@
                 {
                     "mid": 9,
                     "count": 1
+                },
+                {
+                    "mid": 11,
+                    "count": 5
                 }
             ],
             "duration": 13,
             "maxDelay": 45,
-            "minDelay": 39,
+            "minDelay": 32,
             "arrangement": 1,
             "minLine": 1,
             "starShards": 0,
@@ -237,12 +241,12 @@
                 },
                 {
                     "mid": 9,
-                    "count": 1
+                    "count": 3
                 }
             ],
             "duration": 4,
             "maxDelay": 50,
-            "minDelay": 40,
+            "minDelay": 32,
             "arrangement": 1,
             "minLine": 1,
             "starShards": 0,
