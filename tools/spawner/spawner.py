@@ -2,20 +2,20 @@
 
 # ---------------- 全局参数 (可变) ----------------
 first_wave_id = 0            # 第一波的波数索引(不影响结果waveID), 影响后续难度
-total_waves = 40               # 总波数
-difficulty_limit = 190        # 最终波数达到的难度上限
-phase1_end = 12               # 早期阶段结束的波数索引（波 0 到 phase1_end-1）
-phase2_end = 29               # 中期阶段结束的波数索引（波 phase1_end 到 phase2_end-1）
+total_waves = 50               # 总波数
+difficulty_limit = 60        # 最终波数达到的难度上限
+phase1_end = 19               # 早期阶段结束的波数索引（波 0 到 phase1_end-1）
+phase2_end = 38               # 中期阶段结束的波数索引（波 phase1_end 到 phase2_end-1）
 # 后期阶段对应波数：phase2_end 到 total_waves-1
 
 # 定义 flag wave,这些wave之前会给很充足的准备时间
-flagWaves = [10, 20 ,30, 40]
+flagWaves = [15 ,32, 50, 60]
 
 # 水之道,这些路在前几波不会刷怪
 waterWays = [2,3]
 
 # 用于冒险模式,有些怪物还没有遇到,不允许刷怪
-AllowedMobs = {1,2,3,4,5,7,8, 11}              # 允许的怪物
+AllowedMobs = {1,2,3,4,8, 7, 11, 9}              # 允许的怪物
 
 
 MobDict = {

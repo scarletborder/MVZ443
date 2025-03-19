@@ -115,7 +115,7 @@ class _TntMines extends IPlant {
         } else {
             const rightDistance = this.level >= 9 ? 1.5 : 1;
             new IExpolsion(this.game, this.x, this.row, {
-                damage: 1000,
+                damage: 1500,
                 rightGrid: rightDistance,
                 leftGrid: 0.5,
                 upGrid: 0
