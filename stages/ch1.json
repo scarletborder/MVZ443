@@ -10,7 +10,7 @@
             "monsters": [],
             "duration": 0,
             "maxDelay": 15,
-            "minDelay": 10,
+            "minDelay": 12,
             "arrangement": 1,
             "minLine": 1,
             "starShards": 0,
@@ -172,7 +172,7 @@
             4
         ]
     },
-    "energy": 1000,
+    "energy": 50,
     "rewards": [
         {
             "progress": 45,
