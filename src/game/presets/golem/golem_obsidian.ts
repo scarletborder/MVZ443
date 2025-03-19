@@ -103,18 +103,18 @@ class ObsidianGolem extends IGolem {
         const random = seedrandom.alea(String(this.game.seed * 11));
 
         // 根据难度确定每次总共需要刷怪的数量
-        let totalMobCount = diff === 'low' ? 28 : 19;
+        let totalMobCount = diff === 'low' ? 32 : 26;
 
         // 根据难度随机选择怪物类型的方法
         const getMobType = (): number => {
             if (diff === 'low') {
                 // low 难度以 easy 为主，medium 为辅
-                return random() < 0.6
+                return random() < 0.3
                     ? easyMobID[Math.floor(random() * easyMobID.length)]
                     : mediumID[Math.floor(random() * mediumID.length)];
             } else {
                 // high 难度以 medium 为主，hard 为辅
-                return random() < 0.8
+                return random() < 0.5
                     ? mediumID[Math.floor(random() * mediumID.length)]
                     : hardID[Math.floor(random() * hardID.length)];
             }
@@ -138,11 +138,11 @@ class ObsidianGolem extends IGolem {
 
             // 如果还有剩余怪物未刷，则延时后继续本次刷怪
             if (totalMobCount > 0) {
-                const delay = 13000 + Math.floor(random() * 4000); // 随机延时
+                const delay = 9000 + Math.floor(random() * 4000); // 随机延时
                 this.addTimer(delay, spawnIteration);
             } else {
                 // 怪物刷完后，等待 25s 后继续下一轮
-                this.addTimer(25000, () => {
+                this.addTimer(20000, () => {
                     if (diff === 'low') {
                         this.callMob('high');
                     } else {
@@ -269,8 +269,8 @@ class ObsidianGolem extends IGolem {
     public takeDamage(amount: number, projectileType?: "bullet" | "laser" | "explosion" | "trajectory"): void {
         if (projectileType === 'explosion') {
             amount *= 0.25;
-        } else if (projectileType === 'laser' && amount > 800) {
-            amount = 800;
+        } else if (projectileType === 'laser' && amount > 500) {
+            amount = 500;
         }
         super.takeDamage(amount);
     }

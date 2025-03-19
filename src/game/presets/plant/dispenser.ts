@@ -60,7 +60,7 @@ class dispenser extends IPlant {
         return this.game.time.addEvent({
             callback: () => {
                 if (this.health > 0) {
-                    const arrow = shootArrow(this.game, this, 35, true);
+                    const arrow = shootArrow(this.game, this, 30, true);
                 }
             },
             repeat: totalArrows - 1,
@@ -74,7 +74,7 @@ function NewDispenser(scene: Game, col: number, row: number, level: number): IPl
     return peashooter;
 }
 
-function shootArrow(scene: Game, shooter: IPlant, baseDamage: number = 24, isStar: boolean = false) {
+function shootArrow(scene: Game, shooter: IPlant, baseDamage: number = 22, isStar: boolean = false) {
     const level = shooter.level;
     //  根据等级略微提高伤害
     const damage = GetIncValue(baseDamage, level, 1.5);
