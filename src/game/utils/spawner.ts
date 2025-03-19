@@ -108,7 +108,7 @@ export default class MonsterSpawner {
         if (this.current_wave_idx >= this.waves.length - 1) return; // 没下一波了
         if (this.Timer) {
             this.Timer.reset({
-                delay: this.currentWave().minDelay * 1000,
+                delay: this.currentWave().maxDelay * 1000,
                 loop: false,
                 callback: () => {
                     this.nextWave();
@@ -116,7 +116,7 @@ export default class MonsterSpawner {
             });
         } else {
             this.Timer = this.scene.time.addEvent({
-                delay: this.currentWave().minDelay * 1000,
+                delay: this.currentWave().maxDelay * 1000,
                 loop: false,
                 callback: () => {
                     this.nextWave();
@@ -141,6 +141,11 @@ export default class MonsterSpawner {
     spawnMonster() {
         const wave = this.currentWave();
         const starNumber = wave.starShards;
+
+        if (wave.duration === 0) {
+            return; // 准备波,不生成怪物
+        }
+
         // Acquire current wave's monster number
         const currentMonsters = wave.monsters.reduce((acc, m) => acc + m.count, 0);
         this.total_count += currentMonsters; // 当前波id下的僵尸数量
@@ -155,10 +160,6 @@ export default class MonsterSpawner {
                 totalMonsters.push({ mid: monster.mid });
             }
         });
-
-        if (wave.duration === 0) {
-            return;
-        }
 
         // 1. 确定哪些怪物携带starShards
         totalMonsters = this.shuffleArray(totalMonsters);
@@ -356,7 +357,8 @@ export default class MonsterSpawner {
             return;
         }
 
-        // 普通波逻辑：检查是否所有怪物都被击杀
+        // 普通波逻辑：
+        // 检查是否所有怪物都被击杀
         if (this.killed_count >= this.total_count) {
             console.log('All monsters in current wave killed!');
 
@@ -380,18 +382,20 @@ export default class MonsterSpawner {
                 });
             } else if (this.current_wave_idx >= 0 && this.current_wave_idx < this.wavesLeng - 1) {
                 // 非最后一波，继续下一波逻辑
+                // 判断一下minDelay,避免杀的太快
                 const now = this.scene.time.now;
-                if (now - this.prev_wave_time > this.currentWave().minDelay * 1000) {
-                    this.nextWave();
-                } else {
-                    this.Timer.reset({
-                        delay: this.currentWave().minDelay * 1000 - (now - this.prev_wave_time),
-                        loop: false,
-                        callback: () => {
-                            this.nextWave();
-                        }
-                    });
+                let delay = Math.max(this.currentWave().minDelay * 1000 - (now - this.prev_wave_time), 2000);
+                if (delay > 5000) {
+                    delay = 5000;
                 }
+                this.Timer.reset({
+                    delay: delay,
+                    loop: false,
+                    callback: () => {
+                        this.nextWave();
+                    }
+                });
+                return;
             } else {
                 // 你怎么会在这里?
                 console.log('you should not be here');
