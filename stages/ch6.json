@@ -285,8 +285,8 @@
         }
     ],
     "onWin": {
-        "unLock": null,
-        "unLockPlant": null
+        "unLock": [],
+        "unLockPlant": []
     },
     "energy": 50,
     "rewards": [
