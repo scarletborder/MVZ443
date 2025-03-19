@@ -36,6 +36,7 @@ class Generator extends INightPlant {
     }
 
     public takeDamage(amount: number, zombie: IZombie): void {
+        amount = Math.min(amount, this.health + 10);
         if (this.isSleeping) {
             const ratio = (this.level >= 5) ? (this.level >= 9 ? 6 : 7.5) : 10;
             this.game.broadCastEnergy(Math.ceil(amount / ratio));

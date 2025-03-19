@@ -24,7 +24,7 @@ class ObsidianGolem extends IGolem {
         //TODO: 构造前,elite spawner会emit 给progress bar, boss战斗开始
         const animProps = ObsidianGolemAnimProps;
         super(scene, col, row, waveID, animProps);
-        this.maxHealth = 6000;
+        this.maxHealth = 12000;
         this.health = this.maxHealth;
 
         this.SetSpeedFirstly(25 * scene.positionCalc.scaleFactor);
@@ -37,6 +37,7 @@ class ObsidianGolem extends IGolem {
         scene.music.pause();
         scene.dumpMusic = scene.music;
         scene.music = scene.sound.add('ZCDS-0014-05', { loop: true });
+        scene.music.play();
         this.addTimer(2500, () => {
             this.StandUp();
         });
@@ -270,8 +271,6 @@ class ObsidianGolem extends IGolem {
             amount *= 0.25;
         } else if (projectileType === 'laser' && amount > 800) {
             amount = 800;
-        } else {
-            amount *= 1.5;
         }
         super.takeDamage(amount);
     }
