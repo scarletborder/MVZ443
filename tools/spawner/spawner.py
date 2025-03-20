@@ -2,23 +2,26 @@
 
 # ---------------- 全局参数 (可变) ----------------
 first_wave_id = 0            # 第一波的波数索引(不影响结果waveID), 影响后续难度
-total_waves = 35               # 总波数
+total_waves = 40               # 总波数
 difficulty_limit = 40        # 最终波数达到的难度上限
-phase1_end = 15               # 早期阶段结束的波数索引（波 0 到 phase1_end-1）
-phase2_end = 26               # 中期阶段结束的波数索引（波 phase1_end 到 phase2_end-1）
-dayOrNight = 1                  # 1: 白天 2: 晚上
+phase1_end = 12               # 早期阶段结束的波数索引（波 0 到 phase1_end-1）
+phase2_end = 30               # 中期阶段结束的波数索引（波 phase1_end 到 phase2_end-1）
+dayOrNight = 2                  # 1: 白天 2: 晚上
 # 后期阶段对应波数：phase2_end 到 total_waves-1
 
 # 定义 flag wave,这些wave之前会给很充足的准备时间
 flagWaves = [10,25,35]
 
 # 水之道,这些路在前几波不会刷怪
-waterWays = [2,3]
+waterWays = [1,2,3]
 
 # 用于冒险模式,有些怪物还没有遇到,不允许刷怪
 AllowedMobs = {1,2,3,4,8, 7,5,9,11}              # 允许的怪物
 
+# 全局倍率,影响某波之后所有波(直到另外一个ratio出现)的出怪
+globalRatio = [(0,1.0), (30,1.3)]
 
+# -------------全局参数结束 --------------------
 MobDict = {
   1: "普通僵尸",
   2: "帽子僵尸",
@@ -197,14 +200,32 @@ def difficulty_late(wave_idx):
     return L / (1 + math.exp(-r * (wave_idx - x_mid)))
 
 # ---------------- 综合难度函数 ----------------
+import bisect
+
+def get_wave_ratio(waveID):
+    globalRatio = [(0, 1.0), (10, 1.2), (20, 1.5), (30, 2.0)]
+    
+    # 获取所有的阈值列表（waveID_threshold）
+    thresholds = [threshold for threshold, _ in globalRatio]
+    
+    # 使用二分查找找到waveID对应的最大阈值的索引
+    idx = bisect.bisect_right(thresholds, waveID) - 1
+    
+    # 如果idx是负数，说明没有找到合适的阈值，返回默认倍率
+    if idx >= 0:
+        return globalRatio[idx][1]
+    else:
+        return globalRatio[0][1]  # 默认返回最小倍率
+
+
 def difficulty(wave_idx):
     """根据波数返回难度值，确保最后一波难度等于 difficulty_limit"""
     if wave_idx < _phase1_end:
-        return difficulty_early(wave_idx)
+        return difficulty_early(wave_idx) * get_wave_ratio(wave_idx)
     elif wave_idx < _phase2_end:
-        return difficulty_mid(wave_idx)
+        return difficulty_mid(wave_idx) * get_wave_ratio(wave_idx)
     else:
-        return difficulty_late(wave_idx)
+        return difficulty_late(wave_idx) * get_wave_ratio(wave_idx)
 
 
 
