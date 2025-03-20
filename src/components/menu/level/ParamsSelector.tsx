@@ -219,7 +219,7 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({ stageId, setGameParams,
                 flexDirection: 'column'
             }}>
                 <h3>
-                    已选择植物{' '}
+                    已选择器械{' '}
                     <span style={{
                         color: isOverLimit ? 'red' : '#ddd',
                         transition: 'color 0.3s ease'

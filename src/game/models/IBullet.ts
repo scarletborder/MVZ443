@@ -79,7 +79,7 @@ export class IBullet extends Phaser.Physics.Arcade.Sprite {
             }
             object.takeDamage(damage, "bullet");
         } else if (object instanceof IPlant && this.targetCamp === 'plant') {
-            if (object.height === 1) return;
+            if (object.plant_height === 1) return;
             // 关于bullet击打植物,判断该格内的优先目标,shield>一般>carrier
             // 如果一grid内部的植物数量 > penetrate
             const col = object.col;
