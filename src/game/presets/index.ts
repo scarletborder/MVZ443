@@ -12,6 +12,7 @@ import StickZombieRecord from './zombie/stick_zombie';
 import VindicatorRecord from './zombie/vindicator';
 import VindicatorSoliderRecord from './zombie/vindicator_solider';
 import zombieRecord from './zombie/zombie';
+import WardenRecord from './golem/warden';
 
 export const MonsterFactoryMap: Record<number, MIRecord> = {
     1: zombieRecord,
@@ -26,5 +27,6 @@ export const MonsterFactoryMap: Record<number, MIRecord> = {
     10: VindicatorRecord,
     11: VindicatorSoliderRecord,
     12: ObsidianRecord,
+    13: WardenRecord
 }
 

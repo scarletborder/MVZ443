@@ -11,9 +11,15 @@ export interface GolemAnimProps {
 
 export default class GolemAnim {
     scene: Game;
-    scaneFactor: number;
+    scaleFactor: number;
     x: number;
     y: number;
+
+    isInAnim: boolean = false;
+    offsetY: number = 0; // 视觉偏差,比如跳跃
+
+    baseDepth: number;
+    dirt: Phaser.GameObjects.Sprite | null = null;
 
     body: Phaser.GameObjects.Sprite;
     head: Phaser.GameObjects.Sprite;
@@ -40,20 +46,20 @@ export default class GolemAnim {
 
     setScale() {
         // 在创建完所有组件后进行全部组件的setScale
-        console.log(this.scaneFactor)
-        this.body.setScale(this.scaneFactor);
-        this.head.setScale(this.scaneFactor);
-        this.armLeft.setScale(this.scaneFactor);
-        this.armRight.setScale(this.scaneFactor);
-        this.legLeft.setScale(this.scaneFactor);
-        this.legRight.setScale(this.scaneFactor);
+        console.log(this.scaleFactor)
+        this.body.setScale(this.scaleFactor);
+        this.head.setScale(this.scaleFactor);
+        this.armLeft.setScale(this.scaleFactor);
+        this.armRight.setScale(this.scaleFactor);
+        this.legLeft.setScale(this.scaleFactor);
+        this.legRight.setScale(this.scaleFactor);
     }
     constructor(scene: Game, x: number, y: number, props: GolemAnimProps) {
         x = x;
         y = y - scene.positionCalc.gridOffsetY * 5 / 12;
 
         this.species = props.Species;
-        this.scaneFactor = scene.positionCalc.scaleFactor * 1.8;
+        this.scaleFactor = scene.positionCalc.scaleFactor * 1.8;
         this.scene = scene;
         this.x = x;
         this.y = y;
@@ -73,16 +79,16 @@ export default class GolemAnim {
 
         this.body.anims.play(`${this.species}body0`); // default is the 0th frame
 
-        this.head = this.scene.add.sprite(x + this.headOffset[0] * this.scaneFactor,
-            y + this.headOffset[1] * this.scaneFactor, props.headKey);
-        this.armLeft = this.scene.add.sprite(x + this.leftArmOffset[0] * this.scaneFactor,
-            y + this.leftArmOffset[1] * this.scaneFactor, props.armKey);
-        this.armRight = this.scene.add.sprite(x + this.rightArmOffset[0] * this.scaneFactor,
-            y + this.rightArmOffset[1] * this.scaneFactor, props.armKey);
-        this.legLeft = this.scene.add.sprite(x + this.leftLgetOffset[0] * this.scaneFactor,
-            y + this.leftLgetOffset[1] * this.scaneFactor, props.legKey);
-        this.legRight = this.scene.add.sprite(x + this.rightLegOffset[0] * this.scaneFactor,
-            y + this.rightLegOffset[1] * this.scaneFactor, props.legKey);
+        this.head = this.scene.add.sprite(x + this.headOffset[0] * this.scaleFactor,
+            y + this.headOffset[1] * this.scaleFactor, props.headKey);
+        this.armLeft = this.scene.add.sprite(x + this.leftArmOffset[0] * this.scaleFactor,
+            y + this.leftArmOffset[1] * this.scaleFactor, props.armKey);
+        this.armRight = this.scene.add.sprite(x + this.rightArmOffset[0] * this.scaleFactor,
+            y + this.rightArmOffset[1] * this.scaleFactor, props.armKey);
+        this.legLeft = this.scene.add.sprite(x + this.leftLgetOffset[0] * this.scaleFactor,
+            y + this.leftLgetOffset[1] * this.scaleFactor, props.legKey);
+        this.legRight = this.scene.add.sprite(x + this.rightLegOffset[0] * this.scaleFactor,
+            y + this.rightLegOffset[1] * this.scaleFactor, props.legKey);
 
         this.armLeft.setOrigin(1, 0.5);
         this.armRight.setOrigin(1, 0.5);
@@ -99,6 +105,7 @@ export default class GolemAnim {
     }
 
     setDepth(base: number) {
+        this.baseDepth = base;
         // 部件不在本地管
         this.armLeft.setDepth(base + 9);
         this.head.setDepth(base + 8);
@@ -118,20 +125,20 @@ export default class GolemAnim {
 
     updatePosition(x: number, y: number) {
         x = x;
-        y = y - this.scene.positionCalc.GRID_SIZEY * 25 / 54;
+        y = y - this.scene.positionCalc.GRID_SIZEY * 25 / 54 + this.offsetY;
         this.x = x;
         this.y = y;
         this.body.setPosition(x, y);
-        this.head.setPosition(x + this.headOffset[0] * this.scaneFactor,
-            y + this.headOffset[1] * this.scaneFactor);
-        this.armLeft.setPosition(x + this.leftArmOffset[0] * this.scaneFactor,
-            y + this.leftArmOffset[1] * this.scaneFactor);
-        this.armRight.setPosition(x + this.rightArmOffset[0] * this.scaneFactor,
-            y + this.rightArmOffset[1] * this.scaneFactor);
-        this.legLeft.setPosition(x + this.leftLgetOffset[0] * this.scaneFactor,
-            y + this.leftLgetOffset[1] * this.scaneFactor);
-        this.legRight.setPosition(x + this.rightLegOffset[0] * this.scaneFactor,
-            y + this.rightLegOffset[1] * this.scaneFactor);
+        this.head.setPosition(x + this.headOffset[0] * this.scaleFactor,
+            y + this.headOffset[1] * this.scaleFactor);
+        this.armLeft.setPosition(x + this.leftArmOffset[0] * this.scaleFactor,
+            y + this.leftArmOffset[1] * this.scaleFactor);
+        this.armRight.setPosition(x + this.rightArmOffset[0] * this.scaleFactor,
+            y + this.rightArmOffset[1] * this.scaleFactor);
+        this.legLeft.setPosition(x + this.leftLgetOffset[0] * this.scaleFactor,
+            y + this.leftLgetOffset[1] * this.scaleFactor);
+        this.legRight.setPosition(x + this.rightLegOffset[0] * this.scaleFactor,
+            y + this.rightLegOffset[1] * this.scaleFactor);
     }
 
     setOrigin(x: number, y: number) {
@@ -286,4 +293,223 @@ export default class GolemAnim {
         });
     }
 
+
+    highJump(offsetY: number = 48 * this.scaleFactor) {
+        this.isInAnim = true;
+        this.scene.tweens.add({
+            targets: [this.armLeft],
+            y: this.armLeft.y - offsetY,
+            duration: 500,
+            ease: 'Sine.easeOut',
+        });
+        this.scene.tweens.add({
+            targets: [this.armRight],
+            y: this.armRight.y - offsetY,
+            duration: 500,
+            ease: 'Sine.easeOut',
+        });
+        this.scene.tweens.add({
+            targets: [this.legLeft],
+            y: this.legLeft.y - offsetY,
+            duration: 500,
+            ease: 'Sine.easeOut',
+        });
+        this.scene.tweens.add({
+            targets: [this.legRight],
+            y: this.legRight.y - offsetY,
+            duration: 500,
+            ease: 'Sine.easeOut',
+        });
+        this.scene.tweens.add({
+            targets: [this.body],
+            y: this.body.y - offsetY,
+            duration: 500,
+            ease: 'Sine.easeOut',
+        });
+        this.scene.tweens.add({
+            targets: [this.head],
+            y: this.head.y - offsetY,
+            duration: 500,
+            ease: 'Sine.easeOut',
+        });
+    }
+
+    land() {
+        const offsetY = 0;
+        this.isInAnim = true;
+        this.scene.tweens.add({
+            targets: [this.armLeft],
+            y: this.armLeft.y - offsetY,
+            duration: 500,
+            ease: 'Sine.easeOut',
+            onComplete: () => {
+                this.isInAnim = false;
+            },
+        });
+        this.scene.tweens.add({
+            targets: [this.armRight],
+            y: this.armRight.y - offsetY,
+            duration: 500,
+            ease: 'Sine.easeOut',
+        });
+        this.scene.tweens.add({
+            targets: [this.legLeft],
+            y: this.legLeft.y - offsetY,
+            duration: 500,
+            ease: 'Sine.easeOut',
+        });
+        this.scene.tweens.add({
+            targets: [this.legRight],
+            y: this.legRight.y - offsetY,
+            duration: 500,
+            ease: 'Sine.easeOut',
+        });
+        this.scene.tweens.add({
+            targets: [this.body],
+            y: this.body.y - offsetY,
+            duration: 500,
+            ease: 'Sine.easeOut',
+        });
+        this.scene.tweens.add({
+            targets: [this.head],
+            y: this.head.y - offsetY,
+            duration: 500,
+            ease: 'Sine.easeOut',
+        });
+    }
+
+    dig() {
+        this.isInAnim = true;
+        this.scene.tweens.add({
+            targets: [this.armLeft],
+            y: this.y,
+            duration: 700,
+            ease: 'Sine.easeIn',
+            onComplete: () => {
+                this.armLeft.setVisible(false);
+            }
+        });
+        this.scene.tweens.add({
+            targets: [this.armRight],
+            y: this.y,
+            duration: 700,
+            ease: 'Sine.easeIn',
+            onComplete: () => {
+                this.armRight.setVisible(false);
+            }
+        });
+        this.scene.tweens.add({
+            targets: [this.legLeft],
+            y: this.y,
+            duration: 500,
+            ease: 'Sine.easeIn',
+            onComplete: () => {
+                this.legLeft.setVisible(false);
+            }
+        });
+        this.scene.tweens.add({
+            targets: [this.legRight],
+            y: this.y,
+            duration: 500,
+            ease: 'Sine.easeIn',
+            onComplete: () => {
+                this.legRight.setVisible(false);
+            }
+        });
+        this.scene.tweens.add({
+            targets: [this.body],
+            y: this.y,
+            duration: 600,
+            ease: 'Sine.easeIn',
+            onComplete: () => {
+                this.body.setVisible(false);
+            }
+        });
+        this.scene.tweens.add({
+            targets: [this.head],
+            y: this.y,
+            duration: 800,
+            ease: 'Sine.easeIn',
+            onComplete: () => {
+                this.head.setVisible(false);
+                if (this.dirt) {
+                    this.dirt.destroy();
+                    this.dirt = null;
+                }
+                this.isInAnim = false;
+                this.offsetY = +48 * this.scaleFactor;
+            },
+        });
+
+
+        // make dirt
+
+        this.dirt = this.scene.add.sprite(this.x, this.y, 'anime/dirt')
+            .setOrigin(0.5, 0.5).setScale(this.scaleFactor)
+            .setDepth(this.baseDepth + 14);
+    }
+
+
+    // 换位置后出土
+    getOut() {
+        this.isInAnim = true;
+        // 全部visible
+        this.body.setVisible(true);
+        this.head.setVisible(true);
+        this.armLeft.setVisible(true);
+        this.armRight.setVisible(true);
+        this.legLeft.setVisible(true);
+        this.legRight.setVisible(true);
+
+
+        this.scene.tweens.add({
+            targets: [this.armLeft],
+            y: this.armLeft.y - this.offsetY,
+            duration: 700,
+            ease: 'Sine.easeOut',
+        });
+        this.scene.tweens.add({
+            targets: [this.armRight],
+            y: this.armRight.y - this.offsetY,
+            duration: 700,
+            ease: 'Sine.easeOut',
+        });
+        this.scene.tweens.add({
+            targets: [this.legLeft],
+            y: this.legLeft.y - this.offsetY,
+            duration: 800,
+            ease: 'Sine.easeOut',
+        });
+        this.scene.tweens.add({
+            targets: [this.legRight],
+            y: this.legRight.y - this.offsetY,
+            duration: 800,
+            ease: 'Sine.easeOut',
+            onComplete: () => {
+                this.offsetY = 0;
+                this.isInAnim = false;
+                if (this.dirt) {
+                    this.dirt.destroy();
+                    this.dirt = null;
+                }
+
+            },
+        });
+        this.scene.tweens.add({
+            targets: [this.body],
+            y: this.body.y - this.offsetY,
+            duration: 600,
+            ease: 'Sine.easeOut',
+        });
+        this.scene.tweens.add({
+            targets: [this.head],
+            y: this.head.y - this.offsetY,
+            duration: 500,
+            ease: 'Sine.easeOut',
+        });
+
+        this.dirt = this.scene.add.sprite(this.x, this.y, 'anime/dirt')
+            .setOrigin(0.5, 0.5).setScale(this.scaleFactor)
+            .setDepth(this.baseDepth + 14);
+    }
 }

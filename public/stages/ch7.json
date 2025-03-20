@@ -1,25 +1,25 @@
 {
-    "comment": "1-6,in mine boss version,体验版",
-    "rows": 5,
+    "comment": "1-7,deep mine water boss version,体验版",
+    "rows": 6,
     "type": 1,
     "stageScript": {
         "first_wave_id": 3,
         "total_waves": 36,
-        "difficulty_limit": 52,
+        "difficulty_limit": 57,
         "phase1_end": 11,
         "phase2_end": 28,
         "dayOrNight": 2,
         "flagWaves": [ 10, 25, 35 ],
         "waterWays": [ 1, 2, 3 ],
         "AllowedMobs": [ 1, 2, 3, 8, 4, 5, 7, 9, 11 ],
-        "globalRatio": [ [ 0, 1.0 ], [ 21, 1.5 ] ],
-        "bossInsert": [ [ 34, 12 ] ]
+        "globalRatio": [ [ 0, 1.0 ], [ 21, 1.3 ] ],
+        "bossInsert": [ [ 34, 13 ] ]
     },
     "onWin": {
         "unLock": [ 7 ],
         "unLockPlant": [ ]
     },
-    "energy": 50,
+    "energy": 50000,
     "rewards": [
         {
             "progress": 75,

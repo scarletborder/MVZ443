@@ -3,7 +3,8 @@
 import DepthManager from "../../utils/depth";
 import { Game } from "../scenes/Game";
 
-export default function createDirtOut(scene: Game, col: number, row: number, callback: () => void) {
+export default function createDirtOut(scene: Game, col: number, row: number,
+    callback: () => void, size?: { sizeX: number, sizeY: number }) {
     if (!scene.anims.exists('anime/dirt_out')) {
         scene.anims.create({
             key: 'anime/dirt_out',
@@ -12,9 +13,8 @@ export default function createDirtOut(scene: Game, col: number, row: number, cal
             repeat: 0,
         })
     }
+    if (!size) size = scene.positionCalc.getPlantBodySize();
 
-
-    let size = scene.positionCalc.getPlantBodySize();
     const { x, y } = scene.positionCalc.getPlantBottomCenter(col, row);
     const dirt_obj = scene.add.sprite(x, y, 'anime/dirt_out', 0).setDepth(DepthManager.getPlantBasicDepth(row));
     dirt_obj.setDisplaySize(size.sizeX, size.sizeY);

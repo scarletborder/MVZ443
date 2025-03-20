@@ -127,6 +127,7 @@ const IceBombRecord: IRecord = {
     NewFunction: NewIceBomb,
     texture: 'plant/ice_bomb',
     description: i18n.S('ice_bomb_description'),
+    needFirstCoolDown: true,
     NextLevelStuff: levelAndstuff
 };
 

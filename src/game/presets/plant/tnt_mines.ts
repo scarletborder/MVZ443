@@ -194,7 +194,7 @@ const TntMines: IRecord = {
     NewFunction: NewTntMines,
     texture: 'plant/tnt_mines',
     description: i18n.S('tnt_mines_description'),
-    needFirstCoolDown: false,
+    needFirstCoolDown: true,
     NextLevelStuff: levelAndstuff
 };
 

@@ -12,6 +12,7 @@ export default class MineCart extends IBullet {
     screenWidth: number;
     screenFactor: number = 1;
 
+
     constructor(scene: Game, col: number, row: number) {
         super(scene, col, row, 'bullet/minecart', SECKILL, 'zombie');
         this.screenWidth = scene.sys.canvas.width;
@@ -24,6 +25,10 @@ export default class MineCart extends IBullet {
     }
 
     CollideObject(object: IZombie | IPlant | IObstacle | IGolem): void {
+        if (this.hasPenetrated.has(object)) {
+            return;
+        }
+        this.hasPenetrated.add(object);
         const damage = SECKILL;
         // 矿车移动直到屏幕外边
         if (object instanceof IZombie || object instanceof IObstacle || object instanceof IGolem) {

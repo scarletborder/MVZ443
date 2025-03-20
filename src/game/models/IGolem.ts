@@ -77,6 +77,7 @@ export default class IGolem extends Phaser.Physics.Arcade.Sprite {
     }
 
     public takeDamage(amount: number, projectileType?: "bullet" | "laser" | "explosion" | "trajectory"): void {
+        console.log(amount)
         if (amount >= SECKILL / 2) {
             amount = 1000;
         }
@@ -172,6 +173,24 @@ export default class IGolem extends Phaser.Physics.Arcade.Sprite {
         });
     }
 
+    public digTo(x2: number, y2: number,): void {
+        this.anim.highJump();
+        this.game.time.delayedCall(1000, () => {
+            this.anim.dig();
+            this.x = x2;
+            this.y = y2;
+            this.game.time.delayedCall(2000, () => {
+                this.anim.getOut();
+            })
+        })
+
+    }
+
+
+
+
+
+
 
     destroy(fromScene?: boolean): void {
         this.Spawner.registerDestroy(this);
@@ -185,7 +204,7 @@ export default class IGolem extends Phaser.Physics.Arcade.Sprite {
     }
 
     update() {
-        if (!this.isDying) {
+        if (!this.isDying && !this.anim.isInAnim) {
             this.anim.updatePosition(this.x, this.y);
             return;
         }

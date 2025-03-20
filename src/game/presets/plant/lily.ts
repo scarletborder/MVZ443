@@ -13,6 +13,7 @@ class _Lily extends IPlant {
         this.setHealthFirstly(GetIncValue(300, 2, level));
         this.game = scene;
         this.plant_height = 1;
+        this.setDepth(this.depth - 2);
     }
 
     public onStarShards(): void {

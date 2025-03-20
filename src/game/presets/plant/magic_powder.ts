@@ -108,6 +108,7 @@ const MagicPowderRecord: IRecord = {
     NewFunction: NewMagicPowder,
     texture: 'plant/magic_powder',
     description: i18n.S('magic_powder_description'),
+    needFirstCoolDown: true,
     NextLevelStuff: levelAndstuff
 };
 

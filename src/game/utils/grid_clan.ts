@@ -116,9 +116,12 @@ export default class GridClan {
                 return true;
             }
 
-            // lily,只能在水体放置,并且要求该gird 无其他植物
+            // lily,只能在水体放置,并且要求该gird 无其他水生植物
             if (pid === lilyPid) {
-                return this.gardener.scene.gridProperty[row][col] === 'water' && plants.length === 0;
+                for (const plant of plants) {
+                    if (WATER_ONLY_PLANT.includes(plant.pid)) return false;
+                }
+                return this.gardener.scene.gridProperty[row][col] === 'water';
             }
 
             // TODO: other water only plant

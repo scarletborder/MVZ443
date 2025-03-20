@@ -102,6 +102,7 @@ export class Preloader extends Scene {
         this.load.image('shoot_bomb', 'anime/shoot_bomb.png');
         this.load.spritesheet('anime/dirt_out', 'anime/dirt_out.png',
             { frameWidth: 64, frameHeight: 64 });
+        this.load.image('anime/dirt', 'anime/dirt.png');
 
 
         this.load.spritesheet('sprZombieBody', 'sprite/zombie/sprZombieBody.png',
@@ -185,7 +186,7 @@ export class Preloader extends Scene {
             }
         }
 
-        if (stageId === 6) {
+        if (stageId === 6 || stageId === 7) {
             this.load.audio('ZCDS-0014-05', 'audio/ZCDS-0014-05.ogg');
         }
     }

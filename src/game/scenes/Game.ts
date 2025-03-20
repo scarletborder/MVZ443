@@ -153,6 +153,7 @@ export class Game extends Scene {
         this.physics.add.overlap(ILaser.Group, IZombie.Group, laserZombie, null, this);
         // 设置激光与植物的碰撞检测
         // @ts-ignore
+        this.physics.add.overlap(ILaser.Group, IPlant.Group, laserZombie, null, this);
 
 
         // golem
@@ -234,6 +235,7 @@ export class Game extends Scene {
         this.params.setInitialEnergy(this.stageData.energy);
         this.monsterSpawner.startWave();
         AddMapFunction(this);
+        EventBus.emit('boss-dead');
         EventBus.emit('game-progress', { progress: 0 });
         // 设置一排minecart
         for (let i = 0; i < this.GRID_ROWS; i++) {
@@ -421,6 +423,6 @@ function explodeZombie(explosionSprite: Phaser.GameObjects.GameObject, zombieSpr
 
 function laserZombie(laserSprite: Phaser.GameObjects.GameObject, zombieSprite: Phaser.GameObjects.GameObject) {
     const laser = laserSprite as ILaser;
-    const zombie = zombieSprite as IZombie | IGolem | IObstacle;
+    const zombie = zombieSprite as IZombie | IGolem | IObstacle | IPlant;
     laser.CollideObject(zombie);
 }
