@@ -6,6 +6,7 @@ total_waves = 35               # 总波数
 difficulty_limit = 40        # 最终波数达到的难度上限
 phase1_end = 15               # 早期阶段结束的波数索引（波 0 到 phase1_end-1）
 phase2_end = 26               # 中期阶段结束的波数索引（波 phase1_end 到 phase2_end-1）
+dayOrNight = 1                  # 1: 白天 2: 晚上
 # 后期阶段对应波数：phase2_end 到 total_waves-1
 
 # 定义 flag wave,这些wave之前会给很充足的准备时间
@@ -260,14 +261,18 @@ def getAllTimes(waveId:int)->tuple[int, int, int]:
     duration = getDuration(waveId)
 
     def getMaxDelay(waveId: int):
-        return 20 + random.randint(0, 5)
+        return 22 + random.randint(0, 5)
     
     maxDelay = getMaxDelay(waveId)
 
     def getMinDelay(waveId: int):
+        if waveId == 1:
+            return 12
+        elif waveId == 2:
+            return 10
         if (waveId + 1) in _flagWaves:
             return maxDelay - 1
-        return 1
+        return 6
     
     minDelay = getMinDelay(waveId)
     return (duration, minDelay, maxDelay)
@@ -280,7 +285,7 @@ def oneObject(waveId:int):
             "flag": "normal",
             "monsters": [],
             "duration": 0,
-            "maxDelay": 20,
+            "maxDelay": 20 if dayOrNight == 1 else 26,
             "minDelay": 18,
             "arrangement": 1,
             "minLine": 1,
@@ -305,7 +310,7 @@ def oneObject(waveId:int):
 
     levelSum = getLevelSum(waveId)
     duration, minDelay, maxDelay = getAllTimes(waveId)
-    if waveId < 3:
+    if waveId <= 3:
         # 早期阶段,不刷水道
         obj['exceptLine'] = waterWays or None
     else:
