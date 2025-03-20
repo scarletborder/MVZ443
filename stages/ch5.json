@@ -9,7 +9,7 @@
             "flag": "normal",
             "monsters": [],
             "duration": 0,
-            "maxDelay": 24,
+            "maxDelay": 26,
             "minDelay": 18,
             "arrangement": 1,
             "minLine": 1,
