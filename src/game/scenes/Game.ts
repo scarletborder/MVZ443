@@ -19,6 +19,9 @@ import { IExpolsion } from '../models/IExplosion';
 import { ILaser } from '../models/ILaser';
 import IGolem from '../models/IGolem';
 import IObstacle from '../presets/obstacle/IObstacle';
+import { generateStageScript } from '../game_events/stage_script';
+import seedrandom from 'seedrandom';
+import DepthManager from '../../utils/depth';
 
 
 
@@ -85,7 +88,9 @@ export class Game extends Scene {
         this.GRID_ROWS = this.stageData.rows;
         this.gridProperty = new Array(this.GRID_ROWS).fill(0).map(() => new Array(this.GRID_COLS).fill('ground')); //  默认全为地板
         this.positionCalc = new PositionCalc(this.scaleFactor, this.GRID_ROWS, this.GRID_COLS);
-        this.monsterSpawner = new MonsterSpawner(this, this.stageData.waves);
+        const randomPrng = seedrandom.alea(String(this.seed * 17));
+        const waves = generateStageScript(this.stageData.stageScript, randomPrng);
+        this.monsterSpawner = new MonsterSpawner(this, waves);
 
         // 目前只有单机
         // 判断是否联机
@@ -268,6 +273,37 @@ export class Game extends Scene {
             EventBus.emit('starshards-consume');
         }
     }
+
+    broadCastFlag() {
+        // 创建新的广播文本
+        const zombieText = this.add.text(
+            this.cameras.main.width / 2,
+            this.cameras.main.height * 0.3,
+            '一大波怪物即将登场',
+            {
+                fontSize: this.scale.displaySize.width / 20,
+                color: 'rgb(187, 21, 21)', // 红色文本
+                backgroundColor: 'rgba(0, 0, 0, 0.35)',
+                padding: { x: 10, y: 5 },
+            }
+        ).setOrigin(0.5).setDepth(DepthManager.getMenuDepth());
+
+        // 4秒后更换文本内容为“来袭!!”
+        this.time.addEvent({
+            delay: 4000,
+            callback: () => {
+                zombieText.setText('来袭!!');
+                // 3秒后销毁文本对象
+                this.time.addEvent({
+                    delay: 3000,
+                    callback: () => {
+                        zombieText.destroy();
+                    }
+                });
+            }
+        });
+    }
+
 
 
     /** 

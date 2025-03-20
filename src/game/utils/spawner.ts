@@ -71,6 +71,11 @@ export default class MonsterSpawner {
     // Next
     nextWave() {
         console.log('time now:', this.scene.time.now);
+        // 停用当前一切计时器
+        if (this.Timer) {
+            this.Timer.remove();
+            this.Timer.destroy();
+        }
 
         // 无论如何都到达了下一波,那么开始进度记录
         if (this.current_wave_idx >= 0) {
@@ -87,41 +92,53 @@ export default class MonsterSpawner {
             return;
         }
 
-        this.prev_wave_time = this.scene.time.now; // 更新时间
+        const startWave = () => {
+            this.prev_wave_time = this.scene.time.now; // 更新时间
 
-        // 怪物生成流程
-        this.tmpKilled_count = this.killed_count;
-        this.killed_count = 0; // 清空当前击杀数字,在生成怪物之间可能会发生击杀怪物事件
-        this.spawnMonster();
-        this.killed_count += this.tmpKilled_count;
-        this.onKilledCountUpdate(this.current_wave_idx - 1); // 之前杀的,更新击杀数
+            // 怪物生成流程
+            this.tmpKilled_count = this.killed_count;
+            this.killed_count = 0; // 清空当前击杀数字,在生成怪物之间可能会发生击杀怪物事件
+            this.spawnMonster();
+            this.killed_count += this.tmpKilled_count;
+            this.onKilledCountUpdate(this.current_wave_idx - 1); // 之前杀的,更新击杀数
 
-        // 如果当前波为精英或BOSS, 则不启用下一波定时器，
-        // 等待精英/BOSS被击杀后由 onKilledCountUpdate 触发下一波或游戏胜利逻辑
-        if (this.currentWave().flag === 'elite' || this.currentWave().flag === 'boss') {
-            // 设置外部的progress为boss health bar,不影响 this.progress(wave 进度)
-            EventBus.emit('boss-health', { health: 100 });
-            return;
-        }
+            // 如果当前波为精英或BOSS, 则不启用下一波定时器，
+            // 等待精英/BOSS被击杀后由 onKilledCountUpdate 触发下一波或游戏胜利逻辑
+            if (this.currentWave().flag === 'elite' || this.currentWave().flag === 'boss') {
+                // 设置外部的progress为boss health bar,不影响 this.progress(wave 进度)
+                EventBus.emit('boss-health', { health: 100 });
+                return;
+            }
 
-        // 启动定时器（仅适用于普通波）
-        if (this.current_wave_idx >= this.waves.length - 1) return; // 没下一波了
-        if (this.Timer) {
-            this.Timer.reset({
-                delay: this.currentWave().maxDelay * 1000,
-                loop: false,
-                callback: () => {
-                    this.nextWave();
-                }
+            // 启动定时器（仅适用于普通波）
+            if (this.current_wave_idx >= this.waves.length - 1) return; // 没下一波了
+            if (this.Timer) {
+                this.Timer.reset({
+                    delay: this.currentWave().maxDelay * 1000,
+                    loop: false,
+                    callback: () => {
+                        this.nextWave();
+                    }
+                });
+            } else {
+                this.Timer = this.scene.time.addEvent({
+                    delay: this.currentWave().maxDelay * 1000,
+                    loop: false,
+                    callback: () => {
+                        this.nextWave();
+                    }
+                });
+            }
+        };
+
+        // 如果是isFlag,那么输出字幕等待一段时间,否则直接开始
+        if (this.currentWave().isFlag) {
+            this.scene.broadCastFlag();
+            this.scene.time.delayedCall(5000, () => {
+                startWave();
             });
         } else {
-            this.Timer = this.scene.time.addEvent({
-                delay: this.currentWave().maxDelay * 1000,
-                loop: false,
-                callback: () => {
-                    this.nextWave();
-                }
-            });
+            startWave();
         }
     }
 

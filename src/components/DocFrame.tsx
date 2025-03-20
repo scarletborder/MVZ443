@@ -83,6 +83,13 @@ export default function DocFrame({ width, height, sceneRef, setGameParams, gameS
 
         材质来源: Minecraft VS Zombie2 GMS2版
         原作者:  Cuerzor58 
+
+        联机事项:
+        请克隆项目github.com/scarletborder/MVZ443
+        在tools/server文件夹下使用 go build 构建服务器,
+        并在游戏中地址栏输入 ws://127.0.0.1:28080/ws 进行连接
+        (没有回显是正常的行为,你可以在console中看到连接信息)
+        (星之碎片尚未实现同步,联机游戏请别使用)
     `;
 
     // 主菜单组件
@@ -266,7 +273,7 @@ export default function DocFrame({ width, height, sceneRef, setGameParams, gameS
                 islord={islord}
             />}
             {currentView === 'pokedex' && <Pokedex sceneRef={sceneRef} width={width} height={height} onBack={() => setCurrentView('main')} />}
-            {currentView === 'shop' && <Shop width={width} height={height} onBack={() => setCurrentView('main')} />} 
+            {currentView === 'shop' && <Shop width={width} height={height} onBack={() => setCurrentView('main')} />}
             {currentView === 'settings' && <Settings width={width} height={height} onBack={() => setCurrentView('main')} />}
 
             <style>
