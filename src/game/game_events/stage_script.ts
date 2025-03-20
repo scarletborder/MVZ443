@@ -453,6 +453,7 @@ export function generateStageScript(stage: StageScript, random: seedrandom.PRNG)
         // 重新计算 progress, 最后一波为 100%
         ret[i].progress = Math.ceil((i / (total - 1)) * 100);
     }
-
+    ret[0].monsters = []; // 第一波不刷怪
+    ret[0].maxDelay = dayOrNight === 1 ? 20 : 26;
     return ret;
 }
