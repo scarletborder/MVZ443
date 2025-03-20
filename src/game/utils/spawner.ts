@@ -71,11 +71,11 @@ export default class MonsterSpawner {
     // Next
     nextWave() {
         console.log('time now:', this.scene.time.now);
-        // 停用当前一切计时器
-        if (this.Timer) {
-            this.Timer.remove();
-            this.Timer.destroy();
-        }
+        // // 停用当前一切计时器
+        // if (this.Timer) {
+        //     this.Timer.remove();
+        //     this.Timer.destroy();
+        // }
 
         // 无论如何都到达了下一波,那么开始进度记录
         if (this.current_wave_idx >= 0) {
@@ -134,9 +134,23 @@ export default class MonsterSpawner {
         // 如果是isFlag,那么输出字幕等待一段时间,否则直接开始
         if (this.currentWave().isFlag) {
             this.scene.broadCastFlag();
-            this.scene.time.delayedCall(5000, () => {
-                startWave();
-            });
+            if (this.Timer) {
+                this.Timer.reset({
+                    delay: 5000,
+                    loop: false,
+                    callback: () => {
+                        startWave();
+                    }
+                });
+            } else {
+                this.Timer = this.scene.time.addEvent({
+                    delay: 5000,
+                    loop: false,
+                    callback: () => {
+                        startWave();
+                    }
+                });
+            }
         } else {
             startWave();
         }
