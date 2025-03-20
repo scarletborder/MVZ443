@@ -9,10 +9,12 @@ import { IRecord } from "../../models/IRecord";
 import { IZombie } from "../../models/IZombie";
 import { Game } from "../../scenes/Game";
 import { StartArc } from "../../utils/arc";
+import createDirtOut from "../../sprite/dirt_out";
 
 class _TntMines extends IPlant {
     game: Game;
     isBuried: boolean = true;
+    head: Phaser.GameObjects.Sprite;
     random: seedrandom.PRNG;
 
     constructor(scene: Game, col: number, row: number, level: number, buriedTime: number) {
@@ -22,6 +24,11 @@ class _TntMines extends IPlant {
         this.plant_height = 1;
         this.game = scene;
         this.setFrame(0);
+
+        const size = scene.positionCalc.getPlantDisplaySize();
+        this.setVisible(false);
+        this.head = scene.add.sprite(this.x, this.y, 'anime/dirt_out', 0).setOrigin(0.5, 1)
+            .setDisplaySize(size.sizeX, size.sizeY).setDepth(this.depth);
         this.setHealthFirstly(400);
 
         this.Timer = scene.time.addEvent({
@@ -105,8 +112,11 @@ class _TntMines extends IPlant {
 
     public wakeup(): void {
         if (this.health > 0 && this.isBuried) {
-            this.setFrame(1);
+            this.head.setVisible(false);
             this.isBuried = false;
+            createDirtOut(this.game, this.col, this.row, () => {
+                this.setVisible(true);
+            });
         }
     }
 
@@ -123,6 +133,11 @@ class _TntMines extends IPlant {
             });
             this.destroyPlant();
         }
+    }
+
+    destroy(fromScene?: boolean): void {
+        this.head?.destroy();
+        super.destroy(fromScene);
     }
 }
 
@@ -179,7 +194,7 @@ const TntMines: IRecord = {
     NewFunction: NewTntMines,
     texture: 'plant/tnt_mines',
     description: i18n.S('tnt_mines_description'),
-    needFirstCoolDown: true,
+    needFirstCoolDown: false,
     NextLevelStuff: levelAndstuff
 };
 

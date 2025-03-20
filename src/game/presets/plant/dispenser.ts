@@ -5,7 +5,7 @@ import { GetIncValue } from "../../../utils/numbervalue";
 import { IPlant } from "../../models/IPlant";
 import { IRecord } from "../../models/IRecord";
 import { Game } from "../../scenes/Game";
-import createShootBomb from "../../sprite/shoot_anim";
+import createShootBurst from "../../sprite/shoot_anim";
 import NewArrow from "../bullet/arrow";
 
 class dispenser extends IPlant {
@@ -74,7 +74,8 @@ class dispenser extends IPlant {
             duration: 200,
             ease: 'Sine.easeOut',
             onComplete: () => {
-                createShootBomb(this.scene, this.head.x + this.width * 4 / 9, this.head.y - this.height * 2 / 3, 24, this.depth + 2);
+                createShootBurst(this.scene, this.head.x + this.width * 4 / 9, this.head.y - this.height * 2 / 3, 
+                    24, this.depth + 2);
                 // 平移到目标位置后发射箭
                 shootArrow(this.scene, this);
                 // 第二个 tween：平滑回原位

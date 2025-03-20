@@ -6,7 +6,7 @@ import { IExpolsion } from "../../models/IExplosion";
 import { IPlant, INightPlant } from "../../models/IPlant";
 import { IRecord } from "../../models/IRecord";
 import { Game } from "../../scenes/Game";
-import createShootBomb from "../../sprite/shoot_anim";
+import createShootBurst from "../../sprite/shoot_anim";
 import NewSnowBullet, { SnowBall } from "../bullet/snowball";
 
 class smallDispenser extends INightPlant {
@@ -69,7 +69,7 @@ function shootSnowBall(scene: Game, shooter: IPlant, maxDistance: number) {
 
 
     if (!shooter.isSleeping) {
-        createShootBomb(scene, shooter.x + shooter.width * 1 / 3, shooter.y - shooter.height / 7,
+        createShootBurst(scene, shooter.x + shooter.width * 1 / 3, shooter.y - shooter.height / 7,
             16, shooter.depth + 1);
         const arrow = NewSnowBullet(scene, shooter.col, shooter.row, maxDistance, damage);
     }
