@@ -20,6 +20,7 @@ class smallDispenser extends INightPlant {
         }
 
         super(scene, col, row, texture, SmallDispenserRecord.pid, level);
+        this.height = 1;
         this.game = scene;
         this.setHealthFirstly(300);
         this.maxDistance = maxDistance;

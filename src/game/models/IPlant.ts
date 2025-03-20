@@ -11,6 +11,9 @@ export class IPlant extends Phaser.Physics.Arcade.Sprite {
     public pid: number;
     public health: number;
     public maxhealth: number;
+
+    height: number = 2; // 高度,影响是否会被怪物子弹打到
+
     public level: number;
     public Timer?: Phaser.Time.TimerEvent;
     public attackingZombie: Set<IZombie> = new Set<IZombie>();

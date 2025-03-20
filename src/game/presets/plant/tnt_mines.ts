@@ -19,6 +19,7 @@ class _TntMines extends IPlant {
         super(scene, col, row, TntMines.texture, TntMines.pid, level);
         this.random = seedrandom.alea(String(scene.seed * 3));
         this.isBuried = true;
+        this.height = 1;
         this.game = scene;
         this.setFrame(0);
         this.setHealthFirstly(400);
