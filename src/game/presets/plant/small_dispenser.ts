@@ -6,6 +6,7 @@ import { IExpolsion } from "../../models/IExplosion";
 import { IPlant, INightPlant } from "../../models/IPlant";
 import { IRecord } from "../../models/IRecord";
 import { Game } from "../../scenes/Game";
+import createShootBomb from "../../sprite/shoot_anim";
 import NewSnowBullet, { SnowBall } from "../bullet/snowball";
 
 class smallDispenser extends INightPlant {
@@ -28,7 +29,7 @@ class smallDispenser extends INightPlant {
         this.Timer = scene.time.addEvent({
             startAt: 1200, // 已经使用的时间,即开始时间
             callback: () => {
-                if (this.health > 0) {
+                if (this && this.health > 0) {
                     if (scene.monsterSpawner.hasMonsterInRowAfterX(this.row, this.x, this.maxDistance)) {
                         shootSnowBall(scene, this, this.maxDistance);
                     }
@@ -66,7 +67,10 @@ function shootSnowBall(scene: Game, shooter: IPlant, maxDistance: number) {
     //  根据等级略微提高伤害
     const damage = GetIncValue(43, level, 1.45);
 
+
     if (!shooter.isSleeping) {
+        createShootBomb(scene, shooter.x + shooter.width * 1 / 3, shooter.y - shooter.height / 7,
+            16, shooter.depth + 1);
         const arrow = NewSnowBullet(scene, shooter.col, shooter.row, maxDistance, damage);
     }
 }

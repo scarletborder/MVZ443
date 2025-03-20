@@ -3,17 +3,17 @@
     "rows": 5,
     "type": 1,
     "stageScript": {
-        "first_wave_id": 0,
-        "total_waves": 41,
-        "difficulty_limit": 49,
+        "first_wave_id": 3,
+        "total_waves": 36,
+        "difficulty_limit": 52,
         "phase1_end": 11,
         "phase2_end": 28,
         "dayOrNight": 2,
-        "flagWaves": [ 10, 20, 30, 40 ],
+        "flagWaves": [ 10, 25, 35 ],
         "waterWays": [ 1, 2, 3 ],
         "AllowedMobs": [ 1, 2, 3, 8, 4, 5, 7, 9, 11 ],
-        "globalRatio": [ [ 0, 1.0 ], [ 25, 1.2 ] ],
-        "bossInsert": [ [ 39, 12 ] ]
+        "globalRatio": [ [ 0, 1.0 ], [ 21, 1.5 ] ],
+        "bossInsert": [ [ 34, 12 ] ]
     },
     "onWin": {
         "unLock": [ ],

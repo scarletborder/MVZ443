@@ -77,7 +77,7 @@ export default class IGolem extends Phaser.Physics.Arcade.Sprite {
     }
 
     public takeDamage(amount: number, projectileType?: "bullet" | "laser" | "explosion" | "trajectory"): void {
-        if (amount >= SECKILL) {
+        if (amount >= SECKILL / 2) {
             amount = 1000;
         }
         this.setHealth(this.health - amount);

@@ -99,6 +99,7 @@ export class Preloader extends Scene {
             { frameWidth: 16, frameHeight: 16 });
         this.load.spritesheet('anime/explosion', 'anime/explosion.png',
             { frameWidth: 32, frameHeight: 32 });
+        this.load.image('shoot_bomb', 'anime/shoot_bomb.png');
 
 
         this.load.spritesheet('sprZombieBody', 'sprite/zombie/sprZombieBody.png',

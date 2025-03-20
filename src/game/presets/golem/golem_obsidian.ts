@@ -269,6 +269,7 @@ class ObsidianGolem extends IGolem {
     public takeDamage(amount: number, projectileType?: "bullet" | "laser" | "explosion" | "trajectory"): void {
         if (projectileType === 'explosion') {
             amount *= 0.25;
+            amount = Math.min(amount, 1500);
         } else if (projectileType === 'laser' && amount > 500) {
             amount = 500;
         }
@@ -292,6 +293,7 @@ class ObsidianGolem extends IGolem {
         }
 
         super.destoryZombie();
+        EventBus.emit('boss-health', { health: -1 }); // death
     }
 
     // 判断(col,row是否已经有obstacle,防止重复放置)

@@ -107,7 +107,7 @@ export default function BottomTools({ width, chapterID }: Props) {
 
 
     // 计算进度条百分比
-    const progress = gamectx.bossHealth !== -1 ?
+    const progress = gamectx.bossHealth > 0 ?
         (bossHealth) :
         (gamectx.wave / 100) * 100;
 

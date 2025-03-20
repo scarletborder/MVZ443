@@ -15,7 +15,7 @@ export class IPlant extends Phaser.Physics.Arcade.Sprite {
     plant_height: number = 2; // 高度,影响是否会被怪物子弹打到
 
     public level: number;
-    public Timer?: Phaser.Time.TimerEvent;
+    public Timer?: Phaser.Time.TimerEvent | null;
     public attackingZombie: Set<IZombie> = new Set<IZombie>();
 
     // 效果
