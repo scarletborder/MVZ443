@@ -2,6 +2,8 @@ import { Game } from "../scenes/Game";
 
 // 发射bullet的迸裂动画
 export default function createShootBurst(scene: Game, x: number, y: number, size: number = 16, depth: number = 20000) {
+    if (!scene || !scene.add) return;
+
     // 创建爆炸的 sprite，这里假设你已经加载了名为 'explosion' 的图片或精灵图
     let explosion = scene.add.sprite(x, y, 'shoot_bomb');
     explosion.setDisplaySize(size, size).setDepth(depth);

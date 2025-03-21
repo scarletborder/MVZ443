@@ -26,7 +26,7 @@ class Furnace extends IPlant {
             startAt: cooldownTime * 0.7,
             loop: true,
             callback: () => {
-                if (this.health > 0) {
+                if (this.health > 0 && scene && scene.time) {
                     this.setFrame(1);
                     scene.time.delayedCall(1000, () => {
                         if (this && this.health && this.health > 0) {

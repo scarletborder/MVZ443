@@ -14,6 +14,8 @@ class dispenser extends IPlant {
     head: Phaser.GameObjects.Sprite; // 头部，frame 1
     container: Phaser.GameObjects.Container;
 
+    headX: number;
+
     isInBruteShoot = false;
 
     public onStarShards(): void {
@@ -58,6 +60,7 @@ class dispenser extends IPlant {
         this.base = scene.add.sprite(this.x, this.y, texture, 1).setOrigin(0.5, 1)
             .setDisplaySize(size.sizeX, size.sizeY).setDepth(this.depth - 1);
         // !important: 不要用container,很神奇吧,也不要add existing
+        this.headX = this.head.x;
         this.Timer = this.normalShootEvent();
     }
 
@@ -65,7 +68,7 @@ class dispenser extends IPlant {
         // 计算移动距离：50% 的显示宽度
         const moveDistance = this.head.displayWidth * 0.15;
         // 保存 head 原始相对于 container 的 x 坐标（通常为 0）
-        const originalX = this.head.x;
+        const originalX = this.headX;
 
         // 第一个 tween：向左平移 moveDistance
         this.scene.tweens.add({
@@ -74,7 +77,7 @@ class dispenser extends IPlant {
             duration: 200,
             ease: 'Sine.easeOut',
             onComplete: () => {
-                createShootBurst(this.scene, this.head.x + this.width * 4 / 9, this.head.y - this.height * 2 / 3, 
+                createShootBurst(this.scene, this.head.x + this.width * 4 / 9, this.head.y - this.height * 2 / 3,
                     24, this.depth + 2);
                 // 平移到目标位置后发射箭
                 shootArrow(this.scene, this);
@@ -182,6 +185,10 @@ function NewDispenser(scene: Game, col: number, row: number, level: number): IPl
 }
 
 function shootArrow(scene: Game, shooter: IPlant, baseDamage: number = 28, isStar: boolean = false) {
+    if (!scene || !shooter || shooter.health <= 0) {
+        return;
+    }
+
     const level = shooter.level;
     //  根据等级略微提高伤害
     const damage = GetIncValue(baseDamage, level, 1.5);

@@ -29,7 +29,7 @@ class smallDispenser extends INightPlant {
         this.Timer = scene.time.addEvent({
             startAt: 1200, // 已经使用的时间,即开始时间
             callback: () => {
-                if (this && this.health > 0) {
+                if (this && this.health > 0 && scene) {
                     if (scene.monsterSpawner.hasMonsterInRowAfterX(this.row, this.x, this.maxDistance)) {
                         shootSnowBall(scene, this, this.maxDistance);
                     }

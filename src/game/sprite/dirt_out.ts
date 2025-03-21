@@ -5,6 +5,8 @@ import { Game } from "../scenes/Game";
 
 export default function createDirtOut(scene: Game, col: number, row: number,
     callback: () => void, size?: { sizeX: number, sizeY: number }) {
+    if (!scene || !scene.anims) return;
+
     if (!scene.anims.exists('anime/dirt_out')) {
         scene.anims.create({
             key: 'anime/dirt_out',

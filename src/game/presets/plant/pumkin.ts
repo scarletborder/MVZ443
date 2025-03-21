@@ -49,7 +49,7 @@ class pumkin extends INightPlant {
         return this.game.time.addEvent({
             startAt: this.attackInterval * 3 / 4, // 已经使用的时间,即开始时间
             callback: () => {
-                if (this.health > 0 && this.isSleeping === false &&
+                if (this.health > 0 && this.isSleeping === false && this.game &&
                     this.scene.monsterSpawner.hasMonsterInRowAfterX(this.row, this.x, this.maxDistance)) {
                     this.setFrame(1);
                     shootLaser(this.game, this);
