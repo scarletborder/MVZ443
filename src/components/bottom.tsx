@@ -109,7 +109,7 @@ export default function BottomTools({ width, chapterID }: Props) {
     // 计算进度条百分比
     const progress = bossHealth > 0 ?
         (bossHealth) :
-        (gamectx.wave / 100) * 100;
+        (gamectx.wave);
 
     return (
         <div className="bottom" style={{
@@ -129,7 +129,7 @@ export default function BottomTools({ width, chapterID }: Props) {
 
 
             {
-                gamectx.bossHealth !== -1 ? (
+                bossHealth > 0 ? (
                     <div className="boss-health">
                         <div className="progress-bar">
                             <div
