@@ -49,6 +49,9 @@ const zombieRecord: MIRecord = {
     name: 'Zombie',
     NewFunction: NewZombie,
     texture: 'zombie/zombie',
+    weight: (waveId?: number) => Math.max(400, 4000 - ((waveId || 1) - 4) * 180),
+    level: 1,
+    leastWaveID: 0,
 }
 
 export default zombieRecord;

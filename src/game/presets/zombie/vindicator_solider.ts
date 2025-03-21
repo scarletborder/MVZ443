@@ -8,7 +8,7 @@ import { IPlant } from '../../models/IPlant';
 
 export class EnhancedVindicator extends IZombie {
     static maxShieldHealth: number = 990;
-    shieldHealth: number = 990;
+    shieldHealth: number = 1000;
     currentShieldState = 0; // 0 = normal. 1 = broken
 
     axeSwing: Phaser.Tweens.Tween | null = null;
@@ -55,6 +55,7 @@ export class EnhancedVindicator extends IZombie {
     public takeDamage(amount: number, projectileType?: "bullet" | "laser" | "explosion" | "trajectory"): void {
         if (projectileType !== 'laser' && projectileType !== 'trajectory') { // 激光,投掷物穿透盾牌
             if (this.shieldHealth > amount) {
+                amount *= 0.75;
                 this.shieldHealth -= amount;
             } else {
                 this.attachSprites.get('shield')?.setVisible(false);
@@ -72,6 +73,7 @@ export class EnhancedVindicator extends IZombie {
                 this.attachSprites.get('shield')?.setFrame(this.currentShieldState);
             }
         } else {
+            // laser
             super.takeDamage(amount, projectileType);
         }
         this.handleHealthChange(this.health);
@@ -135,6 +137,9 @@ const VindicatorSoliderRecord: MIRecord = {
     name: 'VindicatorSolider',
     NewFunction: NewVindicator,
     texture: 'zombie/zombie',
+    weight: () => 3500,
+    level: 4,
+    leastWaveID: 14,
 }
 
 export default VindicatorSoliderRecord;

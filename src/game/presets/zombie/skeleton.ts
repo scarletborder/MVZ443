@@ -48,6 +48,9 @@ const SkeletonRecord: MIRecord = {
     name: 'Skeleton',
     NewFunction: NewSkeleton,
     texture: 'zombie/zombie',
+    weight: () => 0,
+    level: 999,
+    leastWaveID: 9999,
 }
 
 export default SkeletonRecord;

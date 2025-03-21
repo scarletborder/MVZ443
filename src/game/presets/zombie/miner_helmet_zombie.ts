@@ -139,6 +139,9 @@ const MinerHelmetZombieRecord: MIRecord = {
     name: 'MinerZombie',
     NewFunction: NewZombie,
     texture: 'zombie/zombie',
+    weight: () => 2000,
+    level: 5,
+    leastWaveID: 13,
 }
 
 export default MinerHelmetZombieRecord;

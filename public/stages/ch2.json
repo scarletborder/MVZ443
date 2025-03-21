@@ -6,7 +6,7 @@
         "first_wave_id": 0,
         "total_waves": 21,
         "difficulty_limit": 30,
-        "phase1_end": 8,
+        "phase1_end": 6,
         "phase2_end": 16,
         "dayOrNight": 1,
         "flagWaves": [ 10, 20 ],

@@ -352,6 +352,10 @@ const ObsidianRecord: MIRecord = {
     name: 'Obsidian Golem',
     NewFunction: NewObsidianGolem,
     texture: 'zombie/zombie',
+
+    weight: () => 0,
+    level: 999,
+    leastWaveID: 0,
 }
 
 export default ObsidianRecord;

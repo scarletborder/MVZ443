@@ -31,6 +31,7 @@ class TurtleZombie extends EnhancedZombie {
 
     public takeDamage(amount: number): void {
         if (this.capHealth > amount) {
+            amount *= 0.75;
             this.capHealth -= amount;
         } else {
             this.attachSprites.get('cap')?.setVisible(false);
@@ -39,7 +40,7 @@ class TurtleZombie extends EnhancedZombie {
 
             // 加速
             this.SetSpeedFirstly(30 * this.scaleFactor);
-            if (!this.attackingPlant && !this.IsFrozen && this.hasDebuff('slow') === 0 ) {
+            if (!this.attackingPlant && !this.IsFrozen && this.hasDebuff('slow') === 0) {
                 this.StartMove();
             }
 
@@ -78,6 +79,9 @@ const TurtleZombieRecord: MIRecord = {
     name: 'TurtleZombie',
     NewFunction: NewZombie,
     texture: 'zombie/zombie',
+    weight: () => 1000,
+    level: 2,
+    leastWaveID: 6,
 }
 
 export default TurtleZombieRecord;

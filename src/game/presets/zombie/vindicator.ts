@@ -100,6 +100,9 @@ const VindicatorRecord: MIRecord = {
     name: 'Vindicator',
     NewFunction: NewVindicator,
     texture: 'zombie/zombie',
+    weight: () => 0,
+    level: 9999,
+    leastWaveID: 9999,
 }
 
 export default VindicatorRecord;

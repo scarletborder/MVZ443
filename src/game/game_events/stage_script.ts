@@ -1,5 +1,6 @@
 import seedrandom from "seedrandom";
 import { Monster, Wave } from "../models/IRecord";
+import { MonsterFactoryMap } from "../presets";
 
 // 外部传入的关卡脚本类
 export class StageScript {
@@ -153,57 +154,6 @@ export function generateStageScript(stage: StageScript, random: seedrandom.PRNG)
     // 调整 flagWaves 波数
     const _flagWaves: number[] = flagWaves.map(w => w + first_wave_id);
 
-    // 僵尸种类字典、权重、等级
-    const MobDict: { [key: number]: string } = {
-        1: "普通僵尸",
-        2: "帽子僵尸",
-        3: "铁盔僵尸",
-        4: "矿工僵尸",
-        5: "铁盔矿工僵尸",
-        6: "骷髅",
-        7: "骷髅弓箭手",
-        8: "撑杆僵尸",
-        9: "唤魔者",
-        10: "卫道士",
-        11: "卫道士战士",
-        12: "黑曜石傀儡",
-        13: "坚守者",
-        14: "龟帽僵尸",
-    };
-
-    const MobWeight: { [key: number]: number } = {
-        1: 4000,
-        2: 4000,
-        3: 3000,
-        4: 3500,
-        5: 2000,
-        6: 0,
-        7: 1500,
-        8: 2000,
-        9: 1000,
-        10: 0,
-        11: 3500,
-        12: 0,
-        13: 0,
-        14: 1000
-    };
-
-    const MobLevel: { [key: number]: number } = {
-        1: 1,
-        2: 2,
-        3: 4,
-        4: 2,
-        5: 6,
-        6: 0,
-        7: 2,
-        8: 2,
-        9: 5,
-        10: 0,
-        11: 4,
-        12: 0,
-        13: 0,
-        14: 2
-    };
 
     // ---------------- 辅助函数 ----------------
     // 返回[min, max]之间的随机整数（包含两端）
@@ -226,45 +176,38 @@ export function generateStageScript(stage: StageScript, random: seedrandom.PRNG)
 
     // ---------------- 怪物生成逻辑 ----------------
     function GetMobWeight(mobId: number, waveId: number): number {
-        if (mobId === 1) {
-            return Math.max(400, MobWeight[1] - (waveId - 4) * 180);
-        }
-        if (mobId === 2) {
-            return Math.max(1000, MobWeight[2] - (waveId - 4) * 150);
-        }
-        return MobWeight[mobId];
+        return MonsterFactoryMap[mobId].weight(waveId);
     }
 
+    // 某一波中是否可以出现
     function CanMobAppear(mobId: number, waveId: number): boolean {
         if (!AllowedMobs.has(mobId)) {
             return false;
         }
-        if (waveId < 4) {
-            return [1, 2, 3, 4].includes(mobId);
-        }
-        if (waveId < 10) {
-            return [1, 2, 3, 4, 8, 11, 7, 9].includes(mobId);
-        }
-        if (waveId < 15) {
-            return [1, 2, 3, 4, 8, 11, 7, 9, 5].includes(mobId);
-        }
+
+        if (MonsterFactoryMap[mobId].leastWaveID > waveId) return false;
         return true;
     }
 
     function generateMobs(levelSum: number, waveId: number): { [mobId: number]: number } {
         const mobList: { [mobId: number]: number } = {};
-        const mobKeys = Object.keys(MobDict)
-            .map(Number)
-            .filter(mobId => MobWeight[mobId] !== 0);
+        const mobKeys = [];
+
+        for (const mrecord of Object.values(MonsterFactoryMap)) {
+            const mobId = mrecord.mid;
+            if (mrecord.weight(waveId) === 0) continue;
+            mobKeys.push(mobId);
+        }
 
         const weights = mobKeys.map(mobId => GetMobWeight(mobId, waveId));
 
         let remainingLevel = levelSum;
         while (remainingLevel > 1) {
             const mobId = weightedRandomChoice(mobKeys, weights);
-            if (CanMobAppear(mobId, waveId) && MobLevel[mobId] <= remainingLevel) {
+            const mobLevel = MonsterFactoryMap[mobId].level;
+            if (CanMobAppear(mobId, waveId) && mobLevel <= remainingLevel) {
                 mobList[mobId] = (mobList[mobId] || 0) + 1;
-                remainingLevel -= MobLevel[mobId];
+                remainingLevel -= mobLevel;
             }
         }
         // 若剩余 level 为 1，则补充一个普通僵尸

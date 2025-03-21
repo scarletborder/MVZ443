@@ -340,6 +340,9 @@ const WardenRecord: MIRecord = {
     name: 'Warden',
     NewFunction: NewWarden,
     texture: 'zombie/zombie',
+    weight: () => 0,
+    level: 999,
+    leastWaveID: 0,
 }
 
 export default WardenRecord;

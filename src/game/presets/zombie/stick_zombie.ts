@@ -86,6 +86,9 @@ const StickZombieRecord: MIRecord = {
     name: 'StickZombie',
     NewFunction: NewZombie,
     texture: 'zombie/zombie',
+    weight: () => 2000,
+    level: 2,
+    leastWaveID: 9,
 }
 
 export default StickZombieRecord;

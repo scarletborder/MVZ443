@@ -93,6 +93,9 @@ const SkeletonBowRecord: MIRecord = {
     name: 'MinerZombie',
     NewFunction: NewSkeletonBow,
     texture: 'zombie/zombie',
+    weight: () => 1500,
+    level: 2,
+    leastWaveID: 7,
 }
 
 export default SkeletonBowRecord;

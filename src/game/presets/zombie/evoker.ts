@@ -109,6 +109,9 @@ const EvokerRecord: MIRecord = {
     name: 'evoker',
     NewFunction: NewEvoker,
     texture: 'zombie/zombie',
+    weight: () => 1000,
+    level: 5,
+    leastWaveID: 10,
 }
 
 export default EvokerRecord;

@@ -33,6 +33,11 @@ export interface MIRecord {
     texture: string; // placeholder
     brief?: () => string;
     description?: () => string;
+
+    // 用于出怪
+    weight: (waveId?: number) => number; // 权重
+    level: number;  // 权限等级
+    leastWaveID: number; // 最早出现的waveID
 }
 
 
