@@ -166,7 +166,9 @@ export function generateStageScript(stage: StageScript, random: seedrandom.PRNG)
         9: "唤魔者",
         10: "卫道士",
         11: "卫道士战士",
-        12: "黑曜石傀儡"
+        12: "黑曜石傀儡",
+        13: "坚守者",
+        14: "龟帽僵尸",
     };
 
     const MobWeight: { [key: number]: number } = {
@@ -181,7 +183,9 @@ export function generateStageScript(stage: StageScript, random: seedrandom.PRNG)
         9: 1000,
         10: 0,
         11: 3500,
-        12: 0
+        12: 0,
+        13: 0,
+        14: 1000
     };
 
     const MobLevel: { [key: number]: number } = {
@@ -196,7 +200,9 @@ export function generateStageScript(stage: StageScript, random: seedrandom.PRNG)
         9: 5,
         10: 0,
         11: 4,
-        12: 0
+        12: 0,
+        13: 0,
+        14: 2
     };
 
     // ---------------- 辅助函数 ----------------

@@ -11,7 +11,7 @@
         "dayOrNight": 2,
         "flagWaves": [ 10, 25, 35 ],
         "waterWays": [ 1, 2, 3 ],
-        "AllowedMobs": [ 1, 2, 3, 8, 4, 5, 7, 9, 11 ],
+        "AllowedMobs": [ 1, 2, 3, 8, 4, 5, 7, 9, 11, 14 ],
         "globalRatio": [ [ 0, 1.0 ], [ 21, 1.5 ] ],
         "bossInsert": [ [ 34, 12 ] ]
     },

@@ -77,7 +77,7 @@ class pumkin extends INightPlant {
 }
 
 function attackDistance(level: number = 1) {
-    return 4.5;
+    return 4.8;
 }
 
 function NewPumpkin(scene: Game, col: number, row: number, level: number): IPlant {

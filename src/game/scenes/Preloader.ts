@@ -74,6 +74,8 @@ export class Preloader extends Scene {
             { frameWidth: 33, frameHeight: 14 });
         this.load.spritesheet('attach/helmet', 'attach/helmet.png',
             { frameWidth: 33, frameHeight: 14 });
+        this.load.spritesheet('attach/turtle', 'attach/turtle.png',
+            { frameWidth: 33, frameHeight: 14 });
         this.load.image('attach/hd_pickaxe', `attach/hd_pickaxe.png`);
         this.load.image('attach/hd_bow', `attach/hd_bow.png`);
         this.load.image('attach/hd_stick', `attach/hd_stick.png`);

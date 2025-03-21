@@ -12,7 +12,7 @@ import { NewLaserByGrid } from "../../models/ILaser";
 
 const minerID = 4;
 const helmetMinerID = 5;
-const easyMobID = [1, 2];
+const easyMobID = [1, 2, 14];
 const mediumID = [3, 4, 7, 8, 10];
 const hardID = [5, 9]
 
