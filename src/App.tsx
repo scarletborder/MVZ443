@@ -89,6 +89,15 @@ function App() {
         }
     }, []);
 
+    useEffect(() => {
+        // 在游戏启动时添加全局错误处理
+        window.addEventListener('error', function (event) {
+            console.warn('捕获到全局错误:', event.error);
+            // 你可以根据需要在这里做一些清理工作，避免游戏崩溃
+        }, true);
+
+    }, []);
+
     return (
         <SaveProvider>
             <GameProvider>

@@ -18,7 +18,7 @@ interface Props {
 
 export default function GameResultView({ width, height, isWin, onWin, progressRewards, myProgress, onBack }: Props) {
     const saveManager = useSaveManager();
-    const { setIsPaused } = useGameContext();
+    const { setIsPaused, isPaused } = useGameContext();
     const hasSavedRef = useRef(false);
 
     // 状态存储计算好的字符串显示
@@ -26,7 +26,7 @@ export default function GameResultView({ width, height, isWin, onWin, progressRe
     const [unlockedPlantsStr, setUnlockedPlantsStr] = useState<string>("无");
 
     useEffect(() => {
-        setIsPaused(true);
+        if (!isPaused) setIsPaused(true);
     }, [setIsPaused]);
 
     useEffect(() => {
