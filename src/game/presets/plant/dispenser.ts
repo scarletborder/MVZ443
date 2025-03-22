@@ -65,31 +65,62 @@ class dispenser extends IPlant {
     }
 
     shootAnimation() {
-        // 计算移动距离：50% 的显示宽度
-        const moveDistance = this.head.displayWidth * 0.15;
-        // 保存 head 原始相对于 container 的 x 坐标（通常为 0）
-        const originalX = this.headX;
+        // 安全检查：确保所有需要的对象都存在
+        if (!this.scene || !this.head || this.health <= 0) {
+            return;
+        }
 
-        // 第一个 tween：向左平移 moveDistance
-        this.scene.tweens.add({
-            targets: this.head,
-            x: originalX - moveDistance,
-            duration: 200,
-            ease: 'Sine.easeOut',
-            onComplete: () => {
-                createShootBurst(this.scene, this.head.x + this.width * 4 / 9, this.head.y - this.height * 2 / 3,
-                    24, this.depth + 2);
-                // 平移到目标位置后发射箭
-                shootArrow(this.scene, this);
-                // 第二个 tween：平滑回原位
-                this.scene.tweens.add({
-                    targets: this.head,
-                    x: originalX,
-                    duration: 200,
-                    ease: 'Sine.easeIn'
-                });
+        try {
+            // 计算移动距离
+            const moveDistance = this.head.displayWidth * 0.15;
+            const originalX = this.headX;
+
+            // 第一个 tween：向左平移
+            this.scene.tweens.add({
+                targets: this.head,
+                x: originalX - moveDistance,
+                duration: 200,
+                ease: 'Sine.easeOut',
+                onComplete: () => {
+                    // 完成时再次检查对象是否有效
+                    if (!this.scene || !this.head || this.health <= 0) {
+                        return;
+                    }
+
+                    createShootBurst(
+                        this.scene,
+                        this.head.x + this.width * 4 / 9,
+                        this.head.y - this.height * 2 / 3,
+                        24,
+                        this.depth + 2
+                    );
+
+                    shootArrow(this.scene, this);
+
+                    // 回弹动画前再次检查
+                    if (this.scene && this.head && this.health > 0) {
+                        this.scene.tweens.add({
+                            targets: this.head,
+                            x: originalX,
+                            duration: 200,
+                            ease: 'Sine.easeIn',
+                            onComplete: () => {
+                                // 确保结束时位置正确
+                                if (this.head && this.health > 0) {
+                                    this.head.x = originalX;
+                                }
+                            }
+                        });
+                    }
+                }
+            });
+        } catch (e) {
+            console.warn('Dispenser shootAnimation error:', e);
+            // 发生错误时尝试恢复位置
+            if (this.head && this.health > 0) {
+                this.head.x = this.headX;
             }
-        });
+        }
     }
 
 
@@ -123,14 +154,14 @@ class dispenser extends IPlant {
         if (!this.scene || this.health <= 0) {
             return null;
         }
-
+        const scene = this.scene;
         this.isInBruteShoot = true;
 
         const moveDistance = this.head.displayWidth * 0.15;
         const originalX = this.head.x;
 
         // Tween：先向左移动
-        this.scene.tweens.add({
+        scene.tweens.add({
             targets: this.head,
             x: originalX - moveDistance,
             duration: 200,
@@ -156,7 +187,7 @@ class dispenser extends IPlant {
         // 计算总持续时间：Tween 200ms + Timer 发射的时长
         const overallDuration = 200 + 50 * (totalArrows - 1);
         // 发射结束后回归 Tween
-        this.scene.time.delayedCall(overallDuration, () => {
+        scene.time.delayedCall(overallDuration, () => {
             this.isInBruteShoot = false;
             if (!this.scene || this.health <= 0) {
                 return;

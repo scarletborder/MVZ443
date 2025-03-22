@@ -14,6 +14,7 @@ class pumkin extends INightPlant {
 
     public onStarShards(): void {
         super.onStarShards();
+        if (!this || !this.game) return;
 
         if (this.Timer) {
             this.Timer.remove();
@@ -46,13 +47,15 @@ class pumkin extends INightPlant {
     }
 
     normalShootEvent(): Phaser.Time.TimerEvent {
-        return this.game.time.addEvent({
+        const scene = this.game;
+
+        return scene.time.addEvent({
             startAt: this.attackInterval * 3 / 4, // 已经使用的时间,即开始时间
             callback: () => {
-                if (this.health > 0 && this.isSleeping === false && this.game &&
+                if (this.health > 0 && this.isSleeping === false && scene &&
                     this.scene.monsterSpawner.hasMonsterInRowAfterX(this.row, this.x, this.maxDistance)) {
                     this.setFrame(1);
-                    shootLaser(this.game, this);
+                    shootLaser(scene, this);
                     this.scene.time.delayedCall(750, () => {
                         if (this && this.health && this.health > 0) {
                             this.setFrame(0);

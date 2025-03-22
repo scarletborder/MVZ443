@@ -18,6 +18,8 @@ class _Lily extends IPlant {
 
     public onStarShards(): void {
         super.onStarShards();
+        if (!this.game) return;
+        
         const game = this.game;
         // 为周围一片种植lily
         for (let i = this.col - 1; i <= this.col + 1; i++) {

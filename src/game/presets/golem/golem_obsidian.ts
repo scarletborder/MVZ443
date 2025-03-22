@@ -8,17 +8,15 @@ import IObstacle, { NewObstacleByGrid } from "../obstacle/IObstacle";
 import { SECKILL } from "../../../../public/constants";
 import { MonsterFactoryMap } from "..";
 import { EventBus } from "../../EventBus";
+import { generateBossWaveScript } from "../../game_events/stage_script";
 
 const soliderID = 11;
-const easyMobID = [1, 2];
-const mediumID = [3, 4, 7, 8, 10];
-const hardID = [5, 9]
-
 
 class ObsidianGolem extends IGolem {
     random: seedrandom.PRNG;
     // 定时器列表，用于管理所有延时任务
     timers: Phaser.Time.TimerEvent[] = [];
+    callCount: number = 0;
 
     constructor(scene: Game, col: number, row: number, waveID: number) {
         //TODO: 构造前,elite spawner会emit 给progress bar, boss战斗开始
@@ -100,60 +98,71 @@ class ObsidianGolem extends IGolem {
 
     // 生成怪物
     callMob(diff: 'low' | 'high') {
-        const random = seedrandom.alea(String(this.game.seed * 11));
+        const random = this.random;
 
-        // 根据难度确定每次总共需要刷怪的数量
-        let totalMobCount = diff === 'low' ? 32 : 26;
+        // 根据难度确定基础难度总和
+        const baseLevelSum = diff === 'low' ? 45 : 50;
 
-        // 根据难度随机选择怪物类型的方法
-        const getMobType = (): number => {
-            if (diff === 'low') {
-                // low 难度以 easy 为主，medium 为辅
-                return random() < 0.3
-                    ? easyMobID[Math.floor(random() * easyMobID.length)]
-                    : mediumID[Math.floor(random() * mediumID.length)];
-            } else {
-                // high 难度以 medium 为主，hard 为辅
-                return random() < 0.5
-                    ? mediumID[Math.floor(random() * mediumID.length)]
-                    : hardID[Math.floor(random() * hardID.length)];
+        // 允许生成的怪物类型
+        const allowedMobs = [1, 2, 3, 8, 4, 5, 7, 9, 11, 14];
+
+        // 生成怪物列表
+        const monsterRecords = generateBossWaveScript(
+            baseLevelSum,
+            random,
+            allowedMobs,
+            this.callCount
+        );
+
+        // 展开怪物列表为单个怪物ID数组
+        const monsterIds: number[] = [];
+        monsterRecords.forEach(record => {
+            for (let i = 0; i < record.count; i++) {
+                monsterIds.push(record.mid);
             }
-        };
+        });
 
-        // 定义单次刷怪逻辑，每次生成 1~3 只怪物
-        const spawnIteration = () => {
-            // 本次刷怪数量：1~3 只
-            const spawnCount = Math.floor(random() * (diff === 'low' ? 2 : 1)) + (diff === 'low' ? 3 : 1);
-            // 若剩余数量不足，则取剩余数量
-            const currentSpawn = Math.min(spawnCount, totalMobCount);
+        // 打乱怪物顺序
+        for (let i = monsterIds.length - 1; i > 0; i--) {
+            const j = Math.floor(random() * (i + 1));
+            [monsterIds[i], monsterIds[j]] = [monsterIds[j], monsterIds[i]];
+        }
 
-            for (let i = 0; i < currentSpawn; i++) {
-                const mobType = getMobType();
-                const row = this.game.positionCalc.getRandomRow(random());
-                const col = 9;
-                const mobFunc = MonsterFactoryMap[mobType].NewFunction;
-                mobFunc(this.game, col, row, -10);
-            }
-            totalMobCount -= currentSpawn;
-
-            // 如果还有剩余怪物未刷，则延时后继续本次刷怪
-            if (totalMobCount > 0) {
-                const delay = 9000 + Math.floor(random() * 4000); // 随机延时
-                this.addTimer(delay, spawnIteration);
-            } else {
-                // 怪物刷完后，等待 25s 后继续下一轮
+        // 分批次生成怪物
+        const spawnBatch = () => {
+            if (monsterIds.length === 0) {
+                // 怪物全部生成完毕,等待后继续下一轮
                 this.addTimer(20000, () => {
-                    if (diff === 'low') {
-                        this.callMob('high');
-                    } else {
-                        this.callMob('low');
-                    }
+                    this.callCount++;
+                    this.callMob(diff === 'low' ? 'high' : 'low');
                 });
+                return;
             }
+
+            // 每批次生成
+            const batchSize = Math.min(
+                2 + Math.floor(random() * 4),
+                monsterIds.length // 不超过剩余数量
+            );
+
+            // 生成这一批怪物
+            for (let i = 0; i < batchSize; i++) {
+                const mobId = monsterIds[i];
+                const row = this.game.positionCalc.getRandomRow(random());
+                const mobFunc = MonsterFactoryMap[mobId].NewFunction;
+                mobFunc(this.game, 9, row, -10);
+            }
+
+            // 移除已生成的怪物ID
+            monsterIds.splice(0, batchSize);
+
+            // 继续生成下一批
+            const delay = 8000 + Math.floor(random() * 4000); // 8-12秒的间隔
+            this.addTimer(delay, spawnBatch);
         };
 
-        // 启动刷怪流程
-        spawnIteration();
+        // 启动生成流程
+        spawnBatch();
     }
 
 

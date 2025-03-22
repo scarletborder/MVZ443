@@ -16,6 +16,7 @@ class pumkin_wan extends INightPlant {
 
     public onStarShards(): void {
         super.onStarShards();
+        if (!this || !this.game) return;
         const game = this.game;
         const col = this.col;
         const row = this.row;
@@ -63,12 +64,14 @@ class pumkin_wan extends INightPlant {
     }
 
     normalShootEvent(): Phaser.Time.TimerEvent {
-        return this.game.time.addEvent({
+        const scene = this.game;
+
+        return scene.time.addEvent({
             startAt: this.attackInterval / 2, // 已经使用的时间,即开始时间
             callback: () => {
-                if (this.health > 0 && this.isSleeping === false && this.game) {
+                if (this.health > 0 && this.isSleeping === false && scene) {
                     this.setFrame(1);
-                    shootLaser(this.game, this);
+                    shootLaser(scene, this);
                     this.scene.time.delayedCall(550, () => {
                         if (this && this.health && this.health > 0) {
                             this.setFrame(0);

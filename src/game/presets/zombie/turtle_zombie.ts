@@ -79,7 +79,7 @@ const TurtleZombieRecord: MIRecord = {
     name: 'TurtleZombie',
     NewFunction: NewZombie,
     texture: 'zombie/zombie',
-    weight: () => 1000,
+    weight: () => 1200,
     level: 2,
     leastWaveID: 6,
 }

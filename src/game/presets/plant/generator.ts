@@ -17,14 +17,18 @@ class Generator extends INightPlant {
 
     public onStarShards(): void {
         super.onStarShards();
+        if (!this.scene || this.health <= 0) {
+            return;
+        }
+        const scene = this.game;
         // 唤醒自己和周围的plant,并恢复血量
         for (let i = this.col - 1; i <= this.col + 1; i++) {
             for (let j = this.row - 1; j <= this.row + 1; j++) {
-                if (i >= 0 && i < this.game.positionCalc.Col_Number && j >= 0 && j < this.game.positionCalc.Row_Number) {
+                if (i >= 0 && i < scene.positionCalc.Col_Number && j >= 0 && j < scene.positionCalc.Row_Number) {
                     const key = `${i}-${j}`;
                     // 查找list
-                    if (this.game.gardener.planted.has(key)) {
-                        const list = this.game.gardener.planted.get(key);
+                    if (scene.gardener.planted.has(key)) {
+                        const list = scene.gardener.planted.get(key);
                         if (list) {
                             for (const plant of list) plant.setSleeping(false);
                         }
@@ -37,12 +41,15 @@ class Generator extends INightPlant {
 
     public takeDamage(amount: number, zombie: IZombie): void {
         amount = Math.min(amount, this.health + 10);
+        if (this.health <= 0 || !this.scene) return;
+
+        const scene = this.game;
         if (this.isSleeping) {
             const ratio = (this.level >= 5) ? (this.level >= 9 ? 6 : 7.5) : 10;
-            this.game.broadCastEnergy(Math.ceil(amount / ratio));
+            scene.broadCastEnergy(Math.ceil(amount / ratio));
         } else {
             const ratio = (this.level >= 9) ? 5 : 5.8;
-            this.game.broadCastEnergy(Math.ceil(amount / ratio));
+            scene.broadCastEnergy(Math.ceil(amount / ratio));
         }
         super.takeDamage(amount, zombie);
     }

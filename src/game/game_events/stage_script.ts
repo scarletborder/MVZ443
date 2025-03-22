@@ -406,3 +406,70 @@ export function generateStageScript(stage: StageScript, random: seedrandom.PRNG)
     ret[0].maxDelay = dayOrNight === 1 ? 20 : 26;
     return ret;
 }
+
+/**
+ *  给任何boss用的刷boss召唤的小弟怪物的函数函数
+ * @param baseLevelSum boss指定的基础难度sum
+ * @param seedrandom 伪随机生成机
+ * @param callIdx 这是第几次召唤怪物,难度会是low,medium,high轮流
+ */
+export function generateBossWaveScript(baseLevelSum: number, seedrandom: seedrandom.PRNG, AllowedMobs: number[], callIdx: number = 0): Monster[] {
+    const levelRatio = [0.5, 1.0, 1.5][callIdx % 3];
+    const levelSum = Math.ceil(baseLevelSum * levelRatio);
+    const WAVE_ID = 9999; // 使用一个较大的数值确保所有怪物都可以出现
+
+    // 收集允许的怪物及其权重
+    const mobKeys: number[] = [];
+    const weights: number[] = [];
+
+    for (const mobId of AllowedMobs) {
+        if (MonsterFactoryMap[mobId]) {
+            mobKeys.push(mobId);
+            weights.push(MonsterFactoryMap[mobId].weight(WAVE_ID));
+        }
+    }
+
+    // 生成怪物列表
+    const monsters: Monster[] = [];
+    let remainingLevel = levelSum;
+
+    // 加权随机选择函数
+    function weightedRandomChoice(options: number[], weights: number[]): number {
+        const totalWeight = weights.reduce((a, b) => a + b, 0);
+        let rnd = seedrandom() * totalWeight;
+        for (let i = 0; i < options.length; i++) {
+            rnd -= weights[i];
+            if (rnd < 0) {
+                return options[i];
+            }
+        }
+        return options[options.length - 1];
+    }
+
+    // 按照难度总和生成怪物
+    const mobCounts: { [key: number]: number } = {};
+    while (remainingLevel > 1) {
+        const mobId = weightedRandomChoice(mobKeys, weights);
+        const mobLevel = MonsterFactoryMap[mobId].level;
+
+        if (mobLevel <= remainingLevel) {
+            mobCounts[mobId] = (mobCounts[mobId] || 0) + 1;
+            remainingLevel -= mobLevel;
+        }
+    }
+
+    // 如果还剩1点难度，补充一个普通僵尸
+    if (remainingLevel === 1 && AllowedMobs.includes(1)) {
+        mobCounts[1] = (mobCounts[1] || 0) + 1;
+    }
+
+    // 转换为Monster数组格式
+    for (const [mobId, count] of Object.entries(mobCounts)) {
+        monsters.push({
+            mid: parseInt(mobId),
+            count: count
+        });
+    }
+
+    return monsters;
+}
