@@ -22,7 +22,7 @@ class pumkin extends INightPlant {
 
         // master spark
         this.sparkShoot();
-        this.game.time.delayedCall(2000, () => {
+        this.game?.time.delayedCall(2000, () => {
             if (this && this.health > 0) {
                 this.setFrame(0);
                 if (this.isSleeping) {
@@ -72,7 +72,7 @@ class pumkin extends INightPlant {
         this.setFrame(1);
         const col = this.col;
         const row = this.row;
-        for (let i = Math.max(0, row - 1); i <= Math.min(this.game.positionCalc.Row_Number - 1, row + 1); i++) {
+        for (let i = Math.max(0, row - 1); i <= Math.min(this.game?.positionCalc.Row_Number - 1, row + 1); i++) {
             NewLaserByGrid(this.game, col, i, 12,
                 GetIncValue(625, 1.35, this.level), 'zombie', 1000);
         }

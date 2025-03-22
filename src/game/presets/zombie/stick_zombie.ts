@@ -34,6 +34,8 @@ class StickZombie extends EnhancedZombie {
     }
 
     public startAttacking(plant: IPlant): void {
+        if (!this.game || !this.game.positionCalc) return;
+
         if (this.hasStick) {
             this.hasStick = false;
             // 进行翻阅操作

@@ -7,8 +7,6 @@ import { IExpolsion, NewExplosionByGrid } from "../../models/IExplosion";
 import { IPlant } from "../../models/IPlant";
 import { IRecord } from "../../models/IRecord";
 import { Game } from "../../scenes/Game";
-import { SHIELD_PLANT } from "../../utils/grid_clan";
-import Lily from "./lily";
 import { StartArc } from "../../utils/arc";
 
 class _Tnt extends IPlant {
@@ -37,6 +35,7 @@ class _Tnt extends IPlant {
             repeat: 3,                    // 重复5次（从原状态到高光，再回来，总共3次）
             ease: 'Sine.easeInOut',       // 缓动效果
             onComplete: () => {           // 动画完成后触发的回调函数
+                if (!this.game) return;
                 new IExpolsion(this.game, x, _row, {
                     damage: this.damage,
                     rightGrid: 1.5,
@@ -52,6 +51,10 @@ class _Tnt extends IPlant {
 
     public onStarShards(): void {
         super.onStarShards();
+        if (!this.game) return;
+
+        const scene = this.game;
+
         function getExplosionTargets(game: Game, col: number, row: number) {
             const targets = [];
             if (col === game.GRID_COLS - 1) {
@@ -84,11 +87,11 @@ class _Tnt extends IPlant {
         }
 
         // 使用辅助函数生成爆炸效果
-        const targets = getExplosionTargets(this.game, this.col, this.row);
+        const targets = getExplosionTargets(scene, this.col, this.row);
         targets.forEach(([targetCol, targetRow]) => {
             const { x, y } = this.gardener.positionCalc.getPlantBottomCenter(targetCol, targetRow);
-            StartArc(this.game, this.x, this.y, x, y, 'plant/tnt', 800, () => {
-                NewExplosionByGrid(this.game, targetCol, targetRow, {
+            StartArc(scene, this.x, this.y, x, y, 'plant/tnt', 800, () => {
+                NewExplosionByGrid(scene, targetCol, targetRow, {
                     damage: this.damage,
                     rightGrid: 1.5,
                     leftGrid: 1.5,
@@ -96,8 +99,8 @@ class _Tnt extends IPlant {
                 });
 
                 if ((this.level || 1) >= 7) {
-                    this.game.time.delayedCall(3900, () => {
-                        NewExplosionByGrid(this.game, targetCol, targetRow, {
+                    scene?.time.delayedCall(3900, () => {
+                        NewExplosionByGrid(scene, targetCol, targetRow, {
                             damage: this.damage / 3,
                             rightGrid: 1.5,
                             leftGrid: 1.5,
@@ -111,9 +114,12 @@ class _Tnt extends IPlant {
     }
 
     public eliteClusterBomb() {
+        if (!this.game) return;
+
+        const scene = this.game;
         if (this.level >= 7) {
-            this.game.time.delayedCall(3900, () => {
-                new IExpolsion(this.game, this.x, this.row, {
+            scene?.time.delayedCall(3900, () => {
+                new IExpolsion(scene, this.x, this.row, {
                     damage: this.damage / 3,
                     rightGrid: 1.5,
                     leftGrid: 1.5,

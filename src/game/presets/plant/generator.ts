@@ -27,7 +27,7 @@ class Generator extends INightPlant {
                 if (i >= 0 && i < scene.positionCalc.Col_Number && j >= 0 && j < scene.positionCalc.Row_Number) {
                     const key = `${i}-${j}`;
                     // 查找list
-                    if (scene.gardener.planted.has(key)) {
+                    if (scene?.gardener.planted.has(key)) {
                         const list = scene.gardener.planted.get(key);
                         if (list) {
                             for (const plant of list) plant.setSleeping(false);
@@ -46,10 +46,10 @@ class Generator extends INightPlant {
         const scene = this.game;
         if (this.isSleeping) {
             const ratio = (this.level >= 5) ? (this.level >= 9 ? 6 : 7.5) : 10;
-            scene.broadCastEnergy(Math.ceil(amount / ratio));
+            scene?.broadCastEnergy(Math.ceil(amount / ratio));
         } else {
             const ratio = (this.level >= 9) ? 5 : 5.8;
-            scene.broadCastEnergy(Math.ceil(amount / ratio));
+            scene?.broadCastEnergy(Math.ceil(amount / ratio));
         }
         super.takeDamage(amount, zombie);
     }

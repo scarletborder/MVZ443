@@ -99,7 +99,7 @@ class dispenser extends IPlant {
 
                     // 回弹动画前再次检查
                     if (this.scene && this.head && this.health > 0) {
-                        this.scene.tweens.add({
+                        this.scene?.tweens.add({
                             targets: this.head,
                             x: originalX,
                             duration: 200,
@@ -129,7 +129,7 @@ class dispenser extends IPlant {
         if (!this.scene || this.health <= 0) {
             return null;
         }
-        return this.scene.time.addEvent({
+        return this.scene?.time.addEvent({
             startAt: 900,
             delay: 930,
             loop: true,
@@ -142,7 +142,7 @@ class dispenser extends IPlant {
                     }
                     return;
                 }
-                if (this.scene.monsterSpawner.hasMonsterInRowAfterX(this.row, this.x)) {
+                if (this.scene?.monsterSpawner.hasMonsterInRowAfterX(this.row, this.x)) {
                     this.shootAnimation();
                 }
             }
@@ -161,7 +161,7 @@ class dispenser extends IPlant {
         const originalX = this.head.x;
 
         // Tween：先向左移动
-        scene.tweens.add({
+        scene?.tweens.add({
             targets: this.head,
             x: originalX - moveDistance,
             duration: 200,
@@ -170,7 +170,7 @@ class dispenser extends IPlant {
         });
 
         // 创建 Timer 事件：延迟 200ms 后开始暴力发射箭，每 50ms 一次
-        const bruteTimer = this.game.time.addEvent({
+        const bruteTimer = this.game?.time.addEvent({
             startAt: 200,
             delay: 50,
             repeat: totalArrows - 1,
@@ -192,7 +192,7 @@ class dispenser extends IPlant {
             if (!this.scene || this.health <= 0) {
                 return;
             }
-            this.scene.tweens.add({
+            this.scene?.tweens.add({
                 targets: this.head,
                 x: originalX,
                 duration: 200,

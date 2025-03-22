@@ -28,7 +28,7 @@ class Furnace extends IPlant {
             callback: () => {
                 if (this.health > 0 && scene && scene.time) {
                     this.setFrame(1);
-                    scene.time.delayedCall(1000, () => {
+                    scene?.time.delayedCall(1000, () => {
                         if (this && this.health && this.health > 0) {
                             scene.broadCastEnergy(+this.updateEnergy);
                             this.setFrame(0);
@@ -43,7 +43,7 @@ class Furnace extends IPlant {
     public onStarShards(): void {
         super.onStarShards();
         // 一次性加能量
-        this.game.broadCastEnergy(+450);
+        this.game?.broadCastEnergy(+450);
     }
 
 }

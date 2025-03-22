@@ -43,6 +43,9 @@ class _TntMines extends IPlant {
 
     public onStarShards(): void {
         super.onStarShards();
+        if (!this.game) return;
+
+        const scene = this.game;
         let leftCount = (this.level >= 7) ? 3 : 2;
         // 立刻出土
         this.wakeup();
@@ -52,7 +55,7 @@ class _TntMines extends IPlant {
         const usedCols = new Set<number>();
 
         // 第一遍：保证放置的 TNT Mines 分布在不同的行和列中
-        for (let col = this.game.GRID_COLS - 1; col >= 0 && leftCount > 0; col--) {
+        for (let col = scene.GRID_COLS - 1; col >= 0 && leftCount > 0; col--) {
             // 构造行号数组并随机打乱顺序
             const rows = Array.from({ length: this.game.GRID_ROWS }, (_, i) => i);
             rows.sort(() => this.random() - 0.5);
@@ -61,8 +64,8 @@ class _TntMines extends IPlant {
                 if (leftCount <= 0) break;
                 const key = `${col}-${row}`;
                 // 检查是否有植物占据该格子
-                if (this.game.gardener.planted.has(key)) {
-                    const list = this.game.gardener.planted.get(key);
+                if (scene.gardener.planted.has(key)) {
+                    const list = scene.gardener.planted.get(key);
                     if (list && list.length > 0) continue; // 该格子有植物
                 }
                 // 保证 TNT Mines 不在同一行或同一列
@@ -71,8 +74,8 @@ class _TntMines extends IPlant {
                 // 可以放置 TNT Mines
 
                 const { x: tmpx, y: tmpy } = this.gardener.positionCalc.getPlantBottomCenter(col, row);
-                StartArc(this.game, this.x, this.y, tmpx, tmpy, 'plant/tnt_mines', 1000, () => {
-                    const newmine = NewTntMines(this.game, col, row, this.level);
+                StartArc(scene, this.x, this.y, tmpx, tmpy, 'plant/tnt_mines', 1000, () => {
+                    const newmine = NewTntMines(scene, col, row, this.level);
                     newmine.wakeup();
                 })
 
@@ -85,21 +88,21 @@ class _TntMines extends IPlant {
 
         // 第二遍：如果第一遍放置不足，则放宽行、列唯一性限制
         if (leftCount > 0) {
-            for (let col = this.game.GRID_COLS - 1; col >= 0 && leftCount > 0; col--) {
+            for (let col = scene.GRID_COLS - 1; col >= 0 && leftCount > 0; col--) {
                 // 同样随机打乱行顺序
-                const rows = Array.from({ length: this.game.GRID_ROWS }, (_, i) => i);
+                const rows = Array.from({ length: scene.GRID_ROWS }, (_, i) => i);
                 rows.sort(() => this.random() - 0.5);
 
                 for (const row of rows) {
                     if (leftCount <= 0) break;
                     const key = `${col}-${row}`;
-                    if (this.game.gardener.planted.has(key)) {
-                        const list = this.game.gardener.planted.get(key);
+                    if (scene.gardener.planted.has(key)) {
+                        const list = scene.gardener.planted.get(key);
                         if (list && list.length > 0) continue; // 该格子有植物
                     }
                     const { x: tmpx, y: tmpy } = this.gardener.positionCalc.getPlantBottomCenter(col, row);
-                    StartArc(this.game, this.x, this.y, tmpx, tmpy, 'plant/tnt_mines', 1000, () => {
-                        const newmine = NewTntMines(this.game, col, row, this.level);
+                    StartArc(scene, this.x, this.y, tmpx, tmpy, 'plant/tnt_mines', 1000, () => {
+                        const newmine = NewTntMines(scene, col, row, this.level);
                         newmine.wakeup();
                     })
 
@@ -111,7 +114,7 @@ class _TntMines extends IPlant {
 
 
     public wakeup(): void {
-        if (this.health > 0 && this.isBuried) {
+        if (this.health > 0 && this.isBuried && this.game) {
             this.head.setVisible(false);
             this.isBuried = false;
             createDirtOut(this.game, this.col, this.row, () => {
@@ -121,6 +124,8 @@ class _TntMines extends IPlant {
     }
 
     public takeDamage(amount: number, zombie: IZombie): void {
+        if (!this.game) return;
+
         if (this.isBuried) {
             super.takeDamage(amount, zombie);
         } else {

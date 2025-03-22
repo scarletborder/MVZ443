@@ -75,11 +75,11 @@ class IceBomb extends IPlant {
             let posY = Phaser.Math.Between(centerY - rangeHeight / 2, centerY + rangeHeight / 2);
 
             // 创建图形对象并绘制蓝色矩形
-            let graphics = this.game.add.graphics({ fillStyle: { color: 0x0265b6 } }).setDepth(depth);
+            let graphics = this.game?.add.graphics({ fillStyle: { color: 0x0265b6 } }).setDepth(depth);
             graphics.fillRect(posX - rectWidth / 2, posY - rectHeight / 2, rectWidth, rectHeight);
 
             // 对每个矩形添加 Tween，使透明度在 400ms 内从 1 渐变到 0.2，然后销毁图形对象
-            this.game.tweens.add({
+            this.game?.tweens.add({
                 targets: graphics,
                 alpha: 0.2,
                 duration: 1600,

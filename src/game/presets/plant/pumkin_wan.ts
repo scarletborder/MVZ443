@@ -21,7 +21,7 @@ class pumkin_wan extends INightPlant {
         const col = this.col;
         const row = this.row;
 
-        game.time.addEvent({
+        game?.time.addEvent({
             delay: 2000,
             repeat: 4,
             startAt: 1800,
@@ -72,7 +72,7 @@ class pumkin_wan extends INightPlant {
                 if (this.health > 0 && this.isSleeping === false && scene) {
                     this.setFrame(1);
                     shootLaser(scene, this);
-                    this.scene.time.delayedCall(550, () => {
+                    this.scene?.time.delayedCall(550, () => {
                         if (this && this.health && this.health > 0) {
                             this.setFrame(0);
                         }
