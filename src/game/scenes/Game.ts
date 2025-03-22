@@ -14,7 +14,7 @@ import CreateInnerMenu from '../utils/inner_menu';
 import { StageData } from '../models/IRecord';
 import MineCart from '../presets/bullet/minecart';
 import AddMapFunction from '../game_events/mapfun';
-import BackendWS from '../../utils/net/sync';
+import BackendWS, { HasConnected } from '../../utils/net/sync';
 import { IExpolsion } from '../models/IExplosion';
 import { ILaser } from '../models/ILaser';
 import IGolem from '../models/IGolem';
@@ -50,6 +50,7 @@ export class Game extends Scene {
     pauseBtn: Phaser.GameObjects.Text;
     pauseText: Phaser.GameObjects.Text;
     exitText: Phaser.GameObjects.Text;
+    waitText: Phaser.GameObjects.Text;
 
     params: GameParams;
     public seed: number = 0;
@@ -94,8 +95,6 @@ export class Game extends Scene {
 
         // 目前只有单机
         // 判断是否联机
-
-
         if (!BackendWS.isConnected) {
             this.recvQueue = new QueueReceive({ mode: 'single' }, this);
             this.sendQueue = new QueueSend({ mode: 'single', recvQueue: this.recvQueue.queues });
@@ -126,6 +125,20 @@ export class Game extends Scene {
         // 调整摄像机位置，确保从 (0, 0) 开始显示
         this.cameras.main.scrollX = 0;
         this.cameras.main.scrollY = 0;
+
+
+        // 创建一个waiting text
+        this.waitText = this.add.text(
+            this.cameras.main.width / 2,
+            this.cameras.main.height / 2,
+            '等待中...',
+            {
+                fontSize: this.scale.displaySize.width / 20,
+                color: '#ffffff',
+                backgroundColor: 'rgba(0, 0, 0, 0.35)',
+                padding: { x: 10, y: 5 },
+            }
+        ).setOrigin(0.5).setDepth(DepthManager.getMenuDepth()).setVisible(false);
 
         // 创建分组
         IPlant.InitGroup(this);
@@ -237,6 +250,9 @@ export class Game extends Scene {
         AddMapFunction(this);
         EventBus.emit('boss-dead');
         EventBus.emit('game-progress', { progress: 0 });
+        // 销毁waitText
+        this.waitText.destroy();
+
         // 设置一排minecart
         for (let i = 0; i < this.GRID_ROWS; i++) {
             new MineCart(this, -1, i);
@@ -269,9 +285,9 @@ export class Game extends Scene {
     }
 
     handleStarShards(pid: number, col: number, row: number, uid: number) {
-        this.gardener.launchStarShards(pid, col, row);
+        const success = this.gardener.launchStarShards(pid, col, row);
 
-        if (this.myID === uid) {
+        if (success && this.myID === uid) {
             EventBus.emit('starshards-consume');
         }
     }
@@ -334,6 +350,7 @@ export class Game extends Scene {
     }
     // game->app 通知更新能量
     broadCastEnergy(energyChange: number) {
+        if (HasConnected() && energyChange > 0) energyChange = Math.ceil(0.5 * energyChange); // 联机模式下获取能量减半 
         EventBus.emit('energy-update', { energyChange });
     }
     // game->app 通知游戏进度

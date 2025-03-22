@@ -1,5 +1,6 @@
 import { debounce } from "../../utils/debounce";
 import DepthManager from "../../utils/depth";
+import { HasConnected } from "../../utils/net/sync";
 import { Game } from "../scenes/Game";
 
 export default function CreateInnerMenu(game: Game) {
@@ -18,6 +19,7 @@ export default function CreateInnerMenu(game: Game) {
     game.pauseBtn.on('pointerup', () => {
         // 判断场景有无暂停
         debounce(() => {
+            if (HasConnected()) return; // 联机模式不准暂停
             const currently = game.physics.world.isPaused;
             game.handlePause({ paused: !currently });
         }, 100)();
@@ -47,4 +49,6 @@ export default function CreateInnerMenu(game: Game) {
         }
     ).setOrigin(0.5, 1).setVisible(false).disableInteractive().setDepth(DepthManager.getMenuDepth());
     game.exitText.on('pointerup', () => { game.handleExit(false) }, game);
+
+    
 }

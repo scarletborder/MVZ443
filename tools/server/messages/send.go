@@ -4,6 +4,7 @@ package messages
 const (
 	MsgTypeRoomInfo = 0x00 // 房间信息
 	MsgChooseMap    = 0x10 // 选择地图
+	MsgTypeError    = 0xF0 // 错误
 
 	MsgTypeGameStart     = 0x01 // 游戏开始
 	MsgTypeCardPlant     = 0x02 // 种植卡片
@@ -88,5 +89,15 @@ type ChooseMap struct {
 }
 
 func (m ChooseMap) GetType() int {
+	return m.Type
+}
+
+// ErrorMessage 消息：服务器错误信息
+type ErrorMessage struct {
+	Type    int    `json:"type"`
+	Message string `json:"message"`
+}
+
+func (m ErrorMessage) GetType() int {
 	return m.Type
 }

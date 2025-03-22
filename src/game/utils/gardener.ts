@@ -127,7 +127,7 @@ export default class Gardener {
     }
 
     // 星之碎片使用
-    public launchStarShards(pid: number, col: number, row: number) {
+    public launchStarShards(pid: number, col: number, row: number): boolean {
         console.log('使用')
         const key = `${col}-${row}`;
         if (this.planted.has(key)) {
@@ -138,15 +138,15 @@ export default class Gardener {
                     // 找到对象
                     const plantObj = list[index];
                     plantObj.onStarShards();
-                    // 通知使用星之碎片
+                    // 通知使用星之碎片, 即使plant不存在也不会消耗星之碎片
+                    return true;
                 }
                 if (list.length === 0) {
                     this.planted.delete(key);
                 }
             }
         }
-
-
+        return false;
     }
 
 

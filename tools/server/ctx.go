@@ -1,6 +1,7 @@
 package main
 
 import (
+	"math/rand"
 	"mvzserver/messages"
 
 	"github.com/gofiber/websocket/v2"
@@ -87,6 +88,7 @@ func (m *ctxManager) BroadcastRoomInfo(chapterID int32) {
 
 // 游戏正式开始
 func (m *ctxManager) BroadcastGameStart() {
+	seed := rand.Int()
 	for idx, ctx := range m.Clients {
 		ctx.WriteJSON(map[string]interface{}{
 			"type": 0x01,
@@ -94,6 +96,10 @@ func (m *ctxManager) BroadcastGameStart() {
 			"myID": idx,
 		})
 	}
+}
+
+func (m *ctxManager) GetPlayerCount() int {
+	return len(m.Clients)
 }
 
 // // every server tick, send game loop message

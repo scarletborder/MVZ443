@@ -3,6 +3,7 @@ import { GameParams } from '../models/GameParams';
 import { ResourceMapData } from '../../constants/map_data';
 import { EventBus } from '../EventBus';
 import PlantFactoryMap from '../presets/plant';
+import { HasConnected } from '../../utils/net/sync';
 
 export class Preloader extends Scene {
     constructor() {
@@ -59,6 +60,17 @@ export class Preloader extends Scene {
 
     // 加载全部器械
     loadAllPlant(ids: number[]) {
+        if (HasConnected()) {
+            // 联机模式全部加载
+            const allRecords = Object.values(PlantFactoryMap);
+            for (const record of allRecords) {
+                this.load.spritesheet(record.texture, record.texture + '.png', {
+                    frameWidth: 64, frameHeight: 64
+                });
+            }
+
+            return;
+        }
         for (const id of ids) {
             const texture = PlantFactoryMap[id].texture;
             this.load.spritesheet(texture, texture + '.png', {

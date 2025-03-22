@@ -1,3 +1,4 @@
+import { toast } from "react-toastify";
 import QueueReceive from "../../game/utils/queue_receive";
 import QueueSend from "../../game/utils/queue_send";
 
@@ -38,6 +39,7 @@ class WebSocketClient {
         this.ws.onopen = () => {
             console.log("WebSocket connection established.");
             this.isConnected = true;
+            alert('连接成功');
         };
 
         this.ws.onmessage = (event) => {
@@ -143,5 +145,9 @@ class WebSocketClient {
 }
 
 const BackendWS = new WebSocketClient();
+
+export function HasConnected() {
+    return BackendWS.hasConnected();
+}
 
 export default BackendWS;

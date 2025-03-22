@@ -2,108 +2,131 @@ package main
 
 import (
 	"log"
+	"mvzserver/messages"
+	"strconv"
 	"sync/atomic"
-	"time"
-
-	"math/rand"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/websocket/v2"
 )
 
-var chapterID int32 = 0
-var readyMan int32 = 0
-var gameLoopStartChan chan struct{}
-var isGameRunning bool = false
-var CtxManager = newCtxManager()
-var gameLogic = NewGameLogic()
-var seed int32 = 123456
-
-func resetAll() {
-	atomic.StoreInt32(&chapterID, 0)
-	atomic.StoreInt32(&readyMan, 0)
-	atomic.StoreInt32(&seed, rand.Int31n(40960000))
-	gameLoopStartChan = make(chan struct{}, 1)
-	GameStart()
-}
-
-func destoryAll() {
-	CtxManager.CloseAll()
-	CtxManager = newCtxManager()
-	resetAll()
-}
-
-func GameStart() {
-	isGameRunning = true
-	thisGameDead := make(chan struct{})
-
-	go func() {
-		// validate living
-		// 如果没人了
-		for {
-			time.Sleep(3 * time.Second)
-			if len(CtxManager.Clients) == 0 {
-				thisGameDead <- struct{}{}
-				isGameRunning = false
-				return
-			}
-		}
-	}()
-
-gameWaitStart:
-	for {
-		if readyMan > 0 && atomic.LoadInt32(&readyMan) == int32(len(CtxManager.Clients)) {
-			// 游戏开始
-			for _, ctx := range CtxManager.Clients {
-				ctx.startChan <- struct{}{}
-			}
-			readyMan = 0
-			gameLoopStartChan <- struct{}{}
-			break gameWaitStart
-		}
-		select {
-		case <-thisGameDead:
-			return
-		default:
-			time.Sleep(1 * time.Second)
-		}
-	}
-
-	// game main loop 游戏逻辑开始
-	// 发送线程, 每100ms发送一次
-	CtxManager.BroadcastGameStart()
-	timer := time.NewTicker(100 * time.Millisecond)
-	for {
-		select {
-		case <-timer.C:
-			// 发送消息
-			if len(gameLogic.msgs) == 0 {
-				for _, ctx := range CtxManager.Clients {
-					ctx.WriteJSON([]interface{}{})
-				}
-			} else {
-				for _, ctx := range CtxManager.Clients {
-					ctx.WriteJSON(gameLogic.msgs)
-				}
-			}
-
-			// 每次发送消息后重置游戏逻辑
-			gameLogic.Reset()
-		case <-thisGameDead:
-			return
-		}
-	}
-}
+var roomManager = NewRoomManager()
 
 func main() {
 	app := fiber.New()
+
 	app.Get("/ws", websocket.New(func(c *websocket.Conn) {
-		// 用户加入事件驱动服务是否重启
-		if len(CtxManager.Clients) == 0 && !isGameRunning {
-			go resetAll()
+		// 获取查询参数中的房间ID
+		roomId := -1
+		if id := c.Query("id"); id != "" {
+			if parsedId, err := strconv.Atoi(id); err == nil {
+				roomId = parsedId
+			}
 		}
-		serveUser(c)
+
+		// 如果没有指定房间ID,则创建新房间
+		if roomId == -1 {
+			roomId = roomManager.GetNewRoomId()
+		}
+
+		// 获取或创建房间
+		room := roomManager.GetRoom(roomId)
+		if room == nil {
+			// 房间不存在,创建新房间
+			room = roomManager.AddRoom(roomId)
+		} else {
+			// 房间存在,检查是否已满
+			if room.GetPlayerCount() >= 2 {
+				c.WriteJSON(map[string]interface{}{
+					"error": "房间已满",
+				})
+				c.Close()
+				return
+			}
+		}
+
+		// 服务用户连接
+		serveUserInRoom(c, room)
 	}))
 
 	log.Fatal(app.Listen(":28080"))
+}
+
+func serveUserInRoom(c *websocket.Conn, room *Room) {
+	// 添加用户到房间
+	ctx := room.CtxManager.AddUser(c)
+	defer room.CtxManager.DelUser(ctx.Id)
+	defer c.Close()
+
+	// 广播房间信息
+	room.CtxManager.BroadcastRoomInfo(room.ChapterID)
+
+	// 如果房间未运行,启动房间
+	if !room.IsRunning {
+		go room.Start()
+	}
+
+beforeGame:
+	for {
+		var msg map[string]interface{}
+		err := c.ReadJSON(&msg)
+		if err != nil {
+			return
+		}
+
+		msgType := int(msg["type"].(float64))
+
+		switch msgType {
+		case messages.MsgTypeRequestChooseMap:
+			if ctx.Id == room.CtxManager.FirstUser {
+				atomic.StoreInt32(&room.ChapterID, int32(msg["chapterId"].(float64)))
+				room.CtxManager.BroadcastRoomInfo(room.ChapterID)
+			}
+		case messages.MsgTypeReady:
+			atomic.AddInt32(&room.ReadyCount, 1)
+			break beforeGame
+		}
+	}
+
+	// 等待游戏开始
+	<-ctx.startChan
+
+	// 游戏主循环
+	for {
+		var msg map[string]interface{}
+		err := c.ReadJSON(&msg)
+		if err != nil {
+			return
+		}
+
+		msgType := int(msg["type"].(float64))
+
+		switch msgType {
+		case messages.MsgTypeRequestCardPlant:
+			room.Logic.PlantCard(
+				int(msg["col"].(float64)),
+				int(msg["row"].(float64)),
+				int(msg["pid"].(float64)),
+				int(msg["level"].(float64)),
+				ctx.Id,
+			)
+		case messages.MsgTypeRequestRemovePlant:
+			room.Logic.RemoveCard(
+				int(msg["col"].(float64)),
+				int(msg["row"].(float64)),
+				int(msg["pid"].(float64)),
+				ctx.Id,
+			)
+		case messages.MsgTypeRequestStarShards:
+			room.Logic.UseStarShards(
+				int(msg["col"].(float64)),
+				int(msg["row"].(float64)),
+				int(msg["pid"].(float64)),
+				ctx.Id,
+			)
+		case messages.MsgTypeRequestEndGame:
+			room.Destroy()
+			return
+		}
+	}
 }
