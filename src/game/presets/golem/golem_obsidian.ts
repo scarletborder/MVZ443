@@ -184,9 +184,12 @@ class ObsidianGolem extends IGolem {
                     const key = `${col}-${row}`;
                     if (this.game.gardener.planted.has(key)) {
                         const list = this.game.gardener.planted.get(key);
-                        list?.forEach(plant => {
-                            plant.takeDamage(SECKILL / 2);
-                        });
+                        if (list) {
+                            const copy_list = [...list];
+                            copy_list.forEach(plant => {
+                                plant.takeDamage(SECKILL / 2);
+                            });
+                        }
                     }
                 }, height);
             }
@@ -221,9 +224,12 @@ class ObsidianGolem extends IGolem {
                     const key = `${newCol}-${row}`;
                     if (this.game.gardener.planted.has(key)) {
                         const list = this.game.gardener.planted.get(key);
-                        list?.forEach(plant => {
-                            plant.takeDamage(SECKILL / 2);
-                        });
+                        if (list) {
+                            const copy_list = [...list];
+                            copy_list.forEach(plant => {
+                                plant.takeDamage(SECKILL / 2);
+                            });
+                        }
                     }
                 }, height);
             }

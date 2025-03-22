@@ -69,9 +69,12 @@ class Warden extends IGolem {
         const key = `${this.col}-${this.row}`;
         if (this.game.gardener.planted.has(key)) {
             const list = this.game.gardener.planted.get(key);
-            list?.forEach(plant => {
-                plant.takeDamage(SECKILL / 2);
-            });
+            if (list) {
+                const copy_list = [...list];
+                for (const plant of copy_list) {
+                    plant.takeDamage(SECKILL / 2);
+                }
+            }
         }
 
         // 傻站 5 秒后开始下一步
@@ -201,9 +204,12 @@ class Warden extends IGolem {
 
                     if (this.game.gardener.planted.has(key)) {
                         const list = this.game.gardener.planted.get(key);
-                        list?.forEach(plant => {
-                            plant.takeDamage(180);
-                        });
+                        if (list) {
+                            const copy_list = [...list];
+                            for (const plant of copy_list) {
+                                plant.takeDamage(SECKILL / 2);
+                            }
+                        }
                     }
                 }
             }
