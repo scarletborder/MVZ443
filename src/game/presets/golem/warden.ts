@@ -2,7 +2,7 @@ import seedrandom from "seedrandom";
 import IGolem from "../../models/IGolem";
 import { MIRecord } from "../../models/IRecord";
 import { Game } from "../../scenes/Game";
-import { ObsidianGolemAnimProps } from "../../sprite/normal_golem";
+import { ObsidianGolemAnimProps, WardenGolemAnimProps } from "../../sprite/normal_golem";
 import { StartArc } from "../../utils/arc";
 import IObstacle, { NewObstacleByGrid } from "../obstacle/IObstacle";
 import { SECKILL } from "../../../../public/constants";
@@ -23,7 +23,7 @@ class Warden extends IGolem {
 
     constructor(scene: Game, col: number, row: number, waveID: number) {
         //TODO: 构造前,elite spawner会emit 给progress bar, boss战斗开始
-        const animProps = ObsidianGolemAnimProps;
+        const animProps = WardenGolemAnimProps;
         super(scene, col, row, waveID, animProps);
         this.maxHealth = 16000;
         this.health = this.maxHealth;

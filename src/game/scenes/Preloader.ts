@@ -150,6 +150,12 @@ export class Preloader extends Scene {
         this.load.image('obsidianLeg', 'sprite/obsidian_golem/obsidianLeg.png');
 
         this.load.image('zombie/mob_obsidian', 'zombie/mob_obsidian.png');
+
+        this.load.spritesheet('sprWardenBody', 'sprite/warden_golem/sprWardenBody.png',
+            { frameWidth: 19, frameHeight: 35 });
+        this.load.image('sprWardenHead', 'sprite/warden_golem/sprWardenHead.png');
+        this.load.image('sprWardenArm', 'sprite/warden_golem/sprWardenArm.png');
+        this.load.image('sprWardenLeg', 'sprite/warden_golem/sprWardenLeg.png');
     }
 
     // 加载bgimg和bgm 

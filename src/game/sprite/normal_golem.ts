@@ -8,3 +8,12 @@ export const ObsidianGolemAnimProps: GolemAnimProps = {
     armKey: 'obsidianArm',
     legKey: 'obsidianLeg',
 }
+
+export const WardenGolemAnimProps: GolemAnimProps = {
+    Species: 'Warden',
+    bodyKey: 'sprWardenBody',
+    bodyNum: 2,
+    headKey: 'sprWardenHead',
+    armKey: 'sprWardenArm',
+    legKey: 'sprWardenLeg',
+}
