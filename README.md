@@ -2,6 +2,16 @@
 
 develop from https://github.com/phaserjs/template-react-ts
 
+一个基于html5特性实现的,使用phaser框架的类植物大战僵尸游戏.
+
+MVZ2,Minecraft,东方Project同人游戏
+
+## 介绍
+
+前往PVZ同人创作论坛查看本游戏的介绍
+
+[MC大战僵尸 443版本 | PVZ同人创作论坛](https://www.pvz.moe/resources/1124/)
+
 ## goal and progress
 
 关于游戏进度,目标等游戏性的信息可以查看以下文档.

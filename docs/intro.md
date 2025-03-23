@@ -3,6 +3,7 @@
 
 ## 主要目录结构
 
+```
 MVZ443/
 ├── public/
 │   ├── assets/          # 游戏资源
@@ -42,6 +43,7 @@ MVZ443/
 ├── README.md          # 项目说明
 ├── tsconfig.json      # TypeScript配置
 └── project.md         # 项目进度文档
+```
 
 ### 源代码目录 (src)
 - **components/** - React 组件

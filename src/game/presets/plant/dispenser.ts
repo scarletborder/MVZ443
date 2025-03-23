@@ -226,9 +226,9 @@ function shootArrow(scene: Game, shooter: IPlant, baseDamage: number = 28, isSta
     let penetrate = 1;
     if (level >= 3) {
         penetrate += 1;
-        if (level >= 7) {
-            penetrate += 1;
-        }
+        // if (level >= 7) {
+        //     penetrate += 1;
+        // }
         if (level >= 5 && isStar) {
             penetrate += 1;
         }
