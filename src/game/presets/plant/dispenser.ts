@@ -215,14 +215,14 @@ function NewDispenser(scene: Game, col: number, row: number, level: number): IPl
     return peashooter;
 }
 
-function shootArrow(scene: Game, shooter: IPlant, baseDamage: number = 28, isStar: boolean = false) {
+function shootArrow(scene: Game, shooter: IPlant, baseDamage: number = 30, isStar: boolean = false) {
     if (!scene || !shooter || shooter.health <= 0) {
         return;
     }
 
     const level = shooter.level;
     //  根据等级略微提高伤害
-    const damage = GetIncValue(baseDamage, level, 1.5);
+    let damage = GetIncValue(baseDamage, level, 1.4);
     let penetrate = 1;
     if (level >= 3) {
         penetrate += 1;
@@ -231,6 +231,7 @@ function shootArrow(scene: Game, shooter: IPlant, baseDamage: number = 28, isSta
         // }
         if (level >= 5 && isStar) {
             penetrate += 1;
+            damage *= 0.85;
         }
     }
 

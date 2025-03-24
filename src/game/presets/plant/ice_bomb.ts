@@ -17,9 +17,9 @@ class IceBomb extends IPlant {
         this.setHealthFirstly(SECKILL);
         this.hasKill = false;
         this.createRects();
-        this.damage = GetIncValue(14, 10, level);
+        this.damage = GetIncValue(14, 2, level);
         if (level >= 5) {
-            this.damage = 152;
+            this.damage = 350;
         }
 
         // 发射大道隐藏激光
@@ -43,7 +43,7 @@ class IceBomb extends IPlant {
             // 发射大道隐藏激光,slow
             for (let row = 0; row < this.game.positionCalc.Row_Number; row++) {
                 const laser = NewLaserByGrid(this.game, -1, row, 12,
-                    this.damage, 'zombie', 90, {
+                    5, 'zombie', 90, {
                     debuff: 'slow',
                     duration: 7000
                 }, {
@@ -102,7 +102,7 @@ function NewIceBomb(scene: Game, col: number, row: number, level: number): IPlan
 }
 
 function cost(level?: number): number {
-    // if ((level || 1) >= 5) return 125;
+    if ((level || 1) >= 5) return 100;
     return 75;
 }
 

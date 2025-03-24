@@ -101,7 +101,7 @@ class ObsidianGolem extends IGolem {
         const random = this.random;
 
         // 根据难度确定基础难度总和
-        const baseLevelSum = diff === 'low' ? 45 : 50;
+        const baseLevelSum = diff === 'low' ? 40 : 50;
 
         // 允许生成的怪物类型
         const allowedMobs = [1, 2, 3, 8, 4, 5, 7, 9, 11, 14];
@@ -132,7 +132,7 @@ class ObsidianGolem extends IGolem {
         const spawnBatch = () => {
             if (monsterIds.length === 0) {
                 // 怪物全部生成完毕,等待后继续下一轮
-                this.addTimer(20000, () => {
+                this.addTimer(5000, () => {
                     this.callCount++;
                     this.callMob(diff === 'low' ? 'high' : 'low');
                 });
@@ -141,7 +141,7 @@ class ObsidianGolem extends IGolem {
 
             // 每批次生成
             const batchSize = Math.min(
-                2 + Math.floor(random() * 4),
+                4 + Math.floor(random() * 4),
                 monsterIds.length // 不超过剩余数量
             );
 
@@ -157,7 +157,7 @@ class ObsidianGolem extends IGolem {
             monsterIds.splice(0, batchSize);
 
             // 继续生成下一批
-            const delay = 8000 + Math.floor(random() * 4000); // 8-12秒的间隔
+            const delay = 5000 + Math.floor(random() * 3000); // 8-12秒的间隔
             this.addTimer(delay, spawnBatch);
         };
 

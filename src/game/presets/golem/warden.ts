@@ -147,7 +147,7 @@ class Warden extends IGolem {
         const spawnBatch = () => {
             if (monsterIds.length === 0) {
                 // 怪物全部生成完毕,等待后继续下一轮
-                this.addTimer(20000, () => {
+                this.addTimer(5000, () => {
                     this.callCount++;
                     this.callMob(diff === 'low' ? 'high' : 'low');
                 });
@@ -156,7 +156,7 @@ class Warden extends IGolem {
 
             // 每批次生成
             const batchSize = Math.min(
-                3 + Math.floor(random() * 4),
+                5 + Math.floor(random() * 4),
                 monsterIds.length // 不超过剩余数量
             );
 
@@ -172,7 +172,8 @@ class Warden extends IGolem {
             monsterIds.splice(0, batchSize);
 
             // 继续生成下一批
-            const delay = 8000 + Math.floor(random() * 4000); // 8-12秒的间隔
+            // 类似duration的作用
+            const delay = 4000 + Math.floor(random() * 2000); // 4-6秒的间隔
             this.addTimer(delay, spawnBatch);
         };
 
@@ -195,7 +196,7 @@ class Warden extends IGolem {
         this.game.time.delayedCall(1000, () => {
             this.anim.land();
 
-            // 毁灭3x3范围内
+            // 3x3范围内造成大量伤害
             for (let dx = -1; dx <= 1; dx++) {
                 for (let dy = -1; dy <= 1; dy++) {
                     const targetCol = this.col + dx;
@@ -207,7 +208,7 @@ class Warden extends IGolem {
                         if (list) {
                             const copy_list = [...list];
                             for (const plant of copy_list) {
-                                plant.takeDamage(SECKILL / 2);
+                                plant.takeDamage(180);
                             }
                         }
                     }

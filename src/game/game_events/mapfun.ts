@@ -69,6 +69,10 @@ function Chapter1Dispatch(game: Game, stageId: number) {
         }
     }
 
+    if (stageId === 8) {
+        game.dayOrNight = false;
+    }
+
 
 
     // 绘制阴影表格

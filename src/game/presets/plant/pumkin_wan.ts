@@ -117,15 +117,22 @@ function levelAndstuff(level: number): item[] {
 }
 
 function cost(level?: number): number {
-    if ((level || 1) >= 9) return 275;
+    if ((level || 1) >= 5 && (level || 1) < 7) return 275;
+    if ((level || 1) >= 7) return 300;
     return 325;
+}
+
+function coolDownTime(level?: number): number {
+    level = level || 1;
+    if (level >= 9) return 58;
+    return 52;
 }
 
 const PumpkinWanRecord: IRecord = {
     pid: 11,
     name: '广域南瓜派',
     cost: cost,
-    cooldownTime: () => 52,
+    cooldownTime: coolDownTime,
     NewFunction: NewPumpkinWan,
     texture: 'plant/pumpkin_wan',
     description: i18n.S('pumpkin_wan_description'),

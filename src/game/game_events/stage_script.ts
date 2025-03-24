@@ -133,8 +133,39 @@ function insertWaves(arr: Wave[], insertions: [number, Wave][]): Wave[] {
     return result;
 }
 
+// 调试关卡,在第一波内出完所有的AllowedMobs
+function debugScript(stage: StageScript): Wave[] {
+    const monsters: Monster[] = Object.values(stage.AllowedMobs).map((mid) => {
+        return {
+            mid: mid,
+            count: 1
+        }
+    });
+    return [{
+        waveId: 0,
+        progress: 0,
+        flag: "normal",
+        isFlag: false,
+        monsters: monsters,
+        duration: 2,
+        maxDelay: 20,
+        minDelay: 20,
+        arrangement: 0x01,
+        minLine: 1,
+        exceptLine: [],
+        starShards: 0
+    }]
+}
+
 // 主函数：根据 StageScript 生成 Wave[]
 export function generateStageScript(stage: StageScript, random: seedrandom.PRNG): Wave[] {
+    // 调试入口, totalwaves = 114514
+    if (stage.total_waves === 114514) {
+        // 
+        return debugScript(stage);
+    }
+
+
     // ---------------- 全局参数 ----------------
     const first_wave_id = stage.first_wave_id;
     const total_waves = stage.total_waves;

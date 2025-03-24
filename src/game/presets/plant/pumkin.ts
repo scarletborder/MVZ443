@@ -122,10 +122,16 @@ function levelAndstuff(level: number): item[] {
     return [];
 }
 
+function cost(level?: number): number {
+    level = level || 1;
+    if (level >= 9) return 150;
+    return 100;
+}
+
 const PumpkinRecord: IRecord = {
     pid: 9,
     name: '阴森南瓜头',
-    cost: () => 100,
+    cost: cost,
     cooldownTime: () => 16,
     NewFunction: NewPumpkin,
     texture: 'plant/pumpkin',

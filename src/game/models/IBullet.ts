@@ -18,6 +18,7 @@ export class IBullet extends Phaser.Physics.Arcade.Sprite {
     public penetrate: number = 1; // 穿透次数
     public isFlying: boolean = false; // 是否在空中可以打击空中目标
     public hasPenetrated: Set<Phaser.Physics.Arcade.Sprite> = new Set(); // 已经穿透的目标
+    public penetratedPunish: number = 0.5; // 穿透后伤害减少50%
 
     // 视觉
     public col: number;
@@ -78,6 +79,11 @@ export class IBullet extends Phaser.Physics.Arcade.Sprite {
                 this.destroy();
             }
             object.takeDamage(damage, "bullet");
+
+            // 如果穿透后还存在穿透次数,则伤害降低
+            if (this && this.penetrate && this.penetrate > 0) {
+                this.damage = Math.floor(this.damage * this.penetratedPunish);
+            }
         } else if (object instanceof IPlant && this.targetCamp === 'plant') {
             if (object.plant_height === 1) return;
             // 关于bullet击打植物,判断该格内的优先目标,shield>一般>carrier
@@ -117,6 +123,11 @@ export class IBullet extends Phaser.Physics.Arcade.Sprite {
                 this.destroy();
             }
             object.takeDamage(damage, "bullet");
+
+            // 如果穿透后还存在穿透次数,则伤害降低
+            if (this && this.penetrate && this.penetrate > 0) {
+                this.damage = Math.floor(this.damage * this.penetratedPunish);
+            }
         }
     }
 
