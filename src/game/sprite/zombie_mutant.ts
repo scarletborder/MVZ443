@@ -1,15 +1,22 @@
 import { Game } from "../scenes/Game";
 
-export interface GolemAnimProps {
-    Species: string, // 物种,如铁傀儡,黑曜石傀儡,监守者等
+export interface MutantAnimProps {
+    Species: string, // 物种,如普通突变等
+
     bodyKey: string, // 可以有任何多个切片,但是需要填写bodyNum
     bodyNum: number, // 切片数量
+
     headKey: string,
-    armKey: string,
-    legKey: string,
+
+    upperArmKey: string, // 绕轴转动
+    lowerArmKey: string, // 随upperArmKey一起转动
+    coverHandKey: string, // 随lowerArmKey一起转动
+
+    upperLegKey: string,
+    lowerLegKey: string,
 }
 
-export default class GolemAnim {
+export default class IMutantAnim {
     scene: Game;
     scaleFactor: number;
     x: number;
@@ -21,14 +28,20 @@ export default class GolemAnim {
     baseDepth: number;
     dirt: Phaser.GameObjects.Sprite | null = null;
 
+
+    // 身体部位
     body: Phaser.GameObjects.Sprite;
     head: Phaser.GameObjects.Sprite;
+
     armLeft: Phaser.GameObjects.Sprite;
     armRight: Phaser.GameObjects.Sprite;
+    
     legLeft: Phaser.GameObjects.Sprite;
     legRight: Phaser.GameObjects.Sprite;
+
     legLeftTween: Phaser.Tweens.Tween | null;
     legRightTween: Phaser.Tweens.Tween | null;
+    
     armTween: Phaser.Tweens.Tween | null;
 
     species: string;
@@ -54,7 +67,7 @@ export default class GolemAnim {
         this.legLeft.setScale(this.scaleFactor);
         this.legRight.setScale(this.scaleFactor);
     }
-    constructor(scene: Game, x: number, y: number, props: GolemAnimProps) {
+    constructor(scene: Game, x: number, y: number, props: MutantAnimProps) {
         x = x;
         y = y - scene.positionCalc.gridOffsetY * 5 / 12;
 
@@ -82,13 +95,13 @@ export default class GolemAnim {
         this.head = this.scene.add.sprite(x + this.headOffset[0] * this.scaleFactor,
             y + this.headOffset[1] * this.scaleFactor, props.headKey);
         this.armLeft = this.scene.add.sprite(x + this.leftArmOffset[0] * this.scaleFactor,
-            y + this.leftArmOffset[1] * this.scaleFactor, props.armKey);
+            y + this.leftArmOffset[1] * this.scaleFactor, props.upperArmKey);
         this.armRight = this.scene.add.sprite(x + this.rightArmOffset[0] * this.scaleFactor,
-            y + this.rightArmOffset[1] * this.scaleFactor, props.armKey);
+            y + this.rightArmOffset[1] * this.scaleFactor, props.upperArmKey);
         this.legLeft = this.scene.add.sprite(x + this.leftLgetOffset[0] * this.scaleFactor,
-            y + this.leftLgetOffset[1] * this.scaleFactor, props.legKey);
+            y + this.leftLgetOffset[1] * this.scaleFactor, props.upperLegKey);
         this.legRight = this.scene.add.sprite(x + this.rightLegOffset[0] * this.scaleFactor,
-            y + this.rightLegOffset[1] * this.scaleFactor, props.legKey);
+            y + this.rightLegOffset[1] * this.scaleFactor, props.upperLegKey);
 
         this.armLeft.setOrigin(1, 0.5);
         this.armRight.setOrigin(1, 0.5);
@@ -515,4 +528,4 @@ export default class GolemAnim {
 }
 
 
-export class EnhancedGolemAnim extends GolemAnim { }
+export class EnhancedGolemAnim extends IMutantAnim { }

@@ -21,7 +21,7 @@ export function StartArc(game: Game, x1: number, y1: number, x2: number, y2: num
     let curve = new Phaser.Curves.QuadraticBezier(start, controlPoint, end);
 
     // 创建一个临时贴图，假设 'tempTexture' 是预加载的贴图 key
-    let tempImage = game.add.image(x1, y1, texture).setDepth(DepthManager.getInGameUIUnImportant(0));
+    let tempImage = game.add.image(x1, y1, texture).setDepth(DepthManager.getProjectileDepth('projectile', 0));
 
     // 用于记录曲线进度的对象和临时向量
     let path = { t: 0, vec: new Phaser.Math.Vector2() };

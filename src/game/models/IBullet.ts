@@ -1,5 +1,6 @@
 import DepthManager from "../../utils/depth";
 import IObstacle from "../presets/obstacle/IObstacle";
+import IMutant from "../presets/zombie_mutant/mutant";
 import { Game } from "../scenes/Game";
 import IGolem from "./IGolem";
 import { IPlant } from "./IPlant";
@@ -60,7 +61,7 @@ export class IBullet extends Phaser.Physics.Arcade.Sprite {
         this.setDepth(this.baseDepth);
     }
 
-    CollideObject(object: IZombie | IPlant | IGolem | IObstacle) {
+    CollideObject(object: IZombie | IPlant | IGolem | IObstacle | IMutant) {
         const damage = this.damage;
         if (this.hasPenetrated.has(object) || this.penetrate <= 0) return; // 已经穿透过了
 
@@ -86,22 +87,23 @@ export class IBullet extends Phaser.Physics.Arcade.Sprite {
             }
         } else if (object instanceof IPlant && this.targetCamp === 'plant') {
             if (object.plant_height === 1) return;
+            let targetPlant: IPlant = object;
             // 关于bullet击打植物,判断该格内的优先目标,shield>一般>carrier
             // 如果一grid内部的植物数量 > penetrate
-            const col = object.col;
-            const row = object.row;
+            const col = targetPlant.col;
+            const row = targetPlant.row;
             const key = `${col}-${row}`;
             // 既然有object,那么就肯定会有List
             // 如果有重要的植物,那么让他承担伤害
-            const list = object.scene.gardener.planted.get(key);
+            const list = targetPlant.scene.gardener.planted.get(key);
             if (list) {
-                this.hasPenetrated.add(object);// 记录穿透过的对象
-                const clan = object.scene.gardener.GridClan;
+                this.hasPenetrated.add(targetPlant);// 记录穿透过的对象
+                const clan = targetPlant.scene.gardener.GridClan;
                 for (const plant of list) {
                     // 判断有没有更高级目标承担伤害
-                    if (clan.MorePriorityPlant(object, plant)) object = plant;
+                    if (clan.MorePriorityPlant(targetPlant, plant)) targetPlant = plant;
                 }
-                object.takeDamage(damage);
+                targetPlant.takeDamage(damage);
             }
 
             // TODO: 僵尸子弹直接摧毁
@@ -115,6 +117,11 @@ export class IBullet extends Phaser.Physics.Arcade.Sprite {
                 this.destroy();
             }
             object.takeDamage(damage, "bullet");
+
+            // 如果穿透后还存在穿透次数,则伤害降低
+            if (this && this.penetrate && this.penetrate > 0) {
+                this.damage = Math.floor(this.damage * this.penetratedPunish);
+            }
         } else if (object instanceof IObstacle && this.targetCamp === 'zombie') {
             this.penetrate--;
             this.hasPenetrated.add(object);// 记录穿透过的对象
@@ -128,6 +135,8 @@ export class IBullet extends Phaser.Physics.Arcade.Sprite {
             if (this && this.penetrate && this.penetrate > 0) {
                 this.damage = Math.floor(this.damage * this.penetratedPunish);
             }
+        } else if (object instanceof IMutant && this.targetCamp === 'zombie') {
+
         }
     }
 

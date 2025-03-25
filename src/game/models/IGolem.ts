@@ -4,6 +4,7 @@ import { Game } from "../scenes/Game";
 import GolemAnim, { GolemAnimProps } from "../sprite/golem";
 import GridClan from "../utils/grid_clan";
 import MonsterSpawner from "../utils/spawner";
+import { IMonster } from "./IRecord";
 
 function setDisplay(spr: IGolem, scene: Game) {
     let size = scene.positionCalc.getZombieBodySize();
@@ -14,7 +15,7 @@ function setDisplay(spr: IGolem, scene: Game) {
     spr.setOrigin(0.5, 1);
 }
 
-export default class IGolem extends Phaser.Physics.Arcade.Sprite {
+export default class IGolem extends Phaser.Physics.Arcade.Sprite implements IMonster {
     public static Group: Phaser.Physics.Arcade.Group;
     static GridClan: GridClan;
 
@@ -43,6 +44,14 @@ export default class IGolem extends Phaser.Physics.Arcade.Sprite {
             classType: IGolem,
             runChildUpdate: true,
         });
+    }
+
+    getIsFlying(): boolean {
+        return false;
+    }
+
+    getIsInVoid(): boolean {
+        return false;
     }
 
     constructor(scene: Game, col: number, row: number, waveID: number, animProps: GolemAnimProps) {

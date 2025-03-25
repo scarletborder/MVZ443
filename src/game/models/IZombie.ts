@@ -5,6 +5,7 @@ import IZombieAnim from "../sprite/zombie";
 import GridClan from "../utils/grid_clan";
 import MonsterSpawner from "../utils/spawner";
 import { IPlant } from "./IPlant";
+import { IMonster } from "./IRecord";
 
 function setDisplay(spr: IZombie, scene: Game) {
     let size = scene.positionCalc.getZombieBodySize();
@@ -15,7 +16,7 @@ function setDisplay(spr: IZombie, scene: Game) {
     spr.setOrigin(0.5, 1);
 }
 
-export class IZombie extends Phaser.Physics.Arcade.Sprite {
+export class IZombie extends Phaser.Physics.Arcade.Sprite implements IMonster {
     public static Group: Phaser.Physics.Arcade.Group;
     static GridClan: GridClan;
 
@@ -67,6 +68,14 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite {
             classType: IZombie,
             runChildUpdate: true
         });
+    }
+
+    getIsFlying(): boolean {
+        return this.isFlying;
+    }
+
+    getIsInVoid(): boolean {
+        return this.isInVoid;
     }
 
     // 没必要以后特定texture了,因为反正设置了不可见

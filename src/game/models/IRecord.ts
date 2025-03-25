@@ -26,10 +26,16 @@ export interface IRecord {
 
 
 // monster
+export interface IMonster {
+    getIsFlying: () => boolean;
+    getIsInVoid: () => boolean;
+    takeDamage: (damage: number, projectileType?: "bullet" | "laser" | "explosion" | "trajectory") => void;
+}
+
 export interface MIRecord {
     mid: number;
     name: string;
-    NewFunction: (Game: Game, col: number, row: number, waveID: number) => IZombie | IGolem;
+    NewFunction: (Game: Game, col: number, row: number, waveID: number) => IMonster;
     texture: string; // placeholder
     brief?: () => string;
     description?: () => string;

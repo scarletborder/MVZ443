@@ -363,7 +363,7 @@ export default class Gardener {
         this.highlightSprite.setOrigin(0.5, 1);
         this.highlightSprite.setTint(0xffffff);
         this.highlightSprite.setAlpha(0.8);
-        this.highlightSprite.setDepth(DepthManager.getInGameUIUnImportant(50));
+        this.highlightSprite.setDepth(DepthManager.getInGameUIElementDepth(-5));
 
         this.highlightTween = this.scene.tweens.add({
             targets: this.highlightSprite,
