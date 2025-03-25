@@ -156,6 +156,8 @@ export class Preloader extends Scene {
         this.load.image('sprWardenHead', 'sprite/warden_golem/sprWardenHead.png');
         this.load.image('sprWardenArm', 'sprite/warden_golem/sprWardenArm.png');
         this.load.image('sprWardenLeg', 'sprite/warden_golem/sprWardenLeg.png');
+
+        
     }
 
     // 加载bgimg和bgm 

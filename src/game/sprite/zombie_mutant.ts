@@ -12,8 +12,8 @@ export interface MutantAnimProps {
     lowerArmKey: string, // 随upperArmKey一起转动
     coverHandKey: string, // 随lowerArmKey一起转动
 
-    upperLegKey: string,
-    lowerLegKey: string,
+    upperLegKey: string, // 绕轴旋转
+    lowerLegKey: string, // 随upperLegKey一起转动
 }
 
 export default class IMutantAnim {
@@ -28,21 +28,33 @@ export default class IMutantAnim {
     baseDepth: number;
     dirt: Phaser.GameObjects.Sprite | null = null;
 
-
     // 身体部位
     body: Phaser.GameObjects.Sprite;
     head: Phaser.GameObjects.Sprite;
 
-    armLeft: Phaser.GameObjects.Sprite;
-    armRight: Phaser.GameObjects.Sprite;
-    
-    legLeft: Phaser.GameObjects.Sprite;
-    legRight: Phaser.GameObjects.Sprite;
+    upperArmLeft: Phaser.GameObjects.Sprite;
+    upperArmRight: Phaser.GameObjects.Sprite;
+    lowerArmLeft: Phaser.GameObjects.Sprite;
+    lowerArmRight: Phaser.GameObjects.Sprite;
+    coverHandLeft: Phaser.GameObjects.Sprite;
+    coverHandRight: Phaser.GameObjects.Sprite;
+
+    upperLegLeft: Phaser.GameObjects.Sprite;
+    upperLegRight: Phaser.GameObjects.Sprite;
+    lowerLegLeft: Phaser.GameObjects.Sprite;
+    lowerLegRight: Phaser.GameObjects.Sprite;
 
     legLeftTween: Phaser.Tweens.Tween | null;
     legRightTween: Phaser.Tweens.Tween | null;
-    
+
     armTween: Phaser.Tweens.Tween | null;
+
+    currentAngles: {
+        upperArmLeft: number,
+        upperArmRight: number,
+        upperLegLeft: number,
+        upperLegRight: number,
+    };
 
     species: string;
 
@@ -55,18 +67,22 @@ export default class IMutantAnim {
     leftLgetOffset: Array<number> = [2, -5];
     rightLegOffset: Array<number> = [-2, -10];
 
-
-
     setScale() {
-        // 在创建完所有组件后进行全部组件的setScale
-        console.log(this.scaleFactor)
+        // 在创建完所有组件后进行全部组件的 setScale
+        console.log(this.scaleFactor);
         this.body.setScale(this.scaleFactor);
         this.head.setScale(this.scaleFactor);
-        this.armLeft.setScale(this.scaleFactor);
-        this.armRight.setScale(this.scaleFactor);
-        this.legLeft.setScale(this.scaleFactor);
-        this.legRight.setScale(this.scaleFactor);
+        this.upperArmLeft.setScale(this.scaleFactor);
+        this.upperArmRight.setScale(this.scaleFactor);
+        // 新增 lowerArm 和 coverHand 的缩放
+        this.lowerArmLeft.setScale(this.scaleFactor);
+        this.lowerArmRight.setScale(this.scaleFactor);
+        this.coverHandLeft.setScale(this.scaleFactor);
+        this.coverHandRight.setScale(this.scaleFactor);
+        this.upperLegLeft.setScale(this.scaleFactor);
+        this.upperLegRight.setScale(this.scaleFactor);
     }
+
     constructor(scene: Game, x: number, y: number, props: MutantAnimProps) {
         x = x;
         y = y - scene.positionCalc.gridOffsetY * 5 / 12;
@@ -89,43 +105,103 @@ export default class IMutantAnim {
                 repeat: 0
             });
         }
+        this.body.anims.play(`${this.species}body0`); // 默认播放第0帧
 
-        this.body.anims.play(`${this.species}body0`); // default is the 0th frame
+        this.head = this.scene.add.sprite(
+            x + this.headOffset[0] * this.scaleFactor,
+            y + this.headOffset[1] * this.scaleFactor,
+            props.headKey
+        );
 
-        this.head = this.scene.add.sprite(x + this.headOffset[0] * this.scaleFactor,
-            y + this.headOffset[1] * this.scaleFactor, props.headKey);
-        this.armLeft = this.scene.add.sprite(x + this.leftArmOffset[0] * this.scaleFactor,
-            y + this.leftArmOffset[1] * this.scaleFactor, props.upperArmKey);
-        this.armRight = this.scene.add.sprite(x + this.rightArmOffset[0] * this.scaleFactor,
-            y + this.rightArmOffset[1] * this.scaleFactor, props.upperArmKey);
-        this.legLeft = this.scene.add.sprite(x + this.leftLgetOffset[0] * this.scaleFactor,
-            y + this.leftLgetOffset[1] * this.scaleFactor, props.upperLegKey);
-        this.legRight = this.scene.add.sprite(x + this.rightLegOffset[0] * this.scaleFactor,
-            y + this.rightLegOffset[1] * this.scaleFactor, props.upperLegKey);
+        // 创建 UpperArm（左右）
+        this.upperArmLeft = this.scene.add.sprite(
+            x + this.leftArmOffset[0] * this.scaleFactor,
+            y + this.leftArmOffset[1] * this.scaleFactor,
+            props.upperArmKey
+        );
+        this.upperArmRight = this.scene.add.sprite(
+            x + this.rightArmOffset[0] * this.scaleFactor,
+            y + this.rightArmOffset[1] * this.scaleFactor,
+            props.upperArmKey
+        );
 
-        this.armLeft.setOrigin(1, 0.5);
-        this.armRight.setOrigin(1, 0.5);
-        this.legLeft.setOrigin(0.5, 0);
-        this.legRight.setOrigin(0.5, 0);
-        this.armLeft.setRotation(-Math.PI / 3);
-        this.armRight.setRotation(-Math.PI / 3);
+        // 创建 UpperLeg（左右）
+        this.upperLegLeft = this.scene.add.sprite(
+            x + this.leftLgetOffset[0] * this.scaleFactor,
+            y + this.leftLgetOffset[1] * this.scaleFactor,
+            props.upperLegKey
+        );
+        this.upperLegRight = this.scene.add.sprite(
+            x + this.rightLegOffset[0] * this.scaleFactor,
+            y + this.rightLegOffset[1] * this.scaleFactor,
+            props.upperLegKey
+        );
 
+        // 设置 upper 部件的原点（上臂以右侧为旋转点，腿部以中上部为旋转点）
+        this.upperArmLeft.setOrigin(1, 0.5);
+        this.upperArmRight.setOrigin(1, 0.5);
+        this.upperLegLeft.setOrigin(0.5, 0);
+        this.upperLegRight.setOrigin(0.5, 0);
+        this.upperArmLeft.setRotation(-Math.PI / 3);
+        this.upperArmRight.setRotation(-Math.PI / 3);
 
+        // 新增：创建 lowerArm 和 coverHand（左右）
+        // 下臂与护手的原点都设置为 (1, 0.5)
+        this.lowerArmLeft = this.scene.add.sprite(0, 0, props.lowerArmKey);
+        this.lowerArmRight = this.scene.add.sprite(0, 0, props.lowerArmKey);
+        this.coverHandLeft = this.scene.add.sprite(0, 0, props.coverHandKey);
+        this.coverHandRight = this.scene.add.sprite(0, 0, props.coverHandKey);
+
+        this.lowerArmLeft.setOrigin(1, 0.5);
+        this.lowerArmRight.setOrigin(1, 0.5);
+        this.coverHandLeft.setOrigin(1, 0.5);
+        this.coverHandRight.setOrigin(1, 0.5);
+
+        // 将 lowerArm 紧贴在对应 upperArm 的末端
+        // upperArm 的原点为 (1, 0.5)，因此它的末端（在局部坐标中为 (0,0.5)）的世界坐标可通过其 x 坐标减去 displayWidth 得到
+        this.lowerArmLeft.x = this.upperArmLeft.x - this.upperArmLeft.displayWidth;
+        this.lowerArmLeft.y = this.upperArmLeft.y;
+        this.lowerArmRight.x = this.upperArmRight.x - this.upperArmRight.displayWidth;
+        this.lowerArmRight.y = this.upperArmRight.y;
+
+        // 如需要让 coverHand 紧贴在 lowerArm 的末端，则同样计算：
+        this.coverHandLeft.x = this.lowerArmLeft.x - this.lowerArmLeft.displayWidth;
+        this.coverHandLeft.y = this.lowerArmLeft.y;
+        this.coverHandRight.x = this.lowerArmRight.x - this.lowerArmRight.displayWidth;
+        this.coverHandRight.y = this.lowerArmRight.y;
+
+        // 设置各部件缩放
         this.setScale();
 
         this.legLeftTween = null;
         this.armTween = null;
+
+        // 初始角度
+        this.currentAngles = {
+            upperArmLeft: -60,
+            upperArmRight: -60,
+            upperLegLeft: 0,
+            upperLegRight: 0,
+        };
     }
 
     setDepth(base: number) {
         this.baseDepth = base;
-        // 部件不在本地管
-        this.armLeft.setDepth(base + 9);
+        // 设置各部件深度
+        this.upperArmLeft.setDepth(base + 9);
+        this.upperArmRight.setDepth(base + 6);
+        this.lowerArmLeft.setDepth(base + 5);
+        this.lowerArmRight.setDepth(base + 4);
+        this.coverHandLeft.setDepth(base + 3);
+        this.coverHandRight.setDepth(base + 3);
+
         this.head.setDepth(base + 8);
-        this.armRight.setDepth(base + 6);
         this.body.setDepth(base + 7);
-        this.legLeft.setDepth(base + 2);
-        this.legRight.setDepth(base + 1);
+
+        this.upperLegLeft.setDepth(base + 2);
+        this.upperLegRight.setDepth(base + 1);
+        this.lowerLegLeft.setDepth(base + 2);
+        this.lowerLegRight.setDepth(base + 1);
     }
 
 
@@ -137,59 +213,236 @@ export default class IMutantAnim {
     }
 
     updatePosition(x: number, y: number) {
-        x = x;
         y = y - this.scene.positionCalc.GRID_SIZEY * 25 / 54 + this.offsetY;
         this.x = x;
         this.y = y;
+
+        // 角度转换为弧度（仅针对上臂和腿部）
+        const radianUpperArmLeft = this.currentAngles.upperArmLeft * (Math.PI / 180);
+        const radianUpperArmRight = this.currentAngles.upperArmRight * (Math.PI / 180);
+        const radianUpperLegLeft = this.currentAngles.upperLegLeft * (Math.PI / 180);
+        const radianUpperLegRight = this.currentAngles.upperLegRight * (Math.PI / 180);
+
+        // 更新身体和头部位置
         this.body.setPosition(x, y);
-        this.head.setPosition(x + this.headOffset[0] * this.scaleFactor,
-            y + this.headOffset[1] * this.scaleFactor);
-        this.armLeft.setPosition(x + this.leftArmOffset[0] * this.scaleFactor,
-            y + this.leftArmOffset[1] * this.scaleFactor);
-        this.armRight.setPosition(x + this.rightArmOffset[0] * this.scaleFactor,
-            y + this.rightArmOffset[1] * this.scaleFactor);
-        this.legLeft.setPosition(x + this.leftLgetOffset[0] * this.scaleFactor,
-            y + this.leftLgetOffset[1] * this.scaleFactor);
-        this.legRight.setPosition(x + this.rightLegOffset[0] * this.scaleFactor,
-            y + this.rightLegOffset[1] * this.scaleFactor);
+        this.head.setPosition(
+            x + this.headOffset[0] * this.scaleFactor,
+            y + this.headOffset[1] * this.scaleFactor
+        );
+
+        // 更新上臂位置，并根据上臂角度计算位置
+        this.upperArmLeft.setPosition(
+            x + this.leftArmOffset[0] * this.scaleFactor,
+            y + this.leftArmOffset[1] * this.scaleFactor
+        );
+        const upperArmLengthLeft = this.upperArmLeft.displayHeight;
+        this.upperArmLeft.x = x + this.leftArmOffset[0] * this.scaleFactor + upperArmLengthLeft * Math.cos(radianUpperArmLeft);
+        this.upperArmLeft.y = y + this.leftArmOffset[1] * this.scaleFactor + upperArmLengthLeft * Math.sin(radianUpperArmLeft);
+
+        this.upperArmRight.setPosition(
+            x + this.rightArmOffset[0] * this.scaleFactor,
+            y + this.rightArmOffset[1] * this.scaleFactor
+        );
+        const upperArmLengthRight = this.upperArmRight.displayHeight;
+        this.upperArmRight.x = x + this.rightArmOffset[0] * this.scaleFactor + upperArmLengthRight * Math.cos(radianUpperArmRight);
+        this.upperArmRight.y = y + this.rightArmOffset[1] * this.scaleFactor + upperArmLengthRight * Math.sin(radianUpperArmRight);
+
+        // 更新下臂和护手的位置：它们依赖于上臂的角度
+        // 假设下臂长度和护手偏移均固定，可以通过上臂的末端计算得到
+        const lowerArmLengthLeft = this.lowerArmLeft.displayHeight;
+        this.lowerArmLeft.x = this.upperArmLeft.x + lowerArmLengthLeft * Math.cos(radianUpperArmLeft);
+        this.lowerArmLeft.y = this.upperArmLeft.y + lowerArmLengthLeft * Math.sin(radianUpperArmLeft);
+        // 假设护手与下臂末端有一个固定偏移（这里使用 lowerArmLeft.displayWidth 作为示例）
+        this.coverHandLeft.x = this.lowerArmLeft.x + this.lowerArmLeft.displayWidth * Math.cos(radianUpperArmLeft);
+        this.coverHandLeft.y = this.lowerArmLeft.y + this.lowerArmLeft.displayWidth * Math.sin(radianUpperArmLeft);
+
+        const lowerArmLengthRight = this.lowerArmRight.displayHeight;
+        this.lowerArmRight.x = this.upperArmRight.x + lowerArmLengthRight * Math.cos(radianUpperArmRight);
+        this.lowerArmRight.y = this.upperArmRight.y + lowerArmLengthRight * Math.sin(radianUpperArmRight);
+        this.coverHandRight.x = this.lowerArmRight.x + this.lowerArmRight.displayWidth * Math.cos(radianUpperArmRight);
+        this.coverHandRight.y = this.lowerArmRight.y + this.lowerArmRight.displayWidth * Math.sin(radianUpperArmRight);
+
+        // 更新腿部位置
+        this.upperLegLeft.setPosition(
+            x + this.leftLgetOffset[0] * this.scaleFactor,
+            y + this.leftLgetOffset[1] * this.scaleFactor
+        );
+        const upperLegLengthLeft = this.upperLegLeft.displayHeight;
+        this.upperLegLeft.x = x + this.leftLgetOffset[0] * this.scaleFactor + upperLegLengthLeft * Math.cos(radianUpperLegLeft);
+        this.upperLegLeft.y = y + this.leftLgetOffset[1] * this.scaleFactor + upperLegLengthLeft * Math.sin(radianUpperLegLeft);
+
+        this.upperLegRight.setPosition(
+            x + this.rightLegOffset[0] * this.scaleFactor,
+            y + this.rightLegOffset[1] * this.scaleFactor
+        );
+        const upperLegLengthRight = this.upperLegRight.displayHeight;
+        this.upperLegRight.x = x + this.rightLegOffset[0] * this.scaleFactor + upperLegLengthRight * Math.cos(radianUpperLegRight);
+        this.upperLegRight.y = y + this.rightLegOffset[1] * this.scaleFactor + upperLegLengthRight * Math.sin(radianUpperLegRight);
+
+        // 小腿依然可以简单跟随上腿
+        const lowerLegLengthLeft = this.lowerLegLeft.displayHeight;
+        this.lowerLegLeft.x = this.upperLegLeft.x + lowerLegLengthLeft * Math.cos(radianUpperLegLeft);
+        this.lowerLegLeft.y = this.upperLegLeft.y + lowerLegLengthLeft * Math.sin(radianUpperLegLeft);
+
+        const lowerLegLengthRight = this.lowerLegRight.displayHeight;
+        this.lowerLegRight.x = this.upperLegRight.x + lowerLegLengthRight * Math.cos(radianUpperLegRight);
+        this.lowerLegRight.y = this.upperLegRight.y + lowerLegLengthRight * Math.sin(radianUpperLegRight);
+
+        // 最后同步更新缩放
+        this.setScale();
+    }
+
+    /**
+     * 启动腿部摇摆动画（上臂角度独立记录）
+     */
+    startLegSwing() {
+        if (!this.legLeftTween || !this.legLeftTween.isPlaying()) {
+            // 设置初始角度
+            this.currentAngles.upperLegLeft = -15;
+            this.currentAngles.upperLegRight = 15;
+            this.upperLegLeft.angle = -15;
+            this.upperLegRight.angle = 15;
+
+            this.legLeftTween = this.scene.tweens.add({
+                targets: this.upperLegLeft,
+                angle: { from: -15, to: 15 },
+                duration: 500,
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.easeInOut',
+                onUpdate: () => {
+                    this.currentAngles.upperLegLeft = this.upperLegLeft.angle;
+                }
+            });
+            this.legRightTween = this.scene.tweens.add({
+                targets: this.upperLegRight,
+                angle: { from: 15, to: -15 },
+                duration: 500,
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.easeInOut',
+                onUpdate: () => {
+                    this.currentAngles.upperLegRight = this.upperLegRight.angle;
+                }
+            });
+        }
+    }
+
+    /**
+     * 停止腿部摇摆动画，并将上腿角度重置为 0
+     */
+    stopLegSwing() {
+        if (this.legLeftTween && this.legLeftTween.isPlaying()) {
+            this.legLeftTween.stop();
+            this.legRightTween?.stop();
+            this.legLeftTween = null;
+            this.legRightTween = null;
+            this.upperLegLeft.angle = 0;
+            this.upperLegRight.angle = 0;
+            this.currentAngles.upperLegLeft = 0;
+            this.currentAngles.upperLegRight = 0;
+        }
+    }
+
+    /**
+     * 启动手臂摇摆动画：
+     * 只对上臂做 Tween，下臂和护手依赖上臂的角度计算位置
+     */
+    startArmSwing() {
+        // 平滑过渡到起始角度 95°
+        this.scene.tweens.add({
+            targets: [this.upperArmLeft, this.upperArmRight],
+            angle: 95,
+            duration: 500,
+            ease: 'Sine.easeInOut',
+            onUpdate: () => {
+                this.currentAngles.upperArmLeft = this.upperArmLeft.angle;
+                this.currentAngles.upperArmRight = this.upperArmRight.angle;
+            },
+            onComplete: () => {
+                // 开启循环：在 95° 与 75° 之间摇摆
+                this.armTween = this.scene.tweens.add({
+                    targets: [this.upperArmLeft, this.upperArmRight],
+                    angle: { from: 95, to: 75 },
+                    duration: 500,
+                    yoyo: true,
+                    repeat: -1,
+                    ease: 'Sine.easeInOut',
+                    onUpdate: () => {
+                        this.currentAngles.upperArmLeft = this.upperArmLeft.angle;
+                        this.currentAngles.upperArmRight = this.upperArmRight.angle;
+                    }
+                });
+            }
+        });
+    }
+
+    /**
+     * 停止手臂摇摆动画，先停止循环 Tween，再平滑过渡到静止角度 -60°
+     */
+    stopArmSwing() {
+        if (this.armTween && this.armTween.isPlaying()) {
+            this.armTween.stop();
+            this.armTween = null;
+        }
+        this.scene.tweens.add({
+            targets: [this.upperArmLeft, this.upperArmRight],
+            angle: -60,
+            duration: 600,
+            ease: 'Sine.easeOut',
+            onUpdate: () => {
+                this.currentAngles.upperArmLeft = this.upperArmLeft.angle;
+                this.currentAngles.upperArmRight = this.upperArmRight.angle;
+            }
+        });
     }
 
     setOrigin(x: number, y: number) {
         this.body.setOrigin(x, y);
         this.head.setOrigin(x, y);
-        this.armLeft.setOrigin(x, 0); // Keep top pivot for arms
-        this.armRight.setOrigin(x, 0);
-        this.legLeft.setOrigin(x, 0); // Keep top pivot for legs
-        this.legRight.setOrigin(x, 0);
+        this.upperArmLeft.setOrigin(x, 0); // Keep top pivot for arms
+        this.upperArmRight.setOrigin(x, 0);
+        this.upperLegLeft.setOrigin(x, 0); // Keep top pivot for legs
+        this.upperLegRight.setOrigin(x, 0);
     }
 
     destroy() {
-        // Stop any existing tweens before destroying
+        // 先停止所有 tween
         this.scene.tweens.killTweensOf([
             this.body,
             this.head,
-            this.armLeft,
-            this.armRight,
-            this.legLeft,
-            this.legRight
+            this.upperArmLeft,
+            this.upperArmRight,
+            this.upperLegLeft,
+            this.upperLegRight,
+            this.lowerArmLeft,
+            this.lowerArmRight,
+            this.coverHandLeft,
+            this.coverHandRight
         ]);
 
-        // Destroy all components
+        // 销毁所有组件
+        this.coverHandLeft.destroy();
+        this.coverHandRight.destroy();
+        this.lowerArmLeft.destroy();
+        this.lowerArmRight.destroy();
         this.body.destroy();
         this.head.destroy();
-        this.armLeft.destroy();
-        this.armRight.destroy();
-        this.legLeft.destroy();
-        this.legRight.destroy();
+        this.upperArmLeft.destroy();
+        this.upperArmRight.destroy();
+        this.lowerLegLeft.destroy();
+        this.lowerLegRight.destroy();
+        this.upperLegLeft.destroy();
+        this.upperLegRight.destroy();
 
-        // Stop and clean up leg and arm tweens
+        // 停止并清理 leg 和 arm 的 tween
         this.legLeftTween?.stop();
         this.legRightTween?.stop();
         this.armTween?.stop();
 
-        // 动画特效
-        // this.stopSlowEffect();
+        // 动画特效相关（例如：this.stopSlowEffect();）
     }
+
     highlight() {
         // 计算绘制效果所需参数
         const depth = this.body.depth + 1;  // 根据实际情况调整深度
@@ -226,305 +479,6 @@ export default class IMutantAnim {
         }
     }
 
-    startLegSwing() {
-        if (!this.legLeftTween || !this.legLeftTween.isPlaying()) {
-            this.legLeft.angle = -15;
-            this.legLeftTween = this.scene.tweens.add({
-                targets: this.legLeft,
-                angle: { from: -15, to: 15 },
-                duration: 500,
-                yoyo: true,
-                repeat: -1
-            });
-            this.legRight.angle = 15;
-            this.legRightTween = this.scene.tweens.add({
-                targets: this.legRight,
-                angle: { from: 15, to: -15 },
-                duration: 500,
-                yoyo: true,
-                repeat: -1
-            });
-        }
-    }
-
-    stopLegSwing() {
-        if (this.legLeftTween && this.legLeftTween.isPlaying()) {
-            this.legLeftTween?.stop();
-            this.legRightTween?.stop();
-            this.legLeft.angle = 0;
-            this.legRight.angle = 0;
-        }
-    }
-
-    startArmDance() {
-        if (!this.armTween || !this.armTween.isPlaying()) {
-            this.armTween = this.scene.tweens.add({
-                targets: [this.armLeft, this.armRight],
-                angle: { from: +105, to: +65 },
-                duration: 500,
-                yoyo: true,
-                repeat: -1
-            });
-        }
-    }
-
-    // 平滑过渡到挥舞状态：先从当前角度平滑插值到起始挥舞角度（例如 95°），再启动循环摇摆
-    startArmSwing() {
-        // 先平滑过渡到起始角度95°
-        this.scene.tweens.add({
-            targets: [this.armLeft, this.armRight],
-            angle: 95,
-            duration: 500,
-            ease: 'Sine.easeInOut',
-            onComplete: () => {
-                // 启动连续摇摆，往返于 95° 和 75° 之间
-                this.armTween = this.scene.tweens.add({
-                    targets: [this.armLeft, this.armRight],
-                    angle: { from: 95, to: 75 },
-                    duration: 500,
-                    yoyo: true,
-                    repeat: -1,
-                    ease: 'Sine.easeInOut'
-                });
-            }
-        });
-    }
-
-    // 停止挥舞时平滑插值到静止角度 -60°
-    stopArmSwing() {
-        // 如果已有循环摇摆的 Tween，则先停止它
-        if (this.armTween && this.armTween.isPlaying()) {
-            this.armTween.stop();
-            this.armTween = null;
-        }
-        // 平滑过渡到静止状态（-60°）
-        this.scene.tweens.add({
-            targets: [this.armLeft, this.armRight],
-            angle: -60,
-            duration: 600,
-            ease: 'Sine.easeOut'
-        });
-    }
-
-
-    highJump(offsetY: number = 48 * this.scaleFactor) {
-        this.isInAnim = true;
-        this.scene.tweens.add({
-            targets: [this.armLeft],
-            y: this.armLeft.y - offsetY,
-            duration: 500,
-            ease: 'Sine.easeOut',
-        });
-        this.scene.tweens.add({
-            targets: [this.armRight],
-            y: this.armRight.y - offsetY,
-            duration: 500,
-            ease: 'Sine.easeOut',
-        });
-        this.scene.tweens.add({
-            targets: [this.legLeft],
-            y: this.legLeft.y - offsetY,
-            duration: 500,
-            ease: 'Sine.easeOut',
-        });
-        this.scene.tweens.add({
-            targets: [this.legRight],
-            y: this.legRight.y - offsetY,
-            duration: 500,
-            ease: 'Sine.easeOut',
-        });
-        this.scene.tweens.add({
-            targets: [this.body],
-            y: this.body.y - offsetY,
-            duration: 500,
-            ease: 'Sine.easeOut',
-        });
-        this.scene.tweens.add({
-            targets: [this.head],
-            y: this.head.y - offsetY,
-            duration: 500,
-            ease: 'Sine.easeOut',
-        });
-    }
-
-    land() {
-        const offsetY = 0;
-        this.isInAnim = true;
-        this.scene.tweens.add({
-            targets: [this.armLeft],
-            y: this.armLeft.y - offsetY,
-            duration: 500,
-            ease: 'Sine.easeOut',
-            onComplete: () => {
-                this.isInAnim = false;
-            },
-        });
-        this.scene.tweens.add({
-            targets: [this.armRight],
-            y: this.armRight.y - offsetY,
-            duration: 500,
-            ease: 'Sine.easeOut',
-        });
-        this.scene.tweens.add({
-            targets: [this.legLeft],
-            y: this.legLeft.y - offsetY,
-            duration: 500,
-            ease: 'Sine.easeOut',
-        });
-        this.scene.tweens.add({
-            targets: [this.legRight],
-            y: this.legRight.y - offsetY,
-            duration: 500,
-            ease: 'Sine.easeOut',
-        });
-        this.scene.tweens.add({
-            targets: [this.body],
-            y: this.body.y - offsetY,
-            duration: 500,
-            ease: 'Sine.easeOut',
-        });
-        this.scene.tweens.add({
-            targets: [this.head],
-            y: this.head.y - offsetY,
-            duration: 500,
-            ease: 'Sine.easeOut',
-        });
-    }
-
-    dig() {
-        this.isInAnim = true;
-        this.scene.tweens.add({
-            targets: [this.armLeft],
-            y: this.y,
-            duration: 700,
-            ease: 'Sine.easeIn',
-            onComplete: () => {
-                this.armLeft.setVisible(false);
-            }
-        });
-        this.scene.tweens.add({
-            targets: [this.armRight],
-            y: this.y,
-            duration: 700,
-            ease: 'Sine.easeIn',
-            onComplete: () => {
-                this.armRight.setVisible(false);
-            }
-        });
-        this.scene.tweens.add({
-            targets: [this.legLeft],
-            y: this.y,
-            duration: 500,
-            ease: 'Sine.easeIn',
-            onComplete: () => {
-                this.legLeft.setVisible(false);
-            }
-        });
-        this.scene.tweens.add({
-            targets: [this.legRight],
-            y: this.y,
-            duration: 500,
-            ease: 'Sine.easeIn',
-            onComplete: () => {
-                this.legRight.setVisible(false);
-            }
-        });
-        this.scene.tweens.add({
-            targets: [this.body],
-            y: this.y,
-            duration: 600,
-            ease: 'Sine.easeIn',
-            onComplete: () => {
-                this.body.setVisible(false);
-            }
-        });
-        this.scene.tweens.add({
-            targets: [this.head],
-            y: this.y,
-            duration: 800,
-            ease: 'Sine.easeIn',
-            onComplete: () => {
-                this.head.setVisible(false);
-                if (this.dirt) {
-                    this.dirt.destroy();
-                    this.dirt = null;
-                }
-                this.isInAnim = false;
-                this.offsetY = +48 * this.scaleFactor;
-            },
-        });
-
-
-        // make dirt
-
-        this.dirt = this.scene.add.sprite(this.x, this.y, 'anime/dirt')
-            .setOrigin(0.5, 0.5).setScale(this.scaleFactor)
-            .setDepth(this.baseDepth + 14);
-    }
-
-
-    // 换位置后出土
-    getOut() {
-        this.isInAnim = true;
-        // 全部visible
-        this.body.setVisible(true);
-        this.head.setVisible(true);
-        this.armLeft.setVisible(true);
-        this.armRight.setVisible(true);
-        this.legLeft.setVisible(true);
-        this.legRight.setVisible(true);
-
-
-        this.scene.tweens.add({
-            targets: [this.armLeft],
-            y: this.armLeft.y - this.offsetY,
-            duration: 700,
-            ease: 'Sine.easeOut',
-        });
-        this.scene.tweens.add({
-            targets: [this.armRight],
-            y: this.armRight.y - this.offsetY,
-            duration: 700,
-            ease: 'Sine.easeOut',
-        });
-        this.scene.tweens.add({
-            targets: [this.legLeft],
-            y: this.legLeft.y - this.offsetY,
-            duration: 800,
-            ease: 'Sine.easeOut',
-        });
-        this.scene.tweens.add({
-            targets: [this.legRight],
-            y: this.legRight.y - this.offsetY,
-            duration: 800,
-            ease: 'Sine.easeOut',
-            onComplete: () => {
-                this.offsetY = 0;
-                this.isInAnim = false;
-                if (this.dirt) {
-                    this.dirt.destroy();
-                    this.dirt = null;
-                }
-
-            },
-        });
-        this.scene.tweens.add({
-            targets: [this.body],
-            y: this.body.y - this.offsetY,
-            duration: 600,
-            ease: 'Sine.easeOut',
-        });
-        this.scene.tweens.add({
-            targets: [this.head],
-            y: this.head.y - this.offsetY,
-            duration: 500,
-            ease: 'Sine.easeOut',
-        });
-
-        this.dirt = this.scene.add.sprite(this.x, this.y, 'anime/dirt')
-            .setOrigin(0.5, 0.5).setScale(this.scaleFactor)
-            .setDepth(this.baseDepth + 14);
-    }
 }
 
 
