@@ -22,6 +22,7 @@ import IObstacle from '../presets/obstacle/IObstacle';
 import { generateStageScript } from '../game_events/stage_script';
 import seedrandom from 'seedrandom';
 import DepthManager from '../../utils/depth';
+import IMutant from '../presets/zombie_mutant/mutant';
 
 
 
@@ -143,6 +144,7 @@ export class Game extends Scene {
         // 创建分组
         IPlant.InitGroup(this);
         IZombie.InitGroup(this);
+        IMutant.InitGroup(this, IZombie.Group);
         IBullet.InitGroup(this);
         IExpolsion.InitGroup(this);
         ILaser.InitGroup(this);

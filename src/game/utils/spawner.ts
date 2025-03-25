@@ -1,4 +1,4 @@
-import { Wave } from "../models/IRecord";
+import { IMonster, Wave } from "../models/IRecord";
 import { IZombie } from "../models/IZombie";
 import { Game } from "../scenes/Game";
 import { MonsterFactoryMap } from "../presets";
@@ -11,7 +11,7 @@ import { EventBus } from "../EventBus";
 
 export default class MonsterSpawner {
     public scene: Game;
-    monstered: Map<string, Array<IZombie | IGolem | IObstacle>> = new Map();
+    monstered: Map<string, Array<IMonster>> = new Map();
     private SeedRandom: seedrandom.PRNG;
 
     private waves: Wave[];
@@ -312,7 +312,7 @@ export default class MonsterSpawner {
             return false;
         }
         for (let i = 0; i < rows.length; i++) {
-            if (rows[i].x > x && rows[i].x - x < maxDistance) {
+            if (rows[i].getX() > x && rows[i].getX() - x < maxDistance) {
                 return true;
             }
         }
@@ -334,8 +334,8 @@ export default class MonsterSpawner {
 
 
     // 怪物生成注册
-    registerMonster(monster: IZombie | IGolem | IObstacle) {
-        const key = `${monster.row}`;
+    registerMonster(monster: IMonster) {
+        const key = `${monster.getRow()}`;
         if (!this.monstered.has(key)) {
             this.monstered.set(key, [monster]);
         } else {
@@ -344,8 +344,8 @@ export default class MonsterSpawner {
     }
 
     // 怪物注册销毁
-    registerDestroy(monster: IZombie | IGolem | IObstacle) {
-        const key = `${monster.row}`;
+    registerDestroy(monster: IMonster) {
+        const key = `${monster.getRow()}`;
         if (this.monstered.has(key)) {
             const list = this.monstered.get(key);
             if (list) {
@@ -358,10 +358,10 @@ export default class MonsterSpawner {
                 }
             }
         }
-        console.log('monster destroyed', monster.waveID);
-        if (monster.waveID >= 0) {
+        console.log('monster destroyed', monster.getWaveID());
+        if (monster.getWaveID() >= 0) {
             this.killed_count++;
-            this.onKilledCountUpdate(monster.waveID); // 非召唤物僵尸(waveId >= 0)杀了才计数
+            this.onKilledCountUpdate(monster.getWaveID()); // 非召唤物僵尸(waveId >= 0)杀了才计数
         }
     }
 

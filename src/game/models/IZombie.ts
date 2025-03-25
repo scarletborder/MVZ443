@@ -78,6 +78,16 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite implements IMonster {
         return this.isInVoid;
     }
 
+    getWaveID(): number {
+        return this.waveID;
+    }
+
+    getRow(): number {
+        return this.row;
+    }
+
+    getX: () => number = () => this.x;
+
     // 没必要以后特定texture了,因为反正设置了不可见
     constructor(scene: Game, col: number, row: number, texture: string, waveID: number,
         newZombieAnim: (scene: Game, x: number, y: number) => IZombieAnim) {

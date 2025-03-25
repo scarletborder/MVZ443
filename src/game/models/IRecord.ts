@@ -30,6 +30,10 @@ export interface IMonster {
     getIsFlying: () => boolean;
     getIsInVoid: () => boolean;
     takeDamage: (damage: number, projectileType?: "bullet" | "laser" | "explosion" | "trajectory") => void;
+
+    getWaveID: () => number;
+    getRow: () => number;
+    getX: () => number;
 }
 
 export interface MIRecord {

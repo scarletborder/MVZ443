@@ -157,7 +157,14 @@ export class Preloader extends Scene {
         this.load.image('sprWardenArm', 'sprite/warden_golem/sprWardenArm.png');
         this.load.image('sprWardenLeg', 'sprite/warden_golem/sprWardenLeg.png');
 
-        
+        this.load.spritesheet('sprMutantBody', 'sprite/mutant/body.png',
+            { frameWidth: 52, frameHeight: 89 });
+        this.load.image('sprMutantHead', 'sprite/mutant/head.png');
+        this.load.image('sprMutantUpperArm', 'sprite/mutant/upperArm.png');
+        this.load.image('sprMutantLowerArm', 'sprite/mutant/lowerArm.png');
+        this.load.image('sprMutantUpperLeg', 'sprite/mutant/upperLeg.png');
+        this.load.image('sprMutantLowerLeg', 'sprite/mutant/lowerLeg.png');
+        this.load.image('sprMutantCover', 'sprite/mutant/cover.png');
     }
 
     // 加载bgimg和bgm 

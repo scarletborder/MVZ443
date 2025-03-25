@@ -54,6 +54,17 @@ export default class IGolem extends Phaser.Physics.Arcade.Sprite implements IMon
         return false;
     }
 
+    getWaveID(): number {
+        return this.waveID;
+    }
+
+    getRow(): number {
+        return this.row;
+    }
+
+    getX: () => number = () => this.x;
+    
+
     constructor(scene: Game, col: number, row: number, waveID: number, animProps: GolemAnimProps) {
         IGolem.GridClan = scene.gardener.GridClan;
         const { x, y } = scene.positionCalc.getZombieBottomCenter(col, row);

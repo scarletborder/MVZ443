@@ -2,6 +2,7 @@ import { sign } from "crypto";
 import DepthManager from "../../../utils/depth";
 import { Game } from "../../scenes/Game";
 import MonsterSpawner from "../../utils/spawner";
+import { IMonster } from "../../models/IRecord";
 
 
 export type ObstacleParam = {
@@ -9,7 +10,7 @@ export type ObstacleParam = {
     onDestory: (scene: Game, x: number, y: number) => void;
 };
 
-export default class IObstacle extends Phaser.Physics.Arcade.Sprite {
+export default class IObstacle extends Phaser.Physics.Arcade.Sprite implements IMonster {
     scene: Game;
     spawner: MonsterSpawner;
     public static Group: Phaser.Physics.Arcade.Group;
@@ -27,6 +28,24 @@ export default class IObstacle extends Phaser.Physics.Arcade.Sprite {
             runChildUpdate: true
         });
     }
+
+    getIsFlying(): boolean {
+        return false;
+    }
+
+    getIsInVoid(): boolean {
+        return false;
+    }
+
+    getWaveID(): number {
+        return this.waveID;
+    }
+
+    getRow(): number {
+        return this.row;
+    }
+
+    getX: () => number = () => this.x;
 
     constructor(scene: Game, x: number, y: number, waveID: number, texture: string, param: ObstacleParam) {
         super(scene, x, y, texture, 0);
