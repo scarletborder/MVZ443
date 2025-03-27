@@ -20,27 +20,29 @@ const defaultAnimProps = (scene: Game, x: number, y: number): IMutantAnim => {
 
 function NewMutant(scene: Game, x: number, y: number, waveID: number): IMutant {
     const zomb = new IMutant(scene, x, y, waveID, defaultAnimProps);
-    zomb.anim.setHandObject('attach/sign')
+    zomb.SetHealthFirsty(120);
+    zomb.anim.setHandObject('attach/sign');
     zomb.anim.startLegSwing();
     zomb.anim.startArmSwing();
     zomb.anim.startBodySwing();
-    scene.time.delayedCall(1000, () => {
-        zomb.anim.startThrow()
-        scene.time.delayedCall(2000, () => {
-            zomb.setVelocityX(0);
-            zomb.anim.stopArmSwing()
-            zomb.anim.stopLegSwing()
-            zomb.anim.restoreLegsToInitial()
-            zomb.anim.startLeftArmSmash()
-            scene.time.delayedCall(2000, () => {
-                zomb.setVelocityX(-20 * scene.positionCalc.scaleFactor);
-                zomb.anim.startLegSwing()
-            });
+    // scene.time.delayedCall(1000, () => {
+    //     zomb.anim.startThrow()
+    //     scene.time.delayedCall(2000, () => {
+    //         zomb.setVelocityX(0);
+    //         zomb.anim.stopArmSwing()
+    //         zomb.anim.stopLegSwing()
+    //         zomb.anim.restoreLegsToInitial()
+    //         zomb.anim.startLeftArmSmash()
+    //         scene.time.delayedCall(2000, () => {
+    //             zomb.setVelocityX(-20 * scene.positionCalc.scaleFactor);
+    //             zomb.anim.startLegSwing()
+    //         });
 
-        })
+    //     })
 
-    })
-    zomb.setVelocityX(-20 * scene.positionCalc.scaleFactor);
+    // })
+    zomb.SetSpeedFirstly(20);
+    zomb.StartMove();
     return zomb;
 }
 

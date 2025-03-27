@@ -144,6 +144,8 @@ export class IZombie extends IMonster {
     // 移动相关
     // catchDebuff函数，处理增加debuff
     public catchDebuff(debuff: 'slow' | 'frozen', duration: number) {
+        if (this.health <= 0 || !this.game) return;
+
         if (debuff === 'slow') {
             console.log('slow');
             this.zombieAnim.startSlowEffect();
@@ -165,7 +167,7 @@ export class IZombie extends IMonster {
             if (!this.IsFrozen) {
                 this.speed = this.originalSpeed * 0.6;
                 if (!this.attackingPlant)
-                    this.setVelocityX(-this.speed);
+                    this.StartMove();
             }
         } else if (debuff === 'frozen') {
             console.log('frozen');
@@ -194,6 +196,8 @@ export class IZombie extends IMonster {
 
     // 修改 removeDebuff，处理 frozen 移除后的恢复逻辑
     removeDebuff(debuff: 'slow' | 'frozen') {
+        if (this.health <= 0 || !this.game) return;
+
         if (debuff === 'slow') {
             if (this.debuffs[debuff]) {
                 delete this.debuffs[debuff];
@@ -202,7 +206,7 @@ export class IZombie extends IMonster {
             if (!this.IsFrozen) {
                 this.speed = this.originalSpeed;
                 if (!this.attackingPlant)
-                    this.setVelocityX(-this.speed);
+                    this.StartMove();
             }
             this.zombieAnim.stopSlowEffect();
         } else if (debuff === 'frozen') {
@@ -224,6 +228,8 @@ export class IZombie extends IMonster {
     }
 
     public StartMove() {
+        if (this.IsFrozen) return;
+        if (this.IsStop) return;
         this.setVelocityX(-this.speed);
         this.zombieAnim.startLegSwing();
     }
