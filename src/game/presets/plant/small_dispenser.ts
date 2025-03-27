@@ -65,7 +65,7 @@ function NewDispenser(scene: Game, col: number, row: number, level: number): IPl
 function shootSnowBall(scene: Game, shooter: IPlant, maxDistance: number) {
     const level = shooter.level;
     //  根据等级略微提高伤害
-    const damage = GetIncValue(34, level, 1.3);
+    const damage = GetIncValue(30, level, 1.3);
 
 
     if (!shooter.isSleeping) {
