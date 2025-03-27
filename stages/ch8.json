@@ -1,0 +1,24 @@
+{
+    "comment": "1-8, Rainbow dragon Cave,体验版",
+    "rows": 6,
+    "type": 1,
+    "stageScript": {
+        "first_wave_id": 0,
+        "total_waves": 114514,
+        "difficulty_limit": 114514,
+        "phase1_end": 8,
+        "phase2_end": 28,
+        "dayOrNight": 2,
+        "flagWaves": [ 10, 25, 35 ],
+        "waterWays": [ 2, 3 ],
+        "AllowedMobs": [ 15 ],
+        "globalRatio": [ [ 0, 1.0 ], [ 21, 1.3 ] ],
+        "bossInsert": [ [ 34, 13 ] ]
+    },
+    "onWin": {
+        "unLock": [ ],
+        "unLockPlant": [ ]
+    },
+    "energy": 5555,
+    "rewards": [ ]
+}

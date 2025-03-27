@@ -3,10 +3,10 @@
     "rows": 5,
     "type": 1,
     "stageScript": {
-        "first_wave_id": 3,
+        "first_wave_id": 1,
         "total_waves": 36,
-        "difficulty_limit": 52,
-        "phase1_end": 6,
+        "difficulty_limit": 48,
+        "phase1_end": 11,
         "phase2_end": 28,
         "dayOrNight": 2,
         "flagWaves": [ 10, 25, 35 ],
