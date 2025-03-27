@@ -90,7 +90,7 @@ function NewPumpkin(scene: Game, col: number, row: number, level: number): IPlan
 
 function shootLaser(scene: Game, shooter: IPlant) {
     const level = shooter.level;
-    const damage = GetIncValue(45, 1.5, level);
+    const damage = GetIncValue(42, 1.35, level);
 
     if (level < 9) {
         const laser = NewLaserByGrid(scene, shooter.col, shooter.row,

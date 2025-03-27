@@ -16,7 +16,7 @@
         "bossInsert": [ ]
     },
     "onWin": {
-        "unLock": [ 2 ],
+        "unLock": [ 3 ],
         "unLockPlant": [ 5 ]
     },
     "energy": 50,

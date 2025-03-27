@@ -93,7 +93,7 @@ function NewPumpkinWan(scene: Game, col: number, row: number, level: number): IP
 
 function shootLaser(scene: Game, shooter: IPlant) {
     const level = shooter.level;
-    const damage = GetIncValue(45, 1.4, level);
+    const damage = GetIncValue(42, 1.35, level);
     const start = (level >= 9 ? 2.6 : 1.6);
     const distance = (level >= 9 ? 5.2 : 3.2);
 
