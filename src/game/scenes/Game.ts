@@ -234,8 +234,9 @@ export class Game extends Scene {
         EventBus.emit('current-scene-ready', this);
         this.myID = myID;
         this.params.setInitialEnergy(this.stageData.energy);
-        this.monsterSpawner.startWave();
         AddMapFunction(this);
+
+        this.monsterSpawner.startWave();
         EventBus.emit('boss-dead');
         EventBus.emit('game-progress', { progress: 0 });
         // 销毁waitText

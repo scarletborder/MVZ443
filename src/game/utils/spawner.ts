@@ -326,11 +326,14 @@ export default class MonsterSpawner {
     // 权重随机选择函数
     weightedRandomRow(weights: number[], mid: number): number {
         const couldSpawnMonster = (row: number, mid: number): boolean => {
-            const terrain = this.scene.gridProperty[row][0];
+            const gridClan = this.scene.gardener.GridClan;
             // Example additional rules
-            if (terrain !== 'ground' && (GroundOnlyZombie.includes(mid))) return false;  // Ground only
-            if (terrain !== 'water' && (WaterOnlyZombie.includes(mid))) return false;   // No water for specific monster
-            if (terrain !== 'sky' && (SkyOnlyZombie.includes(mid))) return false;       // No sky for specific monster
+            if ((GroundOnlyZombie.includes(mid))
+                && gridClan.RowPropertyRatio(row, 'ground') > 0.6) return false;  // Ground only
+            if ((WaterOnlyZombie.includes(mid))
+                && gridClan.RowPropertyRatio(row, 'water') > 0.6) return false;   // No water for specific monster
+            if ((SkyOnlyZombie.includes(mid))
+                && gridClan.RowPropertyRatio(row, 'void') > 0.6) return false;       // No sky for specific monster
             return true;
         };
 

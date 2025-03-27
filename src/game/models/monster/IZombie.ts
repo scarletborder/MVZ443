@@ -54,6 +54,18 @@ export class IZombie extends IMonster {
         this.setDepth();
 
         this.zombieAnim.startLegSwing();
+
+        // 免费的附带物体之,boat
+        // 如果某一行有一个water,那么就有boat
+        if (scene.gardener.GridClan.RowPropertyRatio(row, 'water') > 0) {
+            const boat = scene.physics.add.sprite(x, y, 'attach/boat');
+            boat.setScale(scene.positionCalc.scaleFactor * 1.4).setOrigin(0.5, 1);
+            boat.setFrame(0);
+            boat.debugShowBody = false;
+            scene.physics.add.existing(boat);
+            boat.setVisible(true);
+            this.attachSprites.set('boat', boat);
+        }
     }
 
     // 设置生命值并监听

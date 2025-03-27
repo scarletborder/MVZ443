@@ -5,6 +5,7 @@
     "stageScript": {
         "first_wave_id": 0,
         "total_waves": 26,
+        "base_difficulty": 0,
         "difficulty_limit": 29,
         "phase1_end": 12,
         "phase2_end": 20,

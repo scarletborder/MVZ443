@@ -30,6 +30,10 @@ const boatPid = 100;
 
 export default class GridClan {
     gardener: Gardener;
+
+    private __hasCaculatedGridPropertyRatio: boolean = false;
+    private __gridPropertyRatio: Array<Record<'ground' | 'water' | 'void', number>>;
+
     constructor(gardener: Gardener) {
         this.gardener = gardener;
     }
@@ -280,5 +284,35 @@ export default class GridClan {
             return true;
         }
         return false;
+    }
+
+    // 调查row的含水/void率
+    public RowPropertyRatio(row: number, property: 'ground' | 'water' | 'void'): number {
+        const calc = (row: number, property: 'ground' | 'water' | 'void') => {
+            let count = 0;
+            let sum = 0;
+            for (let col = 0; col < this.gardener.positionCalc.Col_Number; col++) {
+                sum++;
+                if (this.gardener.scene.gridProperty[row][col] === property) {
+                    count++;
+                }
+            }
+            return count / sum;
+        }
+
+        if (!this.__hasCaculatedGridPropertyRatio) {
+            // 为所有row计算一遍
+            this.__gridPropertyRatio = [];
+            for (let i = 0; i < this.gardener.positionCalc.Row_Number; i++) {
+                this.__gridPropertyRatio.push({
+                    ground: calc(i, 'ground'),
+                    water: calc(i, 'water'),
+                    void: calc(i, 'void')
+                })
+            }
+            this.__hasCaculatedGridPropertyRatio = true;
+        }
+
+        return this.__gridPropertyRatio[row][property];
     }
 }

@@ -16,6 +16,13 @@ export class StageScript {
     total_waves: number = 40;
 
     /**
+     * 基础难度
+     * 
+     * 所有的难度计算的最终值都会无条件加上这个值
+     */
+    base_difficulty: number = 0;
+
+    /**
      * 最终波数达到的难度上限
      * 
      * 请参考 `tools/spawner/difficulty.csv`
@@ -169,6 +176,7 @@ export function generateStageScript(stage: StageScript, random: seedrandom.PRNG)
     // ---------------- 全局参数 ----------------
     const first_wave_id = stage.first_wave_id;
     const total_waves = stage.total_waves;
+    const base_difficulty = stage.base_difficulty;
     const difficulty_limit = stage.difficulty_limit;
     const phase1_end = stage.phase1_end;
     const phase2_end = stage.phase2_end;
@@ -291,12 +299,13 @@ export function generateStageScript(stage: StageScript, random: seedrandom.PRNG)
     }
 
     function difficulty(wave_idx: number): number {
+        const base = base_difficulty * get_wave_ratio(wave_idx);
         if (wave_idx < _phase1_end) {
-            return difficulty_early(wave_idx) * get_wave_ratio(wave_idx);
+            return difficulty_early(wave_idx) * get_wave_ratio(wave_idx) + base;
         } else if (wave_idx < _phase2_end) {
-            return difficulty_mid(wave_idx) * get_wave_ratio(wave_idx);
+            return difficulty_mid(wave_idx) * get_wave_ratio(wave_idx) + base;
         } else {
-            return difficulty_late(wave_idx) * get_wave_ratio(wave_idx);
+            return difficulty_late(wave_idx) * get_wave_ratio(wave_idx) + base;
         }
     }
 

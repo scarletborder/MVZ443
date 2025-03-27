@@ -5,6 +5,12 @@ import { EventBus } from "../EventBus";
 import { Game } from "../scenes/Game";
 import { StageDataRecords } from "../utils/loader";
 
+/**
+ * 为关卡加入特殊的地图设定
+ * 
+ * 你甚至可以在这里修改wave,修改定时地图变更等
+ * @param game 
+ */
 export default function AddMapFunction(game: Game) {
     const stageId = game.params.level; // stage id
     const chapterId = StageDataRecords[stageId].chapterID; // chapter id
