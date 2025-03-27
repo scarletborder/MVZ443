@@ -165,5 +165,30 @@ export class IMonster extends Phaser.Physics.Arcade.Sprite {
         super.destroy(fromScene);
     }
 
+    playDeathSmokeAnimation(depth: number) {
+        if (!this.game) return;
+        const game = this.game;
+
+        // 创建临时的白烟 sprite
+        const smoke = game.add.sprite(this.x, this.y, 'anime/death_smoke');
+        smoke.setDisplaySize(this.displayWidth, this.displayWidth);
+        smoke.setOrigin(0.5, 1).setDepth(depth);  // 设置底部为中心
+
+        // 确保动画只创建一次（全局定义）
+        if (!game.anims.exists('death_smoke')) {
+            game.anims.create({
+                key: 'death_smoke',
+                frames: game.anims.generateFrameNumbers('anime/death_smoke', { start: 0, end: 7 }),
+                frameRate: 16,  // 0.5秒播放8帧
+                repeat: 0
+            });
+        }
+        // 播放动画并销毁
+        smoke.play('death_smoke');
+        smoke.once('animationcomplete', () => {
+            smoke.destroy();    // 销毁临时白烟
+        });
+    }
+
 
 }

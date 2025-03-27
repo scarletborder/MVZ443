@@ -6,7 +6,7 @@ import DepthManager from "../../../utils/depth";
 import { IPlant } from "../../models/IPlant";
 import { IMonster } from "../../models/monster/IMonster";
 import { Game } from "../../scenes/Game";
-import IMutantAnim, { MutantAnimProps } from "../../sprite/zombie_mutant";
+import IMutantAnim from "../../sprite/zombie_mutant";
 
 export default class IMutant extends IMonster {
     // 动画
@@ -239,6 +239,10 @@ export default class IMutant extends IMonster {
             this.anim.highlight();
         }
         super.setHealth(health);
+
+        // TODO: 根据血量不同显示不同的贴图状态
+        // 要加上各个肢体的
+
         if (this.health <= 0) {
             this.destoryZombie();
         }
@@ -258,6 +262,8 @@ export default class IMutant extends IMonster {
     destoryZombie() {
         // Ensure we don't proceed if this object is already destroyed or undefined
         if (!this || !this.game) return;
+
+        this.playDeathSmokeAnimation(this.baseDepth);
 
         const scene = this.game;
         const anim = this.anim;

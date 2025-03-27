@@ -20,7 +20,8 @@ const defaultAnimProps = (scene: Game, x: number, y: number): IMutantAnim => {
 
 function NewMutant(scene: Game, x: number, y: number, waveID: number): IMutant {
     const zomb = new IMutant(scene, x, y, waveID, defaultAnimProps);
-    zomb.SetHealthFirsty(120);
+    zomb.SetHealthFirsty(3000);
+    zomb.SetSpeedFirstly(18);
     zomb.anim.setHandObject('attach/sign');
     zomb.anim.startLegSwing();
     zomb.anim.startArmSwing();
@@ -41,7 +42,6 @@ function NewMutant(scene: Game, x: number, y: number, waveID: number): IMutant {
     //     })
 
     // })
-    zomb.SetSpeedFirstly(20);
     zomb.StartMove();
     return zomb;
 }
@@ -52,8 +52,8 @@ export const MutantRecord: MIRecord = {
     NewFunction: NewMutant,
     texture: 'zombie/zombie',
     weight(waveId?: number) {
-        return 1;
+        return 1500;
     },
-    level: 7,
-    leastWaveID: 10,
+    level: 8,
+    leastWaveID: 15,
 }

@@ -58,13 +58,24 @@ export class IZombie extends IMonster {
         // 免费的附带物体之,boat
         // 如果某一行有一个water,那么就有boat
         if (scene.gardener.GridClan.RowPropertyRatio(row, 'water') > 0) {
-            const boat = scene.physics.add.sprite(x, y, 'attach/boat');
-            boat.setScale(scene.positionCalc.scaleFactor * 1.4).setOrigin(0.5, 1);
-            boat.setFrame(0);
-            boat.debugShowBody = false;
-            scene.physics.add.existing(boat);
-            boat.setVisible(true);
-            this.attachSprites.set('boat', boat);
+            const boaty = y + 15 * scene.positionCalc.scaleFactor;
+            const boat1 = scene.physics.add.sprite(x, boaty, 'attach/boat1');
+            boat1.setScale(scene.positionCalc.scaleFactor * 1.4).setOrigin(0.5, 1);
+            boat1.setFrame(0);
+            boat1.debugShowBody = false;
+            scene.physics.add.existing(boat1);
+            boat1.setVisible(true);
+            this.attachSprites.set('boat1', boat1);
+            boat1.setDepth(this.baseDepth - 2);
+
+            const boat2 = scene.physics.add.sprite(x, boaty, 'attach/boat2');
+            boat2.setScale(scene.positionCalc.scaleFactor * 1.4).setOrigin(0.5, 1);
+            boat2.setFrame(0);
+            boat2.debugShowBody = false;
+            scene.physics.add.existing(boat2);
+            boat2.setVisible(true);
+            this.attachSprites.set('boat2', boat2);
+            boat2.setDepth(this.baseDepth + 10);
         }
     }
 
@@ -303,28 +314,6 @@ export class IZombie extends IMonster {
                 }
             });
         }
-    }
-
-    playDeathSmokeAnimation(depth: number) {
-        // 创建临时的白烟 sprite
-        const smoke = this.game.add.sprite(this.x, this.y, 'anime/death_smoke');
-        smoke.setDisplaySize(this.displayWidth, this.displayWidth);
-        smoke.setOrigin(0.5, 1).setDepth(depth);  // 设置底部为中心
-
-        // 确保动画只创建一次（全局定义）
-        if (!this.game.anims.exists('death_smoke')) {
-            this.game.anims.create({
-                key: 'death_smoke',
-                frames: this.game.anims.generateFrameNumbers('anime/death_smoke', { start: 0, end: 7 }),
-                frameRate: 16,  // 0.5秒播放8帧
-                repeat: 0
-            });
-        }
-        // 播放动画并销毁
-        smoke.play('death_smoke');
-        smoke.once('animationcomplete', () => {
-            smoke.destroy();    // 销毁临时白烟
-        });
     }
 
     carryStar() {

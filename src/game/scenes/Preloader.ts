@@ -97,6 +97,9 @@ export class Preloader extends Scene {
 
         this.load.image('attach/sign', 'attach/sign.png');
 
+        this.load.image('attach/boat1', 'attach/sprBoat/sprBoat_0.png');
+        this.load.image('attach/boat2', 'attach/sprBoat/sprBoat_1.png');
+
 
     }
 
