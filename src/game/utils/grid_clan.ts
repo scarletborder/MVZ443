@@ -7,6 +7,7 @@ import { IPlant } from "../models/IPlant";
 import MagicPowderRecord from "../presets/plant/magic_powder";
 import Gardener from "./gardener";
 
+// 特殊的植物种植规则
 export const SHIELD_PLANT: number[] = []; // 护盾植物,铲除上方时铲除,可以和任何非护盾器械兼容
 export const GROUND_ONLY_PLANT: number[] = [4];// 地面植物,只能种植在地面
 export const WATER_ONLY_PLANT: number[] = [6];// 水中植物,只能种植在水中
@@ -14,7 +15,14 @@ export const SKY_ONLY_PLANT: number[] = [100]; // 船只,只能种植在天空�
 export const POWDER_PLANT: number[] = [10]; // 粉尘植物,可以随意种植
 export const ADVANCED_PLANT: Map<number, number> = new Map([
     [11, 9]
-]); // 高级植物,只能种植在基座上, [ad - basic]
+]); // 高级植物,只能种植在基座上, [advancedPid - basicPid]
+
+
+// 特殊的怪物放置规则
+export const GroundOnlyZombie: number[] = [15]; // 只能放置在地面的僵尸
+export const WaterOnlyZombie: number[] = []; // 只能放置在水中的僵尸
+export const SkyOnlyZombie: number[] = []; // 只能放置在天空的僵尸
+
 
 const lilyPid = 6;
 const boatPid = 100;

@@ -1,8 +1,6 @@
-import { sign } from "crypto";
 import DepthManager from "../../../utils/depth";
 import { Game } from "../../scenes/Game";
 import MonsterSpawner from "../../utils/spawner";
-import { IMonster } from "../../models/IRecord";
 
 
 export type ObstacleParam = {
@@ -10,7 +8,7 @@ export type ObstacleParam = {
     onDestory: (scene: Game, x: number, y: number) => void;
 };
 
-export default class IObstacle extends Phaser.Physics.Arcade.Sprite implements IMonster {
+export default class IObstacle extends Phaser.Physics.Arcade.Sprite {
     scene: Game;
     spawner: MonsterSpawner;
     public static Group: Phaser.Physics.Arcade.Group;

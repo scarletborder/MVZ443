@@ -1,99 +1,27 @@
-import { SECKILL } from "../../../public/constants";
-import DepthManager from "../../utils/depth";
-import { Game } from "../scenes/Game";
-import GolemAnim, { GolemAnimProps } from "../sprite/golem";
-import GridClan from "../utils/grid_clan";
-import MonsterSpawner from "../utils/spawner";
-import { IMonster } from "./IRecord";
+import { SECKILL } from "../../../../public/constants";
+import DepthManager from "../../../utils/depth";
+import { Game } from "../../scenes/Game";
+import GolemAnim, { GolemAnimProps } from "../../sprite/golem";
+import { IMonster } from "./IMonster";
 
-function setDisplay(spr: IGolem, scene: Game) {
-    let size = scene.positionCalc.getZombieBodySize();
-    spr.setBodySize(size.sizeX, size.sizeY * 0.9);
-    size = scene.positionCalc.getZombieDisplaySize();
-    spr.setDisplaySize(size.sizeX, size.sizeY);
-    spr.setOffset(10 * scene.positionCalc.scaleFactor, + 20 * scene.positionCalc.scaleFactor);
-    spr.setOrigin(0.5, 1);
-}
 
-export default class IGolem extends Phaser.Physics.Arcade.Sprite implements IMonster {
-    public static Group: Phaser.Physics.Arcade.Group;
-    static GridClan: GridClan;
-
-    // 全局
-    protected Spawner: MonsterSpawner;
-    public game: Game;
-    waveID: number;
-    Rank: 'normal' | 'elite' | 'boss' = 'normal'; // 等级
-
+export default class IGolem extends IMonster {
     anim: GolemAnim;
     baseDepth: number;
 
-    // 属性
-    maxHealth: number = 300;
-    health: number = 300;
-    originalSpeed: number;
-    speed: number;
-
-    col: number;
-    row: number;
-
     isDying: boolean = false;
 
-    static InitGroup(scene: Game) {
-        IGolem.Group = scene.physics.add.group({
-            classType: IGolem,
-            runChildUpdate: true,
-        });
-    }
-
-    getIsFlying(): boolean {
-        return false;
-    }
-
-    getIsInVoid(): boolean {
-        return false;
-    }
-
-    getWaveID(): number {
-        return this.waveID;
-    }
-
-    getRow(): number {
-        return this.row;
-    }
-
-    getX: () => number = () => this.x;
-    
 
     constructor(scene: Game, col: number, row: number, waveID: number, animProps: GolemAnimProps) {
-        IGolem.GridClan = scene.gardener.GridClan;
-        const { x, y } = scene.positionCalc.getZombieBottomCenter(col, row);
+        super(scene, col, row, waveID);
 
-        const placeholder = 'zombie/zombie';
-        super(scene, x, y, placeholder, 0);
-
-        this.game = scene;
-        this.waveID = waveID;
-        this.Spawner = scene.monsterSpawner;
-        this.setVisible(false);
-
+        const x = this.x;
+        const y = this.y;
 
         this.anim = new GolemAnim(scene, x, y, animProps);
         this.baseDepth = DepthManager.getZombieBasicDepth(row);
-        this.SetSpeedFirstly(10 * scene.positionCalc.scaleFactor);
+        this.SetSpeedFirstly(10);
         this.setDepth();
-
-        scene.add.existing(this);
-        scene.physics.add.existing(this);
-
-        setDisplay(this, scene);
-
-        this.col = col;
-        this.row = row;
-
-        IGolem.Group.add(this);
-        this.Spawner = scene.monsterSpawner;
-        this.Spawner.registerMonster(this);
     }
 
     public takeDamage(amount: number, projectileType?: "bullet" | "laser" | "explosion" | "trajectory"): void {
@@ -101,13 +29,15 @@ export default class IGolem extends Phaser.Physics.Arcade.Sprite implements IMon
         if (amount >= SECKILL / 2) {
             amount = 1000;
         }
-        this.setHealth(this.health - amount);
+        super.takeDamage(amount, projectileType);
     }
 
     // 设置生命值并监听
     public setHealth(value: number) {
         if (value < this.health) this.anim.highlight();
-        this.health = value;
+
+        super.setHealth(value);
+
         if (this.health <= 0) {
             this.destoryZombie();
         }
@@ -218,10 +148,6 @@ export default class IGolem extends Phaser.Physics.Arcade.Sprite implements IMon
         super.destroy(fromScene);
     }
 
-    SetSpeedFirstly(speed: number) {
-        this.originalSpeed = speed;
-        this.speed = speed;
-    }
 
     update() {
         if (!this.isDying && !this.anim.isInAnim) {

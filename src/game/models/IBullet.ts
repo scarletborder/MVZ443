@@ -1,10 +1,8 @@
 import DepthManager from "../../utils/depth";
 import IObstacle from "../presets/obstacle/IObstacle";
-import IMutant from "../presets/zombie_mutant/mutant";
 import { Game } from "../scenes/Game";
-import IGolem from "./IGolem";
 import { IPlant } from "./IPlant";
-import { IZombie } from "./IZombie";
+import { IMonster } from "./monster/IMonster";
 
 export class IBullet extends Phaser.Physics.Arcade.Sprite {
     public ScreenWidth: number = 1024;
@@ -61,16 +59,17 @@ export class IBullet extends Phaser.Physics.Arcade.Sprite {
         this.setDepth(this.baseDepth);
     }
 
-    CollideObject(object: IZombie | IPlant | IGolem | IObstacle | IMutant) {
+    CollideObject(object: IMonster | IPlant | IObstacle) {
         const damage = this.damage;
         if (this.hasPenetrated.has(object) || this.penetrate <= 0) return; // 已经穿透过了
 
-        if (object instanceof IZombie && this.targetCamp === 'zombie') {
+        if (object instanceof IMonster && this.targetCamp === 'zombie') {
             // 如果子弹的实际位置不再天上打不到isFlying
-            if (object.isFlying && !this.isFlying) return;
+            if (object.getIsFlying() && !this.isFlying) return;
 
-            // 如果isInVoid,也打不到
-            if (object.isInVoid) return;
+            // 如果isInVoid,并且该格子 没有 被照亮,也打不到
+            // TODO: isInVoid的逻辑将在gardener中写,种植发光器械可以赋予周边的grid以 glow 状态
+            if (object.isInVoid && (!false)) return;
 
             // 可以打
             // 穿透次数和销毁
@@ -109,19 +108,6 @@ export class IBullet extends Phaser.Physics.Arcade.Sprite {
             // TODO: 僵尸子弹直接摧毁
             this.penetrate = 0;
             this.destroy();
-        } else if (object instanceof IGolem && this.targetCamp === 'zombie') {
-            this.penetrate--;
-            this.hasPenetrated.add(object);// 记录穿透过的对象
-
-            if (this.penetrate <= 0) {
-                this.destroy();
-            }
-            object.takeDamage(damage, "bullet");
-
-            // 如果穿透后还存在穿透次数,则伤害降低
-            if (this && this.penetrate && this.penetrate > 0) {
-                this.damage = Math.floor(this.damage * this.penetratedPunish);
-            }
         } else if (object instanceof IObstacle && this.targetCamp === 'zombie') {
             this.penetrate--;
             this.hasPenetrated.add(object);// 记录穿透过的对象
@@ -135,8 +121,6 @@ export class IBullet extends Phaser.Physics.Arcade.Sprite {
             if (this && this.penetrate && this.penetrate > 0) {
                 this.damage = Math.floor(this.damage * this.penetratedPunish);
             }
-        } else if (object instanceof IMutant && this.targetCamp === 'zombie') {
-
         }
     }
 

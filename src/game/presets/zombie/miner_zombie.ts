@@ -2,7 +2,7 @@
 
 import { IPlant } from "../../models/IPlant";
 import { MIRecord } from "../../models/IRecord";
-import { IZombie } from "../../models/IZombie";
+import { IZombie } from "../../models/monster/IZombie";
 import { Game } from "../../scenes/Game";
 import { EnhancedZombie } from "./zombie";
 
@@ -15,7 +15,7 @@ class MinerZombie extends EnhancedZombie {
 
     constructor(scene: Game, col: number, row: number, texture: string, waveID: number) {
         super(scene, col, row, texture, waveID);
-        this.SetSpeedFirstly(20 * scene.positionCalc.scaleFactor);
+        this.SetSpeedFirstly(20);
         this.axeDurability = 24;
         this.attackDamage = 60;
         this.game = scene;

@@ -1,5 +1,5 @@
 import { MIRecord } from "../../models/IRecord";
-import { IZombie } from "../../models/IZombie";
+import { IZombie } from "../../models/monster/IZombie";
 import { Game } from "../../scenes/Game";
 import { EnhancedZombie } from "./zombie";
 
@@ -10,7 +10,7 @@ class CapZombie extends EnhancedZombie {
     constructor(scene: Game, col: number, row: number, texture: string, waveID: number) {
         super(scene, col, row, texture, waveID);
         this.waveID = waveID;
-        this.SetSpeedFirstly(20 * scene.positionCalc.scaleFactor);
+        this.SetSpeedFirstly(20);
         this.capHealth = 370;
 
         const topX = this.x + this.offsetX;

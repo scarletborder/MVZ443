@@ -3,9 +3,8 @@
 import DepthManager from "../../utils/depth";
 import IObstacle from "../presets/obstacle/IObstacle";
 import { Game } from "../scenes/Game";
-import IGolem from "./IGolem";
 import { IPlant } from "./IPlant";
-import { IZombie } from "./IZombie";
+import { IMonster } from "./monster/IMonster";
 
 type _Typedebuffs = 'slow' | 'frozen' | null;
 
@@ -103,16 +102,17 @@ export class ILaser extends Phaser.GameObjects.Rectangle {
         });
     }
 
-    CollideObject(object: IZombie | IPlant | IGolem | IObstacle) {
+    CollideObject(object: IMonster | IPlant | IObstacle) {
         const damage = this.damage;
         if (this.hasPenetrated.has(object)) return; // 已经穿透过了
 
-        if (object instanceof IZombie && this.targetCamp === 'zombie') {
+        if (object instanceof IMonster && this.targetCamp === 'zombie') {
             // 如果激光的实际位置不再天上打不到isFlying
-            if (object.isFlying && !this.isFlying) return;
+            if (object.getIsFlying() && !this.isFlying) return;
 
-            // 如果isInVoid,也打不到
-            if (object.isInVoid) return;
+            // 如果isInVoid,并且该格子 没有 被照亮,也打不到
+            // TODO: isInVoid的逻辑将在gardener中写,种植发光器械可以赋予周边的grid以 glow 状态
+            if (object.isInVoid && (!false)) return;
 
 
             // 可以打
@@ -128,12 +128,6 @@ export class ILaser extends Phaser.GameObjects.Rectangle {
             this.hasPenetrated.add(object); // 记录穿透过的对象
 
             object.takeDamage(damage);
-        } else if (object instanceof IGolem && this.targetCamp === 'zombie') {
-            this.hasPenetrated.add(object); // 记录穿透过的对象
-            object.takeDamage(damage, "laser");
-        } else if (object instanceof IObstacle && this.targetCamp === 'zombie') {
-            this.hasPenetrated.add(object); // 记录穿透过的对象
-            object.takeDamage(damage, "laser");
         }
     }
 }

@@ -1,46 +1,19 @@
-import DepthManager from "../../utils/depth";
-import { EventBus } from "../EventBus";
-import { Game } from "../scenes/Game";
-import IZombieAnim from "../sprite/zombie";
-import GridClan from "../utils/grid_clan";
-import MonsterSpawner from "../utils/spawner";
-import { IPlant } from "./IPlant";
-import { IMonster } from "./IRecord";
-
-function setDisplay(spr: IZombie, scene: Game) {
-    let size = scene.positionCalc.getZombieBodySize();
-    spr.setBodySize(size.sizeX, size.sizeY * 0.9);
-    size = scene.positionCalc.getZombieDisplaySize();
-    spr.setDisplaySize(size.sizeX, size.sizeY);
-    spr.setOffset(10 * scene.positionCalc.scaleFactor, + 20 * scene.positionCalc.scaleFactor);
-    spr.setOrigin(0.5, 1);
-}
-
-export class IZombie extends Phaser.Physics.Arcade.Sprite implements IMonster {
-    public static Group: Phaser.Physics.Arcade.Group;
-    static GridClan: GridClan;
-
-    // 全局
-    protected Spawner: MonsterSpawner;
-    game: Game;
-    waveID: number;
-    Rank: 'normal' | 'elite' | 'boss' = 'normal'; // 等级
-
-    // 私有
-    // 属性
-    public health: number;
-    public originalSpeed: number; // 默认情况速度,(静态值,不受buff影响)
-    public speed: number; // 当前速度
-    private debuffs: { [key: string]: { remaining: number, timer: Phaser.Time.TimerEvent } } = {};  // 存储每个debuff的剩余时间和定时器
+import DepthManager from "../../../utils/depth";
+import { EventBus } from "../../EventBus";
+import { Game } from "../../scenes/Game";
+import IZombieAnim from "../../sprite/zombie";
+import GridClan from "../../utils/grid_clan";
+import MonsterSpawner from "../../utils/spawner";
+import { IPlant } from "../IPlant";
+import { IMonster } from "./IMonster";
 
 
+
+export class IZombie extends IMonster {
     public IsFrozen: boolean = false;
     public IsStop: boolean = false;
 
-    public isFlying: boolean = false; // 是否在天上
-    public isInVoid: boolean = false; // 是否是灵魂状态
 
-    private carryStarShards: boolean = false; // 是否携带星之碎片
     // 是否是召唤的僵尸(击杀不计数), waveID < 0 即召唤物
 
     // 攻击
@@ -53,8 +26,6 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite implements IMonster {
     public zombieAnim: IZombieAnim;
     public attachSprites: Map<string, Phaser.Physics.Arcade.Sprite> = new Map();
 
-    public col: number;
-    public row: number;
 
     // 动画
     isDying: boolean = false; // 是否正在死亡
@@ -63,73 +34,32 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite implements IMonster {
 
     baseDepth: number
 
-    static InitGroup(scene: Game) {
-        this.Group = scene.physics.add.group({
-            classType: IZombie,
-            runChildUpdate: true
-        });
-    }
-
-    getIsFlying(): boolean {
-        return this.isFlying;
-    }
-
-    getIsInVoid(): boolean {
-        return this.isInVoid;
-    }
-
-    getWaveID(): number {
-        return this.waveID;
-    }
-
-    getRow(): number {
-        return this.row;
-    }
-
-    getX: () => number = () => this.x;
 
     // 没必要以后特定texture了,因为反正设置了不可见
     constructor(scene: Game, col: number, row: number, texture: string, waveID: number,
         newZombieAnim: (scene: Game, x: number, y: number) => IZombieAnim) {
-        IZombie.GridClan = scene.gardener.GridClan;
+        super(scene, col, row, waveID); // 没必要以后特定texture了,因为反正设置了不可见
 
-        const { x, y } = scene.positionCalc.getZombieBottomCenter(col, row);
-        super(scene, x, y, texture, 0); // 没必要以后特定texture了,因为反正设置了不可见
+        this.couldCarryStarShards = true;
 
-        this.waveID = waveID;
-        this.game = scene;
-        this.setVisible(false);
+        const x = this.x;
+        const y = this.y;
 
         this.zombieAnim = newZombieAnim(scene, x, y);
         this.offsetX = Math.random() * scene.positionCalc.GRID_SIZEX / 5;
         this.offsetY = Math.random() * scene.positionCalc.GRID_SIZEY / 10;
         this.baseDepth = DepthManager.getZombieBasicDepth(row, this.offsetY);
-        this.originalSpeed = 20 * scene.positionCalc.scaleFactor;
+
+        this.SetSpeedFirstly(20);
         this.setDepth();
 
         this.zombieAnim.startLegSwing();
-
-        scene.add.existing(this);
-        scene.physics.add.existing(this);
-
-        setDisplay(this, scene);
-
-        this.col = col;
-        this.row = row;
-        this.isDying = false;
-        this.isFlying = false;
-        this.isInVoid = false;
-        this.health = 20; // 默认血量
-
-        IZombie.Group.add(this, true);
-        this.Spawner = scene.monsterSpawner;
-        this.Spawner.registerMonster(this);
     }
 
     // 设置生命值并监听
     public setHealth(value: number) {
         if (value < this.health) this.zombieAnim.highlight();
-        this.health = value;
+        super.setHealth(value);
         if (this.health <= 0) {
             this.destroyZombie();
         }
@@ -137,7 +67,8 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite implements IMonster {
 
     // 受到伤害
     public takeDamage(amount: number, projectileType?: "bullet" | "laser" | "explosion" | "trajectory") {
-        this.setHealth(this.health - amount);
+        const realDamage = amount;
+        super.takeDamage(realDamage, projectileType);
     }
 
     // 开始攻击植物
@@ -250,7 +181,7 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite implements IMonster {
     }
 
     // 修改 removeDebuff，处理 frozen 移除后的恢复逻辑
-    private removeDebuff(debuff: 'slow' | 'frozen') {
+    removeDebuff(debuff: 'slow' | 'frozen') {
         if (debuff === 'slow') {
             if (this.debuffs[debuff]) {
                 delete this.debuffs[debuff];
@@ -278,26 +209,6 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite implements IMonster {
             if (!this.attackingPlant)
                 this.StartMove();
         }
-    }
-
-    /**
-     * 根据debuff名字判断是否有debuff,如果有返回对应剩余时间(否则为0)
-     * @param name debuff name
-     * @returns 剩余时间(0表示没有debuff)
-     */
-    public hasDebuff(name: 'slow' | 'frozen'): number {
-        try {
-            if (this.debuffs[name]) {
-                this.debuffs[name].remaining = Math.max(this.debuffs[name].timer.getRemaining(), 0);
-            }
-        } finally {
-            return this.debuffs[name]?.remaining || 0;
-        }
-    }
-
-    public SetSpeedFirstly(speed: number) {
-        this.originalSpeed = speed;
-        this.speed = speed;
     }
 
     public StartMove() {
@@ -400,9 +311,8 @@ export class IZombie extends Phaser.Physics.Arcade.Sprite implements IMonster {
 
     carryStar() {
         // 携带星之碎片
-        this.carryStarShards = true;
         this.zombieAnim.twinkle();
-
+        super.carryStar();
     }
 
     // 覆盖 destroy 方法，确保清理

@@ -1,6 +1,6 @@
 // src/game/sprites/NewZombie.ts
 import { Game } from '../../scenes/Game';
-import { IZombie } from '../../models/IZombie';
+import { IZombie } from '../../models/monster/IZombie';
 import { MIRecord } from '../../models/IRecord';
 import { newNormalSkeletonAnim } from '../../sprite/normal_zombie';
 
@@ -9,7 +9,7 @@ export class EnhancedSkeleton extends IZombie {
     constructor(scene: Game, col: number, row: number, texture: string, waveID: number) {
         super(scene, col, row, texture, waveID, newNormalSkeletonAnim);
         this.health = 250;
-        this.SetSpeedFirstly(20 * scene.positionCalc.scaleFactor);
+        this.SetSpeedFirstly(20);
     }
 
 

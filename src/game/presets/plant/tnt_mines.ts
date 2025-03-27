@@ -6,10 +6,10 @@ import { GetDecValue } from "../../../utils/numbervalue";
 import { IExpolsion } from "../../models/IExplosion";
 import { IPlant } from "../../models/IPlant";
 import { IRecord } from "../../models/IRecord";
-import { IZombie } from "../../models/IZombie";
 import { Game } from "../../scenes/Game";
 import { StartArc } from "../../utils/arc";
 import createDirtOut from "../../sprite/dirt_out";
+import { IMonster } from "../../models/monster/IMonster";
 
 class _TntMines extends IPlant {
     game: Game;
@@ -123,11 +123,11 @@ class _TntMines extends IPlant {
         }
     }
 
-    public takeDamage(amount: number, zombie: IZombie): void {
+    public takeDamage(amount: number, monster: IMonster): void {
         if (!this.game) return;
 
         if (this.isBuried) {
-            super.takeDamage(amount, zombie);
+            super.takeDamage(amount, monster);
         } else {
             const rightDistance = this.level >= 9 ? 1.5 : 1;
             new IExpolsion(this.game, this.x, this.row, {

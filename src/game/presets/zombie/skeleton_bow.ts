@@ -1,7 +1,7 @@
 // 在pickaxe 耐久用完之前,伤害非常高
 
 import { MIRecord } from "../../models/IRecord";
-import { IZombie } from "../../models/IZombie";
+import { IZombie } from "../../models/monster/IZombie";
 import { Game } from "../../scenes/Game";
 import NewArrow from "../bullet/arrow";
 import { EnhancedSkeleton } from "./skeleton";
@@ -14,7 +14,7 @@ class MinerZombie extends EnhancedSkeleton {
 
     constructor(scene: Game, col: number, row: number, texture: string, waveID: number) {
         super(scene, col, row, texture, waveID);
-        this.SetSpeedFirstly(20 * scene.positionCalc.scaleFactor);
+        this.SetSpeedFirstly(20);
         this.attackDamage = 25;
 
         // 添加pickaxe attackment

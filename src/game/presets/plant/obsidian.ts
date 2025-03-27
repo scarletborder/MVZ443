@@ -3,8 +3,7 @@ import { item } from "../../../components/shop/types";
 import i18n from "../../../utils/i18n";
 import { GetIncValue } from "../../../utils/numbervalue";
 import { IPlant } from "../../models/IPlant";
-import { IRecord } from "../../models/IRecord";
-import { IZombie } from "../../models/IZombie";
+import { IMonster, IRecord } from "../../models/IRecord";
 import { Game } from "../../scenes/Game";
 
 class Obsidian extends IPlant {
@@ -25,14 +24,14 @@ class Obsidian extends IPlant {
         }
     }
 
-    public takeDamage(amount: number, zombie: IZombie): void {
+    public takeDamage(amount: number, monster: IMonster): void {
         const shieldRatio = (this.level >= 9) ? 0.8 : 1;
         if (this.shieldHealth > amount) {
             this.shieldHealth -= amount * shieldRatio;
         } else {
             amount -= Math.ceil(this.shieldHealth * (1 / shieldRatio));
             this.shieldHealth = 0;
-            super.takeDamage(amount, zombie);
+            super.takeDamage(amount, monster);
         }
     }
 

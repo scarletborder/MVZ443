@@ -5,8 +5,8 @@ import { GetIncValue } from "../../../utils/numbervalue";
 import { EventBus } from "../../EventBus";
 import { NewLaserByGrid } from "../../models/ILaser";
 import { IPlant } from "../../models/IPlant";
-import { IRecord } from "../../models/IRecord";
-import { IZombie } from "../../models/IZombie";
+import { IMonster, IRecord } from "../../models/IRecord";
+import { IZombie } from "../../models/monster/IZombie";
 import { Game } from "../../scenes/Game";
 
 class MagicPowder extends IPlant {
@@ -31,7 +31,7 @@ class MagicPowder extends IPlant {
         });
     }
 
-    public takeDamage(amount: number, zombie?: IZombie | null): void { }
+    public takeDamage(amount: number, monster: IMonster): void { }
 
     createRects() {
         const depth = this.baseDepth + 1;

@@ -1,7 +1,8 @@
 import DepthManager from "../../utils/depth";
 import { Game } from "../scenes/Game";
 import Gardener from "../utils/gardener";
-import { IZombie } from "./IZombie";
+import { IMonster } from "./monster/IMonster";
+import { IZombie } from "./monster/IZombie";
 
 export class IPlant extends Phaser.Physics.Arcade.Sprite {
     scene: Game;
@@ -92,7 +93,7 @@ export class IPlant extends Phaser.Physics.Arcade.Sprite {
      * @param amount update offset number
      * @param zombie 造成伤害的来源,未来可能拓展如反叛等
      */
-    public takeDamage(amount: number, zombie: IZombie | null = null) {
+    public takeDamage(amount: number, zombie: IMonster | null = null) {
         this.setHealth(this.health - amount);
     }
 

@@ -1,5 +1,4 @@
 import seedrandom from "seedrandom";
-import IGolem from "../../models/IGolem";
 import { MIRecord } from "../../models/IRecord";
 import { Game } from "../../scenes/Game";
 import { ObsidianGolemAnimProps } from "../../sprite/normal_golem";
@@ -9,6 +8,7 @@ import { SECKILL } from "../../../../public/constants";
 import { MonsterFactoryMap } from "..";
 import { EventBus } from "../../EventBus";
 import { generateBossWaveScript } from "../../game_events/stage_script";
+import IGolem from "../../models/monster/IGolem";
 
 const soliderID = 11;
 
@@ -22,10 +22,9 @@ class ObsidianGolem extends IGolem {
         //TODO: 构造前,elite spawner会emit 给progress bar, boss战斗开始
         const animProps = ObsidianGolemAnimProps;
         super(scene, col, row, waveID, animProps);
-        this.maxHealth = 12000;
-        this.health = this.maxHealth;
+        this.SetHealthFirsty(12000);
 
-        this.SetSpeedFirstly(25 * scene.positionCalc.scaleFactor);
+        this.SetSpeedFirstly(25);
         this.random = seedrandom.alea(String(scene.seed * 7));
 
         this.setVelocityX(-this.speed);

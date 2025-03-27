@@ -141,7 +141,7 @@ function cost(level?: number): number {
 }
 
 function cooldownTime(level?: number): number {
-    return GetDecValue(48, 0.85, level || 1);
+    return GetDecValue(50, 0.85, level || 1);
 }
 
 

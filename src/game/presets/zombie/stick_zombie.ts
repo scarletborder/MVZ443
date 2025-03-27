@@ -3,7 +3,7 @@
 // 在持有stick的时候,第一次碰撞将会触发翻越动画,并忽视这个器械,同时isFly= true,状态结束后false
 import { IPlant } from "../../models/IPlant";
 import { MIRecord } from "../../models/IRecord";
-import { IZombie } from "../../models/IZombie";
+import { IZombie } from "../../models/monster/IZombie";
 import { Game } from "../../scenes/Game";
 import { EnhancedZombie } from "./zombie";
 
@@ -14,7 +14,7 @@ class StickZombie extends EnhancedZombie {
 
     constructor(scene: Game, col: number, row: number, texture: string, waveID: number) {
         super(scene, col, row, texture, waveID);
-        this.SetSpeedFirstly(40 * scene.positionCalc.scaleFactor);
+        this.SetSpeedFirstly(40);
         this.hasStick = true;
         this.attackDamage = 30;
         this.game = scene;
@@ -55,7 +55,7 @@ class StickZombie extends EnhancedZombie {
             this.isFlying = false;
             this.attachSprites.get('stick')?.setVisible(false);
             // 减速
-            this.SetSpeedFirstly(20 * this.game.positionCalc.scaleFactor);
+            this.SetSpeedFirstly(20);
             if (this.health > 0 && !this.IsFrozen) {
                 this.setVelocityX(-this.speed);
             }

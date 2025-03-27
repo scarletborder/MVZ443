@@ -1,17 +1,21 @@
-import { IMonster, Wave } from "../models/IRecord";
-import { IZombie } from "../models/IZombie";
+import { Wave } from "../models/IRecord";
+import { IZombie } from "../models/monster/IZombie";
 import { Game } from "../scenes/Game";
 import { MonsterFactoryMap } from "../presets";
 import seedrandom from 'seedrandom';
-import IGolem from "../models/IGolem";
-import IObstacle from "../presets/obstacle/IObstacle";
 import { EventBus } from "../EventBus";
+import { GroundOnlyZombie, SkyOnlyZombie, WaterOnlyZombie } from "./grid_clan";
+import { IMonster } from "../models/monster/IMonster";
+import IObstacle from "../presets/obstacle/IObstacle";
 // 出怪实例
 // 使用一个刷怪表进行实例化
 
 export default class MonsterSpawner {
     public scene: Game;
-    monstered: Map<string, Array<IMonster>> = new Map();
+    monstered: Map<string, Array<IMonster | IObstacle>> = new Map();
+    // Add to class properties
+    private rowCache: Map<number, number[]> = new Map();  // mid -> valid rows
+
     private SeedRandom: seedrandom.PRNG;
 
     private waves: Wave[];
@@ -246,12 +250,12 @@ export default class MonsterSpawner {
             repeat: totalMonsters.length - 1,
             callback: () => {
                 const monsterData = totalMonsters[monsterIndex];
-                const row = this.weightedRandomRow(rowWeights);
+                const row = this.weightedRandomRow(rowWeights, monsterData.mid);
                 const newFunc = MonsterFactoryMap[monsterData.mid].NewFunction;
                 const zomb = newFunc(this.scene, colMax, row, wave.waveId);
 
                 // 2. 如果当前怪物索引在carryingMonsters中，则设置携带starShards
-                if (carryingMonsters.has(monsterIndex) && zomb instanceof IZombie) {
+                if (carryingMonsters.has(monsterIndex) && zomb.couldCarryStarShards) {
                     zomb.carryStar();
                 }
 
@@ -320,21 +324,54 @@ export default class MonsterSpawner {
     }
 
     // 权重随机选择函数
-    weightedRandomRow(weights: number[]): number {
-        const totalWeight = weights.reduce((acc, w) => acc + w, 0);
+    weightedRandomRow(weights: number[], mid: number): number {
+        const couldSpawnMonster = (row: number, mid: number): boolean => {
+            const terrain = this.scene.gridProperty[row][0];
+            // Example additional rules
+            if (terrain !== 'ground' && (GroundOnlyZombie.includes(mid))) return false;  // Ground only
+            if (terrain !== 'water' && (WaterOnlyZombie.includes(mid))) return false;   // No water for specific monster
+            if (terrain !== 'sky' && (SkyOnlyZombie.includes(mid))) return false;       // No sky for specific monster
+            return true;
+        };
+
+        // Create a copy of weights to modify
+        const weightsCopy = [...weights];
+
+        // Adjust weights based on spawn possibility
+        for (let i = 0; i < weightsCopy.length; i++) {
+            if (!couldSpawnMonster(i, mid)) {
+                weightsCopy[i] = 0;
+            }
+        }
+
+        const totalWeight = weightsCopy.reduce((acc, w) => acc + w, 0);
+
+        // If all valid weights are zero, fallback to original weights with spawn check
+        if (totalWeight === 0) {
+            const validRows = weights
+                .map((_, index) => index)
+                .filter(row => couldSpawnMonster(row, mid));
+
+            if (validRows.length === 0) {
+                console.error('No valid rows to spawn monster!');
+                return 0; // Fallback to first row
+            }
+            return validRows[Math.floor(this.SeedRandom() * validRows.length)];
+        }
+
         let randomNum = this.SeedRandom() * totalWeight;
-        for (let i = 0; i < weights.length; i++) {
-            if (randomNum < weights[i]) {
+        for (let i = 0; i < weightsCopy.length; i++) {
+            if (randomNum < weightsCopy[i]) {
                 return i;
             }
-            randomNum -= weights[i];
+            randomNum -= weightsCopy[i];
         }
-        return weights.length - 1;
+        return weightsCopy.length - 1;
     }
 
 
     // 怪物生成注册
-    registerMonster(monster: IMonster) {
+    registerMonster(monster: IMonster | IObstacle) {
         const key = `${monster.getRow()}`;
         if (!this.monstered.has(key)) {
             this.monstered.set(key, [monster]);
@@ -344,7 +381,7 @@ export default class MonsterSpawner {
     }
 
     // 怪物注册销毁
-    registerDestroy(monster: IMonster) {
+    registerDestroy(monster: IMonster | IObstacle) {
         const key = `${monster.getRow()}`;
         if (this.monstered.has(key)) {
             const list = this.monstered.get(key);

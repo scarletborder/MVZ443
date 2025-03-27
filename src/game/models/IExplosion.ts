@@ -1,8 +1,7 @@
 import IObstacle from "../presets/obstacle/IObstacle";
 import { Game } from "../scenes/Game";
-import IGolem from "./IGolem";
 import { IPlant } from "./IPlant";
-import { IZombie } from "./IZombie";
+import { IMonster } from "./monster/IMonster";
 
 export type explosionParams = {
     damage: number,
@@ -154,17 +153,14 @@ export class IExpolsion extends Phaser.Physics.Arcade.Sprite {
         });
     }
 
-    CollideObject(object: IZombie | IPlant | IGolem | IObstacle) {
+    CollideObject(object: IMonster | IPlant | IObstacle) {
         if (this.hasAttacked.has(object)) return;
         // 炸僵尸
-        if (object instanceof IZombie && this.targetCamp === 'zombie') {
+        if (object instanceof IMonster && this.targetCamp === 'zombie') {
             object.takeDamage(this.damage, 'explosion');
             this.hasAttacked.add(object);
         } else if (object instanceof IPlant && this.targetCamp === 'plant') {
             object.takeDamage(this.damage, null);
-            this.hasAttacked.add(object);
-        } else if (object instanceof IGolem && this.targetCamp === 'zombie') {
-            object.takeDamage(this.damage, 'explosion');
             this.hasAttacked.add(object);
         } else if (object instanceof IObstacle && this.targetCamp === 'zombie') {
             object.takeDamage(this.damage, 'explosion');

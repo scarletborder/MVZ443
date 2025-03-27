@@ -1,5 +1,5 @@
 import { MIRecord } from "../../models/IRecord";
-import { IZombie } from "../../models/IZombie";
+import { IZombie } from "../../models/monster/IZombie";
 import { Game } from "../../scenes/Game";
 import { EnhancedZombie } from "./zombie";
 
@@ -12,7 +12,7 @@ class TurtleZombie extends EnhancedZombie {
         super(scene, col, row, texture, waveID);
         this.waveID = waveID;
         this.scaleFactor = scene.positionCalc.scaleFactor;
-        this.SetSpeedFirstly(20 * this.scaleFactor);
+        this.SetSpeedFirstly(20);
         this.capHealth = 370;
 
         const topX = this.x + this.offsetX;
@@ -39,7 +39,7 @@ class TurtleZombie extends EnhancedZombie {
             this.capHealth = 0;
 
             // 加速
-            this.SetSpeedFirstly(30 * this.scaleFactor);
+            this.SetSpeedFirstly(30);
             if (!this.attackingPlant && !this.IsFrozen && this.hasDebuff('slow') === 0) {
                 this.StartMove();
             }

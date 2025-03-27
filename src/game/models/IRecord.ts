@@ -1,9 +1,8 @@
 import { item } from "../../components/shop/types";
 import { StageScript } from "../game_events/stage_script";
 import { Game } from "../scenes/Game";
-import IGolem from "./IGolem";
 import { IPlant } from "./IPlant";
-import { IZombie } from "./IZombie";
+import { IMonster } from "./monster/IMonster";
 
 // plant
 export interface IRecord {
@@ -24,17 +23,6 @@ export interface IRecord {
     NextLevelStuff: (level: number) => item[],
 }
 
-
-// monster
-export interface IMonster {
-    getIsFlying: () => boolean;
-    getIsInVoid: () => boolean;
-    takeDamage: (damage: number, projectileType?: "bullet" | "laser" | "explosion" | "trajectory") => void;
-
-    getWaveID: () => number;
-    getRow: () => number;
-    getX: () => number;
-}
 
 export interface MIRecord {
     mid: number;

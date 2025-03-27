@@ -1,8 +1,7 @@
 import { SECKILL } from "../../../../public/constants";
 import { IBullet } from "../../models/IBullet";
-import IGolem from "../../models/IGolem";
 import { IPlant } from "../../models/IPlant";
-import { IZombie } from "../../models/IZombie";
+import { IMonster } from "../../models/monster/IMonster";
 import { Game } from "../../scenes/Game";
 import IObstacle from "../obstacle/IObstacle";
 
@@ -24,14 +23,14 @@ export default class MineCart extends IBullet {
 
     }
 
-    CollideObject(object: IZombie | IPlant | IObstacle | IGolem): void {
+    CollideObject(object: IMonster | IPlant | IObstacle): void {
         if (this.hasPenetrated.has(object)) {
             return;
         }
         this.hasPenetrated.add(object);
         const damage = SECKILL;
         // 矿车移动直到屏幕外边
-        if (object instanceof IZombie || object instanceof IObstacle || object instanceof IGolem) {
+        if (object instanceof IMonster || object instanceof IObstacle) {
             object.takeDamage(damage, 'bullet');
             // 如果没有速度,则设置速度
             if (this.body?.velocity.x === undefined || this.body?.velocity.x < 1) {

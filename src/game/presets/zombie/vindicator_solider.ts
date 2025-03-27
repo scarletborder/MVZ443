@@ -1,6 +1,6 @@
 // src/game/sprites/NewZombie.ts
 import { Game } from '../../scenes/Game';
-import { IZombie } from '../../models/IZombie';
+import { IZombie } from '../../models/monster/IZombie';
 import { MIRecord } from '../../models/IRecord';
 import { newNormalVindicatorAnim } from '../../sprite/normal_zombie';
 import { IPlant } from '../../models/IPlant';
@@ -18,7 +18,7 @@ export class EnhancedVindicator extends IZombie {
         this.health = 360;
         this.shieldHealth = EnhancedVindicator.maxShieldHealth;
         this.attackDamage = 32;
-        this.SetSpeedFirstly(15 * scene.positionCalc.scaleFactor);
+        this.SetSpeedFirstly(15);
 
         const topX = this.x + this.offsetX - scene.positionCalc.GRID_SIZEX * 0.42;
         const topY = this.y - scene.positionCalc.GRID_SIZEY * 0.7 + this.offsetY;

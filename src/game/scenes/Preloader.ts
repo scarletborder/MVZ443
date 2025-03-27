@@ -95,6 +95,8 @@ export class Preloader extends Scene {
         this.load.spritesheet('attach/hd_shield', `attach/hd_shield.png`,
             { frameWidth: 32, frameHeight: 32 });
 
+        this.load.image('attach/sign', 'attach/sign.png');
+
 
     }
 

@@ -1,5 +1,4 @@
 import seedrandom from "seedrandom";
-import IGolem from "../../models/IGolem";
 import { MIRecord } from "../../models/IRecord";
 import { Game } from "../../scenes/Game";
 import { ObsidianGolemAnimProps, WardenGolemAnimProps } from "../../sprite/normal_golem";
@@ -10,6 +9,7 @@ import { MonsterFactoryMap } from "..";
 import { EventBus } from "../../EventBus";
 import { NewLaserByGrid } from "../../models/ILaser";
 import { generateBossWaveScript } from "../../game_events/stage_script";
+import IGolem from "../../models/monster/IGolem";
 
 const minerID = 4;
 const helmetMinerID = 5;
@@ -25,10 +25,9 @@ class Warden extends IGolem {
         //TODO: 构造前,elite spawner会emit 给progress bar, boss战斗开始
         const animProps = WardenGolemAnimProps;
         super(scene, col, row, waveID, animProps);
-        this.maxHealth = 16000;
-        this.health = this.maxHealth;
+        this.SetHealthFirsty(16000);
 
-        this.SetSpeedFirstly(25 * scene.positionCalc.scaleFactor);
+        this.SetSpeedFirstly(25);
         this.random = seedrandom.alea(String(scene.seed * 19));
 
         this.setVelocityX(-this.speed);

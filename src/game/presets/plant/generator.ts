@@ -4,13 +4,14 @@ import i18n from "../../../utils/i18n";
 import { GetIncValue } from "../../../utils/numbervalue";
 import { INightPlant, IPlant } from "../../models/IPlant";
 import { IRecord } from "../../models/IRecord";
-import { IZombie } from "../../models/IZombie";
+import { IMonster } from "../../models/monster/IMonster";
 import { Game } from "../../scenes/Game";
 
 class Generator extends INightPlant {
     game: Game;
     constructor(scene: Game, col: number, row: number, level: number) {
         super(scene, col, row, GeneratorRecord.texture, GeneratorRecord.pid, level);
+        this.plant_height = 1;
         this.setHealthFirstly(GetIncValue(800, level, 1.25));
         this.game = scene;
     }
@@ -39,7 +40,7 @@ class Generator extends INightPlant {
         this.setHealth(this.maxhealth);
     }
 
-    public takeDamage(amount: number, zombie: IZombie): void {
+    public takeDamage(amount: number, zombie: IMonster): void {
         amount = Math.min(amount, this.health + 10);
         if (this.health <= 0 || !this.scene) return;
 

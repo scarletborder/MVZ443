@@ -53,6 +53,10 @@ export default class IMutantAnim {
         upperLegRight: number,
     };
 
+    //attach
+    handObject: Phaser.GameObjects.Sprite | null = null;
+    backObject: Phaser.GameObjects.Sprite | null = null;
+
     species: string;
 
     // size
@@ -77,6 +81,33 @@ export default class IMutantAnim {
         this.upperLegLeft.setScale(this.scaleFactor * 1);
         this.upperLegRight.setScale(this.scaleFactor * 1);
     }
+
+    setHandObject(key: string) {
+        if (!this.scene) return;
+        const scene = this.scene;
+        if (this.handObject) {
+            // 已经有,那么摧毁原先
+            this.handObject.destroy();
+            this.handObject = null;
+        }
+        // 无论如何都增加新的
+        const armLength = this.lowerArmLeft.displayWidth;
+        const rad = this.currentAngles.upperArmLeft * Math.PI / 180;
+        const originX = this.lowerArmLeft.x + armLength
+            * Math.cos(rad);
+        const originY = this.lowerArmLeft.y + armLength
+            * Math.sin(rad);
+
+        this.handObject = this.scene.add.sprite(originX, originY, key);
+        this.handObject.setOrigin(1, 0.5);
+
+        scene.physics.add.existing(this.handObject);
+        this.handObject.setVisible(true);
+
+        this.handObject.setDepth(this.baseDepth + 10);
+    }
+
+    setBackObject(key: string) { }
 
     constructor(scene: Game, x: number, y: number, props: MutantAnimProps) {
         x = x + this.wholeOffset[0] * scene.positionCalc.scaleFactor;
@@ -276,45 +307,87 @@ export default class IMutantAnim {
         this.lowerLegRight.y = this.upperLegRight.y + upperLegLengthRight * Math.cos(-radianUpperLegRight);
         this.lowerLegRight.setRotation(radianUpperLegRight - 1 / 2);
 
+        // 更新attachment
+        if (this.handObject) {
+            const armLength = this.lowerArmLeft.displayWidth;
+            const offsetRad = (this.currentAngles.upperArmLeft - 60) * Math.PI / 180;
+            const Rad = (this.currentAngles.upperArmLeft + 20) * Math.PI / 180;
+            const originX = this.lowerArmLeft.x + (armLength - 30 * this.scaleFactor)
+                * Math.cos(offsetRad);
+            const originY = this.lowerArmLeft.y + (armLength - 40 * this.scaleFactor)
+                * Math.sin(offsetRad);
+            this.handObject.x = originX;
+            this.handObject.y = originY;
+            this.handObject.setRotation(Rad);
+        }
+
         // 最后同步更新缩放
         this.setScale();
     }
 
     /**
-     * 启动腿部摇摆动画（上臂角度独立记录）
-     */
+  * 启动腿部摇摆动画：
+  * 先从当前角度平滑过渡到初始角度（左腿 -15°，右腿 15°），然后开始循环摆动
+  */
     startLegSwing() {
+        // 如果没有腿部动画在播放，则开始新动画
         if (!this.legLeftTween || !this.legLeftTween.isPlaying()) {
-            // 设置初始角度
-            this.currentAngles.upperLegLeft = -15;
-            this.currentAngles.upperLegRight = 15;
-            this.upperLegLeft.angle = -15;
-            this.upperLegRight.angle = 15;
-
+            // 第一步：平滑过渡到初始角度（左腿 -15°）
             this.legLeftTween = this.scene.tweens.add({
                 targets: this.upperLegLeft,
-                angle: { from: -5, to: 25 },
-                duration: 550,
-                yoyo: true,
-                repeat: -1,
+                angle: -15, // 过渡到初始角度 -15°
+                duration: 300, // 插值过渡时间 0.3 秒
                 ease: 'Sine.easeInOut',
                 onUpdate: () => {
                     this.currentAngles.upperLegLeft = this.upperLegLeft.angle;
+                },
+                onComplete: () => {
+                    // 确保角度同步
+                    this.currentAngles.upperLegLeft = -15;
+                    // 开启循环：在 -5° 与 25° 之间摇摆
+                    this.legLeftTween = this.scene.tweens.add({
+                        targets: this.upperLegLeft,
+                        angle: { from: 0, to: 30 },
+                        duration: 550,
+                        yoyo: true,
+                        repeat: -1,
+                        ease: 'Sine.easeInOut',
+                        onUpdate: () => {
+                            this.currentAngles.upperLegLeft = this.upperLegLeft.angle;
+                        }
+                    });
                 }
             });
+
+            // 第一步：平滑过渡到初始角度（右腿 15°）
             this.legRightTween = this.scene.tweens.add({
                 targets: this.upperLegRight,
-                angle: { from: 30, to: 0 },
-                duration: 550,
-                yoyo: true,
-                repeat: -1,
+                angle: 15, // 过渡到初始角度 15°
+                duration: 300, // 插值过渡时间 0.3 秒
                 ease: 'Sine.easeInOut',
                 onUpdate: () => {
                     this.currentAngles.upperLegRight = this.upperLegRight.angle;
+                },
+                onComplete: () => {
+                    // 确保角度同步
+                    this.currentAngles.upperLegRight = 15;
+                    // 开启循环：在 30° 与 0° 之间摇摆
+                    this.legRightTween = this.scene.tweens.add({
+                        targets: this.upperLegRight,
+                        angle: { from: 30, to: 0 },
+                        duration: 550,
+                        yoyo: true,
+                        repeat: -1,
+                        ease: 'Sine.easeInOut',
+                        onUpdate: () => {
+                            this.currentAngles.upperLegRight = this.upperLegRight.angle;
+                        }
+                    });
                 }
             });
         }
     }
+
 
     /**
      * 停止腿部摇摆动画，并将上腿角度重置为 0
@@ -325,32 +398,36 @@ export default class IMutantAnim {
             this.legRightTween?.stop();
             this.legLeftTween = null;
             this.legRightTween = null;
-            this.upperLegLeft.angle = 0;
-            this.upperLegRight.angle = 0;
-            this.currentAngles.upperLegLeft = 0;
-            this.currentAngles.upperLegRight = 0;
         }
     }
 
     /**
-     * 启动手臂摇摆动画：
-     * 只对上臂做 Tween，下臂和护手依赖上臂的角度计算位置
-     */
+    * 启动手臂摇摆动画：
+    * 先从当前角度平滑过渡到初始角度（左臂 -35°，右臂 35°），然后开始循环摆动
+    */
     startArmSwing() {
-        // 平滑过渡到起始角度 95°
+        // 如果已有手臂动画在播放，先停止
+        if (this.armTween && this.armTween.isPlaying()) {
+            this.armTween.stop();
+            this.armTween = null;
+        }
+
+        // 第一步：平滑过渡到初始角度（左臂 -35°）
         this.scene.tweens.add({
-            targets: [this.upperArmLeft],
-            angle: -45,
-            duration: 500,
+            targets: this.upperArmLeft,
+            angle: -35, // 过渡到初始角度 -35°
+            duration: 300, // 插值过渡时间 0.3 秒
             ease: 'Sine.easeInOut',
             onUpdate: () => {
                 this.currentAngles.upperArmLeft = this.upperArmLeft.angle;
             },
             onComplete: () => {
-                // 开启循环：在 95° 与 75° 之间摇摆
+                // 确保角度同步
+                this.currentAngles.upperArmLeft = -35;
+                // 开启循环：在 -35° 与 15° 之间摇摆
                 this.armTween = this.scene.tweens.add({
-                    targets: [this.upperArmLeft],
-                    angle: { from: -45, to: 15 },
+                    targets: this.upperArmLeft,
+                    angle: { from: -35, to: 15 },
                     duration: 650,
                     yoyo: true,
                     repeat: -1,
@@ -362,19 +439,22 @@ export default class IMutantAnim {
             }
         });
 
+        // 第一步：平滑过渡到初始角度（右臂 35°）
         this.scene.tweens.add({
-            targets: [this.upperArmRight],
-            angle: 45,
-            duration: 500,
+            targets: this.upperArmRight,
+            angle: 35, // 过渡到初始角度 35°
+            duration: 300, // 插值过渡时间 0.3 秒
             ease: 'Sine.easeInOut',
             onUpdate: () => {
                 this.currentAngles.upperArmRight = this.upperArmRight.angle;
             },
             onComplete: () => {
-                // 开启循环：在 95° 与 75° 之间摇摆
+                // 确保角度同步
+                this.currentAngles.upperArmRight = 35;
+                // 开启循环：在 35° 与 -15° 之间摇摆
                 this.armTween = this.scene.tweens.add({
-                    targets: [this.upperArmRight],
-                    angle: { from: 45, to: -15 },
+                    targets: this.upperArmRight,
+                    angle: { from: 35, to: -15 },
                     duration: 650,
                     yoyo: true,
                     repeat: -1,
@@ -386,6 +466,7 @@ export default class IMutantAnim {
             }
         });
     }
+
 
     /**
      * 停止手臂摇摆动画，先停止循环 Tween，再平滑过渡到静止角度 -60°
@@ -456,8 +537,8 @@ export default class IMutantAnim {
     }
 
     /**
-  * 启动投掷动画：右手慢速顺时针旋转 180°，再快速逆时针旋转 180°，头部旋转 10°，结束后恢复普通摆动
-  */
+     * 启动投掷动画：右手慢速顺时针旋转 180°，再快速逆时针旋转 180°，头部旋转 10°，结束后恢复普通摆动
+     */
     startThrow() {
         // 如果已有动画在播放，先停止
         if (this.armTween && this.armTween.isPlaying()) {
@@ -466,11 +547,11 @@ export default class IMutantAnim {
         }
 
         // 初始角度假设为 0°，记录当前角度
-        this.currentAngles.upperArmRight = 0;
-        this.upperArmRight.angle = 0;
+        // this.currentAngles.upperArmRight = 0;
+        // this.upperArmRight.angle = 0;
 
         // 第一阶段：右手慢速顺时针旋转 180°
-        this.scene.tweens.add({
+        this.armTween = this.scene.tweens.add({
             targets: this.upperArmRight,
             angle: 220, // 慢速顺时针旋转到 180°
             duration: 1200, // 慢速阶段 1 秒
@@ -510,6 +591,125 @@ export default class IMutantAnim {
             repeat: 0 // 只执行一次
         });
     }
+
+    /**
+ * 启动左手砸击动画：
+ * 左手平缓抬升到高处，然后快速向下砸击
+ */
+    /**
+ * 启动左手砸击动画：
+ * 左手从当前角度平缓过渡到 -60°，然后抬升到高处，再快速向下砸击
+ */
+    startLeftArmSmash() {
+        // 如果已有手臂动画在播放，先停止
+        if (this.armTween && this.armTween.isPlaying()) {
+            this.armTween.stop();
+            this.armTween = null;
+        }
+
+        // 第一步：从当前角度插值到初始角度 -60°
+        this.armTween = this.scene.tweens.add({
+            targets: this.upperArmLeft,
+            angle: -60, // 平缓过渡到 -60°（手臂自然下垂）
+            duration: 400, // 插值过渡时间 0.3 秒
+            ease: 'Sine.easeInOut', // 平滑过渡
+            onUpdate: () => {
+                this.currentAngles.upperArmLeft = this.upperArmLeft.angle;
+            },
+            onComplete: () => {
+                // 确保角度同步
+                this.currentAngles.upperArmLeft = -60;
+
+                // 第二步：平缓抬升到 30°（从 -60° 抬升 90°）
+                this.armTween = this.scene.tweens.add({
+                    targets: this.upperArmLeft,
+                    angle: 80, // 抬升到 30°（手臂接近水平上方）
+                    duration: 800, // 平缓抬升阶段 0.8 秒
+                    ease: 'Sine.easeInOut', // 平滑过渡
+                    onUpdate: () => {
+                        this.currentAngles.upperArmLeft = this.upperArmLeft.angle;
+                    },
+                    onComplete: () => {
+                        // 第三步：快速向下砸击到 -90°
+                        this.scene.tweens.add({
+                            targets: this.upperArmLeft,
+                            angle: -90, // 快速砸向下方（超过初始位置）
+                            duration: 300, // 快速砸击阶段 0.3 秒
+                            ease: 'Sine.easeOut', // 快速但自然减速
+                            onUpdate: () => {
+                                this.currentAngles.upperArmLeft = this.upperArmLeft.angle;
+                            },
+                            onComplete: () => {
+                                // 第四步：平缓回到初始角度 -60°
+                                this.scene.tweens.add({
+                                    targets: this.upperArmLeft,
+                                    angle: -60, // 回到初始角度
+                                    duration: 500, // 恢复阶段 0.5 秒
+                                    ease: 'Sine.easeInOut',
+                                    onUpdate: () => {
+                                        this.currentAngles.upperArmLeft = this.upperArmLeft.angle;
+                                    },
+                                    onComplete: () => {
+                                        // 可选：恢复普通手臂摆动
+                                        this.startArmSwing();
+                                    }
+                                });
+                            }
+                        });
+                    }
+                });
+            }
+        });
+    }
+
+    /**
+ * 恢复腿部到初始角度：
+ * 左右腿从当前角度平缓过渡到 0°（自然直立状态）
+ */
+    restoreLegsToInitial() {
+        // 如果已有腿部动画在播放，先停止
+        if (this.legLeftTween && this.legLeftTween.isPlaying()) {
+            this.legLeftTween.stop();
+            this.legLeftTween = null;
+        }
+        if (this.legRightTween && this.legRightTween.isPlaying()) {
+            this.legRightTween.stop();
+            this.legRightTween = null;
+        }
+
+        // 平缓过渡到初始角度 0°（左腿）
+        const targetLeftDegree = -10;
+        const targetRightDegree = 20;
+        this.legLeftTween = this.scene.tweens.add({
+            targets: this.upperLegLeft,
+            angle: targetLeftDegree, // 恢复到 0°（自然直立）
+            duration: 300, // 插值过渡时间 0.3 秒
+            ease: 'Sine.easeInOut', // 平滑过渡
+            onUpdate: () => {
+                this.currentAngles.upperLegLeft = this.upperLegLeft.angle;
+            },
+            onComplete: () => {
+                // 确保角度同步
+                this.currentAngles.upperLegLeft = targetLeftDegree;
+            }
+        });
+
+        // 平缓过渡到初始角度 0°（右腿）
+        this.legRightTween = this.scene.tweens.add({
+            targets: this.upperLegRight,
+            angle: targetRightDegree, // 恢复到 0°（自然直立）
+            duration: 300, // 插值过渡时间 0.3 秒
+            ease: 'Sine.easeInOut', // 平滑过渡
+            onUpdate: () => {
+                this.currentAngles.upperLegRight = this.upperLegRight.angle;
+            },
+            onComplete: () => {
+                // 确保角度同步
+                this.currentAngles.upperLegRight = targetRightDegree;
+            }
+        });
+    }
+
 
 
 

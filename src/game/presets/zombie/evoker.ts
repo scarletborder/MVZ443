@@ -1,6 +1,6 @@
 // src/game/sprites/NewZombie.ts
 import { Game } from '../../scenes/Game';
-import { IZombie } from '../../models/IZombie';
+import { IZombie } from '../../models/monster/IZombie';
 import { MIRecord } from '../../models/IRecord';
 import { newNormalEvokerAnim } from '../../sprite/normal_zombie';
 import { MonsterFactoryMap } from '..';
@@ -17,7 +17,7 @@ export class EnhancedEvoker extends IZombie {
         this.summonTimes = 3;
         this.scene = scene;
         this.attackDamage = 20;
-        this.SetSpeedFirstly(25 * scene.positionCalc.scaleFactor);
+        this.SetSpeedFirstly(25);
 
         this.Timer = scene.time.addEvent({
             delay: 28000,
