@@ -5,7 +5,7 @@ import { ChapterDescription, StageDescription } from "../models/GameParams";
 
 
 export const ChapterDataRecords: Record<number, ChapterDescription> = {
-    1: { id: 1, name: '村庄之下', description: i18n.S('cp1'), stages: [1, 2, 3, 4, 5, 6, 7, 8] },
+    1: { id: 1, name: '村庄之下', description: i18n.S('cp1'), stages: [1, 2, 3, 4, 5, 6, 7, 8, 9] },
     // 2: { id: 2, name: 'Chapter 2', description: 'Intermediate challenge, moderate difficulty.', stages: [3, 4] },
     // 3: { id: 3, name: 'Chapter 3', description: 'Advanced chapter, test your strategy.', stages: [5] },
 }
@@ -19,4 +19,7 @@ export const StageDataRecords: Record<number, StageDescription> = {
     6: { id: 6, name: '虹龙洞', description: i18n.S('sg6'), chapterID: 1 },
     7: { id: 7, name: '矿道(elite)', description: i18n.S('sg7'), chapterID: 1 },
     8: { id: 8, name: '矿洞深处(水elite)', description: i18n.S('sg8'), chapterID: 1 },
+    9: { id: 9, name: '虹龙洞(BOSS)', description: i18n.S('sg9'), chapterID: 1 },
 }
+
+// 添加新关卡需要同时在ChapterDataRecords和StageDataRecords中添加

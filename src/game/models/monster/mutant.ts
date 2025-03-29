@@ -24,10 +24,6 @@ export default class IMutant extends IMonster {
 
     constructor(scene: Game, col: number, row: number, waveID: number,
         newAnim: (scene: Game, x: number, y: number) => IMutantAnim) {
-        // TODO: for debug
-        row = 4;
-        col -= 2;
-
         super(scene, col, row, waveID);
         const x = this.x;
         const y = this.y;
@@ -90,8 +86,22 @@ export default class IMutant extends IMonster {
 
             this.attackTimer = scene.time.delayedCall(1500, () => {
                 if (this.health <= 0 || !this.game || this.IsFrozen) return;
+
+                const grids: Set<string> = new Set();
                 preDamagedPlants.forEach(plant => {
                     plant.takeDamage(5500, this);
+                    const key = `${plant.col}-${plant.row}`;
+                    grids.add(key);
+                });
+
+                // 删除所有grids key
+                grids.forEach(key => {
+                    const plant = this.game.gardener.planted.get(key);
+                    if (plant && plant.length > 0) {
+                        plant.forEach(p => {
+                            p.takeDamage(5500, this);
+                        });
+                    }
                 });
 
                 scene.time.delayedCall(1500, () => {
@@ -242,6 +252,11 @@ export default class IMutant extends IMonster {
 
         // TODO: 根据血量不同显示不同的贴图状态
         // 要加上各个肢体的
+        if (this.health >= this.maxHealth / 2) {
+            this.anim.body.setFrame(0);
+        } else if (this.health > 0) {
+            this.anim.body.setFrame(1);
+        }
 
         if (this.health <= 0) {
             this.destoryZombie();
@@ -261,27 +276,136 @@ export default class IMutant extends IMonster {
 
     destoryZombie() {
         // Ensure we don't proceed if this object is already destroyed or undefined
-        if (!this || !this.game) return;
+        if (!this || !this.game || !this.anim) return;
 
+        // 删除物理效果
+        if (this.body) {
+            this.body.enable = false;
+            this.game.physics.world.remove(this.body);
+        }
+
+        this.isDying = true; // 标记为死亡状态，避免其他逻辑干扰
+        this.StopMove(); // 停止移动
+        this.stopAllAction(); // 停止所有动作（如攻击）
+
+        // 播放死亡烟雾动画
         this.playDeathSmokeAnimation(this.baseDepth);
 
         const scene = this.game;
         const anim = this.anim;
 
-        if (anim) {
-            // Stop all tweens (animations)
-            scene.tweens.killTweensOf([
-                anim.body,
-                anim.head,
-                anim.upperArmLeft,
-                anim.upperArmRight,
-                anim.upperLegLeft,
-                anim.upperLegRight,
-                anim.lowerArmLeft,
-                anim.lowerArmRight
-            ]);
+        // 停止所有现有动画
+        scene.tweens.killTweensOf([
+            anim.body,
+            anim.head,
+            anim.upperArmLeft,
+            anim.upperArmRight,
+            anim.upperLegLeft,
+            anim.upperLegRight,
+            anim.lowerArmLeft,
+            anim.lowerArmRight,
+            anim.lowerLegLeft,
+            anim.lowerLegRight
+        ]);
+        anim.stopArmSwing();
+        anim.stopLegSwing();
 
-            // Safely destroy all components only if they are defined
+        // 死亡动画：向前倒地
+        const duration = 1500; // 总动画时间 1.5 秒
+
+        // 1. 身体向前倾斜到 90°（顺时针）
+        scene.tweens.add({
+            targets: anim.body,
+            angle: 120, // 身体向前倒地
+            y: anim.y + anim.body.displayHeight * 0.5, // 调整 Y 位置，使底部贴地
+            duration: duration,
+            ease: 'Sine.easeIn', // 先慢后快，模拟重力坠落
+            onUpdate: () => {
+                anim.updatePosition(this.x, this.y); // 同步更新所有部件位置
+            }
+        });
+
+        // 2. 头部跟随身体倾斜并略微前倾
+        scene.tweens.add({
+            targets: anim.head,
+            angle: 140, // 比身体多倾斜一点，模拟头部下垂
+            duration: duration,
+            ease: 'Sine.easeIn'
+        });
+
+        // 3. 手臂自然下垂（左臂和右臂）
+        scene.tweens.add({
+            targets: anim.upperArmLeft,
+            angle: 120, // 手臂垂直向下
+            duration: duration * 0.8, // 手臂比身体稍快完成
+            ease: 'Sine.easeInOut'
+        });
+        scene.tweens.add({
+            targets: anim.lowerArmLeft,
+            angle: 120, // 下臂也垂直
+            duration: duration * 0.8,
+            ease: 'Sine.easeInOut'
+        });
+        scene.tweens.add({
+            targets: anim.upperArmRight,
+            angle: 120,
+            duration: duration * 0.8,
+            ease: 'Sine.easeInOut'
+        });
+        scene.tweens.add({
+            targets: anim.lowerArmRight,
+            angle: 120,
+            duration: duration * 0.8,
+            ease: 'Sine.easeInOut'
+        });
+
+        // 4. 腿部稍微弯曲后下垂
+        scene.tweens.add({
+            targets: anim.upperLegLeft,
+            angle: 45, // 腿部稍微弯曲
+            duration: duration * 0.6,
+            ease: 'Sine.easeInOut',
+            onComplete: () => {
+                scene.tweens.add({
+                    targets: anim.upperLegLeft,
+                    angle: 120, // 最终垂直
+                    duration: duration * 0.4,
+                    ease: 'Sine.easeIn'
+                });
+            }
+        });
+        scene.tweens.add({
+            targets: anim.lowerLegLeft,
+            angle: 120,
+            duration: duration * 0.8,
+            ease: 'Sine.easeInOut'
+        });
+        scene.tweens.add({
+            targets: anim.upperLegRight,
+            angle: 45,
+            duration: duration * 0.6,
+            ease: 'Sine.easeInOut',
+            onComplete: () => {
+                scene.tweens.add({
+                    targets: anim.upperLegRight,
+                    angle: 120,
+                    duration: duration * 0.4,
+                    ease: 'Sine.easeIn'
+                });
+            }
+        });
+        scene.tweens.add({
+            targets: anim.lowerLegRight,
+            angle: 120,
+            duration: duration * 0.8,
+            ease: 'Sine.easeInOut'
+        });
+
+        // 动画完成后清理
+        scene.time.delayedCall(duration, () => {
+            if (!this || !this.anim) return;
+
+            // 销毁所有部件
             if (anim.body) anim.body.destroy();
             if (anim.head) anim.head.destroy();
             if (anim.upperArmLeft) anim.upperArmLeft.destroy();
@@ -293,26 +417,11 @@ export default class IMutant extends IMonster {
             if (anim.lowerLegLeft) anim.lowerLegLeft.destroy();
             if (anim.lowerLegRight) anim.lowerLegRight.destroy();
 
+            // 清理手臂和腿部动画数组
+            anim.armTweens = [];
+            anim.legTweens = [];
 
-            // 安全地停止并清理所有 tween 数组
-            if (Array.isArray(anim.armTweens)) {
-                anim.armTweens.forEach(tween => {
-                    if (tween && tween.isPlaying()) {
-                        tween.stop();
-                    }
-                });
-                anim.armTweens = [];
-            }
-
-            if (Array.isArray(anim.legTweens)) {
-                anim.legTweens.forEach(tween => {
-                    if (tween && tween.isPlaying()) {
-                        tween.stop();
-                    }
-                });
-                anim.legTweens = [];
-            }
-            // Clean up any attached objects like handObject or backObject if they exist
+            // 清理附加对象
             if (anim.handObject) {
                 anim.handObject.destroy();
                 anim.handObject = null;
@@ -321,25 +430,24 @@ export default class IMutant extends IMonster {
                 anim.backObject.destroy();
                 anim.backObject = null;
             }
-        }
 
-
-        // 清理攻击计时器
-        if (this.attackTimer) {
-            this.attackTimer.remove();
-            this.attackTimer = null;
-        }
-
-        // 清理debuff计时器
-        for (const debuff in this.debuffs) {
-            if (this.debuffs[debuff] && this.debuffs[debuff].timer) {
-                this.debuffs[debuff].timer.remove();
+            // 清理攻击计时器和 debuff
+            if (this.attackTimer) {
+                this.attackTimer.remove();
+                this.attackTimer = null;
             }
-        }
-        this.debuffs = {};
-        // Finally, destroy the zombie sprite itself
-        this.destroy();
+            for (const debuff in this.debuffs) {
+                if (this.debuffs[debuff] && this.debuffs[debuff].timer) {
+                    this.debuffs[debuff].timer.remove();
+                }
+            }
+            this.debuffs = {};
+
+            // 最后销毁僵尸本身
+            this.destroy();
+        });
     }
+
 
 
 

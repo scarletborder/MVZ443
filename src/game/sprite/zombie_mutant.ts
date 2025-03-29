@@ -82,6 +82,8 @@ export default class IMutantAnim {
         this.lowerArmRight.setScale(this.scaleFactor * 1);
         this.upperLegLeft.setScale(this.scaleFactor * 1);
         this.upperLegRight.setScale(this.scaleFactor * 1);
+        this.lowerLegLeft.setScale(this.scaleFactor * 1);
+        this.lowerLegRight.setScale(this.scaleFactor * 1);
     }
 
     setHandObject(key: string) {
@@ -101,7 +103,7 @@ export default class IMutantAnim {
             * Math.sin(rad);
 
         this.handObject = this.scene.add.sprite(originX, originY, key);
-        this.handObject.setOrigin(1, 0.5);
+        this.handObject.setOrigin(1, 0.5).setScale(this.scaleFactor * 1);
 
         scene.physics.add.existing(this.handObject);
         this.handObject.setVisible(true);
