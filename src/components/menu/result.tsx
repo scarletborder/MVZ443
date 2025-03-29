@@ -17,6 +17,7 @@ interface Props {
 }
 
 export default function GameResultView({ width, height, isWin, onWin, progressRewards, myProgress, onBack }: Props) {
+    // console.log(onWin)
     const saveManager = useSaveManager();
     const { setIsPaused, isPaused } = useGameContext();
     const hasSavedRef = useRef(false);
@@ -61,9 +62,6 @@ export default function GameResultView({ width, height, isWin, onWin, progressRe
 
             if (onWin.unLock && onWin.unLock.length > 0) {
                 const computedLevels = onWin.unLock.map((cpid) => {
-                    if (saveManager.currentProgress.level.has(cpid)) {
-                        return "";
-                    }
                     const stage = StageDataRecords[cpid];
                     const chapter = ChapterDataRecords[stage.chapterID];
                     return `${chapter.name} - ${stage.name}`;
@@ -73,14 +71,10 @@ export default function GameResultView({ width, height, isWin, onWin, progressRe
 
             if (onWin.unLockPlant && onWin.unLockPlant.length > 0) {
                 const computedPlants = onWin.unLockPlant.map((pid) => {
-                    if (saveManager.currentProgress.plants.some(p => p.pid === pid)) {
-                        return "";
-                    }
                     return PlantFactoryMap[pid].name;
                 }).filter(item => item !== "");
                 plantsStr = computedPlants.length > 0 ? computedPlants.join(" ") : "无";
             }
-
             setUnlockedLevelsStr(levelsStr);
             setUnlockedPlantsStr(plantsStr);
         }
