@@ -6,7 +6,7 @@
         "first_wave_id": 0,
         "total_waves": 36,
         "base_difficulty": 0,
-        "difficulty_limit": 48,
+        "difficulty_limit": 52,
         "phase1_end": 11,
         "phase2_end": 28,
         "dayOrNight": 2,

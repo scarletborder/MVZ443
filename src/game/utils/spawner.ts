@@ -12,6 +12,10 @@ import IObstacle from "../presets/obstacle/IObstacle";
 
 export default class MonsterSpawner {
     public scene: Game;
+
+    /**
+     * row
+     */
     monstered: Map<string, Array<IMonster | IObstacle>> = new Map();
     // Add to class properties
     private rowCache: Map<number, number[]> = new Map();  // mid -> valid rows
@@ -326,12 +330,29 @@ export default class MonsterSpawner {
         if (!rows || rows == undefined || rows.length == 0) {
             return false;
         }
-        for (let i = 0; i < rows.length; i++) {
-            if (rows[i].getX() > x && rows[i].getX() - x < maxDistance) {
-                return true;
+        // 二分查找第一个大于x的怪物并且距离小于maxDistance
+        let left = 0;
+        let right = rows.length - 1;
+        while (left <= right) {
+            const mid = Math.floor((left + right) / 2);
+            const monster = rows[mid];
+            if (monster.getX() > x && monster.getX() < x + maxDistance) {
+                return true; // 找到一个符合条件的怪物
+            } else if (monster.getX() <= x) {
+                left = mid + 1; // 向右查找
+            } else {
+                right = mid - 1; // 向左查找
             }
         }
+        // 如果没有找到符合条件的怪物
         return false;
+    }
+
+    // 排序Monsters,根据monster.x从小到大,这里monsterd的每一个element都是数组,他们都是基本有序的
+    sortMonsters() {
+        this.monstered.forEach((list, key) => {
+            list.sort((a, b) => a.getX() - b.getX());
+        });
     }
 
     // 权重随机选择函数
@@ -391,7 +412,21 @@ export default class MonsterSpawner {
         if (!this.monstered.has(key)) {
             this.monstered.set(key, [monster]);
         } else {
-            this.monstered.get(key)?.push(monster);
+            // 二分插入,保持monster.x从小到大
+            const list = this.monstered.get(key);
+            if (!list) return;
+            let left = 0;
+            let right = list.length - 1;
+            while (left <= right) {
+                const mid = Math.floor((left + right) / 2);
+                if (list[mid].getX() < monster.getX()) {
+                    left = mid + 1;
+                } else {
+                    right = mid - 1;
+                }
+            }
+            list.splice(left, 0, monster); // 插入怪物
+            this.monstered.set(key, list); // 更新怪物列表
         }
     }
 

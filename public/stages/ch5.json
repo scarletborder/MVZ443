@@ -4,7 +4,7 @@
     "type": 1,
     "stageScript": {
         "first_wave_id": 0,
-        "total_waves": 31,
+        "total_waves": 26,
         "base_difficulty": 0,
         "difficulty_limit": 36,
         "phase1_end": 11,
@@ -17,7 +17,7 @@
         "bossInsert": [ ]
     },
     "onWin": {
-        "unLock": [ 8 ],
+        "unLock": [ 6 ],
         "unLockPlant": [ 12 ]
     },
     "energy": 50,
@@ -33,7 +33,7 @@
             "progress": 95,
             "reward": {
                 "type": 1,
-                "count": 120
+                "count": 150
             }
         }
     ]

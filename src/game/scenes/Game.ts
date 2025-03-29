@@ -212,6 +212,9 @@ export class Game extends Scene {
         if (this.elapsed >= 100) {  // 达到 100 毫秒，执行函数
             this.recvQueue.Consume();
             this.elapsed -= 100; // 保留多余的时间，避免累积误差
+
+            // 更新怪物排序
+            this.monsterSpawner.sortMonsters();
         }
         this.sendQueue.Consume();
         if (BackendWS.isConnected) {
