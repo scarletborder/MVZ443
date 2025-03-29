@@ -111,6 +111,28 @@ function levelAndstuff(level: number): item[] {
                 type: 3,
                 count: 1
             }];
+        case 3:
+            return [{
+                type: 1,
+                count: 400
+            }, {
+                type: 3,
+                count: 2
+            }, {
+                type: 4,
+                count: 2
+            }];
+        case 4:
+            return [{
+                type: 1,
+                count: 600
+            }, {
+                type: 3,
+                count: 3
+            }, {
+                type: 5,
+                count: 3
+            }];
     }
     return [{
         type: SECKILL,

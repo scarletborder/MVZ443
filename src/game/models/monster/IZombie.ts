@@ -326,7 +326,6 @@ export class IZombie extends IMonster {
     destroy(fromScene?: boolean) {
         this.attackTimer?.remove();
         this.attackTimer?.destroy();
-        this.Spawner.registerDestroy(this);
         // 处理attach
         this.zombieAnim.destroy();
         this.attachSprites.forEach(sprite => sprite.destroy());

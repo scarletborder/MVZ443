@@ -126,6 +126,7 @@ export default class MonsterSpawner {
 
             // 启动定时器（仅适用于普通波）
             if (this.current_wave_idx >= this.waves.length - 1) return; // 没下一波了
+            console.log('next wave timer', this.currentWave().maxDelay * 1000);
             if (this.Timer) {
                 this.Timer.reset({
                     delay: this.currentWave().maxDelay * 1000,
@@ -193,7 +194,7 @@ export default class MonsterSpawner {
 
         // Acquire current wave's monster number
         const currentMonsters = wave.monsters.reduce((acc, m) => acc + m.count, 0);
-        this.total_count += currentMonsters; // 当前波id下的僵尸数量
+        this.total_count += currentMonsters; // 当前波id以及之前的所有(非召唤物)僵尸数量
 
         let totalMonsters: { mid: number }[] = [];
         const colMax = this.scene.GRID_COLS;
@@ -467,8 +468,8 @@ export default class MonsterSpawner {
                 // 判断一下minDelay,避免杀的太快
                 const now = this.scene.time.now;
                 let delay = Math.max(this.currentWave().minDelay * 1000 - (now - this.prev_wave_time), 2000);
-                if (delay > 5000) {
-                    delay = 5000;
+                if (delay > 6000) {
+                    delay = 6000;
                 }
                 this.Timer.reset({
                     delay: delay,

@@ -46,7 +46,8 @@ class at_dispenser extends IPlant {
         super(scene, col, row, texture, ATDispenserRecord.pid, level);
         this.setVisible(false);
         this.game = scene;
-        this.setHealthFirstly(300);
+        const health = GetIncValue(450, 2, level);
+        this.setHealthFirstly(health);
 
         // anim
         let size = scene.positionCalc.getPlantDisplaySize();
@@ -251,9 +252,13 @@ const ATDispenserRecord: IRecord = {
     pid: 14,
     name: '反坦克炮台',
     cost: (level) => {
-        return 425;
+        if (level && level >= 5) return 425;
+        return 450;
     },
-    cooldownTime: () => 6,
+    cooldownTime: (level) => {
+        if (level && level >= 9) return 48;
+        return 60;
+    },
     NewFunction: NewATDispenser,
     texture: 'plant/at_dispenser',
     description: i18n.S('at_dispenser'),

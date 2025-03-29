@@ -109,6 +109,19 @@ function shootLaser(scene: Game, shooter: IPlant) {
 }
 
 function levelAndstuff(level: number): item[] {
+    switch (level) {
+        case 1:
+            return [{
+                type: 1,
+                count: 300
+            }, {
+                type: 3,
+                count: 4
+            }, {
+                type: 2,
+                count: 2
+            }]
+    }
     return [{
         type: SECKILL,
         count: 1

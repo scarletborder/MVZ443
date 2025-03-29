@@ -143,7 +143,6 @@ export default class IGolem extends IMonster {
 
 
     destroy(fromScene?: boolean): void {
-        this.Spawner.registerDestroy(this);
         this.anim.destroy();
         super.destroy(fromScene);
     }

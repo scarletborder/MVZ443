@@ -226,7 +226,7 @@ function shootArrow(scene: Game, shooter: IPlant, baseDamage: number = 30, isSta
 
     const level = shooter.level;
     //  根据等级略微提高伤害
-    let damage = GetIncValue(baseDamage, level, 1.4);
+    let damage = GetIncValue(baseDamage, level, 1.35);
     let penetrate = 1;
     if (level >= 5) {
         penetrate += 1;
@@ -291,7 +291,7 @@ const TripleDispenserRecord: IRecord = {
         if (level && level >= 5) return 350;
         return 325;
     },
-    cooldownTime: () => 6,
+    cooldownTime: () => 10,
     NewFunction: NewTripleDispenser,
     texture: 'plant/triple_dispenser',
     description: i18n.S('triple_dispenser_description'),

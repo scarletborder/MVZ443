@@ -3,7 +3,8 @@ import { item } from "../../../components/shop/types";
 import i18n from "../../../utils/i18n";
 import { GetIncValue } from "../../../utils/numbervalue";
 import { IPlant } from "../../models/IPlant";
-import { IMonster, IRecord } from "../../models/IRecord";
+import { IRecord } from "../../models/IRecord";
+import { IMonster } from "../../models/monster/IMonster";
 import { Game } from "../../scenes/Game";
 
 class Obsidian extends IPlant {
@@ -81,10 +82,29 @@ function levelAndstuff(level: number): item[] {
         case 2:
             return [{
                 type: 1,
-                count: 190
+                count: 290
             }, {
                 type: 3,
                 count: 3
+            }];
+        case 3:
+            return [{
+                type: 1,
+                count: 490
+            }, {
+                type: 3,
+                count: 4
+            }, {
+                type: 4,
+                count: 1
+            }];
+        case 4:
+            return [{
+                type: 1,
+                count: 800
+            }, {
+                type: 4,
+                count: 2
             }];
     }
     return [{
