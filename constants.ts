@@ -1,4 +1,4 @@
-export const VERSION = `0.0.3b`;
+export const VERSION = `0.0.4a`;
 
 export const announcement =
     `游戏仍在开发中, 当前状态不代表最终品质.

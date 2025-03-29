@@ -1,24 +1,24 @@
 {
-    "comment": "1-6,in mine boss version,体验版",
-    "rows": 5,
+    "comment": "1-6, Rainbow dragon Cave,体验版",
+    "rows": 6,
     "type": 1,
     "stageScript": {
-        "first_wave_id": 1,
-        "total_waves": 36,
+        "first_wave_id": 0,
+        "total_waves": 31,
         "base_difficulty": 0,
-        "difficulty_limit": 48,
+        "difficulty_limit": 38,
         "phase1_end": 11,
-        "phase2_end": 28,
+        "phase2_end": 22,
         "dayOrNight": 2,
-        "flagWaves": [ 10, 25, 35 ],
-        "waterWays": [ 1, 2, 3 ],
-        "AllowedMobs": [ 1, 2, 3, 8, 4, 5, 7, 9, 11, 14 ],
-        "globalRatio": [ [ 0, 1.0 ], [ 21, 1.5 ] ],
-        "bossInsert": [ [ 34, 12 ] ]
+        "flagWaves": [ 10, 20, 30 ],
+        "waterWays": [ ],
+        "AllowedMobs": [ 1, 2, 3, 8, 4, 5, 7, 9, 11, 14, 15 ],
+        "globalRatio": [ [ 0, 1.0 ], [ 25, 1.2 ] ],
+        "bossInsert": [ ]
     },
     "onWin": {
         "unLock": [ 7 ],
-        "unLockPlant": [ ]
+        "unLockPlant": [ 13 ]
     },
     "energy": 50,
     "rewards": [
@@ -26,28 +26,21 @@
             "progress": 75,
             "reward": {
                 "type": 1,
-                "count": 180
+                "count": 240
+            }
+        },
+        {
+            "progress": 90,
+            "reward": {
+                "type": 1,
+                "count": 2
             }
         },
         {
             "progress": 90,
             "reward": {
                 "type": 2,
-                "count": 3
-            }
-        },
-        {
-            "progress": 90,
-            "reward": {
-                "type": 3,
-                "count": 3
-            }
-        },
-        {
-            "progress": 100,
-            "reward": {
-                "type": 1,
-                "count": 500
+                "count": 2
             }
         }
     ]
