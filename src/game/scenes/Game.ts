@@ -57,6 +57,8 @@ export class Game extends Scene {
     private isDestroyed = false; // Track if the scene/game is destroyed
     public stageData: StageData;
     public dayOrNight: boolean = true; // day = true
+    // 定期波数的额外游戏设置,如切换地图,进行额外非常规设置,在spawner中消费
+    public extraFunc: Map<number, (game: Game, waveIdx: number) => void> = new Map<number, (game: Game) => void>();
 
     music: Phaser.Sound.BaseSound;
     dumpMusic: Phaser.Sound.BaseSound | null = null;

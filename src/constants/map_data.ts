@@ -23,9 +23,9 @@ const chapter1_deepmineWater: _ResourceMapData = {
     bgimg: 'bg/bgDeepMineWater.png',
     bgm: 'audio/OLJA-0021-08.ogg',
 }
-const chapter1_boss: _ResourceMapData = {
-    bgimg: 'bg/bgBoss.png',
-    bgm: 'audio/AREP-0005-03.ogg',
+const chapter1_rainbowCave: _ResourceMapData = {
+    bgimg: 'bg/bgRainbowCave1.png',
+    bgm: 'audio/OLJA-0021-08.ogg',
 }
 
 
@@ -36,7 +36,7 @@ export const ResourceMapData: Map<number, _ResourceMapData> = new Map<number, _R
     [3, chapter1_innermine],
     [4, chapter1_deepmine],
     [5, chapter1_deepmineWater],
-    [6, chapter1_innermine],
-    [7, chapter1_deepmineWater],
-    [8, chapter1_boss],
+    [6, chapter1_rainbowCave],
+    [7, chapter1_innermine],
+    [8, chapter1_deepmineWater],
 ]);

@@ -89,6 +89,16 @@ export default class MonsterSpawner {
         }
 
         this.current_wave_idx++;
+
+        // 定期波数的额外设置
+        if (this.scene.extraFunc.has(this.current_wave_idx)) {
+            const func = this.scene.extraFunc.get(this.current_wave_idx);
+            if (func) {
+                func(this.scene, this.current_wave_idx);
+                this.scene.extraFunc.delete(this.current_wave_idx); // 删除已执行的函数
+            }
+        }
+
         console.log('next wave', this.current_wave_idx, '/', this.wavesLeng);
         if (this.current_wave_idx >= this.waves.length) {
             // 游戏结束,不应该在这里出现
@@ -357,7 +367,8 @@ export default class MonsterSpawner {
 
             if (validRows.length === 0) {
                 console.error('No valid rows to spawn monster!');
-                return 0; // Fallback to first row
+                // Fallback to fake random row
+                return Math.floor(this.SeedRandom() * this.scene.GRID_ROWS);
             }
             return validRows[Math.floor(this.SeedRandom() * validRows.length)];
         }

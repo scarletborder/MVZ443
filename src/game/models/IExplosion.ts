@@ -1,3 +1,4 @@
+import DepthManager from "../../utils/depth";
 import IObstacle from "../presets/obstacle/IObstacle";
 import { Game } from "../scenes/Game";
 import { IPlant } from "./IPlant";
@@ -113,7 +114,7 @@ export class IExpolsion extends Phaser.Physics.Arcade.Sprite {
                     const anime = scene.add.sprite(finalX, finalY, 'anime/explosion');
                     anime.setDisplaySize(spriteSize, spriteSize)
                         .setOrigin(0.5, 0.5)
-                        .setDepth(1000)
+                        .setDepth(DepthManager.getInGameUIElementDepth(-100))
                         .setRotation(Math.random() * Math.PI * 2);
 
                     explosionSprites.push(anime);

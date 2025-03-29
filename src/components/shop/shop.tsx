@@ -70,8 +70,7 @@ const ShopSelector: React.FC<ShopSelectorProps> = ({
         });
     }, [gameManager]);
 
-    const itemsPerPage = Math.min(6, Math.floor((height - 80) / 80));
-    const visibleGoods = goodsList.slice(0, itemsPerPage);
+    const visibleGoods = goodsList;
 
     return (
         <div style={{

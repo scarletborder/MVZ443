@@ -85,11 +85,11 @@ export default function DocFrame({ width, height, sceneRef, setGameParams, gameS
         原作者:  Cuerzor58 
 
         联机事项:
-        请克隆项目github.com/scarletborder/MVZ443
+        你可以使用游戏发布页面公布的公益服务器或者自行部署服务端
+        部署服务端请克隆项目github.com/scarletborder/MVZ443
         在tools/server文件夹下使用 go build 构建服务器,
         并在游戏中地址栏输入 ws://127.0.0.1:28080/ws 进行连接
-        (没有回显是正常的行为,你可以在console中看到连接信息)
-        (星之碎片尚未实现同步,联机游戏请别使用)
+        (正常连接后会有提示,如果没有回显则说明连接失败,请查看console获知详情)
     `;
 
     // 主菜单组件

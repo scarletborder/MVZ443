@@ -5,7 +5,8 @@ const idToName = new Map<number, string>(
     [[1, 'gold'],
     [2, 'leather'],
     [3, 'iron'],
-
+    [4, 'obsidian_medal'],
+    [5, 'echo_shard'],
     [SECKILL, 'scb'],
     ]);
 

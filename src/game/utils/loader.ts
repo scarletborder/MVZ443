@@ -16,7 +16,7 @@ export const StageDataRecords: Record<number, StageDescription> = {
     3: { id: 3, name: '矿道', description: i18n.S('sg3'), chapterID: 1 },
     4: { id: 4, name: '矿洞深处', description: i18n.S('sg4'), chapterID: 1 },
     5: { id: 5, name: '矿洞深处(水)', description: i18n.S('sg5'), chapterID: 1 },
-    6: { id: 6, name: '矿道(elite)', description: i18n.S('sg6'), chapterID: 1 },
-    7: { id: 7, name: '矿洞深处(水elite)', description: i18n.S('sg7'), chapterID: 1 },
-    8: { id: 8, name: '虹龙洞', description: i18n.S('sg8'), chapterID: 1 },
+    6: { id: 6, name: '虹龙洞', description: i18n.S('sg6'), chapterID: 1 },
+    7: { id: 7, name: '矿道(elite)', description: i18n.S('sg7'), chapterID: 1 },
+    8: { id: 8, name: '矿洞深处(水elite)', description: i18n.S('sg8'), chapterID: 1 },
 }

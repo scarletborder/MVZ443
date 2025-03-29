@@ -14,7 +14,7 @@ export const WATER_ONLY_PLANT: number[] = [6];// 水中植物,只能种植在水
 export const SKY_ONLY_PLANT: number[] = [100]; // 船只,只能种植在天空中
 export const POWDER_PLANT: number[] = [10]; // 粉尘植物,可以随意种植
 export const ADVANCED_PLANT: Map<number, number> = new Map([
-    [11, 9]
+    [11, 9], [14, 1]
 ]); // 高级植物,只能种植在基座上, [advancedPid - basicPid]
 
 

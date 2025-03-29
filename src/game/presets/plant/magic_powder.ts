@@ -5,8 +5,8 @@ import { GetIncValue } from "../../../utils/numbervalue";
 import { EventBus } from "../../EventBus";
 import { NewLaserByGrid } from "../../models/ILaser";
 import { IPlant } from "../../models/IPlant";
-import { IMonster, IRecord } from "../../models/IRecord";
-import { IZombie } from "../../models/monster/IZombie";
+import { IRecord } from "../../models/IRecord";
+import { IMonster } from "../../models/monster/IMonster";
 import { Game } from "../../scenes/Game";
 
 class MagicPowder extends IPlant {
@@ -108,7 +108,7 @@ const MagicPowderRecord: IRecord = {
     NewFunction: NewMagicPowder,
     texture: 'plant/magic_powder',
     description: i18n.S('magic_powder_description'),
-    needFirstCoolDown: true,
+    needFirstCoolDown: false,
     NextLevelStuff: levelAndstuff
 };
 

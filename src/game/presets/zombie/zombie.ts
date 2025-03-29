@@ -3,6 +3,7 @@ import { Game } from '../../scenes/Game';
 import { IZombie } from '../../models/monster/IZombie';
 import { MIRecord } from '../../models/IRecord';
 import { newNormalZombieAnim } from '../../sprite/normal_zombie';
+import { title } from 'process';
 
 
 export class EnhancedZombie extends IZombie {

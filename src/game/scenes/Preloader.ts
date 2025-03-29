@@ -108,6 +108,9 @@ export class Preloader extends Scene {
         this.load.image('bullet/snowball', 'bullet/snowball.png');
         this.load.image('bullet/arrow', 'bullet/arrow.png');
         this.load.image('bullet/minecart', 'bullet/minecart.png');
+        this.load.image('bullet/firework', 'bullet/firework.png');
+        this.load.image('bullet/Hfirework', 'bullet/Hfirework.png');
+
     }
 
     // 加载全部sprite
@@ -203,7 +206,7 @@ export class Preloader extends Scene {
     }
 
     loadStageSpecified(stageId: number) {
-        if (stageId === 1 || stageId === 6) {
+        if (stageId === 1 || stageId === 7) {
             // 加载熔炉和发射器
             if (!this.textures.exists('plant/furnace')) {
                 this.load.spritesheet('plant/furnace', 'plant/furnace.png', {

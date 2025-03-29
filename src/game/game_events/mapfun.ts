@@ -47,13 +47,13 @@ function Chapter1Dispatch(game: Game, stageId: number) {
         game.handleCardPlant(2, 1, 1, 3, 9961);
     }
 
-    if (stageId === 6) {
+    if (stageId === 7) {
         game.handleCardPlant(2, 1, 1, 1, 9961);
         game.handleCardPlant(2, 1, 1, 2, 9961);
         game.handleCardPlant(2, 1, 1, 3, 9961);
     }
 
-    if (stageId === 3 || stageId === 6) {
+    if (stageId === 3 || stageId === 7) {
         // [0][7] = water
         game.dayOrNight = false;
         game.gridProperty[0][7] = 'water';
@@ -65,7 +65,7 @@ function Chapter1Dispatch(game: Game, stageId: number) {
         const darkOverlay = game.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.5).setDepth(2);
     }
 
-    if (stageId === 5 || stageId === 7) {
+    if (stageId === 5 || stageId === 8) {
         game.dayOrNight = false;
         const darkOverlay = game.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.5).setDepth(2);
         // row:2, 3  = water
@@ -75,9 +75,19 @@ function Chapter1Dispatch(game: Game, stageId: number) {
         }
     }
 
-    if (stageId === 8) {
+    if (stageId === 6 || stageId === 9) {
         game.dayOrNight = false;
+        const darkOverlay = game.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.5).setDepth(2);
+        if (stageId === 9) {
+            // 在stage 8 基础上,在第一个elite结束后沙砾和碎石砖块会消失变为sky
+
+            // 切换地图为 `bg/bgRainbowCave2`
+
+            // 开始定时能量恢复
+        }
+
     }
+
 
 
 

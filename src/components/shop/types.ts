@@ -180,6 +180,70 @@ class PumpkinWan implements IGoods {
     }
 }
 
+class ATDispenser implements IGoods {
+    id: number = 5;
+    name: string = "反坦克炮台";
+    price: number = 800;
+
+    constructor(
+        private purchasedIds: Set<number>,
+        private onPurchase: (id: number) => void
+    ) { }
+
+    description = () => "反坦克炮台\n呼叫一位HellVillager操纵威力强大的炮台为你进行单行绝对统治\n需要发射器作为基座\n解锁chapter1-stage7";
+    hasBought = (id: number, progress: GameProgress) => {
+        const plants = progress.plants;
+        let hasBought = false;
+        for (let i = 0; i < plants.length; i++) {
+            if (plants[i].pid === 14) {
+                hasBought = true;
+                break;
+            }
+        }
+        return this.purchasedIds.has(id) || hasBought;
+    };
+    afterBought = (id: number, save: GameManager) => {
+        this.purchasedIds.add(id);
+        this.onPurchase(id);
+        save.currentProgress.plants.push({ pid: 14, level: 1 });
+    };
+    getPriceStructure = (): price => ({
+        items: [{ type: 1, count: this.price },
+        { type: 3, count: 10 }]
+    });
+    canPurchase = (progress: GameProgress) => {
+        if (progress.level.has(7)) return true;
+        return false;
+    }
+}
+
+class NinthSlot implements IGoods {
+    id: number = 6;
+    name: string = "9th Slot";
+    price: number = 1000;
+
+    constructor(
+        private purchasedIds: Set<number>,
+        private onPurchase: (id: number) => void
+    ) { }
+
+    description = () => "9槽\n解锁chapter1-stage6";
+    hasBought = (id: number, progress: GameProgress) => {
+        return this.purchasedIds.has(id) || progress.slotNum >= 9;
+    };
+    afterBought = (id: number, save: GameManager) => {
+        this.purchasedIds.add(id);
+        this.onPurchase(id);
+        save.updateSlotNum(9);
+    };
+    getPriceStructure = (): price => ({
+        items: [{ type: 1, count: this.price }]
+    });
+    canPurchase = (progress: GameProgress) => {
+        if (progress.level.has(6) && progress.slotNum === 8) return true;
+        return false;
+    }
+}
 
 
 
@@ -189,6 +253,8 @@ export function NewGoodLists(purchasedIds: Set<number>, onPurchase: (id: number)
         new EighthSlot(purchasedIds, onPurchase),
         new Cp1Kit(purchasedIds, onPurchase),
         new ScarletborderCrystal(purchasedIds, onPurchase),
-        new PumpkinWan(purchasedIds, onPurchase)
+        new PumpkinWan(purchasedIds, onPurchase),
+        new ATDispenser(purchasedIds, onPurchase),
+        new NinthSlot(purchasedIds, onPurchase),
     ];
 }
