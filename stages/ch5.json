@@ -17,7 +17,7 @@
         "bossInsert": [ ]
     },
     "onWin": {
-        "unLock": [ 8 ],
+        "unLock": [ 6 ],
         "unLockPlant": [ 12 ]
     },
     "energy": 50,
@@ -33,7 +33,7 @@
             "progress": 95,
             "reward": {
                 "type": 1,
-                "count": 120
+                "count": 150
             }
         }
     ]
