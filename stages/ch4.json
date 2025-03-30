@@ -4,11 +4,11 @@
     "type": 1,
     "stageScript": {
         "first_wave_id": 0,
-        "total_waves": 21,
+        "total_waves": 22,
         "base_difficulty": 0,
         "difficulty_limit": 26,
         "phase1_end": 10,
-        "phase2_end": 22,
+        "phase2_end": 16,
         "dayOrNight": 2,
         "flagWaves": [ 10, 20 ],
         "waterWays": [ ],
