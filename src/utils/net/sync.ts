@@ -1,6 +1,43 @@
-import { toast } from "react-toastify";
-import QueueReceive from "../../game/utils/queue_receive";
+import QueueReceive, { decodeMessage } from "../../game/utils/queue_receive";
 import QueueSend from "../../game/utils/queue_send";
+
+
+export function encodeMessageToBinary(message: _requestType): Uint8Array {
+    const buffer = new ArrayBuffer(8); // 固定长度
+    const view = new DataView(buffer);
+
+    view.setUint8(0, message.type);
+
+    // 通用字段
+    if ('uid' in message) view.setUint16(1, message.uid);
+
+    // 针对不同类型结构
+    switch (message.type) {
+        case 0x02: // Plant
+            view.setUint16(3, message.pid);
+            view.setUint8(5, message.level);
+            view.setUint8(6, message.col);
+            view.setUint8(7, message.row);
+            break;
+
+        case 0x04: // Remove
+        case 0x08: // StarShard
+            view.setUint16(3, message.pid);
+            view.setUint8(6, message.col);
+            view.setUint8(7, message.row);
+            break;
+
+        case 0x01: // Ready
+            // already handled uid
+            break;
+        case 0x10:
+            view.setUint32(3, message.chapterId);
+            break;
+    }
+
+    return new Uint8Array(buffer);
+}
+
 
 class WebSocketClient {
     private ws: WebSocket | null = null;
@@ -66,6 +103,15 @@ class WebSocketClient {
         }
     }
 
+    send(message: Uint8Array<ArrayBufferLike>) {
+        if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+            this.ws.send(message.buffer); // 发送的是 ArrayBuffer
+            console.log("Sent binary message:", message);
+        } else {
+            console.error("WebSocket is not open. Cannot send message.");
+        }
+    }
+
     // Method to add additional message listeners
     addMessageListener(listener: (event: MessageEvent) => void) {
         this.additionalListeners.push(listener);
@@ -85,15 +131,20 @@ class WebSocketClient {
 
         // Push the received message to the receive queue
         if (this.receiveQueue) {
-            const parsedMessage = JSON.parse(event.data);
-            if (parsedMessage) {
-                if (!parsedMessage.length) {
+            const vanillaMessage = JSON.parse(event.data);
+            if (vanillaMessage) {
+                if (!vanillaMessage.length) {
                     // 游戏外frame以object形式
-                    this.receiveQueue.queues.push(parsedMessage);
+                    this.receiveQueue.queues.push(vanillaMessage);
                 } else {
                     // 游戏内frame以array形式
-                    for (const message of parsedMessage) {
-                        this.receiveQueue?.queues.push(message);
+                    for (const message of vanillaMessage) {
+                        const decodedMessage = decodeMessage(message);
+                        if (!decodedMessage) {
+                            console.error("Failed to decode message:", message);
+                            continue;
+                        }
+                        this.receiveQueue?.queues.push(decodedMessage);
                     }
                 }
             }
@@ -111,8 +162,9 @@ class WebSocketClient {
             while (this.sendQueue && !this.sendQueue.queues.isEmpty()) {
                 const message = this.sendQueue.queues.shift();
                 if (message) {
-                    this.ws.send(JSON.stringify(message));
-                    console.log("Sent message:", message);
+                    const encoded = encodeMessageToBinary(message);
+                    this.ws.send(encoded.buffer); // 发送的是 ArrayBuffer
+                    console.log("Sent binary message:", encoded);
                 }
             }
         } else {

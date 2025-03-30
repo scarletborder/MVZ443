@@ -10,7 +10,7 @@ const MAXCARDS = 8 // max cards allowed to plant per server loop in one grid
 type GameLogic struct {
 	// 本循环中将要放置的card
 	cards [MAXROWS][MAXCOLS]bool // 每一个frame只能做一次操作
-	msgs  []messages.MessageSend
+	msgs  [][]byte
 }
 
 func NewGameLogic() *GameLogic {
@@ -31,19 +31,25 @@ func (g *GameLogic) PlantCard(col, row, id, level, uid int) {
 		return
 	}
 	// 判断这个grid有没有做过操作
-	isOk := !g.cards[row][col]
-
-	if isOk {
-		g.cards[row][col] = true
-		g.msgs = append(g.msgs, messages.CardPlant{
-			Type:  messages.MsgTypeCardPlant,
-			Pid:   id,
-			Level: level,
-			Col:   col,
-			Row:   row,
-			UID:   uid,
-		})
+	if g.cards[row][col] { // true=> 有操作
+		return
 	}
+
+	data, err := messages.EncodeMessage(messages.CardPlant{
+		Type:  messages.MsgTypeCardPlant,
+		Pid:   id,
+		Level: level,
+		Col:   col,
+		Row:   row,
+		UID:   uid,
+	})
+	if err != nil {
+		return
+	}
+
+	g.cards[row][col] = true
+	g.msgs = append(g.msgs, data)
+
 }
 
 func (g *GameLogic) RemoveCard(col, row, id, uid int) {
@@ -55,13 +61,20 @@ func (g *GameLogic) RemoveCard(col, row, id, uid int) {
 	if g.cards[row][col] { // true=> 有操作
 		return
 	}
-	g.msgs = append(g.msgs, messages.RemovePlant{
-		Type: messages.MsgTypeRemovePlant,
-		Pid:  id,
-		Col:  col,
-		Row:  row,
-		UID:  uid,
+
+	data, err := messages.EncodeMessage(messages.RemovePlant{Type: messages.MsgTypeRemovePlant,
+		Pid: id,
+		Col: col,
+		Row: row,
+		UID: uid,
 	})
+	if err != nil {
+		return
+	}
+
+	g.cards[row][col] = true
+	g.msgs = append(g.msgs, data)
+
 }
 
 func (g *GameLogic) UseStarShards(col, row, id, uid int) {
@@ -73,11 +86,18 @@ func (g *GameLogic) UseStarShards(col, row, id, uid int) {
 	if g.cards[row][col] { // true=> 有操作
 		return
 	}
-	g.msgs = append(g.msgs, messages.UseStarShards{
+	data, err := messages.EncodeMessage(messages.UseStarShards{
 		Type: messages.MsgTypeUseStarShards,
 		Pid:  id,
 		Col:  col,
 		Row:  row,
 		UID:  uid,
 	})
+
+	if err != nil {
+		return
+	}
+
+	g.cards[row][col] = true
+	g.msgs = append(g.msgs, data)
 }

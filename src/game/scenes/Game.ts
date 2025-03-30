@@ -216,10 +216,8 @@ export class Game extends Scene {
             // 更新怪物排序
             this.monsterSpawner.sortMonsters();
         }
+        // 每次更新直接消费 发送队列
         this.sendQueue.Consume();
-        if (BackendWS.isConnected) {
-            BackendWS.consumeSendQueue();
-        }
     }
 
     changeScene() {
@@ -354,6 +352,8 @@ export class Game extends Scene {
 
     // 处理暂停
     handlePause({ paused }: { paused: boolean }) {
+        if (BackendWS.isConnected) return; // 联机模式下不允许暂停
+
         if (this.isDestroyed) return; // Skip if scene is destroyed
         if (!this.exitText || !this.pauseText) {
             console.warn('Text objects not initialized yet');

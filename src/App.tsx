@@ -12,7 +12,7 @@ import { OnWin, StageResult } from './game/models/IRecord';
 import GameResultView from './components/menu/result';
 import { useDeviceType } from './hooks/useDeviceType';
 import { _RoomInfo } from './game/utils/queue_receive';
-import BackendWS from './utils/net/sync';
+import BackendWS, { encodeMessageToBinary } from './utils/net/sync';
 
 function App() {
     // State to control the visibility of the game tool
@@ -52,9 +52,8 @@ function App() {
         setGameResult(result);
         setShowGameResult(true);
         if (BackendWS.isConnected) {
-            BackendWS.sendMessage(JSON.stringify({
-                type: 0x20,
-            }));
+            const encoded = encodeMessageToBinary({ type: 0x20 });
+            BackendWS.send(encoded);
         }
     }, [setShowGameScreen, setShowGameTool]);
 

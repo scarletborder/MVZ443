@@ -68,18 +68,32 @@ func serveUserInRoom(c *websocket.Conn, room *Room) {
 
 beforeGame:
 	for {
-		var msg map[string]interface{}
-		err := c.ReadJSON(&msg)
+		messageType, data, err := c.ReadMessage()
 		if err != nil {
+			log.Println("read error:", err)
 			return
 		}
 
-		msgType := int(msg["type"].(float64))
+		// 忽略非二进制消息
+		if messageType != websocket.BinaryMessage {
+			continue
+		}
+
+		msgType, decoded, err := messages.DecodeBinaryMessage(data)
+		if err != nil {
+			log.Println("decode error:", err)
+			continue
+		}
 
 		switch msgType {
 		case messages.MsgTypeRequestChooseMap:
+			msg, ok := decoded.(messages.RequestChooseMap)
+			if !ok {
+				log.Println("decode error: invalid message type")
+				continue
+			}
 			if ctx.Id == room.CtxManager.FirstUser {
-				atomic.StoreInt32(&room.ChapterID, int32(msg["chapterId"].(float64)))
+				atomic.StoreInt32(&room.ChapterID, int32(msg.ChapterId))
 				room.CtxManager.BroadcastRoomInfo(room.ChapterID)
 			}
 		case messages.MsgTypeReady:
@@ -93,35 +107,59 @@ beforeGame:
 
 	// 游戏主循环
 	for {
-		var msg map[string]interface{}
-		err := c.ReadJSON(&msg)
+		messageType, data, err := c.ReadMessage()
 		if err != nil {
+			log.Println("read error:", err)
 			return
 		}
 
-		msgType := int(msg["type"].(float64))
+		// 忽略非二进制消息
+		if messageType != websocket.BinaryMessage {
+			continue
+		}
+
+		msgType, decoded, err := messages.DecodeBinaryMessage(data)
+		if err != nil {
+			log.Println("decode error:", err)
+			continue
+		}
 
 		switch msgType {
 		case messages.MsgTypeRequestCardPlant:
+			msg, ok := decoded.(messages.RequestCardPlant)
+			if !ok {
+				log.Println("decode error: invalid message type")
+				continue
+			}
 			room.Logic.PlantCard(
-				int(msg["col"].(float64)),
-				int(msg["row"].(float64)),
-				int(msg["pid"].(float64)),
-				int(msg["level"].(float64)),
+				msg.Col,
+				msg.Row,
+				msg.Pid,
+				msg.Level,
 				ctx.Id,
 			)
 		case messages.MsgTypeRequestRemovePlant:
+			msg, ok := decoded.(messages.RequestRemovePlant)
+			if !ok {
+				log.Println("decode error: invalid message type")
+				continue
+			}
 			room.Logic.RemoveCard(
-				int(msg["col"].(float64)),
-				int(msg["row"].(float64)),
-				int(msg["pid"].(float64)),
+				msg.Col,
+				msg.Row,
+				msg.Pid,
 				ctx.Id,
 			)
 		case messages.MsgTypeRequestStarShards:
+			msg, ok := decoded.(messages.RequestStarShards)
+			if !ok {
+				log.Println("decode error: invalid message type")
+				continue
+			}
 			room.Logic.UseStarShards(
-				int(msg["col"].(float64)),
-				int(msg["row"].(float64)),
-				int(msg["pid"].(float64)),
+				msg.Col,
+				msg.Row,
+				msg.Pid,
 				ctx.Id,
 			)
 		case messages.MsgTypeRequestEndGame:

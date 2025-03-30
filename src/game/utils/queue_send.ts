@@ -1,5 +1,6 @@
 import Denque from "denque";
 import { _receiveType } from "./queue_receive";
+import BackendWS from "../../utils/net/sync";
 
 // 单人游戏
 interface SingleParams {
@@ -84,12 +85,18 @@ export default class QueueSend {
     }
 
     Consume() {
+        // 如果是单人游戏,则直接将数据放入接收队列
         if (this.singRecvQueue) {
             while (!this.queues.isEmpty()) {
                 const data = this.queues.shift();
                 if (!data) continue;
                 this.dispatchSingle(data);
             }
+        }
+        // 多人游戏
+        else if (BackendWS.isConnected) {
+            // 直接发送数据到服务器
+            BackendWS.consumeSendQueue();
         }
     }
 

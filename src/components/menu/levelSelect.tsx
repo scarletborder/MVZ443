@@ -5,7 +5,7 @@ import ChapterSelector from './level/ChapterSelector';
 import StageSelector from './level/StageSelector';
 import ParamsSelector from './level/ParamsSelector';
 import { StageDataRecords } from '../../game/utils/loader';
-import BackendWS from '../../utils/net/sync';
+import BackendWS, { encodeMessageToBinary } from '../../utils/net/sync';
 
 interface LevelSelectorProps {
     width: number;
@@ -85,12 +85,10 @@ const LevelSelector: React.FC<LevelSelectorProps> = ({ setGameParams, startGame,
                         setCurrentStep('params');
                         if (islord) {
                             console.log("send message map");
-                            BackendWS.sendMessage(JSON.stringify(
-                                {
-                                    type: 0x10,
-                                    chapterId: stageId
-                                }
-                            ))
+                            BackendWS.send(encodeMessageToBinary({
+                                type: 0x10,
+                                chapterId: stageId
+                            }));
                         }
                     }}
                     onBack={handleBack}
