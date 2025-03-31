@@ -24,14 +24,17 @@ export default function Card({ pid, texture, plantName, cooldownTime, sceneRef, 
     const [isChosen, setIsChosen] = useState(false);
     const { energy, isPaused } = useGameContext();
     const [pausedTime, setPausedTime] = useState(0);
+    const [timeFlow, setTimeFlow] = useState(0.1);
     const settings = useSettings();
+
+    const speedFactor = timeFlow * 10; // Adjust this value to control the speed of the cooldown
 
     useEffect(() => {
         let timer: NodeJS.Timeout;
         if (isCoolingDown && remainingTime > 0 && !isPaused) {
             // console.log('start cooldown', remainingTime);
             timer = setInterval(() => {
-                setRemainingTime(prev => Math.max(prev - 0.1, 0));
+                setRemainingTime(prev => Math.max(prev - timeFlow, 0));
             }, 100);
         } else if (remainingTime <= 0 && !isPaused) {
             setIsCoolingDown(false);
@@ -78,11 +81,17 @@ export default function Card({ pid, texture, plantName, cooldownTime, sceneRef, 
                 }
             }
         };
+        const handleSetTimeFlow = (data: { timeFlow: number }) => {
+            setTimeFlow(data.timeFlow * 0.1);
+        };
+
         EventBus.on('card-deselected', handleDeselect);
         EventBus.on('card-plant', handlePlant);
+        EventBus.on('timeFlow-set', handleSetTimeFlow);
         return () => {
             EventBus.removeListener('card-deselected', handleDeselect);
             EventBus.removeListener('card-plant', handlePlant);
+            EventBus.removeListener('timeFlow-set', handleSetTimeFlow);
         };
     }, [pid, isPaused, cooldownTime]); // Add isPaused and cooldownTime to dependencies
 
@@ -143,7 +152,7 @@ export default function Card({ pid, texture, plantName, cooldownTime, sceneRef, 
                 <div
                     className="cooldown-overlay"
                     style={{
-                        animationDuration: `${cooldownTime}s`,
+                        animationDuration: `${cooldownTime / speedFactor}s`,
                         animationPlayState: isPaused ? 'paused' : 'running',
                     }}
                 />

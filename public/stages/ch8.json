@@ -14,7 +14,7 @@
         "waterWays": [ 2, 3 ],
         "AllowedMobs": [ 1, 2, 3, 8, 4, 5, 7, 9, 11, 14, 15 ],
         "globalRatio": [ [ 0, 1.0 ], [ 21, 1.3 ] ],
-        "bossInsert": [ [ 34, 13 ] ]
+        "bossInsert": [ [ 35, 13 ] ]
     },
     "onWin": {
         "unLock": [ ],

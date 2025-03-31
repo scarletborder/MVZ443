@@ -51,6 +51,7 @@ export class Game extends Scene {
     pauseText: Phaser.GameObjects.Text;
     exitText: Phaser.GameObjects.Text;
     waitText: Phaser.GameObjects.Text;
+    speedText: Phaser.GameObjects.Text;
 
     params: GameParams;
     public seed: number = 0;
@@ -64,7 +65,9 @@ export class Game extends Scene {
     dumpMusic: Phaser.Sound.BaseSound | null = null;
 
     // command queue
-    private elapsed: number = 0;
+    private elapsed100: number = 0;
+    private elapsed500: number = 0;
+
     sendQueue: QueueSend
     recvQueue: QueueReceive
 
@@ -208,14 +211,18 @@ export class Game extends Scene {
     }
 
     update(time: number, delta: number): void {
-        this.elapsed += delta;
-        if (this.elapsed >= 100) {  // 达到 100 毫秒，执行函数
+        this.elapsed100 += delta;
+        this.elapsed500 += delta;
+        if (this.elapsed100 >= 100) {  // 达到 100 毫秒，执行函数
             this.recvQueue.Consume();
-            this.elapsed -= 100; // 保留多余的时间，避免累积误差
-
+            this.elapsed100 -= 100; // 保留多余的时间，避免累积误差
+        }
+        if (this.elapsed500 >= 500) {  // 达到 500 毫秒，执行函数
             // 更新怪物排序
             this.monsterSpawner.sortMonsters();
+            this.elapsed500 -= 500; // 保留多余的时间，避免累积误差
         }
+
         // 每次更新直接消费 发送队列
         this.sendQueue.Consume();
     }
@@ -392,6 +399,18 @@ export class Game extends Scene {
             rewards: this.stageData.rewards,
             progress: isWin ? 100 : this.monsterSpawner.progress,
         });
+    }
+
+    // game->app 通知游戏的速率变化
+    handleSpeedUp() {
+        // 多人游戏无效
+        if (HasConnected()) return;
+        const newTimeFlow = this.time.timeScale === 1 ? 2 : 1; // 切换速率
+        const newPhysicsTimeFlow = this.physics.world.timeScale === 1 ? 0.5 : 1; // 切换物理速率
+        EventBus.emit('timeFlow-set', { timeFlow: newTimeFlow });
+        this.time.timeScale = newTimeFlow; // 设置新的游戏速率
+        this.physics.world.timeScale = newPhysicsTimeFlow; // 设置新的物理速率
+        this.speedText.setText(newTimeFlow + '速');
     }
 
     destroy() { // Override Phaser's destroy method

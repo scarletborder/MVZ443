@@ -50,5 +50,26 @@ export default function CreateInnerMenu(game: Game) {
     ).setOrigin(0.5, 1).setVisible(false).disableInteractive().setDepth(DepthManager.getMenuDepth());
     game.exitText.on('pointerup', () => { game.handleExit(false) }, game);
 
-    
+    game.speedText = game.add.text(
+        game.cameras.main.width,
+        0,
+        '1速',
+        {
+            fontSize: game.scale.displaySize.width / 20,
+            color: 'rgb(187, 21, 21)',
+            backgroundColor: 'rgba(0, 0, 0, 0.35)',
+            padding: { x: 10, y: 5 },
+        }
+    ).setOrigin(1, 0).setVisible(true).setInteractive().setDepth(DepthManager.getMenuDepth());
+
+    game.speedText.on('pointerup', () => {
+        game.handleSpeedUp();
+    });
+
+    const KeyT = game.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.T);
+    if (KeyT) {
+        KeyT.on('down', () => {
+            game.handleSpeedUp();
+        });
+    }
 }

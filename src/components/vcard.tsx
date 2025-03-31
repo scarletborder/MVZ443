@@ -24,14 +24,16 @@ export default function VCard({ pid, texture, plantName, cooldownTime, sceneRef,
     const [isChosen, setIsChosen] = useState(false);
     const { energy, isPaused } = useGameContext();
     const [pausedTime, setPausedTime] = useState(0);
+    const [timeFlow, setTimeFlow] = useState(0.1);
     const settings = useSettings();
+    const speedFactor = timeFlow * 10; // 调整此值以控制冷却速度
 
     // [保持原有的 useEffect 逻辑不变]
     useEffect(() => {
         let timer: NodeJS.Timeout;
         if (isCoolingDown && remainingTime > 0 && !isPaused) {
             timer = setInterval(() => {
-                setRemainingTime(prev => Math.max(prev - 0.1, 0));
+                setRemainingTime(prev => Math.max(prev - timeFlow, 0));
             }, 100);
         } else if (remainingTime <= 0 && !isPaused) {
             setIsCoolingDown(false);
@@ -75,11 +77,16 @@ export default function VCard({ pid, texture, plantName, cooldownTime, sceneRef,
                 }
             }
         };
+        const handleSetTimeFlow = (data: { timeFlow: number }) => {
+            setTimeFlow(data.timeFlow * 0.1);
+        };
         EventBus.on('card-deselected', handleDeselect);
         EventBus.on('card-plant', handlePlant);
+        EventBus.on('timeFlow-set', handleSetTimeFlow);
         return () => {
             EventBus.removeListener('card-deselected', handleDeselect);
             EventBus.removeListener('card-plant', handlePlant);
+            EventBus.removeListener('timeFlow-set', handleSetTimeFlow);
         };
     }, [pid, isPaused, cooldownTime]);
 
@@ -139,7 +146,7 @@ export default function VCard({ pid, texture, plantName, cooldownTime, sceneRef,
                 <div
                     className="Vcooldown-overlay"
                     style={{
-                        animationDuration: `${cooldownTime}s`,
+                        animationDuration: `${cooldownTime / speedFactor}s`,
                         animationPlayState: isPaused ? 'paused' : 'running',
                     }}
                 />

@@ -145,7 +145,7 @@ class at_dispenser extends IPlant {
         }
         return this.scene?.time.addEvent({
             startAt: 1500,
-            delay: 2050,
+            delay: 4550,
             loop: true,
             callback: () => {
                 // 这里先判断对象及场景是否有效
@@ -175,7 +175,7 @@ function NewATDispenser(scene: Game, col: number, row: number, level: number): I
     return peashooter;
 }
 
-function shootArrow(scene: Game, shooter: IPlant, baseDamage: number = 250, isStar: boolean = false) {
+function shootArrow(scene: Game, shooter: IPlant, baseDamage: number = 450, isStar: boolean = false) {
     if (!scene || !shooter || shooter.health <= 0) {
         return;
     }
