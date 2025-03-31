@@ -77,9 +77,7 @@ class Warden extends IGolem {
         }
 
         // 傻站 5 秒后开始下一步
-        this.addTimer(5000, () => {
-            if (this && this.game) this.game.physics.world.enable(this); // 启用物理体
-
+        this.addTimer(4000, () => {
             // 开始挥舞手臂（如果有专门的动画方法）
             if (this.anim.startArmSwing) {
                 this.anim.startArmSwing();
@@ -95,7 +93,7 @@ class Warden extends IGolem {
                     this.anim.stopArmSwing();
                 }
                 // 傻站 3 秒后跳跃换位置
-                this.addTimer(4500, () => {
+                this.addTimer(3000, () => {
                     this.digToNewPosition(skid === 1);
                     callback();
                 });
@@ -237,8 +235,6 @@ class Warden extends IGolem {
     // 钻地换位置：删除当前注册，跳到新位置后重新注册
     // isBack: 是否在器械的后排位置(突袭)
     digToNewPosition(isBack: boolean = false) {
-        if (this && this.game) this.game.physics.world.disable(this); // 禁用物理体
-
         const key = `${this.row}`;
         if (this.Spawner.monstered.has(key)) {
             const list = this.Spawner.monstered.get(key);
@@ -261,7 +257,11 @@ class Warden extends IGolem {
         }
         const newcol = isBack ? 3 : 8;
         const { x, y } = this.game.positionCalc.getZombieBottomCenter(newcol, newRow);
+        if (this && this.game) this.game.physics.world.disable(this); // 禁用物理体
         this.digTo(x, y);
+        this.game.time.delayedCall(6000, () => {
+            if (this && this.game) this.game.physics.world.enable(this); // 启用物理体
+        });
 
         // 更新注册信息
         this.row = newRow;

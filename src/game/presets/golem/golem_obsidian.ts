@@ -63,7 +63,6 @@ class ObsidianGolem extends IGolem {
     doRound(skid: number, callback: () => void) {
         // 傻站 5 秒后开始下一步
         this.addTimer(7000, () => {
-            if (this && this.game) this.game.physics.world.enable(this); // 启用物理体
 
             // 开始挥舞手臂（如果有专门的动画方法）
             if (this.anim.startArmSwing) {
@@ -247,7 +246,6 @@ class ObsidianGolem extends IGolem {
 
     // 跳跃换位置：删除当前注册，跳到新位置后重新注册
     jumpToNewPosition() {
-        if (this && this.game) this.game.physics.world.disable(this);
         const key = `${this.row}`;
         if (this.Spawner.monstered.has(key)) {
             const list = this.Spawner.monstered.get(key);
@@ -270,7 +268,12 @@ class ObsidianGolem extends IGolem {
         }
         const newcol = 8;
         const { x, y } = this.game.positionCalc.getZombieBottomCenter(newcol, newRow);
-        this.jumpTo(x, y, 2500, 120 * Math.abs(newRow - this.row));
+
+        if (this && this.game) this.game.physics.world.disable(this);
+        this.jumpTo(x, y, 3500, 120 * Math.abs(newRow - this.row));
+        this.game.time.delayedCall(2500, () => {
+            if (this && this.game) this.game.physics.world.enable(this); // 启用物理体
+        });
 
         // 更新注册信息
         this.row = newRow;

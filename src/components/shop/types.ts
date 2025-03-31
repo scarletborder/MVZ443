@@ -227,7 +227,7 @@ class NinthSlot implements IGoods {
         private onPurchase: (id: number) => void
     ) { }
 
-    description = () => "9槽\n解锁chapter1-stage6";
+    description = () => "9槽\n解锁chapter1-stage7";
     hasBought = (id: number, progress: GameProgress) => {
         return this.purchasedIds.has(id) || progress.slotNum >= 9;
     };
@@ -240,7 +240,7 @@ class NinthSlot implements IGoods {
         items: [{ type: 1, count: this.price }]
     });
     canPurchase = (progress: GameProgress) => {
-        if (progress.level.has(6) && progress.slotNum === 8) return true;
+        if (progress.level.has(7) && progress.slotNum === 8) return true;
         return false;
     }
 }

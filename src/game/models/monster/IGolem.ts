@@ -129,7 +129,7 @@ export default class IGolem extends IMonster {
             this.anim.dig();
             this.x = x2;
             this.y = y2;
-            this.game.time.delayedCall(2000, () => {
+            this.game.time.delayedCall(5000, () => {
                 this.anim.getOut();
             })
         })
