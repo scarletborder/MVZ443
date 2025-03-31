@@ -19,7 +19,7 @@ class Obsidian extends IPlant {
     public onStarShards(): void {
         super.onStarShards();
         // 设置护盾
-        if (this.game && this.health > 0) {
+        if (this.health > 0) {
             this.shieldHealth = this.maxShieldHealth;
             this.setHealth(this.maxhealth);
         }

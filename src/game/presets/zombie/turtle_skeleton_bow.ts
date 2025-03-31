@@ -36,26 +36,28 @@ class TurtleSkeletonBow extends SkeletonBow {
             amount *= 0.5;
             this.capHealth -= amount;
         } else {
-            this.attachSprites.get('cap')?.setVisible(false);
+            if (this.capHealth > 0) {
+                this.attachSprites.get('cap')?.setVisible(false);
+                this.capHealth = 0;
+                // 加速+damage
+                this.SetSpeedFirstly(40);
+                this.attackDamage *= 2;
+                this.arrowDamage = 90;
+                // 狂暴射击
+                const scene = this.game;
+                const bruteTimer = scene.time.addEvent({
+                    delay: 600, // ms
+                    callback: () => {
+                        if (!scene || !this || this.health < 0) {
+                            bruteTimer.remove();
+                            return;
+                        }
+                        this.shootArrow(scene);
+                    },
+                    repeat: 4 // 5次
+                });
+            }
             super.takeDamage(amount - this.capHealth);
-            this.capHealth = 0;
-
-            // 加速
-            this.SetSpeedFirstly(40);
-            this.arrowDamage = 90;
-            // 狂暴射击
-            const scene = this.game;
-            const bruteTimer = scene.time.addEvent({
-                delay: 400, // ms
-                callback: () => {
-                    if (!scene || !this || this.health < 0) {
-                        bruteTimer.remove();
-                        return;
-                    }
-                    this.shootArrow(scene);
-                },
-                repeat: 4 // 5次
-            });
         }
 
         if (this.capHealth > 0) {

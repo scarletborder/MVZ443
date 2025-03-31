@@ -34,12 +34,16 @@ class TurtleZombie extends EnhancedZombie {
             amount *= 0.5;
             this.capHealth -= amount;
         } else {
-            this.attachSprites.get('cap')?.setVisible(false);
-            super.takeDamage(amount - this.capHealth);
-            this.capHealth = 0;
+            if (this.capHealth > 0) {
+                this.attachSprites.get('cap')?.setVisible(false);
+                this.capHealth = 0;
+                // 加速+damage
+                this.SetSpeedFirstly(40);
+                this.attackDamage *= 2;
+            }
 
-            // 加速
-            this.SetSpeedFirstly(40);
+            super.takeDamage(amount - this.capHealth);
+
             if (!this.attackingPlant && !this.IsFrozen && this.hasDebuff('slow') === 0) {
                 this.StartMove();
             }
