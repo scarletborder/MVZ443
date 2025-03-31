@@ -4,7 +4,7 @@
     "type": 1,
     "stageScript": {
         "first_wave_id": 0,
-        "total_waves": 114514,
+        "total_waves": 10,
         "difficulty_limit": 114514,
         "phase1_end": 8,
         "phase2_end": 28,
@@ -13,7 +13,7 @@
         "waterWays": [ 2, 3 ],
         "AllowedMobs": [ 1, 15 ],
         "globalRatio": [ [ 0, 1.0 ], [ 21, 1.3 ] ],
-        "bossInsert": [ [ 34, 13 ] ]
+        "bossInsert": [ [ 1, 13 ] ]
     },
     "onWin": {
         "unLock": [ ],
