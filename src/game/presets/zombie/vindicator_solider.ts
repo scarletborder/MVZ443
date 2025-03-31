@@ -4,6 +4,9 @@ import { IZombie } from '../../models/monster/IZombie';
 import { MIRecord } from '../../models/IRecord';
 import { newNormalVindicatorAnim } from '../../sprite/normal_zombie';
 import { IPlant } from '../../models/IPlant';
+import { IBullet } from '../../models/IBullet';
+import { ILaser } from '../../models/ILaser';
+import { IExpolsion } from '../../models/IExplosion';
 
 
 export class EnhancedVindicator extends IZombie {
@@ -52,11 +55,18 @@ export class EnhancedVindicator extends IZombie {
         // <0 给到别的逻辑处理
     }
 
-    public takeDamage(amount: number, projectileType?: "bullet" | "laser" | "explosion" | "trajectory"): void {
+    public takeDamage(amount: number, projectileType?: "bullet" | "laser" | "explosion" | "trajectory",
+        projectile?: IBullet | ILaser | IExpolsion
+    ): void {
         if (projectileType !== 'laser' && projectileType !== 'trajectory') { // 激光,投掷物穿透盾牌
             if (this.shieldHealth > amount) {
-                amount *= 0.75;
+                // 盾牌成功挡下
+                amount *= 0.5;
                 this.shieldHealth -= amount;
+                // 同时直接让穿透子弹的穿透数量减少到0
+                if (projectile instanceof IBullet) {
+                    projectile.penetrate = 0;
+                }
             } else {
                 this.attachSprites.get('shield')?.setVisible(false);
                 super.takeDamage(amount - this.shieldHealth, projectileType);

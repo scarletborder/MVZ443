@@ -2,6 +2,9 @@ import { SECKILL } from "../../../../public/constants";
 import { Game } from "../../scenes/Game";
 import GridClan from "../../utils/grid_clan";
 import MonsterSpawner from "../../utils/spawner";
+import { IBullet } from "../IBullet";
+import { IExpolsion } from "../IExplosion";
+import { ILaser } from "../ILaser";
 import { IPlant } from "../IPlant";
 
 // monster
@@ -92,7 +95,9 @@ export class IMonster extends Phaser.Physics.Arcade.Sprite {
      * @param damage 子类在处理完逻辑后可以调用父类方法,传入真实受到的伤害(如已经考虑了减伤防御)
      * @param projectileType 
      */
-    takeDamage(damage: number, projectileType?: "bullet" | "laser" | "explosion" | "trajectory") {
+    takeDamage(damage: number, projectileType?: "bullet" | "laser" | "explosion" | "trajectory",
+        projectile?: IBullet | ILaser | IExpolsion
+    ) {
         const newHealth = this.health - damage;
         this.setHealth(newHealth);
     }
@@ -113,13 +118,22 @@ export class IMonster extends Phaser.Physics.Arcade.Sprite {
     }
 
     /**
-     * 初始设置速度
+     * 任何时机设置速度, 如果在移动中,那么会直接影响当前的速度
      * @param speed 数值,无需考虑缩放比例
      */
     SetSpeedFirstly(speed: number) {
         const ratio = this.scaleFactor * 0.8;
         this.originalSpeed = speed * ratio;
         this.speed = speed * ratio;
+
+        if (this.body && (this.body.velocity.x !== 0) && (!this.IsFrozen)) {
+            // 如果已经在移动,那么直接设置速度
+            // 判断是否有slow
+            if (this.hasDebuff('slow') > 0) {
+                this.speed *= 0.5;
+            }
+            this.setVelocityX(-this.speed);
+        }
     }
 
     // catchDebuff函数，处理增加debuff

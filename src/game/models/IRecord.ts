@@ -36,6 +36,10 @@ export interface MIRecord {
     weight: (waveId?: number) => number; // 权重
     level: number;  // 权限等级
     leastWaveID: number; // 最早出现的waveID
+
+    // 最早出现的waveID, 通过关卡ID来判断, 主要用于后期关卡增大难度
+    // 如果无,fallback到leastWaveID
+    leastWaveIDByStageID?: (stageID: number) => number;
 }
 
 

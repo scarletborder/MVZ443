@@ -158,7 +158,7 @@ export class IExpolsion extends Phaser.Physics.Arcade.Sprite {
         if (this.hasAttacked.has(object)) return;
         // 炸僵尸
         if (object instanceof IMonster && this.targetCamp === 'zombie') {
-            object.takeDamage(this.damage, 'explosion');
+            object.takeDamage(this.damage, 'explosion', this);
             this.hasAttacked.add(object);
         } else if (object instanceof IPlant && this.targetCamp === 'plant') {
             object.takeDamage(this.damage, null);

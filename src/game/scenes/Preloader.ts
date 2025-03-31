@@ -223,7 +223,7 @@ export class Preloader extends Scene {
             }
         }
 
-        if (stageId === 6 || stageId === 7) {
+        if (stageId === 6 || stageId === 7 || stageId === 8 || stageId === 9) {
             this.load.audio('ZCDS-0014-05', 'audio/ZCDS-0014-05.ogg');
         }
     }

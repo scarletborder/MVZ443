@@ -63,6 +63,8 @@ class ObsidianGolem extends IGolem {
     doRound(skid: number, callback: () => void) {
         // 傻站 5 秒后开始下一步
         this.addTimer(7000, () => {
+            if (this && this.game) this.game.physics.world.enable(this); // 启用物理体
+
             // 开始挥舞手臂（如果有专门的动画方法）
             if (this.anim.startArmSwing) {
                 this.anim.startArmSwing();
@@ -77,8 +79,8 @@ class ObsidianGolem extends IGolem {
                 if (this.anim.stopArmSwing) {
                     this.anim.stopArmSwing();
                 }
-                // 傻站 3 秒后跳跃换位置
-                this.addTimer(5000, () => {
+                // 傻站 2 秒后跳跃换位置
+                this.addTimer(2000, () => {
                     this.jumpToNewPosition();
                     callback();
                 });
@@ -100,10 +102,10 @@ class ObsidianGolem extends IGolem {
         const random = this.random;
 
         // 根据难度确定基础难度总和
-        const baseLevelSum = diff === 'low' ? 40 : 50;
+        const baseLevelSum = diff === 'low' ? 38 : 48;
 
         // 允许生成的怪物类型
-        const allowedMobs = [1, 2, 3, 8, 4, 5, 7, 9, 11, 14];
+        const allowedMobs = [1, 2, 3, 8, 5, 7, 9, 11, 14, 15, 16];
 
         // 生成怪物列表
         const monsterRecords = generateBossWaveScript(
@@ -245,6 +247,7 @@ class ObsidianGolem extends IGolem {
 
     // 跳跃换位置：删除当前注册，跳到新位置后重新注册
     jumpToNewPosition() {
+        if (this && this.game) this.game.physics.world.disable(this);
         const key = `${this.row}`;
         if (this.Spawner.monstered.has(key)) {
             const list = this.Spawner.monstered.get(key);
@@ -267,7 +270,7 @@ class ObsidianGolem extends IGolem {
         }
         const newcol = 8;
         const { x, y } = this.game.positionCalc.getZombieBottomCenter(newcol, newRow);
-        this.jumpTo(x, y, 1000, 120 * Math.abs(newRow - this.row));
+        this.jumpTo(x, y, 2500, 120 * Math.abs(newRow - this.row));
 
         // 更新注册信息
         this.row = newRow;
@@ -286,6 +289,8 @@ class ObsidianGolem extends IGolem {
             amount = Math.min(amount, 1500);
         } else if (projectileType === 'laser' && amount > 500) {
             amount = 500;
+        } else {
+            amount *= 0.8;
         }
         super.takeDamage(amount);
     }

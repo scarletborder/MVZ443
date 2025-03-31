@@ -70,7 +70,7 @@ const CapZombieRecord: MIRecord = {
     NewFunction: NewZombie,
     texture: 'zombie/zombie',
 
-    weight: (waveId?: number) => Math.max(1000, 4000 - ((waveId || 1) - 4) * 150),
+    weight: (waveId?: number) => Math.max(800, 4000 - ((waveId || 1) - 4) * 150),
     level: 2,
     leastWaveID: 0,
 }

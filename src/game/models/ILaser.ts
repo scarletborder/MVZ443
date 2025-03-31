@@ -1,12 +1,11 @@
 // 激光
 
+import { _Typedebuffs } from "../../constants/game";
 import DepthManager from "../../utils/depth";
 import IObstacle from "../presets/obstacle/IObstacle";
 import { Game } from "../scenes/Game";
 import { IPlant } from "./IPlant";
 import { IMonster } from "./monster/IMonster";
-
-type _Typedebuffs = 'slow' | 'frozen' | null;
 
 type LaserParams = {
     debuff?: _Typedebuffs,
@@ -119,7 +118,7 @@ export class ILaser extends Phaser.GameObjects.Rectangle {
             // 穿透次数和销毁
             this.hasPenetrated.add(object);// 记录穿透过的对象
 
-            object.takeDamage(damage, "laser");
+            object.takeDamage(damage, "laser", this);
             // 如果有debuff
             if (this.debuff) {
                 object.catchDebuff(this.debuff, this.duration);

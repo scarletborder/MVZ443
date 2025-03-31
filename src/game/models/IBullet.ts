@@ -1,3 +1,4 @@
+import { _Typedebuffs } from "../../constants/game";
 import DepthManager from "../../utils/depth";
 import IObstacle from "../presets/obstacle/IObstacle";
 import { Game } from "../scenes/Game";
@@ -18,6 +19,10 @@ export class IBullet extends Phaser.Physics.Arcade.Sprite {
     public isFlying: boolean = false; // 是否在空中可以打击空中目标
     public hasPenetrated: Set<Phaser.Physics.Arcade.Sprite> = new Set(); // 已经穿透的目标
     public penetratedPunish: number = 0.5; // 穿透后伤害减少50%
+
+    // buff
+    public debuff: _Typedebuffs = null;
+    public duration: number = 0;
 
     // 视觉
     public col: number;
@@ -78,7 +83,11 @@ export class IBullet extends Phaser.Physics.Arcade.Sprite {
             if (this.penetrate <= 0) {
                 this.destroy();
             }
-            object.takeDamage(damage, "bullet");
+            object.takeDamage(damage, "bullet", this);
+            // 如果有debuff
+            if (this.debuff) {
+                object.catchDebuff(this.debuff, this.duration);
+            }
 
             // 如果穿透后还存在穿透次数,则伤害降低
             if (this && this.penetrate && this.penetrate > 0) {

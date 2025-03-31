@@ -144,8 +144,8 @@ class at_dispenser extends IPlant {
             return null;
         }
         return this.scene?.time.addEvent({
-            startAt: 1500,
-            delay: 4550,
+            startAt: 2500,
+            delay: 3550,
             loop: true,
             callback: () => {
                 // 这里先判断对象及场景是否有效
@@ -175,7 +175,7 @@ function NewATDispenser(scene: Game, col: number, row: number, level: number): I
     return peashooter;
 }
 
-function shootArrow(scene: Game, shooter: IPlant, baseDamage: number = 450, isStar: boolean = false) {
+function shootArrow(scene: Game, shooter: IPlant, baseDamage: number = 300, isStar: boolean = false) {
     if (!scene || !shooter || shooter.health <= 0) {
         return;
     }
@@ -185,7 +185,7 @@ function shootArrow(scene: Game, shooter: IPlant, baseDamage: number = 450, isSt
     let damage = GetIncValue(baseDamage, level, 1.4);
     let penetrate = 1;
 
-    const arrow = NewHorizontalFireWork(scene, shooter.col, shooter.row, scene.positionCalc.GRID_SIZEX * 32, damage, 'zombie', 50);
+    const arrow = NewHorizontalFireWork(scene, shooter.col, shooter.row, scene.positionCalc.GRID_SIZEX * 32, damage, 'zombie', 100);
     arrow.penetrate = penetrate;
     return arrow;
 }

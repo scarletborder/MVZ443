@@ -1,0 +1,1 @@
+export type _Typedebuffs = 'slow' | 'frozen' | null;

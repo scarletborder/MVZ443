@@ -165,7 +165,7 @@ function debugScript(stage: StageScript): Wave[] {
 }
 
 // 主函数：根据 StageScript 生成 Wave[]
-export function generateStageScript(stage: StageScript, random: seedrandom.PRNG): Wave[] {
+export function generateStageScript(stage: StageScript, random: seedrandom.PRNG, stageID: number): Wave[] {
     // 调试入口, totalwaves = 114514
     if (stage.total_waves === 114514) {
         // 
@@ -222,6 +222,11 @@ export function generateStageScript(stage: StageScript, random: seedrandom.PRNG)
     function CanMobAppear(mobId: number, waveId: number): boolean {
         if (!AllowedMobs.has(mobId)) {
             return false;
+        }
+
+        if (MonsterFactoryMap[mobId].leastWaveIDByStageID) {
+            const leastWaveID = MonsterFactoryMap[mobId].leastWaveIDByStageID(stageID);
+            if (leastWaveID <= waveId) return true;
         }
 
         if (MonsterFactoryMap[mobId].leastWaveID > waveId) return false;

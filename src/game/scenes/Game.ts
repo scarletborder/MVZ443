@@ -95,7 +95,7 @@ export class Game extends Scene {
         this.gridProperty = new Array(this.GRID_ROWS).fill(0).map(() => new Array(this.GRID_COLS).fill('ground')); //  默认全为地板
         this.positionCalc = new PositionCalc(this.scaleFactor, this.GRID_ROWS, this.GRID_COLS);
         const randomPrng = seedrandom.alea(String(this.seed * 17));
-        const waves = generateStageScript(this.stageData.stageScript, randomPrng);
+        const waves = generateStageScript(this.stageData.stageScript, randomPrng, this.params.level);
         this.monsterSpawner = new MonsterSpawner(this, waves);
 
         // 目前只有单机

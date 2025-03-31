@@ -56,8 +56,7 @@ export default function CreateInnerMenu(game: Game) {
         '1速',
         {
             fontSize: game.scale.displaySize.width / 20,
-            color: 'rgb(187, 21, 21)',
-            backgroundColor: 'rgba(0, 0, 0, 0.35)',
+            color: 'rgba(187, 21, 21, 0.5)',
             padding: { x: 10, y: 5 },
         }
     ).setOrigin(1, 0).setVisible(true).setInteractive().setDepth(DepthManager.getMenuDepth());

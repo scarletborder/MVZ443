@@ -6,10 +6,11 @@ import { Game } from "../../scenes/Game";
 import NewArrow from "../bullet/arrow";
 import { EnhancedSkeleton } from "./skeleton";
 
-class MinerZombie extends EnhancedSkeleton {
+export class SkeletonBow extends EnhancedSkeleton {
     currentHatState = 0;
+    arrowDamage: number = 70;
+    arrowInterval: number = 3500;
 
-    pickaxeSwing: Phaser.Tweens.Tween | null = null;
     Timer: Phaser.Time.TimerEvent | null = null;
 
     constructor(scene: Game, col: number, row: number, texture: string, waveID: number) {
@@ -34,7 +35,7 @@ class MinerZombie extends EnhancedSkeleton {
 
         // 监听射箭和停止射箭
         this.Timer = scene.time.addEvent({
-            delay: 3500,
+            delay: this.arrowInterval, // ms
             callback: () => {
                 if (this.hasDebuff('frozen') > 0) return; // 冰冻状态不射箭
                 // 如果正在近战攻击,放弃
@@ -70,7 +71,7 @@ class MinerZombie extends EnhancedSkeleton {
     }
 
     shootArrow(scene: Game) {
-        const damage = 70;
+        const damage = this.arrowDamage;
         const arrow = NewArrow(scene, 10, this.row,
             scene.positionCalc.GRID_SIZEX * 32, damage, 'plant');
         arrow.setX(this.x);
@@ -83,7 +84,7 @@ class MinerZombie extends EnhancedSkeleton {
 
 
 function NewSkeletonBow(scene: Game, x: number, y: number, waveID: number): IZombie {
-    const zombie = new MinerZombie(scene, x, y, 'zombie/zombie', waveID);
+    const zombie = new SkeletonBow(scene, x, y, 'zombie/zombie', waveID);
     zombie.StartMove();
     return zombie;
 }
@@ -93,7 +94,7 @@ const SkeletonBowRecord: MIRecord = {
     name: 'MinerZombie',
     NewFunction: NewSkeletonBow,
     texture: 'zombie/zombie',
-    weight: () => 1500,
+    weight: (waveId?: number) => Math.max(800, 1500 - ((waveId || 1) - 15) * 100),
     level: 2,
     leastWaveID: 7,
 }

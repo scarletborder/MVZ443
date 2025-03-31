@@ -25,7 +25,7 @@ class Warden extends IGolem {
         //TODO: 构造前,elite spawner会emit 给progress bar, boss战斗开始
         const animProps = WardenGolemAnimProps;
         super(scene, col, row, waveID, animProps);
-        this.SetHealthFirsty(16000);
+        this.SetHealthFirsty(18000);
 
         this.SetSpeedFirstly(25);
         this.random = seedrandom.alea(String(scene.seed * 19));
@@ -78,6 +78,8 @@ class Warden extends IGolem {
 
         // 傻站 5 秒后开始下一步
         this.addTimer(5000, () => {
+            if (this && this.game) this.game.physics.world.enable(this); // 启用物理体
+
             // 开始挥舞手臂（如果有专门的动画方法）
             if (this.anim.startArmSwing) {
                 this.anim.startArmSwing();
@@ -115,10 +117,10 @@ class Warden extends IGolem {
         const random = this.random;
 
         // 根据难度确定基础难度总和
-        const baseLevelSum = diff === 'low' ? 45 : 55;
+        const baseLevelSum = diff === 'low' ? 40 : 50;
 
         // 允许生成的怪物类型
-        const allowedMobs = [1, 2, 3, 8, 4, 5, 7, 9, 11, 14];
+        const allowedMobs = [1, 2, 3, 8, 5, 7, 9, 11, 14, 15, 16];
 
         // 生成怪物列表
         const monsterRecords = generateBossWaveScript(
@@ -235,6 +237,8 @@ class Warden extends IGolem {
     // 钻地换位置：删除当前注册，跳到新位置后重新注册
     // isBack: 是否在器械的后排位置(突袭)
     digToNewPosition(isBack: boolean = false) {
+        if (this && this.game) this.game.physics.world.disable(this); // 禁用物理体
+
         const key = `${this.row}`;
         if (this.Spawner.monstered.has(key)) {
             const list = this.Spawner.monstered.get(key);
@@ -276,6 +280,8 @@ class Warden extends IGolem {
             amount = Math.min(amount, 1500);
         } else if (projectileType === 'laser' && amount > 500) {
             amount = 500;
+        } else {
+            amount *= 0.9;
         }
         super.takeDamage(amount);
     }
