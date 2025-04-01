@@ -28,4 +28,5 @@ export interface StageDescription {
     chapterID: number;
     name: string;
     description: () => string;
-};
+    illustration: string;
+}

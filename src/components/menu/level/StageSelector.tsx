@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { ChapterDataRecords, StageDataRecords } from '../../../game/utils/loader';
 import { useSaveManager } from '../../../context/save_ctx';
+import { publicUrl } from '../../../utils/browser';
 
 interface StageSelectorProps {
     chapterId: number;
@@ -105,14 +106,21 @@ const StageSelector: React.FC<StageSelectorProps> = ({ chapterId, onSelect, onBa
                 overflowY: 'auto',
                 background: 'rgba(30, 30, 30, 0.9)',
             }}>
+                {selectedStage ? <img
+                    src={`${publicUrl}/assets/dramas/${StageDataRecords[selectedStage].illustration}`}
+                    style={{
+                        width: '100%',
+                        height: 'auto',
+                        marginBottom: '20px',
+                    }}
+                /> : null}
                 {selectedStage ? StageDataRecords[selectedStage].description() : '请选择一个关卡'}
                 {/* 下一步按钮 */}
+                <br />
                 <button
                     style={{
-                        position: 'absolute',
-                        bottom: '20px',
-                        left: '50%',
-                        transform: 'translateX(-50%)',
+                        marginTop: 'auto',
+                        width: '95%',
                         padding: '10px 20px',
                         background: selectedStage ? '#00ccff' : '#666',
                         border: 'none',

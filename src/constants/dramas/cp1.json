@@ -1,0 +1,64 @@
+[
+    {
+        "id": 1,
+        "name": "村庄之下",
+        "description": "cp1",
+        "stages": [
+            {
+                "id": 1,
+                "name": "安心村庄",
+                "description": "sg1",
+                "illustration": "img/sg1.png"
+            },
+            {
+                "id": 2,
+                "name": "矿洞之外",
+                "description": "sg2",
+                "illustration": "img/sg2.png"
+            },
+            {
+                "id": 3,
+                "name": "矿道",
+                "description": "sg3",
+                "illustration": "img/sg3.png"
+            },
+            {
+                "id": 4,
+                "name": "矿洞深处",
+                "description": "sg4",
+                "illustration": "img/sg4.png"
+            },
+            {
+                "id": 5,
+                "name": "矿洞深处(水)",
+                "description": "sg5",
+                "illustration": "img/sg5.png"
+            },
+            {
+                "id": 6,
+                "name": "虹龙洞",
+                "description": "sg6",
+                "illustration": "img/sg6.png"
+            },
+            {
+                "id": 7,
+                "name": "矿道(elite)",
+                "description": "sg7",
+                "illustration": "img/sg7.png"
+            },
+            {
+                "id": 8,
+                "name": "矿洞深处(水elite)",
+                "description": "sg8",
+                "illustration": "img/sg8.png"
+            },
+            {
+                "id": 9,
+                "name": "虹龙洞(BOSS)",
+                "description": "sg9",
+                "illustration": "img/sg9.png"
+            }
+        ]
+    }
+
+]
