@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { IRefPhaserGame } from '../game/PhaserGame';
-import { Game } from '../game/scenes/Game';
-import { EventBus } from '../game/EventBus';
-import { useGameContext } from '../context/garden_ctx';
-import { useSettings } from '../context/settings_ctx';
-import { publicUrl } from '../utils/browser';
-import PlantFactoryMap from '../game/presets/plant';
+import { IRefPhaserGame } from '../../game/PhaserGame';
+import { Game } from '../../game/scenes/Game';
+import { EventBus } from '../../game/EventBus';
+import { useGameContext } from '../../context/garden_ctx';
+import { useSettings } from '../../context/settings_ctx';
+import { publicUrl } from '../../utils/browser';
+import PlantFactoryMap from '../../game/presets/plant';
 
 interface CardProps {
     pid: number;

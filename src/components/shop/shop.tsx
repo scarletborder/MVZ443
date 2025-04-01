@@ -1,8 +1,9 @@
 // src/components/ShopSelector.tsx
 import React, { useEffect, useState, useCallback } from 'react';
-import { item, IGoods, NewGoodLists } from './types';
+import { item, IGoods } from './types';
 import { GameProgress, useSaveManager } from '../../context/save_ctx';
-import StuffList from './stuff_list';
+import { DetailGoods, InitDetail, PurchasedDetailGoods, SidebarGoods } from './widget';
+import NewGoodLists from './goods';
 
 interface ShopSelectorProps {
     width: number;
@@ -18,6 +19,10 @@ const ShopSelector: React.FC<ShopSelectorProps> = ({
     const [selectedGoodId, setSelectedGoodId] = useState<number | null>(null);
     const [purchasedIds] = useState<Set<number>>(new Set());
     const [forceUpdate, setForceUpdate] = useState(0); // Added to force re-render
+
+    // 视图类型,false-未购买,true-已购买 
+    const [showPurchased, setShowPurchased] = useState(false);
+
     const gameManager = useSaveManager();
 
     const handlePurchaseCallback = useCallback((id: number) => {
@@ -97,15 +102,16 @@ const ShopSelector: React.FC<ShopSelectorProps> = ({
             }}>
                 <div style={{
                     display: "flex",
-                    justifyContent: "space-between",
+                    justifyContent: "flex-start",
                     alignItems: "center",
                     marginBottom: "10px",
-                    padding: "5px"
+                    padding: "2px",
+                    gap: "4%"
                 }}>
                     <button
                         onClick={onBack}
                         style={{
-                            padding: "6px 12px",
+                            padding: "6px 8px",
                             background: "#444",
                             border: "none",
                             color: "#fff",
@@ -116,43 +122,46 @@ const ShopSelector: React.FC<ShopSelectorProps> = ({
                     >
                         Back
                     </button>
+
+                    <button
+                        onClick={() => {
+                            setShowPurchased(!showPurchased);
+                            setSelectedGoodId(null);
+                        }}
+                        style={{
+                            padding: "4px 4px",
+                            backgroundColor: showPurchased ? "#72B063" : "#719AAC",
+                            color: "#fff",
+                            border: "none",
+                            borderRadius: "4px",
+                            fontSize: "14px"
+                        }}
+                    >
+                        {showPurchased ? "已购列表" : "商品列表"}
+                    </button>
+
                     <span style={{
                         color: "#ffd700",
                         fontSize: "16px",
-                        fontWeight: "bold"
+                        fontWeight: "bold",
+                        marginLeft: "auto",
+                        marginRight: "1%",
                     }}>
-                        Gold: {getGoldAmount()}
+                        {getGoldAmount()}$
                     </span>
                 </div>
 
                 {visibleGoods.map(good => (
-                    <div
-                        key={good.id}
-                        style={{
-                            padding: "5px",
-                            margin: "2px 0",
-                            background: good.hasBought(good.id, gameManager.currentProgress) ? "#666" : "#333",
-                            border: selectedGoodId === good.id ? "2px solid #fff" : "1px solid #555",
-                            cursor: good.hasBought(good.id, gameManager.currentProgress) ? "not-allowed" : "pointer",
-                            opacity: good.hasBought(good.id, gameManager.currentProgress) ? 0.6 : 1,
-                            minHeight: "60px",
-                            display: "flex",
-                            flexDirection: "column",
-                            justifyContent: "center"
-                        }}
-                        onClick={() => !good.hasBought(good.id, gameManager.currentProgress) && setSelectedGoodId(good.id)}
-                    >
-                        <h3 style={{
-                            margin: "0",
-                            fontSize: "14px",
-                            lineHeight: "1.2"
-                        }}>{good.name}</h3>
-                        <p style={{
-                            margin: "2px 0 0 0",
-                            fontSize: "12px",
-                            lineHeight: "1.2"
-                        }}>Price: {good.price}</p>
-                    </div>
+                    (showPurchased === good.hasBought(good.id, gameManager.currentProgress)) && (
+                        SidebarGoods({
+                            key: good.id,
+                            name: good.name,
+                            showPrice: !showPurchased,
+                            price: good.price,
+                            isChosen: (key: number) => key === selectedGoodId,
+                            handleClick: (key: number) => setSelectedGoodId(key)
+                        })
+                    )
                 ))}
             </div>
 
@@ -161,7 +170,7 @@ const ShopSelector: React.FC<ShopSelectorProps> = ({
                 height: "100%",
                 padding: "20px"
             }}>
-                {selectedGoodId !== null && (() => {
+                {selectedGoodId !== null && !showPurchased && (() => {
                     const selectedGood = goodsList.find(g => g.id === selectedGoodId);
                     if (!selectedGood) return null;
 
@@ -169,44 +178,27 @@ const ShopSelector: React.FC<ShopSelectorProps> = ({
                     const purchaseAllowed = canPurchase(gameManager.currentProgress, selectedGood);
                     const hasBought = selectedGood.hasBought(selectedGood.id, gameManager.currentProgress);
 
-                    return (
-                        <div>
-                            <h2>{selectedGood.name}</h2>
-                            <p>{selectedGood.description()}</p>
-                            <StuffList
-                                items={selectedGood.getPriceStructure().items}
-                                currentItems={getCurrentItems()}
-                            />
-
-                            {purchaseAllowed ? (
-                                <button
-                                    disabled={hasBought || !canAfford}
-                                    onClick={() => handlePurchase(selectedGood)}
-                                    style={{
-                                        padding: "10px 20px",
-                                        background: hasBought || !canAfford ? "#666" : "#007bff",
-                                        border: "none",
-                                        color: "#fff",
-                                        cursor: hasBought || !canAfford ? "not-allowed" : "pointer",
-                                        marginTop: "20px"
-                                    }}
-                                >
-                                    {hasBought ? "Purchased" : !canAfford ? "Cannot Afford" : "Purchase"}
-                                </button>
-                            ) : (
-                                <span style={{
-                                    color: "#ff4444",
-                                    fontSize: "16px",
-                                    fontWeight: "bold",
-                                    marginTop: "20px",
-                                    display: "block"
-                                }}>
-                                    Not Allowed
-                                </span>
-                            )}
-                        </div>
-                    );
+                    return (DetailGoods({
+                        good: selectedGood,
+                        canAfford,
+                        canPurchase: purchaseAllowed,
+                        hasBought,
+                        priceItems: selectedGood.getPriceStructure().items,
+                        myItems: getCurrentItems(),
+                        handlePurchase
+                    }))
                 })()}
+
+                {selectedGoodId !== null && showPurchased && (() => {
+                    const selectedGood = goodsList.find(g => g.id === selectedGoodId);;
+                    if (!selectedGood) return null;
+
+                    return (PurchasedDetailGoods(selectedGood));
+                })()}
+
+                {selectedGoodId === null && InitDetail({
+                    myItems: getCurrentItems()
+                })}
             </div>
         </div>
     );

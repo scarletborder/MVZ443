@@ -1,17 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { IRefPhaserGame, PhaserGame } from './game/PhaserGame';
-import { CardSlotHorizontal, CardSlotVertical, EnergySlot, VerticalEnergySlot, ViceCardSlot } from './components/cardslot';
+import { CardSlotHorizontal, CardSlotVertical, EnergySlot, VerticalEnergySlot, ViceCardSlot } from './components/widget/cardslot';
 import { GameProvider } from './context/garden_ctx';
-import BottomTools from './components/bottom';
+import BottomTools from './components/widget/bottom';
 import DocFrame from './components/DocFrame';
 import { SaveProvider } from './context/save_ctx';
 import { useSettings } from './context/settings_ctx';
 import { GameParams } from './game/models/GameParams';
 import i18n from './utils/i18n';
-import { OnWin, StageResult } from './game/models/IRecord';
+import { StageResult } from './game/models/IRecord';
 import GameResultView from './components/menu/result';
 import { useDeviceType } from './hooks/useDeviceType';
-import { _RoomInfo } from './game/utils/queue_receive';
 import BackendWS, { encodeMessageToBinary } from './utils/net/sync';
 
 function App() {

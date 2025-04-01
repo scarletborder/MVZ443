@@ -1,9 +1,9 @@
-import { useEffect } from "react";
-import { useGameContext } from "../context/garden_ctx";
-import { useSettings } from "../context/settings_ctx";
-import { EventBus } from "../game/EventBus";
-import { IRefPhaserGame } from "../game/PhaserGame";
-import { publicUrl } from "../utils/browser";
+import { useEffect, useCallback } from "react";
+import { useGameContext } from "../../context/garden_ctx";
+import { useSettings } from "../../context/settings_ctx";
+import { EventBus } from "../../game/EventBus";
+import { IRefPhaserGame } from "../../game/PhaserGame";
+import { publicUrl } from "../../utils/browser";
 
 interface Props {
     sceneRef: React.MutableRefObject<IRefPhaserGame | null>;
@@ -14,12 +14,12 @@ export default function Pickaxe({ sceneRef }: Props) {
     const settings = useSettings();
     const img = `${publicUrl}/assets/sprite/pickaxe.png`;
 
-    const handleClick = () => {
+    const handleClick = useCallback(() => {
         EventBus.emit('card-deselected', { pid: null }); // 通知卡片取消选中
         if (!sceneRef.current) return;
         if (isPaused && (!settings.isBluePrint)) return;
         EventBus.emit('pickaxe-click', null);
-    }
+    }, [sceneRef, isPaused, settings.isBluePrint]);
 
     // 添加键盘事件监听
     useEffect(() => {

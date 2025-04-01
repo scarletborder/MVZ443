@@ -1,11 +1,11 @@
 // BottomTools.jsx
-import { useGameContext } from "../context/garden_ctx";
+import { useGameContext } from "../../context/garden_ctx";
 import { useCallback, useEffect, useState } from "react";
-import { EventBus } from "../game/EventBus";
-import { useSettings } from "../context/settings_ctx";
-import { StageDataRecords } from "../game/utils/loader";
-import { publicUrl } from "../utils/browser";
-import { useSaveManager } from "../context/save_ctx";
+import { EventBus } from "../../game/EventBus";
+import { useSettings } from "../../context/settings_ctx";
+import { StageDataRecords } from "../../game/utils/loader";
+import { publicUrl } from "../../utils/browser";
+import { useSaveManager } from "../../context/save_ctx";
 
 type Props = {
     width: number

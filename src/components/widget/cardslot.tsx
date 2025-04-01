@@ -1,26 +1,21 @@
 import { useEffect, useState } from 'react';
-import { IRefPhaserGame } from '../game/PhaserGame';
+import { IRefPhaserGame } from '../../game/PhaserGame';
 import Card from './card';
-import PlantFactoryMap from '../game/presets/plant';
-import { useGameContext } from '../context/garden_ctx';
-import { EventBus } from '../game/EventBus';
-import { IRecord } from '../game/models/IRecord';
-import { useSaveManager } from '../context/save_ctx';
-import { GameParams } from '../game/models/GameParams';
+import PlantFactoryMap from '../../game/presets/plant';
+import { useGameContext } from '../../context/garden_ctx';
+import { EventBus } from '../../game/EventBus';
+import { IRecord } from '../../game/models/IRecord';
+import { useSaveManager } from '../../context/save_ctx';
+import { GameParams } from '../../game/models/GameParams';
 import VCard from './vcard';
-import { publicUrl } from '../utils/browser';
-import { useDeviceType } from '../hooks/useDeviceType';
+import { publicUrl } from '../../utils/browser';
+import { useDeviceType } from '../../hooks/useDeviceType';
 import Pickaxe from './pickaxe';
-import useDarkMode from '../hooks/useDarkMode';
+import useDarkMode from '../../hooks/useDarkMode';
 
 interface slotProps {
     sceneRef: React.MutableRefObject<IRefPhaserGame | null>;
     gameParams: GameParams | null;
-}
-
-interface Styles {
-    width: string;
-    height: string;
 }
 
 export function EnergySlot() {

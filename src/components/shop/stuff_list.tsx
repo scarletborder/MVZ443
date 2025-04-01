@@ -32,3 +32,15 @@ export default function StuffList({ items, currentItems }: Props) {
         </div>
     );
 }
+
+export function CurrentStuffs(items: item[]) {
+    return (
+        <div>
+            {items.map((item, index) => (
+                <div key={index}>
+                    <span>{`${Stuff(item.type)}: ${item.count}`}</span>
+                </div>
+            ))}
+        </div>
+    );
+}
