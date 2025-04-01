@@ -1,0 +1,1 @@
+const e=1,t="小吉",i={main:"草坪的第一防线",sub:"发射器",ability:"射出箭矢程度的能力"},a="发射器是你的第一道防线,经过升级可以进行穿透攻击,是便宜但对无甲目标有效的无奇",s={"运势":"虽然看起来你能解决一定的问题,但是当大的要来了之时,你会发现自己无能为力"},l="其实,发射器还是有点用的,在关卡前期可以很轻松的接敌,但是她真的值得一个卡槽吗,虽然可以升级为别的器械",n={index:1,level:"小吉",description:i,comment:a,details:s,extras:l};export{a as comment,n as default,i as description,s as details,l as extras,e as index,t as level};
