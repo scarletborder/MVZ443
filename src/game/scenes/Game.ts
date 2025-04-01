@@ -391,6 +391,12 @@ export class Game extends Scene {
     // game->app 通知游戏结束
     handleExit(isWin: boolean = false) {
         this.music.stop();
+        // 移除所有game的事件监听
+        this.sound.stopAll();
+        this.input.keyboard?.removeAllKeys(true);
+        this.input.keyboard?.removeAllListeners();
+        this.tweens.killAll();
+
         this.isGameEnd = true;
         EventBus.emit('okIsPaused', { paused: false });
         this.params.gameExit({

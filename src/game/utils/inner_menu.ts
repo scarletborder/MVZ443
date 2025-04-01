@@ -68,6 +68,7 @@ export default function CreateInnerMenu(game: Game) {
     const KeyT = game.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.T);
     if (KeyT) {
         KeyT.on('down', () => {
+            console.log('speed up')
             game.handleSpeedUp();
         });
     }
