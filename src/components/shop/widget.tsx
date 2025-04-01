@@ -2,7 +2,7 @@
  * 在这里放商店页面的控件
  */
 
-import FortuneCard from "./fortune_card";
+import { randomFortuneCard as RandomFortuneCard } from "./fortune_card";
 import StuffList, { CurrentStuffs } from "./stuff_list";
 import { IGoods, item } from "./types";
 
@@ -120,6 +120,7 @@ interface initDetailProps {
     myItems: item[],
 }
 
+
 export function InitDetail({ myItems }: initDetailProps) {
     return (<div
         style={
@@ -140,28 +141,19 @@ export function InitDetail({ myItems }: initDetailProps) {
             }
         }
     >
+
+        <div
+            style={{
+                width: "50%",
+            }}
+        >{CurrentStuffs(myItems)}</div>
+
         <div
             style={{
                 width: "60%",
             }}>
-            <FortuneCard
-                index={1}
-                level='233'
-                description={
-                    {
-                        main: '233',
-                        sub: '333',
-                        ability: '233',
-                    }
-                }
-                comment="这是一张卡片的注释"
-                details={{ "extra1": "这是额外信息1", "extra2": "这是额外信息2" }}
-                extras={{ "extra1": "这是额外信息1", "extra2": "这是额外信息2" }}
-            />
+            <RandomFortuneCard />
         </div>
-
-        <div>
-            <p>AAA 品好饭</p>
-            {CurrentStuffs(myItems)}</div>
     </div>)
 }
+

@@ -35,12 +35,55 @@ export default function StuffList({ items, currentItems }: Props) {
 
 export function CurrentStuffs(items: item[]) {
     return (
-        <div>
-            {items.map((item, index) => (
-                <div key={index}>
-                    <span>{`${Stuff(item.type)}: ${item.count}`}</span>
-                </div>
-            ))}
+        <div style={{
+            backgroundColor: '#000000',
+            padding: '2%',
+            borderRadius: '8px',
+            maxWidth: '400px',
+            margin: '20px auto',
+            fontFamily: 'Arial, sans-serif'
+        }}>
+            <table style={{
+                width: '100%',
+                borderCollapse: 'collapse',
+                color: '#ffffff'
+            }}>
+                <thead>
+                    <tr>
+                        <th style={{
+                            backgroundColor: '#1a1a1a',
+                            padding: '12px',
+                            textAlign: 'left',
+                            fontWeight: 'bold',
+                            borderBottom: '2px solid #333333'
+                        }}>Type</th>
+                        <th style={{
+                            backgroundColor: '#1a1a1a',
+                            padding: '12px',
+                            textAlign: 'left',
+                            fontWeight: 'bold',
+                            borderBottom: '2px solid #333333'
+                        }}>Count</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {items.map((item, index) => (
+                        <tr key={index} style={{
+                            transition: 'background-color 0.3s'
+                        }} onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#2a2a2a'}
+                            onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
+                            <td style={{
+                                padding: '10px',
+                                borderBottom: '1px solid #333333'
+                            }}>{Stuff(item.type)}</td>
+                            <td style={{
+                                padding: '10px',
+                                borderBottom: '1px solid #333333'
+                            }}>{item.count}</td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
         </div>
     );
 }

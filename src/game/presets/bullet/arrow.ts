@@ -65,10 +65,11 @@ class MutantYAxisArrow extends Arrow {
         const { y } = scene.positionCalc.getBulletCenter(col, targetRow);
         this.targetY = y;
         this.lowerOrUpper = targetRow < row;
-        if (this.lowerOrUpper) {
+
+        if (this.lowerOrUpper && this.setVelocityY) {
             this.setVelocityY(-yspeed); // 向上
         }
-        else {
+        else if (this.setVelocityY) {
             this.setVelocityY(+yspeed); // 向下
         }
 
@@ -78,6 +79,10 @@ class MutantYAxisArrow extends Arrow {
 
     update(...args: any[]): void {
         super.update();
+
+        if (!this.setVelocityY) {
+            return;
+        }
 
         // 如果当前row超过了设定值,取消y速度, 只向前移动
         if (this.lowerOrUpper) {

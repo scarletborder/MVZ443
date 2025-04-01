@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 interface FortuneCardProps {
     index: number; // 第几番
@@ -9,8 +9,8 @@ interface FortuneCardProps {
         ability: string; // 能力描述，如“霧を泳ぐ程度の能力”
     };
     comment: string; // 侧边评论，例如“名字が無くたって気にしないね。...”
-    details: Record<string, string>; // 运势详情数据，键为属性名，值为具体显示内容
-    extras: Record<string, string>;  // 额外提示数据，键为属性名，值为具体显示内容
+    details?: Record<string, string>; // 运势详情数据，键为属性名，值为具体显示内容
+    extras: string;
 }
 
 const FortuneCard: React.FC<FortuneCardProps> = ({
@@ -46,7 +46,6 @@ const FortuneCard: React.FC<FortuneCardProps> = ({
     };
 
     const verticalTextStyle: React.CSSProperties = {
-        writingMode: 'vertical-rl',
         padding: '15px 5px',
     };
 
@@ -95,7 +94,7 @@ const FortuneCard: React.FC<FortuneCardProps> = ({
                     >
                         <div>{description.main}</div>
                         <div>
-                            <big>{description.sub}</big>（名前不詳）
+                            <big>{description.sub}</big>
                         </div>
                         <div>{description.ability}</div>
                     </td>
@@ -127,10 +126,9 @@ const FortuneCard: React.FC<FortuneCardProps> = ({
                             backgroundPosition: 'bottom 0 center',
                             backgroundSize: '80% 2px',
                             backgroundRepeat: 'no-repeat',
-                            writingMode: 'vertical-rl',
                         }}
                     >
-                        {Object.entries(details).map(([key, value]) => (
+                        {details && Object.entries(details).map(([key, value]) => (
                             <div key={key}>
                                 {key}：{value}
                             </div>
@@ -139,12 +137,8 @@ const FortuneCard: React.FC<FortuneCardProps> = ({
                 </tr>
                 {/* 第五行：额外提示 */}
                 <tr>
-                    <td colSpan={2} style={{ ...detailCellStyle, writingMode: 'vertical-rl' }}>
-                        {Object.entries(extras).map(([key, value]) => (
-                            <div key={key}>
-                                {key}：{value}
-                            </div>
-                        ))}
+                    <td colSpan={2} style={{ ...detailCellStyle }}>
+                        {extras}
                     </td>
                 </tr>
             </tbody>
@@ -153,3 +147,72 @@ const FortuneCard: React.FC<FortuneCardProps> = ({
 };
 
 export default FortuneCard;
+
+export function randomFortuneCard() {
+    const [cardData, setCardData] = useState<FortuneCardProps | null>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const loadCardData = async () => {
+            try {
+                const number = 2; // 目前的卡片含量
+                const idx = Math.floor(Math.random() * number) + 1;
+
+                // 动态加载JSON文件
+                const json = await import(`../../../public/fortune_card/${idx}.json`);
+
+                // 构建卡片数据对象
+                const card: FortuneCardProps = {
+                    index: idx,
+                    level: json.level,
+                    description: json.description,
+                    comment: json.comment,
+                    details: json.details,
+                    extras: json.extras
+                };
+
+                setCardData(card);
+            } catch (error) {
+                console.error("Failed to load fortune card:", error);
+                // 加载失败时设置一个默认卡片
+                setCardData({
+                    index: 0,
+                    level: "超大凶",
+                    description: {
+                        main: "名为网络错误的凶兆",
+                        sub: "OFFLINE",
+                        ability: "无法加载卡片数据程度的能力"
+                    },
+                    comment: "请检查网络连接",
+                    details: { "状态": "加载失败" },
+                    extras: "开发者说：请稍后再试"
+                });
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadCardData();
+    }, []);
+
+    if (loading) {
+        return (
+            <div style={{
+                width: '90%',
+                height: '300px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+            }}>
+                加载中...
+            </div>
+        );
+    }
+
+    // 确保卡片数据已加载
+    if (!cardData) {
+        return null;
+    }
+
+    return FortuneCard(cardData);
+}
