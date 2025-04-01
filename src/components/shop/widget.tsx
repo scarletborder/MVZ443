@@ -124,10 +124,12 @@ interface initDetailProps {
 export function InitDetail({ myItems }: initDetailProps) {
     return (<div
         style={
-            // 允许滚动
             {
                 display: "flex",
-                overflowY: "auto",
+                overflowY: 'hidden',
+                overflowX: 'hidden',
+                scrollbarWidth: 'thin',
+                scrollbarColor: '#888 #333',
                 height: "88%",
                 padding: "20px",
                 color: "#fff",
@@ -145,6 +147,7 @@ export function InitDetail({ myItems }: initDetailProps) {
         <div
             style={{
                 width: "50%",
+                overflowY: "auto",
             }}
         >{CurrentStuffs(myItems)}</div>
 

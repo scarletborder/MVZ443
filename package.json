@@ -30,6 +30,8 @@
     },
     "dependencies": {
         "-": "^0.0.1",
+        "@react-spring/web": "^9.7.5",
+        "@use-gesture/react": "^10.3.1",
         "denque": "^2.1.0",
         "gh-pages": "^6.3.0",
         "phaser": "^3.88.2",

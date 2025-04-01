@@ -1,4 +1,3 @@
-// pokedex.tsx
 import React, { useEffect, useState } from 'react';
 import { useSaveManager } from '../../context/save_ctx';
 import PlantFactoryMap from '../../game/presets/plant';
@@ -27,6 +26,11 @@ export default function Pokedex({ width, height, onBack }: Props) {
 
     const [pokedexItems, setPokedexItems] = useState<PokedexItem[]>([]);
     const [selectedItemName, setSelectedItemName] = useState<string | null>(null);
+
+    // 用于实现滑动动画的状态
+    const [displayedItemName, setDisplayedItemName] = useState<string | null>(null);
+    const [animationClass, setAnimationClass] = useState<string>('');
+
     const saveManager = useSaveManager();
     const plants = saveManager.currentProgress.plants;
 
@@ -45,6 +49,18 @@ export default function Pokedex({ width, height, onBack }: Props) {
             });
         setPokedexItems(tmpList);
     }, [plants]);
+
+    // 当selectedItemName发生变化时，触发滑动动画
+    useEffect(() => {
+        if (selectedItemName === null) return;
+        // 触发"滑出"动画
+        setAnimationClass('slide-out');
+        const timer = setTimeout(() => {
+            setDisplayedItemName(selectedItemName);
+            setAnimationClass('slide-in');
+        }, 300); // 滑出动画持续300ms，可根据需要调整
+        return () => clearTimeout(timer);
+    }, [selectedItemName]);
 
     const getCurrentItems = (): item[] => {
         return Array.from(saveManager.currentProgress.items.values());
@@ -76,6 +92,7 @@ export default function Pokedex({ width, height, onBack }: Props) {
                         : item
                 )
             );
+            // 升级后直接选中新等级的项
             setSelectedItemName(`${PlantFactoryMap[pid].name} LV.${level + 1}`);
         }
     };
@@ -84,6 +101,7 @@ export default function Pokedex({ width, height, onBack }: Props) {
         <div style={{
             width: `${width}px`,
             height: `${height}px`,
+            perspective: '1200px', // 保留 perspective 以增强3D效果
             background: "linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)",
             position: "relative",
             overflow: "hidden",
@@ -94,7 +112,7 @@ export default function Pokedex({ width, height, onBack }: Props) {
             {/* Left Sidebar - Scrollable List */}
             <div style={{
                 width: "50%",
-                height: "100%",
+                height: "90%",
                 position: "absolute",
                 left: 0,
                 top: 0,
@@ -181,7 +199,7 @@ export default function Pokedex({ width, height, onBack }: Props) {
             {/* Right Sidebar - Details and Upgrade Controls */}
             <div style={{
                 width: "40%",
-                height: "100%",
+                height: "95%",
                 position: "absolute",
                 right: 0,
                 top: 0,
@@ -190,54 +208,56 @@ export default function Pokedex({ width, height, onBack }: Props) {
                 overflowY: "auto",
                 scrollbarWidth: "thin",
                 scrollbarColor: "#666 #333",
-                background: "rgba(30, 30, 30, 0.9)"
+                background: "rgba(30, 30, 30, 0.9)",
+                overflow: "hidden" // 确保超出部分隐藏，使滑动动画看起来更自然
             }}>
-                <h2 style={{ marginBottom: "2px" }}>{selectedItemName || "未选择"}</h2>
-                {selectedItemName ? (
-                    <div style={{ whiteSpace: "pre-wrap" }}>
-                        {pokedexItems.find(item => item.name === selectedItemName)?.details || "未找到详情"}
+                <div className={animationClass} style={{
+                    position: "relative",
+                    width: "100%",
+                    height: "100%"
+                }}>
+                    <h2 style={{ marginBottom: "2px" }}>{displayedItemName || "未选择"}</h2>
+                    {displayedItemName ? (
+                        <div style={{ whiteSpace: "pre-wrap" }}>
+                            {pokedexItems.find(item => item.name === displayedItemName)?.details || "未找到详情"}
+                            <hr style={{ border: "1px solid #666", margin: "20px 0" }} />
 
-                        {/* Horizontal Separator */}
-                        <hr style={{
-                            border: "1px solid #666",
-                            margin: "20px 0"
-                        }} />
+                            {/* 升级控件区域 */}
+                            {(() => {
+                                const selectedItem = pokedexItems.find(item => item.name === displayedItemName);
+                                if (!selectedItem) return null;
 
-                        {/* Upgrade Controls */}
-                        {(() => {
-                            const selectedItem = pokedexItems.find(item => item.name === selectedItemName);
-                            if (!selectedItem) return null;
+                                const nextLevelStuff = PlantFactoryMap[selectedItem.pid].NextLevelStuff(selectedItem.level);
+                                const currentItems = getCurrentItems();
+                                const canUpgradeNow = canUpgrade(selectedItem.pid, selectedItem.level);
 
-                            const nextLevelStuff = PlantFactoryMap[selectedItem.pid].NextLevelStuff(selectedItem.level);
-                            const currentItems = getCurrentItems();
-                            const canUpgradeNow = canUpgrade(selectedItem.pid, selectedItem.level);
-
-                            return (
-                                <div>
-                                    <h3 style={{ margin: "0 0 10px 0" }}>升级到 LV.{selectedItem.level + 1}</h3>
-                                    <StuffList items={nextLevelStuff} currentItems={currentItems} />
-                                    <button
-                                        onClick={() => handleUpgrade(selectedItem.pid, selectedItem.level)}
-                                        disabled={!canUpgradeNow}
-                                        style={{
-                                            padding: "10px 20px",
-                                            background: canUpgradeNow ? "#007bff" : "#ff4444",
-                                            border: "none",
-                                            color: "#fff",
-                                            cursor: canUpgradeNow ? "pointer" : "not-allowed",
-                                            marginTop: "10px",
-                                            borderRadius: "4px"
-                                        }}
-                                    >
-                                        {canUpgradeNow ? "升级" : "材料不足"}
-                                    </button>
-                                </div>
-                            );
-                        })()}
-                    </div>
-                ) : (
-                    <div>请在左侧选择一个项目以查看详情</div>
-                )}
+                                return (
+                                    <div>
+                                        <h3 style={{ margin: "0 0 10px 0" }}>升级到 LV.{selectedItem.level + 1}</h3>
+                                        <StuffList items={nextLevelStuff} currentItems={currentItems} />
+                                        <button
+                                            onClick={() => handleUpgrade(selectedItem.pid, selectedItem.level)}
+                                            disabled={!canUpgradeNow}
+                                            style={{
+                                                padding: "10px 20px",
+                                                background: canUpgradeNow ? "#007bff" : "#ff4444",
+                                                border: "none",
+                                                color: "#fff",
+                                                cursor: canUpgradeNow ? "pointer" : "not-allowed",
+                                                marginTop: "10px",
+                                                borderRadius: "4px"
+                                            }}
+                                        >
+                                            {canUpgradeNow ? "升级" : "材料不足"}
+                                        </button>
+                                    </div>
+                                );
+                            })()}
+                        </div>
+                    ) : (
+                        <div>请在左侧选择一个项目以查看详情</div>
+                    )}
+                </div>
             </div>
 
             <style>
@@ -245,6 +265,45 @@ export default function Pokedex({ width, height, onBack }: Props) {
                     @keyframes frameFadeIn {
                         from { opacity: 0; transform: scale(0.95); }
                         to { opacity: 1; transform: scale(1); }
+                    }
+                    
+                    /* 从下往上滑出的动画 */
+                    @keyframes slideOut {
+                        0% { transform: translateY(0); opacity: 1; }
+                        100% { transform: translateY(-20px); opacity: 0; }
+                    }
+                    
+                    /* 从下往上滑入的动画 */
+                    @keyframes slideIn {
+                        0% { transform: translateY(100%); opacity: 0; }
+                        100% { transform: translateY(0); opacity: 1; }
+                    }
+                    
+                    .slide-out {
+                        animation: slideOut 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+                    }
+                    
+                    .slide-in {
+                        animation: slideIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+                    }
+                    
+                    /* 滚动条样式美化 */
+                    ::-webkit-scrollbar {
+                        width: 8px;
+                    }
+                    
+                    ::-webkit-scrollbar-track {
+                        background: rgba(30, 30, 30, 0.5);
+                        border-radius: 4px;
+                    }
+                    
+                    ::-webkit-scrollbar-thumb {
+                        background: #666;
+                        border-radius: 4px;
+                    }
+                    
+                    ::-webkit-scrollbar-thumb:hover {
+                        background: #888;
                     }
                 `}
             </style>

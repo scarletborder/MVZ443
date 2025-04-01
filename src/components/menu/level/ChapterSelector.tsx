@@ -98,6 +98,7 @@ const ChapterSelector: React.FC<ChapterSelectorProps> = ({ onSelect, onBack }) =
                 color: '#ddd',
                 overflowY: 'auto',
                 background: 'rgba(30, 30, 30, 0.9)',
+                scrollbarColor: '#666 #333',
             }}>
                 {selectedChapter ? ChapterDataRecords[selectedChapter].description() : '请选择一个章节'}
                 {/* 下一步按钮 */}

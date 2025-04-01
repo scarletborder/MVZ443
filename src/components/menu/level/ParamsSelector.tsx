@@ -231,6 +231,7 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({ stageId, setGameParams,
                     flex: 1,
                     overflowY: 'auto',
                     maxHeight: '80%',
+                    scrollbarColor: '#888 #333',
                 }}>
                     {selectedPlants.map(pid => {
                         const plant = availablePlants.find(p => p.pid === pid);

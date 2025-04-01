@@ -105,6 +105,7 @@ const StageSelector: React.FC<StageSelectorProps> = ({ chapterId, onSelect, onBa
                 color: '#ddd',
                 overflowY: 'auto',
                 background: 'rgba(30, 30, 30, 0.9)',
+                scrollbarColor: '#666 #333',
             }}>
                 {selectedStage ? <img
                     src={`${publicUrl}/assets/dramas/${StageDataRecords[selectedStage].illustration}`}
