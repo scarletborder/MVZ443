@@ -45,6 +45,9 @@ func (rm *RoomManager) RemoveRoom(id int) {
 	}
 }
 
+// 获得房间列表和人数
+
+
 // 定时清理无人房间
 func (rm *RoomManager) startCleaner() {
 	ticker := time.NewTicker(1 * time.Minute) // 每分钟清理一次

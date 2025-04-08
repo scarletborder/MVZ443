@@ -41,6 +41,7 @@ type _CardPlant = {
     col: number;
     row: number;
     uid: number; // 来源用户
+    FrameID: number;
 };
 
 type _RemovePlant = {
@@ -49,6 +50,7 @@ type _RemovePlant = {
     col: number;
     row: number;
     uid: number; // 来源用户
+    FrameID: number;
 }
 
 type _UseStarShards = {
@@ -57,6 +59,7 @@ type _UseStarShards = {
     col: number;
     row: number;
     uid: number; // 来源用户
+    FrameID: number;
 }
 
 export type _receiveType = _GameStart | _CardPlant | _RemovePlant | _UseStarShards;
@@ -141,7 +144,9 @@ export function decodeMessage(base64: string): _Message | null {
             };
         }
         case 0x02: {
-            // CardPlant: pid(uint16), level(uint8), col(uint8), row(uint8), uid(uint16)
+            // CardPlant: frameID(uint16), pid(uint16), level(uint8), col(uint8), row(uint8), uid(uint16)
+            const frameID = view.getUint16(offset);
+            offset += 2;
             const pid = view.getUint16(offset);
             offset += 2;
             const level = view.getUint8(offset);
@@ -159,10 +164,13 @@ export function decodeMessage(base64: string): _Message | null {
                 col,
                 row,
                 uid,
+                FrameID: frameID,
             };
         }
         case 0x04: {
-            // RemovePlant: pid(uint16), col(uint8), row(uint8), uid(uint16)
+            // RemovePlant: frameID(uint16), pid(uint16), col(uint8), row(uint8), uid(uint16)
+            const frameID = view.getUint16(offset);
+            offset += 2;
             const pid = view.getUint16(offset);
             offset += 2;
             const col = view.getUint8(offset);
@@ -177,10 +185,13 @@ export function decodeMessage(base64: string): _Message | null {
                 col,
                 row,
                 uid,
+                FrameID: frameID,
             };
         }
         case 0x08: {
-            // UseStarShards: pid(uint16), col(uint8), row(uint8), uid(uint16)
+            // UseStarShards: frameID(uint16), pid(uint16), col(uint8), row(uint8), uid(uint16)
+            const frameID = view.getUint16(offset);
+            offset += 2;
             const pid = view.getUint16(offset);
             offset += 2;
             const col = view.getUint8(offset);
@@ -195,6 +206,7 @@ export function decodeMessage(base64: string): _Message | null {
                 col,
                 row,
                 uid,
+                FrameID: frameID,
             };
         }
         case 0x10: {

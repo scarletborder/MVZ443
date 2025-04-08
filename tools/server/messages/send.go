@@ -44,12 +44,13 @@ func (m GameStart) GetType() int {
 
 // CardPlant 消息：种植卡片
 type CardPlant struct {
-	Type  int `json:"type"`
-	Pid   int `json:"pid"`
-	Level int `json:"level"`
-	Col   int `json:"col"`
-	Row   int `json:"row"`
-	UID   int `json:"uid"` // 来源用户
+	Type    int    `json:"type"`
+	FrameID uint16 `json:"frameId"`
+	Pid     int    `json:"pid"`
+	Level   int    `json:"level"`
+	Col     int    `json:"col"`
+	Row     int    `json:"row"`
+	UID     int    `json:"uid"` // 来源用户
 }
 
 func (m CardPlant) GetType() int {
@@ -58,11 +59,12 @@ func (m CardPlant) GetType() int {
 
 // RemovePlant 消息：移除植物
 type RemovePlant struct {
-	Type int `json:"type"`
-	Pid  int `json:"pid"`
-	Col  int `json:"col"`
-	Row  int `json:"row"`
-	UID  int `json:"uid"` // 来源用户
+	Type    int    `json:"type"`
+	FrameID uint16 `json:"frameId"`
+	Pid     int    `json:"pid"`
+	Col     int    `json:"col"`
+	Row     int    `json:"row"`
+	UID     int    `json:"uid"` // 来源用户
 }
 
 func (m RemovePlant) GetType() int {
@@ -71,11 +73,12 @@ func (m RemovePlant) GetType() int {
 
 // UseStarShards 消息：使用星尘
 type UseStarShards struct {
-	Type int `json:"type"`
-	Pid  int `json:"pid"`
-	Col  int `json:"col"`
-	Row  int `json:"row"`
-	UID  int `json:"uid"` // 来源用户
+	Type    int    `json:"type"`
+	FrameID uint16 `json:"frameId"`
+	Pid     int    `json:"pid"`
+	Col     int    `json:"col"`
+	Row     int    `json:"row"`
+	UID     int    `json:"uid"` // 来源用户
 }
 
 func (m UseStarShards) GetType() int {

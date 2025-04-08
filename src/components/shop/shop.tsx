@@ -195,17 +195,36 @@ const ShopSelector: React.FC<ShopSelectorProps> = ({
                         {showPurchased ? "已购列表" : "商品列表"}
                     </button>
 
-                    <span style={{
-                        color: "#ffd700",
-                        fontSize: "16px",
-                        fontWeight: "bold",
-                        marginLeft: "auto",
-                        marginRight: "1%",
-                    }}>
-                        {getGoldAmount()}$
-                    </span>
-                </div>
+                    <div
+                        onClick={() => {
+                            setSelectedGoodId(null);
+                            setDisplayedGoodId(null);
+                        }}
+                        // 占有剩下的空间
+                        style={{
+                            flex: 1,
+                            display: "flex",
+                            justifyContent: "center",
+                            alignItems: "center",
+                            backgroundColor: "#444",
+                            color: "#fff",
+                            borderRadius: "4px",
+                            padding: "4px 8px",
+                            fontSize: "14px"
+                        }}
+                    >
+                        <span style={{
+                            color: "#ffd700",
+                            fontSize: "16px",
+                            fontWeight: "bold",
+                            marginLeft: "auto",
+                            marginRight: "1%",
 
+                        }}>
+                            {getGoldAmount()}$
+                        </span>
+                    </div>
+                </div>
                 {visibleGoods.map(good => (
                     (showPurchased === good.hasBought(good.id, gameManager.currentProgress)) && (
                         <div key={good.id}>
@@ -360,7 +379,7 @@ const ShopSelector: React.FC<ShopSelectorProps> = ({
                     }
                 `}
             </style>
-        </div>
+        </div >
     );
 };
 

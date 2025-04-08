@@ -54,7 +54,10 @@ func EncodeMessage(msg MessageSend) ([]byte, error) {
 			return nil, err
 		}
 	case CardPlant:
-		// CardPlant: pid(uint16), level(uint8), col(uint8), row(uint8), uid(uint16)
+		// CardPlant: frameID(uint16), pid(uint16), level(uint8), col(uint8), row(uint8), uid(uint16)
+		if err := binary.Write(buf, binary.BigEndian, uint16(m.FrameID)); err != nil {
+			return nil, err
+		}
 		if err := binary.Write(buf, binary.BigEndian, uint16(m.Pid)); err != nil {
 			return nil, err
 		}
@@ -71,7 +74,10 @@ func EncodeMessage(msg MessageSend) ([]byte, error) {
 			return nil, err
 		}
 	case RemovePlant:
-		// RemovePlant: pid(uint16), col(uint8), row(uint8), uid(uint16)
+		// RemovePlant: frameID(uint16), pid(uint16), col(uint8), row(uint8), uid(uint16)
+		if err := binary.Write(buf, binary.BigEndian, uint16(m.FrameID)); err != nil {
+			return nil, err
+		}
 		if err := binary.Write(buf, binary.BigEndian, uint16(m.Pid)); err != nil {
 			return nil, err
 		}
@@ -85,7 +91,10 @@ func EncodeMessage(msg MessageSend) ([]byte, error) {
 			return nil, err
 		}
 	case UseStarShards:
-		// UseStarShards: pid(uint16), col(uint8), row(uint8), uid(uint16)
+		// UseStarShards: frameID(uint16), pid(uint16), col(uint8), row(uint8), uid(uint16)
+		if err := binary.Write(buf, binary.BigEndian, uint16(m.FrameID)); err != nil {
+			return nil, err
+		}
 		if err := binary.Write(buf, binary.BigEndian, uint16(m.Pid)); err != nil {
 			return nil, err
 		}

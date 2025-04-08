@@ -2,8 +2,8 @@ import QueueReceive, { decodeMessage } from "../../game/utils/queue_receive";
 import QueueSend from "../../game/utils/queue_send";
 
 
-export function encodeMessageToBinary(message: _requestType): Uint8Array {
-    const buffer = new ArrayBuffer(8); // 固定长度
+export function encodeMessageToBinary(message: _requestType, frameID: number): Uint8Array {
+    const buffer = new ArrayBuffer(16); // 固定长度
     const view = new DataView(buffer);
 
     view.setUint8(0, message.type);
@@ -18,6 +18,7 @@ export function encodeMessageToBinary(message: _requestType): Uint8Array {
             view.setUint8(5, message.level);
             view.setUint8(6, message.col);
             view.setUint8(7, message.row);
+            view.setUint16(8, frameID);
             break;
 
         case 0x04: // Remove
@@ -25,6 +26,7 @@ export function encodeMessageToBinary(message: _requestType): Uint8Array {
             view.setUint16(3, message.pid);
             view.setUint8(6, message.col);
             view.setUint8(7, message.row);
+            view.setUint16(8, frameID);
             break;
 
         case 0x01: // Ready
@@ -46,6 +48,8 @@ class WebSocketClient {
     public url: string = "";
     private additionalListeners: ((event: MessageEvent) => void)[] = [];
     public isConnected: boolean = false;
+
+    public FrameID: number = 0; // 当前帧ID
 
     constructor() { }
 
@@ -162,7 +166,7 @@ class WebSocketClient {
             while (this.sendQueue && !this.sendQueue.queues.isEmpty()) {
                 const message = this.sendQueue.queues.shift();
                 if (message) {
-                    const encoded = encodeMessageToBinary(message);
+                    const encoded = encodeMessageToBinary(message, this.FrameID);
                     this.ws.send(encoded.buffer); // 发送的是 ArrayBuffer
                     console.log("Sent binary message:", encoded);
                 }

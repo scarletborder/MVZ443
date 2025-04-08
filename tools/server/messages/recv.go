@@ -45,6 +45,8 @@ type RequestCardPlant struct {
 	Col   int `json:"col"`
 	Row   int `json:"row"`
 	UID   int `json:"uid"` // 来源用户
+
+	FrameID uint16 `json:"frameId"`
 }
 
 func (m RequestCardPlant) GetType() int {
@@ -58,6 +60,8 @@ type RequestRemovePlant struct {
 	Col  int `json:"col"`
 	Row  int `json:"row"`
 	UID  int `json:"uid"` // 来源用户
+
+	FrameID uint16 `json:"frameId"`
 }
 
 func (m RequestRemovePlant) GetType() int {
@@ -71,6 +75,8 @@ type RequestStarShards struct {
 	Col  int `json:"col"`
 	Row  int `json:"row"`
 	UID  int `json:"uid"` // 来源用户
+
+	FrameID uint16 `json:"frameId"`
 }
 
 func (m RequestStarShards) GetType() int {

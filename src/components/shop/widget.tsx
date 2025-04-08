@@ -98,7 +98,7 @@ export function DetailGoods({ good, canAfford, canPurchase, hasBought,
                     marginTop: "20px",
                     display: "block"
                 }}>
-                    Not Allowed
+                    未解锁
                 </span>
             )}
         </div>

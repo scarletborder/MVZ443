@@ -17,7 +17,7 @@ export default function StuffList({ items, currentItems }: Props) {
         return (
             <div style={{ color: isInsufficient ? 'red' : 'white' }}>
                 <span>{`${Stuff(type)}: ${availableCount}/${requiredCount}`}</span>
-                {isInsufficient && <span> (missing or insufficient)</span>}
+                {isInsufficient && <span> (缺少相关材料)</span>}
             </div>
         );
     }

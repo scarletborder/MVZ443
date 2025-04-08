@@ -16,30 +16,33 @@ func DecodeBinaryMessage(data []byte) (int, interface{}, error) {
 	switch msgType {
 	case MsgTypeRequestCardPlant:
 		return msgType, RequestCardPlant{
-			Type:  msgType,
-			UID:   uid,
-			Pid:   int(binary.BigEndian.Uint16(data[3:5])),
-			Level: int(data[5]),
-			Col:   int(data[6]),
-			Row:   int(data[7]),
+			Type:    msgType,
+			UID:     uid,
+			Pid:     int(binary.BigEndian.Uint16(data[3:5])),
+			Level:   int(data[5]),
+			Col:     int(data[6]),
+			Row:     int(data[7]),
+			FrameID: (binary.BigEndian.Uint16(data[8:10])),
 		}, nil
 
 	case MsgTypeRequestRemovePlant:
 		return msgType, RequestRemovePlant{
-			Type: msgType,
-			UID:  uid,
-			Pid:  int(binary.BigEndian.Uint16(data[3:5])),
-			Col:  int(data[6]),
-			Row:  int(data[7]),
+			Type:    msgType,
+			UID:     uid,
+			Pid:     int(binary.BigEndian.Uint16(data[3:5])),
+			Col:     int(data[6]),
+			Row:     int(data[7]),
+			FrameID: (binary.BigEndian.Uint16(data[8:10])),
 		}, nil
 
 	case MsgTypeRequestStarShards:
 		return msgType, RequestStarShards{
-			Type: msgType,
-			UID:  uid,
-			Pid:  int(binary.BigEndian.Uint16(data[3:5])),
-			Col:  int(data[6]),
-			Row:  int(data[7]),
+			Type:    msgType,
+			UID:     uid,
+			Pid:     int(binary.BigEndian.Uint16(data[3:5])),
+			Col:     int(data[6]),
+			Row:     int(data[7]),
+			FrameID: (binary.BigEndian.Uint16(data[8:10])),
 		}, nil
 
 	case MsgTypeReady:
