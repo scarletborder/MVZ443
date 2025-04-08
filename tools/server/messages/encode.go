@@ -107,6 +107,11 @@ func EncodeMessage(msg MessageSend) ([]byte, error) {
 		if err := binary.Write(buf, binary.BigEndian, uint16(m.UID)); err != nil {
 			return nil, err
 		}
+	case BlankMsg:
+		// Blank: frameID(uint16)
+		if err := binary.Write(buf, binary.BigEndian, uint16(m.FrameID)); err != nil {
+			return nil, err
+		}
 	case ChooseMap:
 		// ChooseMap: chapterId (uint16)
 		if err := binary.Write(buf, binary.BigEndian, uint16(m.ChapterId)); err != nil {

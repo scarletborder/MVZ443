@@ -37,6 +37,12 @@ type _ready = {
     uid: number; // 来源用户
 }
 
+type _requestBlank = {
+    type: 0x03;
+    FrameID: number;
+    uid: number;
+}
+
 type _requestCardPlant = {
     type: 0x02;
     pid: number;
@@ -109,7 +115,12 @@ export default class QueueSend {
                 myID: this.myID
             });
         } else {
-            this.singRecvQueue?.push(data);
+            // 单人游戏,直接下一服务器帧的数据进来
+            const nextFrameID = 1 + BackendWS.GetFrameID();
+            this.singRecvQueue?.push({
+                ...data,
+                FrameID: nextFrameID,
+            });
         }
     }
 

@@ -8,6 +8,7 @@ const (
 
 	MsgTypeGameStart     = 0x01 // 游戏开始
 	MsgTypeCardPlant     = 0x02 // 种植卡片
+	MsgTypeBlank         = 0x03 // 空白消息,只用于同步frameID
 	MsgTypeRemovePlant   = 0x04 // 移除植物
 	MsgTypeUseStarShards = 0x08 // 使用星尘
 )
@@ -82,6 +83,16 @@ type UseStarShards struct {
 }
 
 func (m UseStarShards) GetType() int {
+	return m.Type
+}
+
+// Blank
+type BlankMsg struct {
+	Type    int    `json:"type"`
+	FrameID uint16 `json:"frameId"`
+}
+
+func (m BlankMsg) GetType() int {
 	return m.Type
 }
 

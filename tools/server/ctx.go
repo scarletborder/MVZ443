@@ -33,8 +33,9 @@ func (u *userCtx) WriteJSON(v interface{}) error {
 
 // context manager
 type ctxManager struct {
-	FirstUser int
-	Clients   map[int]*userCtx
+	FirstUser     int
+	Clients       map[int]*userCtx
+	PlayerFrameID map[int]uint16
 }
 
 func newCtxManager() *ctxManager {
@@ -88,6 +89,11 @@ func (m *ctxManager) BroadcastRoomInfo(chapterID int32) {
 
 // 游戏正式开始
 func (m *ctxManager) BroadcastGameStart() {
+	// 初始化frameID
+	for idx := range m.Clients {
+		m.PlayerFrameID[idx] = 0
+	}
+
 	seed := rand.Int()
 	for idx, ctx := range m.Clients {
 		ctx.WriteJSON(map[string]interface{}{

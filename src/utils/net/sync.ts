@@ -58,6 +58,14 @@ class WebSocketClient {
         this.sendQueue = sendQueue;
     }
 
+    public GetFrameID () {
+        return this.FrameID;
+    }
+
+    public IncreaseFrameID() {
+        ++this.FrameID;
+    }
+
     // Method to set WebSocket server URL
     setConnectionUrl(url: string) {
         this.url = url;

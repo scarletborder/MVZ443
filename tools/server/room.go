@@ -109,6 +109,8 @@ func (r *Room) gameLoop() {
 
 func (r *Room) broadcastGameState() {
 	if len(r.Logic.msgs) == 0 {
+		// 构建一个默认的不可能消息
+
 		for _, ctx := range r.CtxManager.Clients {
 			ctx.WriteJSON([]interface{}{})
 		}
@@ -122,6 +124,15 @@ func (r *Room) broadcastGameState() {
 
 func (r *Room) GetPlayerCount() int {
 	return r.CtxManager.GetPlayerCount()
+}
+
+func (r *Room) HasAllPlayerSync() bool {
+	for _, frameID := range r.CtxManager.PlayerFrameID {
+		if frameID < r.FrameID {
+			return false
+		}
+	}
+	return true
 }
 
 func (r *Room) Destroy() {

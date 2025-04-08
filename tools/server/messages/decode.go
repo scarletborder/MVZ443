@@ -14,6 +14,12 @@ func DecodeBinaryMessage(data []byte) (int, interface{}, error) {
 	uid := int(binary.BigEndian.Uint16(data[1:3]))
 
 	switch msgType {
+	case MsgTypeBlank:
+		return msgType, RequestBlank{
+			Type:    msgType,
+			UID:     uid,
+			FrameID: (binary.BigEndian.Uint16(data[3:5])),
+		}, nil
 	case MsgTypeRequestCardPlant:
 		return msgType, RequestCardPlant{
 			Type:    msgType,

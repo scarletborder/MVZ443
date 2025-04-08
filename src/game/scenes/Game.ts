@@ -359,7 +359,8 @@ export class Game extends Scene {
 
     // 处理暂停
     handlePause({ paused }: { paused: boolean }) {
-        if (BackendWS.isConnected) return; // 联机模式下不允许暂停
+        // 联机模式下不允许手动handle暂停
+        if (BackendWS.isConnected) return;
 
         if (this.isDestroyed) return; // Skip if scene is destroyed
         if (!this.exitText || !this.pauseText) {
@@ -368,24 +369,34 @@ export class Game extends Scene {
         }
 
         if (paused) {
-            this.physics.world?.pause();
-            this.anims?.pauseAll();
-            this.tweens?.pauseAll();
-            this.time.paused = true;
-            this.pauseText.setVisible(true);
-            this.exitText.setVisible(true);
-            try { this.exitText.setInteractive(); } finally { EventBus.emit('okIsPaused', { paused: true }); }
-            this.music.pause();
+            this.doHalt();
         } else {
-            this.physics.world?.resume();
-            this.anims?.resumeAll();
-            this.tweens?.resumeAll();
-            this.time.paused = false;
-            this.pauseText.setVisible(false);
-            this.exitText.setVisible(false);
-            try { this.exitText.disableInteractive(); } finally { EventBus.emit('okIsPaused', { paused: false }); }
-            this.music.resume();
+            this.doResume();
         }
+    }
+
+    doHalt() {
+        if (this.isDestroyed) return; // Skip if scene is destroyed
+        this.physics.world?.pause();
+        this.anims?.pauseAll();
+        this.tweens?.pauseAll();
+        this.time.paused = true;
+        this.pauseText.setVisible(true);
+        this.exitText.setVisible(true);
+        try { this.exitText.setInteractive(); } finally { EventBus.emit('okIsPaused', { paused: true }); }
+        this.music.pause();
+    }
+
+    doResume() {
+        if (this.isDestroyed) return; // Skip if scene is destroyed
+        this.physics.world?.resume();
+        this.anims?.resumeAll();
+        this.tweens?.resumeAll();
+        this.time.paused = false;
+        this.pauseText.setVisible(false);
+        this.exitText.setVisible(false);
+        try { this.exitText.disableInteractive(); } finally { EventBus.emit('okIsPaused', { paused: false }); }
+        this.music.resume();
     }
 
     // game->app 通知游戏结束

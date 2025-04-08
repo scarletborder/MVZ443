@@ -8,6 +8,7 @@ const (
 	MsgTypeRequestEndGame   = 0x20 // endgame
 
 	MsgTypeRequestCardPlant   = 0x02 // 请求种植卡片
+	MsgTypeRequestBlank       = 0x03 // 空白消息用于同步FrameID
 	MsgTypeRequestRemovePlant = 0x04 // 请求移除植物
 	MsgTypeRequestStarShards  = 0x08 // 请求使用星尘
 )
@@ -34,6 +35,17 @@ type Ready struct {
 }
 
 func (m Ready) GetType() int {
+	return m.Type
+}
+
+// RequestBlank 消息: 空白消息同步frameID
+type RequestBlank struct {
+	Type    int    `json:"type"`
+	UID     int    `json:"uid"` // 来源用户
+	FrameID uint16 `json:"frameId"`
+}
+
+func (m RequestBlank) GetType() int {
 	return m.Type
 }
 
