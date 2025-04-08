@@ -28,9 +28,11 @@
 - 每服务器帧循环,自增frameID,将缓存中的所有msg(msg.frameID == svc.frameID)发送,. 接着阻塞,直到所有用户的ID都等于服务器的ID
 - 每个用户客户端,当服务器帧时间到,自增frameID,
   - 循环处理recvQueue, 对于frameID等于客户端id的帧,直接处理了.如果没有这样的帧,那么暂停游戏.
-  - 当recvQueue消费流程结束后,发送sendQueue,同时这些msg的frameID等于客户端的frameID
+  - 当recvQueue消费流程结束后,发送我已经接收到了这个帧的frameID
+- 每个用户端的sendQueue直接立刻发送,frameID是当前的frameID
 
-- 每次用户发来command message,比对该message的ID是否小于服务器frameID,如果晚,直接丢弃. 同时更新这个用户的当前ID为`max(用户当前ID,frameID)`
+- 每次用户发来command message,比对该message的ID是否小于服务器维护该用户的frameID,如果晚,直接丢弃. 
+  - 每次用户发来'我已经接收到服务器帧', 更新这个用户的当前ID为`max(用户当前ID,frameID)`
 
 #### 模拟运行
 
