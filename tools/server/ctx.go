@@ -40,7 +40,8 @@ type ctxManager struct {
 
 func newCtxManager() *ctxManager {
 	return &ctxManager{
-		Clients: make(map[int]*userCtx),
+		Clients:       make(map[int]*userCtx, 16),
+		PlayerFrameID: make(map[int]uint16, 16),
 	}
 }
 
@@ -74,11 +75,11 @@ func (m *ctxManager) GetPeerAddr() []string {
 }
 
 // RoomInfo
-func (m *ctxManager) BroadcastRoomInfo(chapterID int32) {
+func (m *ctxManager) BroadcastRoomInfo(chapterID int32, roomid int) {
 	for _, ctx := range m.Clients {
 		ctx.Conn.WriteJSON(messages.RoomInfo{
 			Type:      messages.MsgTypeRoomInfo,
-			RoomID:    0,
+			RoomID:    roomid,
 			LordID:    m.FirstUser,
 			MyID:      ctx.Id,
 			ChapterId: int(chapterID),
@@ -89,7 +90,7 @@ func (m *ctxManager) BroadcastRoomInfo(chapterID int32) {
 
 // 游戏正式开始
 func (m *ctxManager) BroadcastGameStart() {
-	// 初始化frameID
+	// 初始化所有玩家的frameID为0
 	for idx := range m.Clients {
 		m.PlayerFrameID[idx] = 0
 	}

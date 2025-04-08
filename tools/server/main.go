@@ -27,7 +27,7 @@ func serveUserInRoom(c *websocket.Conn, room *Room) {
 	defer c.Close()
 
 	// 广播房间信息
-	room.CtxManager.BroadcastRoomInfo(room.ChapterID)
+	room.CtxManager.BroadcastRoomInfo(room.ChapterID, room.ID)
 
 	// 如果房间未运行,启动房间
 	if !room.IsRunning {
@@ -62,7 +62,7 @@ beforeGame:
 			}
 			if ctx.Id == room.CtxManager.FirstUser {
 				atomic.StoreInt32(&room.ChapterID, int32(msg.ChapterId))
-				room.CtxManager.BroadcastRoomInfo(room.ChapterID)
+				room.CtxManager.BroadcastRoomInfo(room.ChapterID, room.ID)
 			}
 		case messages.MsgTypeReady:
 			atomic.AddInt32(&room.ReadyCount, 1)
@@ -94,6 +94,14 @@ beforeGame:
 		}
 
 		switch msgType {
+		case messages.MsgTypeRequestBlank:
+			// 只通过空白消息表示客户端接收到了服务端消息
+			msg, ok := decoded.(messages.RequestBlank)
+			if !ok {
+				log.Println("decode error: invalid message type")
+				continue
+			}
+			room.UpdatePlayerFrameID(msg.UID, msg.FrameID)
 		case messages.MsgTypeRequestCardPlant:
 			msg, ok := decoded.(messages.RequestCardPlant)
 			if !ok {
@@ -106,6 +114,7 @@ beforeGame:
 				msg.Pid,
 				msg.Level,
 				ctx.Id,
+				room.GetNextFrameID(),
 			)
 		case messages.MsgTypeRequestRemovePlant:
 			msg, ok := decoded.(messages.RequestRemovePlant)
@@ -118,6 +127,7 @@ beforeGame:
 				msg.Row,
 				msg.Pid,
 				ctx.Id,
+				room.GetNextFrameID(),
 			)
 		case messages.MsgTypeRequestStarShards:
 			msg, ok := decoded.(messages.RequestStarShards)
@@ -130,6 +140,7 @@ beforeGame:
 				msg.Row,
 				msg.Pid,
 				ctx.Id,
+				room.GetNextFrameID(),
 			)
 		case messages.MsgTypeRequestEndGame:
 			room.Destroy()

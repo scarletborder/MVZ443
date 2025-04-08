@@ -80,8 +80,7 @@ class ObsidianGolem extends IGolem {
                 }
                 // 傻站 2 秒后跳跃换位置
                 this.addTimer(2000, () => {
-                    this.jumpToNewPosition();
-                    callback();
+                    this.jumpToNewPosition(callback);
                 });
             });
         });
@@ -245,7 +244,7 @@ class ObsidianGolem extends IGolem {
 
 
     // 跳跃换位置：删除当前注册，跳到新位置后重新注册
-    jumpToNewPosition() {
+    jumpToNewPosition(callback: () => void) {
         const key = `${this.row}`;
         if (this.Spawner.monstered.has(key)) {
             const list = this.Spawner.monstered.get(key);
@@ -271,8 +270,11 @@ class ObsidianGolem extends IGolem {
 
         if (this && this.game) this.game.physics.world.disable(this);
         this.jumpTo(x, y, 3500, 120 * Math.abs(newRow - this.row));
-        this.game.time.delayedCall(2500, () => {
-            if (this && this.game) this.game.physics.world.enable(this); // 启用物理体
+        this.game.time.delayedCall(3500, () => {
+            if (this && this.game) {
+                this.game.physics.world.enable(this); // 启用物理体
+                callback();
+            }
         });
 
         // 更新注册信息

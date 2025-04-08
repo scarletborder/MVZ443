@@ -22,6 +22,7 @@ import { generateStageScript } from '../game_events/stage_script';
 import seedrandom from 'seedrandom';
 import DepthManager from '../../utils/depth';
 import { IMonster } from '../models/monster/IMonster';
+import { FrameTick } from '../../../public/constants';
 
 
 
@@ -65,7 +66,7 @@ export class Game extends Scene {
     dumpMusic: Phaser.Sound.BaseSound | null = null;
 
     // command queue
-    private elapsed100: number = 0;
+    private frameTick: number = 0; // 服务器帧
     private elapsed500: number = 0;
 
     sendQueue: QueueSend
@@ -105,7 +106,8 @@ export class Game extends Scene {
             this.sendQueue = new QueueSend({ mode: 'single', recvQueue: this.recvQueue.queues });
         } else {
             this.recvQueue = new QueueReceive({ mode: 'multi' }, this);
-            this.sendQueue = new QueueSend({ mode: 'multi' });
+            this.sendQueue = new QueueSend({ mode: 'single', recvQueue: this.recvQueue.queues }); // 断线后单人可玩
+            // this.sendQueue = new QueueSend({ mode: 'multi' });
             BackendWS.setQueue(this.recvQueue, this.sendQueue);
         }
 
@@ -211,11 +213,11 @@ export class Game extends Scene {
     }
 
     update(time: number, delta: number): void {
-        this.elapsed100 += delta;
+        this.frameTick += delta; // 服务器帧
         this.elapsed500 += delta;
-        if (this.elapsed100 >= 100) {  // 达到 100 毫秒，执行函数
+        if (this.frameTick >= FrameTick) {  // 达到 100 毫秒，执行函数
             this.recvQueue.Consume();
-            this.elapsed100 -= 100; // 保留多余的时间，避免累积误差
+            this.frameTick -= FrameTick; // 保留多余的时间，避免累积误差
         }
         if (this.elapsed500 >= 500) {  // 达到 500 毫秒，执行函数
             // 更新怪物排序
@@ -243,6 +245,7 @@ export class Game extends Scene {
         this.monsterSpawner.setRandomSeed(seed);
         EventBus.emit('current-scene-ready', this);
         this.myID = myID;
+        this.sendQueue.setMyID(myID);
         this.params.setInitialEnergy(this.stageData.energy);
         AddMapFunction(this);
 
@@ -370,8 +373,12 @@ export class Game extends Scene {
 
         if (paused) {
             this.doHalt();
+            this.pauseText.setVisible(true);
+            this.exitText.setVisible(true);
         } else {
             this.doResume();
+            this.pauseText.setVisible(false);
+            this.exitText.setVisible(false);
         }
     }
 
@@ -381,8 +388,6 @@ export class Game extends Scene {
         this.anims?.pauseAll();
         this.tweens?.pauseAll();
         this.time.paused = true;
-        this.pauseText.setVisible(true);
-        this.exitText.setVisible(true);
         try { this.exitText.setInteractive(); } finally { EventBus.emit('okIsPaused', { paused: true }); }
         this.music.pause();
     }
@@ -393,8 +398,6 @@ export class Game extends Scene {
         this.anims?.resumeAll();
         this.tweens?.resumeAll();
         this.time.paused = false;
-        this.pauseText.setVisible(false);
-        this.exitText.setVisible(false);
         try { this.exitText.disableInteractive(); } finally { EventBus.emit('okIsPaused', { paused: false }); }
         this.music.resume();
     }

@@ -80,24 +80,27 @@ class MutantYAxisArrow extends Arrow {
     update(...args: any[]): void {
         super.update();
 
-        if (!this.setVelocityY) {
-            return;
+        if (!this || !this.setVelocityY || this.penetrate === 0) {
+            return;  // Ensure `this` is not undefined and `setVelocityY` is available
         }
 
-        // 如果当前row超过了设定值,取消y速度, 只向前移动
-        if (this.lowerOrUpper) {
-            if (this.y < this.targetY) {
-                this.setVelocityY(0); // 取消y速度
-                this.setY(this.targetY); // 设置到目标位置
+        try {
+            // 如果当前row超过了设定值,取消y速度, 只向前移动
+            if (this.lowerOrUpper) {
+                if (this.y < this.targetY) {
+                    this.setVelocityY(0); // 取消y速度
+                    this.setY(this.targetY); // 设置到目标位置
+                }
             }
-        }
-        else {
-            if (this.y > this.targetY) {
-                this.setVelocityY(0); // 取消y速度
-                this.setY(this.targetY); // 设置到目标位置
+            else {
+                if (this.y > this.targetY) {
+                    this.setVelocityY(0); // 取消y速度
+                    this.setY(this.targetY); // 设置到目标位置
+                }
             }
+        } catch {
+            if (this && this.destroy && this.game) this.destroy();
         }
-
     }
 }
 

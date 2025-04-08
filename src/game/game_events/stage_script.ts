@@ -324,7 +324,7 @@ export function generateStageScript(stage: StageScript, random: seedrandom.PRNG,
     function getAllTimes(waveId: number): { duration: number; minDelay: number; maxDelay: number } {
         const duration = 5; // 固定时长，单位秒
 
-        const maxDelay = (_flagWaves.includes(waveId) ? 180 : 25) + randomInt(0, 6); // 本波为flag
+        const maxDelay = (_flagWaves.includes(waveId + 1) ? 40 : 20) + randomInt(0, 6); // 下波为flag
         let minDelay: number;
         if (waveId === 1) {
             minDelay = 14;

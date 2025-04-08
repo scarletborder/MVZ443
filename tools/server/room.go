@@ -2,6 +2,8 @@ package main
 
 import (
 	"math/rand"
+	"mvzserver/constants"
+	"mvzserver/messages"
 	"sync/atomic"
 	"time"
 )
@@ -95,11 +97,17 @@ waitLoop:
 
 func (r *Room) gameLoop() {
 	r.CtxManager.BroadcastGameStart()
-	timer := time.NewTicker(100 * time.Millisecond)
+	timer := time.NewTicker(constants.FrameTick * time.Millisecond)
 
 	for {
 		select {
 		case <-timer.C:
+			// fmt.Printf("FrameID: %d\n", r.FrameID)
+			// 判断是否所有的玩家的frameID都已经同步
+			if !r.HasAllPlayerSync() {
+				continue
+			}
+			// 广播
 			r.broadcastGameState()
 		case <-r.GameDeadChan:
 			return
@@ -108,17 +116,24 @@ func (r *Room) gameLoop() {
 }
 
 func (r *Room) broadcastGameState() {
-	if len(r.Logic.msgs) == 0 {
-		// 构建一个默认的不可能消息
+	r.FrameID++
 
-		for _, ctx := range r.CtxManager.Clients {
-			ctx.WriteJSON([]interface{}{})
+	if len(r.Logic.msgs) == 0 {
+		// 构建一个blank msg
+		data, err := messages.EncodeMessage(messages.BlankMsg{
+			Type:    messages.MsgTypeBlank,
+			FrameID: r.FrameID,
+		})
+		if err != nil {
+			return
 		}
-	} else {
-		for _, ctx := range r.CtxManager.Clients {
-			ctx.WriteJSON(r.Logic.msgs)
-		}
+		r.Logic.msgs = append(r.Logic.msgs, data)
 	}
+
+	for _, ctx := range r.CtxManager.Clients {
+		ctx.WriteJSON(r.Logic.msgs)
+	}
+
 	r.Logic.Reset()
 }
 
@@ -127,12 +142,27 @@ func (r *Room) GetPlayerCount() int {
 }
 
 func (r *Room) HasAllPlayerSync() bool {
+	// 延迟等待.最多容忍 maxDelayFrames 帧的延迟
+	var minFrameID uint16 = r.FrameID
+	if r.FrameID < constants.MaxDelayFrames {
+		minFrameID = 0
+	} else {
+		minFrameID = r.FrameID - constants.MaxDelayFrames
+	}
+
 	for _, frameID := range r.CtxManager.PlayerFrameID {
-		if frameID < r.FrameID {
+		if frameID < minFrameID {
 			return false
 		}
 	}
 	return true
+}
+
+func (r *Room) UpdatePlayerFrameID(uid int, frameID uint16) {
+	// fmt.Printf("UpdatePlayerFrameID: uid: %d, frameID: %d\n", uid, frameID)
+	if frameID > r.CtxManager.PlayerFrameID[uid] {
+		r.CtxManager.PlayerFrameID[uid] = frameID
+	}
 }
 
 func (r *Room) Destroy() {

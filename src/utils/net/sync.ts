@@ -28,6 +28,9 @@ export function encodeMessageToBinary(message: _requestType, frameID: number): U
             view.setUint8(7, message.row);
             view.setUint16(8, frameID);
             break;
+        case 0x03: // Blank
+            view.setUint16(3, frameID); // 发送的FrameID    
+            break;
 
         case 0x01: // Ready
             // already handled uid
@@ -58,7 +61,7 @@ class WebSocketClient {
         this.sendQueue = sendQueue;
     }
 
-    public GetFrameID () {
+    public GetFrameID() {
         return this.FrameID;
     }
 
@@ -152,6 +155,7 @@ class WebSocketClient {
                     // 游戏内frame以array形式
                     for (const message of vanillaMessage) {
                         const decodedMessage = decodeMessage(message);
+                        console.log("Decoded message:", decodedMessage);
                         if (!decodedMessage) {
                             console.error("Failed to decode message:", message);
                             continue;

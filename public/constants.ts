@@ -10,3 +10,5 @@ export const announcement =
 
 
 export const SECKILL = 99889988;
+
+export const FrameTick = 50; // 20tick/s, 50ms/tick

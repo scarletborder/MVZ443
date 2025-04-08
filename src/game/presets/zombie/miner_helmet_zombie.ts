@@ -90,7 +90,7 @@ class MinerHelmetZombie extends EnhancedZombie {
     public startAttacking(plant: IPlant): void {
         // 开始动画
         if (this.axeDurability > 0) {
-            if (!this.pickaxeSwing) {
+            if (!this.pickaxeSwing && !this.IsFrozen) {
                 const sprite = this.attachSprites.get('pickaxe');
                 if (this.game.tweens) {
                     this.pickaxeSwing = this.game.tweens.add({

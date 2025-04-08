@@ -26,7 +26,7 @@ func (g *GameLogic) Reset() {
 	g.msgs = g.msgs[:0]
 }
 
-func (g *GameLogic) PlantCard(col, row, id, level, uid int) {
+func (g *GameLogic) PlantCard(col, row, id, level, uid int, frameID uint16) {
 	if (col < 0 || col >= MAXCOLS) || (row < 0 || row >= MAXROWS) {
 		return
 	}
@@ -42,6 +42,8 @@ func (g *GameLogic) PlantCard(col, row, id, level, uid int) {
 		Col:   col,
 		Row:   row,
 		UID:   uid,
+
+		FrameID: frameID,
 	})
 	if err != nil {
 		return
@@ -52,7 +54,7 @@ func (g *GameLogic) PlantCard(col, row, id, level, uid int) {
 
 }
 
-func (g *GameLogic) RemoveCard(col, row, id, uid int) {
+func (g *GameLogic) RemoveCard(col, row, id, uid int, frameID uint16) {
 	if (col < 0 || col >= MAXCOLS) || (row < 0 || row >= MAXROWS) {
 		return
 	}
@@ -67,6 +69,8 @@ func (g *GameLogic) RemoveCard(col, row, id, uid int) {
 		Col: col,
 		Row: row,
 		UID: uid,
+
+		FrameID: frameID,
 	})
 	if err != nil {
 		return
@@ -77,7 +81,7 @@ func (g *GameLogic) RemoveCard(col, row, id, uid int) {
 
 }
 
-func (g *GameLogic) UseStarShards(col, row, id, uid int) {
+func (g *GameLogic) UseStarShards(col, row, id, uid int, frameID uint16) {
 	if (col < 0 || col >= MAXCOLS) || (row < 0 || row >= MAXROWS) {
 		return
 	}
@@ -92,6 +96,8 @@ func (g *GameLogic) UseStarShards(col, row, id, uid int) {
 		Col:  col,
 		Row:  row,
 		UID:  uid,
+
+		FrameID: frameID,
 	})
 
 	if err != nil {

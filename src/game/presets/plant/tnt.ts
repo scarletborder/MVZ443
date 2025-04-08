@@ -19,7 +19,7 @@ class _Tnt extends IPlant {
         super(scene, col, row, TntRecord.texture, TntRecord.pid, level);
         this.game = scene;
         this.setHealthFirstly(SECKILL);
-        this.damage = GetIncValue(1400, 1.5, level);
+        this.damage = GetIncValue(1400, 1.35, level);
         this.damage *= (level >= 5 ? 1.3 : 1);
         this.random = seedrandom.alea(String(scene.seed * 5));
 

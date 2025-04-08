@@ -21,7 +21,7 @@ class triple_dispenser extends IPlant {
     public onStarShards(): void {
         super.onStarShards();
 
-        const totalArrows = 8; // Total number of arrows to shoot
+        const totalArrows = 10; // Total number of arrows to shoot
 
         // 如果存在 Timer，则先移除（防止多重 Timer 并存）
         if (this.Timer) {
@@ -238,8 +238,8 @@ function shootArrow(scene: Game, shooter: IPlant, baseDamage: number = 30, isSta
         const bottomRow = 8; // 确保一个非常下方的行让视觉看起来是散射
         // 星之碎片,纯散射
         for (let speed = 0; speed < 600; speed += 40) {
-            NewMutantYAxisArrow(scene, shooter.col, shooter.row, scene.positionCalc.GRID_SIZEX * 32, damage, 'zombie', topRow, speed).penetrate = penetrate;
-            NewMutantYAxisArrow(scene, shooter.col, shooter.row, scene.positionCalc.GRID_SIZEX * 32, damage, 'zombie', bottomRow, speed).penetrate = penetrate;
+            NewMutantYAxisArrow(scene, shooter.col, shooter.row, scene.positionCalc.GRID_SIZEX * 32, damage / 2, 'zombie', topRow, speed).penetrate = penetrate;
+            NewMutantYAxisArrow(scene, shooter.col, shooter.row, scene.positionCalc.GRID_SIZEX * 32, damage / 2, 'zombie', bottomRow, speed).penetrate = penetrate;
         }
         return;
     }

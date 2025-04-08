@@ -92,7 +92,7 @@ export default class QueueSend {
 
     Consume() {
         // 如果是单人游戏,则直接将数据放入接收队列
-        if (this.singRecvQueue) {
+        if (!BackendWS.isConnected) {
             while (!this.queues.isEmpty()) {
                 const data = this.queues.shift();
                 if (!data) continue;
@@ -100,7 +100,7 @@ export default class QueueSend {
             }
         }
         // 多人游戏
-        else if (BackendWS.isConnected) {
+        else {
             // 直接发送数据到服务器
             BackendWS.consumeSendQueue();
         }

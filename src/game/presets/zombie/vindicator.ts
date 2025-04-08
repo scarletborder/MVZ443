@@ -46,7 +46,7 @@ export class EnhancedVindicator extends IZombie {
     public startAttacking(plant: IPlant): void {
         // 开始动画
 
-        if (!this.axeSwing) {
+        if (!this.axeSwing && !this.IsFrozen) {
             const sprite = this.attachSprites.get('axe');
             if (this.game.tweens) {
                 this.axeSwing = this.game.tweens.add({

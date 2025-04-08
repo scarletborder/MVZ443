@@ -22,7 +22,7 @@ class MagicPowder extends IPlant {
         this.damage = GetIncValue(1500, 1.3, level);
 
         // 立刻创建一道激光
-        NewLaserByGrid(scene, col - 0.6, row, 1.3, this.damage, 'zombie', 200, { toSky: true },
+        NewLaserByGrid(scene, col - 0.4, row, 0.8, this.damage, 'zombie', 200, { toSky: true },
             { invisible: true, color: 0, alphaFrom: 0.2, alphaTo: 0.1 });
 
         scene.time.delayedCall(400, () => {
@@ -78,8 +78,8 @@ function cost(level?: number): number {
 }
 
 function cooldownTime(level?: number): number {
-    if ((level || 1) >= 9) return 42;
-    return 50;
+    if ((level || 1) >= 9) return 48;
+    return 55;
 }
 
 function levelAndstuff(level: number): item[] {

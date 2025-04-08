@@ -94,8 +94,7 @@ class Warden extends IGolem {
                 }
                 // 傻站 3 秒后跳跃换位置
                 this.addTimer(3000, () => {
-                    this.digToNewPosition(skid === 1);
-                    callback();
+                    this.digToNewPosition(skid === 1, callback);
                 });
             });
         });
@@ -222,10 +221,6 @@ class Warden extends IGolem {
                 newHelmetMinerFunc(this.game, this.col, this.row, -10);
             });
         });
-
-
-
-
     }
 
 
@@ -234,7 +229,7 @@ class Warden extends IGolem {
 
     // 钻地换位置：删除当前注册，跳到新位置后重新注册
     // isBack: 是否在器械的后排位置(突袭)
-    digToNewPosition(isBack: boolean = false) {
+    digToNewPosition(isBack: boolean = false, callback: () => void = () => { }) {
         const key = `${this.row}`;
         if (this.Spawner.monstered.has(key)) {
             const list = this.Spawner.monstered.get(key);
@@ -260,7 +255,10 @@ class Warden extends IGolem {
         if (this && this.game) this.game.physics.world.disable(this); // 禁用物理体
         this.digTo(x, y);
         this.game.time.delayedCall(6000, () => {
-            if (this && this.game) this.game.physics.world.enable(this); // 启用物理体
+            if (this && this.game) {
+                this.game.physics.world.enable(this); // 启用物理体
+                callback();
+            }
         });
 
         // 更新注册信息

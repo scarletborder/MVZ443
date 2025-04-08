@@ -53,7 +53,7 @@ class pumkin_wan extends INightPlant {
         super(scene, col, row, texture, PumpkinWanRecord.pid, level);
         this.setSleeping(isSleeping);
 
-        this.attackInterval = 1050;
+        this.attackInterval = 1550;
 
         this.game = scene;
         this.setHealthFirstly(400);
@@ -93,9 +93,9 @@ function NewPumpkinWan(scene: Game, col: number, row: number, level: number): IP
 
 function shootLaser(scene: Game, shooter: IPlant) {
     const level = shooter.level;
-    const damage = GetIncValue(42, 1.35, level);
-    const start = (level >= 9 ? 2.6 : 1.6);
-    const distance = (level >= 9 ? 5.2 : 3.2);
+    const damage = GetIncValue(65, 1.35, level);
+    const start = (level >= 9 ? 2.5 : 1.5);
+    const distance = (level >= 9 ? 5 : 3);
 
     NewLaserByGrid(scene, shooter.col - start, shooter.row - 1, distance, damage, 'zombie', 550, {
         toSky: (level >= 7 ? true : false)

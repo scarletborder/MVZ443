@@ -1,6 +1,6 @@
 import Denque from "denque";
 import { Game } from "../scenes/Game";
-import BackendWS from "../../utils/net/sync";
+import BackendWS, { encodeMessageToBinary } from "../../utils/net/sync";
 
 // 单人游戏
 interface SingleParams {
@@ -74,6 +74,7 @@ export type _Message =
     | _RoomInfo
     | _ChooseMap
     | _GameStart
+    | _ResponseBlank
     | _CardPlant
     | _RemovePlant
     | _UseStarShards;
@@ -173,6 +174,15 @@ export function decodeMessage(base64: string): _Message | null {
                 FrameID: frameID,
             };
         }
+        case 0x03: {
+            // Blank: frameID(uint16)
+            const frameID = view.getUint16(offset);
+            offset += 2;
+            return {
+                type: 0x03,
+                FrameID: frameID,
+            };
+        }
         case 0x04: {
             // RemovePlant: frameID(uint16), pid(uint16), col(uint8), row(uint8), uid(uint16)
             const frameID = view.getUint16(offset);
@@ -260,6 +270,8 @@ export default class QueueReceive {
         const tmpLeftFrames = []; // 存放未来frame的数据
         let hasExecuted = false;
 
+        console.log('expected frameID:', nextFrameID);
+
         // 单人游戏模拟发送一次服务器 blank
         if (!BackendWS.isConnected) {
             this.queues.push({
@@ -272,6 +284,7 @@ export default class QueueReceive {
         while (!this.queues.isEmpty()) {
             const data = this.queues.shift();
             if (!data) continue;
+            console.log('receive data:', data);
 
             if ("FrameID" in data && data.FrameID > nextFrameID) {
                 tmpLeftFrames.push(data);
@@ -311,14 +324,28 @@ export default class QueueReceive {
             this._haltGame();
         } else {
             // 收到了 下一个服务器帧的命令,自增frameID,发送确认接收信息
-            //TODO:
+            if (BackendWS.isConnected) {
+                //TODO: 发送确认信息
+                console.log('myid', this.myID)
+                const encoded = encodeMessageToBinary({
+                    type: 0x03,
+                    FrameID: nextFrameID,
+                    uid: this.myID
+                }, nextFrameID);
+                BackendWS.IncreaseFrameID();
+                BackendWS.send(encoded);
+            } else {
+                // 单人游戏
+                BackendWS.IncreaseFrameID();
+            }
             this._resumeGame();
         }
     }
 
     private _startGame(seed: number, myID: number) {
         // TODO:在启动游戏主进程前,调用发送队列设置发送队列的myID
-        console.log('game start')
+        console.log('game start', myID);
+        this.myID = myID;
         this.game.handleGameStart(seed, myID);
     }
     private _cardPlant(pid: number, col: number, row: number, level: number, uid: number) {
