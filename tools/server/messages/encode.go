@@ -53,6 +53,11 @@ func EncodeMessage(msg MessageSend) ([]byte, error) {
 		if err := binary.Write(buf, binary.BigEndian, uint16(m.MyID)); err != nil {
 			return nil, err
 		}
+	case GameEnd:
+		// GameEnd: frameID (uint16) + result (uint16)
+		if err := binary.Write(buf, binary.BigEndian, m.GameResult); err != nil {
+			return nil, err
+		}
 	case CardPlant:
 		// CardPlant: frameID(uint16), pid(uint16), level(uint8), col(uint8), row(uint8), uid(uint16)
 		if err := binary.Write(buf, binary.BigEndian, uint16(m.FrameID)); err != nil {

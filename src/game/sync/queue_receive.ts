@@ -1,6 +1,7 @@
 import Denque from "denque";
 import { Game } from "../scenes/Game";
-import BackendWS, { encodeMessageToBinary } from "../../utils/net/sync";
+import BackendWS from "../../utils/net/sync";
+import encodeMessageToBinary from "../../utils/net/encode";
 
 // 单人游戏
 interface SingleParams {
@@ -35,6 +36,11 @@ export type _GameStart = {
     myID: number;
 };
 
+type _GameEnd = {
+    type: 0x20;
+    GameResult: number; // uint16
+}
+
 type _CardPlant = {
     type: 0x02;
     pid: number;
@@ -68,16 +74,14 @@ type _ResponseBlank = {
     FrameID: number;
 }
 
-export type _receiveType = _GameStart | _CardPlant | _RemovePlant | _UseStarShards | _ResponseBlank;
+export type _receiveType = _GameStart | _CardPlant | _RemovePlant | _UseStarShards | _ResponseBlank | _GameEnd;
 
 export type _Message =
     | _RoomInfo
     | _ChooseMap
-    | _GameStart
+    | _GameStart | _GameEnd
     | _ResponseBlank
-    | _CardPlant
-    | _RemovePlant
-    | _UseStarShards;
+    | _CardPlant | _RemovePlant | _UseStarShards;
 
 
 /**
@@ -234,6 +238,15 @@ export function decodeMessage(base64: string): _Message | null {
                 chapterId,
             };
         }
+        case 0x20: {
+            // GameEnd : GameResult(uint16)
+            const GameResult = view.getUint16(offset);
+            offset += 2;
+            return {
+                type: 0x20,
+                GameResult,
+            };
+        }
         default:
             console.error("Unknown message type:", type);
             return null;
@@ -257,6 +270,12 @@ export default class QueueReceive {
         this.queues = new Denque();
         if (params.mode == 'single') {
             // this.sync = null;
+            // 单人游戏模拟发送一次服务器 blank, default = 1
+            this.queues.push({
+                type: 0x03,
+                FrameID: 1,
+            })
+
         } else {
             // 多人
             // this.sync = new Syncer();
@@ -270,21 +289,19 @@ export default class QueueReceive {
         const tmpLeftFrames = []; // 存放未来frame的数据
         let hasExecuted = false;
 
-        console.log('expected frameID:', nextFrameID);
-
-        // 单人游戏模拟发送一次服务器 blank
-        if (!BackendWS.isConnected) {
-            this.queues.push({
-                type: 0x03,
-                FrameID: nextFrameID,
-            })
-        }
+        // console.log('expected frameID:', nextFrameID);
 
         // 消费队列
         while (!this.queues.isEmpty()) {
             const data = this.queues.shift();
             if (!data) continue;
-            console.log('receive data:', data);
+            // console.log('receive data:', data);
+
+            if (data.type === 0x20) {
+                // 直接结束游戏
+                const isWin = data.GameResult === 1 ? true : false;
+                this.game.ExitEntry(isWin);
+            }
 
             if ("FrameID" in data && data.FrameID > nextFrameID) {
                 tmpLeftFrames.push(data);
@@ -336,9 +353,25 @@ export default class QueueReceive {
                 BackendWS.send(encoded);
             } else {
                 // 单人游戏
-                BackendWS.IncreaseFrameID();
+                // 如果游戏没有暂停
+                if (!this.game.time.paused) {
+                    BackendWS.IncreaseFrameID();
+                    // 单人游戏模拟发送一次服务器 blank
+                    this.queues.push({
+                        type: 0x03,
+                        FrameID: nextFrameID + 1,
+                    })
+                } else {
+                    // 如果游戏暂停了,那么不需要模拟发送blank
+                    // 也不能让自己frameID自增,因为有私密图纸
+                    return;
+                }
             }
+
             this._resumeGame();
+            // 该帧有效,帧驱动一些事件发生
+            // 例如 plant发出子弹, 刷怪, 避免通过game.timer导致不精确
+            this.game.frameTicker.update();
         }
     }
 

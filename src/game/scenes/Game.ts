@@ -1,15 +1,14 @@
 import { EventBus } from '../EventBus';
 import { Scene } from 'phaser';
 import { IPlant } from '../models/IPlant';
-import { IZombie } from '../models/monster/IZombie';
 import { IBullet } from '../models/IBullet';
 import { PositionCalc } from '../utils/position';
 import Gardener from '../utils/gardener';
 import MonsterSpawner from '../utils/spawner';
 import { GameParams, GameSettings } from '../models/GameParams';
 import PlantFactoryMap from '../presets/plant';
-import QueueReceive from '../utils/queue_receive';
-import QueueSend from '../utils/queue_send';
+import QueueReceive from '../sync/queue_receive';
+import QueueSend from '../sync/queue_send';
 import CreateInnerMenu from '../utils/inner_menu';
 import { StageData } from '../models/IRecord';
 import MineCart from '../presets/bullet/minecart';
@@ -23,6 +22,7 @@ import seedrandom from 'seedrandom';
 import DepthManager from '../../utils/depth';
 import { IMonster } from '../models/monster/IMonster';
 import { FrameTick } from '../../../public/constants';
+import FrameTicker from '../sync/ticker';
 
 
 
@@ -38,6 +38,7 @@ export class Game extends Scene {
     public gardener: Gardener;
     public monsterSpawner: MonsterSpawner;
     public innerSettings: GameSettings;
+    public frameTicker: FrameTicker;
 
     /**
      * gridProperty[row][col]
@@ -87,6 +88,7 @@ export class Game extends Scene {
 
     create() {
         this.isGameEnd = true;
+        this.frameTicker = new FrameTicker();
         // read external data
         // TODO : 根据type具体判断放置那张背景图
         this.params = this.game.registry.get('gameParams') as GameParams;
@@ -215,9 +217,10 @@ export class Game extends Scene {
     update(time: number, delta: number): void {
         this.frameTick += delta; // 服务器帧
         this.elapsed500 += delta;
-        if (this.frameTick >= FrameTick) {  // 达到 100 毫秒，执行函数
+        const realFrameTick = FrameTick / this.time.timeScale; // 真实的帧间隔 
+        if (this.frameTick >= realFrameTick) {  // 达到 100 毫秒，执行函数
             this.recvQueue.Consume();
-            this.frameTick -= FrameTick; // 保留多余的时间，避免累积误差
+            this.frameTick -= realFrameTick; // 保留多余的时间，避免累积误差
         }
         if (this.elapsed500 >= 500) {  // 达到 500 毫秒，执行函数
             // 更新怪物排序
@@ -376,6 +379,10 @@ export class Game extends Scene {
             this.pauseText.setVisible(true);
             this.exitText.setVisible(true);
         } else {
+            this.recvQueue.queues.push({
+                type: 0x03,
+                FrameID: BackendWS.FrameID + 1,
+            })
             this.doResume();
             this.pauseText.setVisible(false);
             this.exitText.setVisible(false);
@@ -404,10 +411,17 @@ export class Game extends Scene {
 
     // game->app 通知游戏结束
     handleExit(isWin: boolean = false) {
+        // 向发送队列发送消息,准备退出游戏
+        if (this.isGameEnd) return; // 如果游戏已经结束，则不执行任何操作
+        this.sendQueue.sendGameEnd(isWin ? 1 : 0); // 发送游戏结束消息
+    }
+
+    // 游戏退出真实入口, 由消息队列调用
+    ExitEntry(isWin: boolean = false) {
         this.music.stop();
         // 移除所有game的事件监听
         this.sound.stopAll();
-        this.input.keyboard?.removeAllKeys(true);
+        this.input.keyboard?.removeAllKeys(true, true);
         this.input.keyboard?.removeAllListeners();
         this.tweens.killAll();
 

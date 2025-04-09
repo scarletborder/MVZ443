@@ -11,7 +11,8 @@ import i18n from './utils/i18n';
 import { StageResult } from './game/models/IRecord';
 import GameResultView from './components/menu/result';
 import { useDeviceType } from './hooks/useDeviceType';
-import BackendWS, { encodeMessageToBinary } from './utils/net/sync';
+import BackendWS from './utils/net/sync';
+import encodeMessageToBinary from './utils/net/encode';
 
 function App() {
     // State to control the visibility of the game tool

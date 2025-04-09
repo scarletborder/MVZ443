@@ -7,6 +7,7 @@ import { EventBus } from "../EventBus";
 import { GroundOnlyZombie, SkyOnlyZombie, WaterOnlyZombie } from "./grid_clan";
 import { IMonster } from "../models/monster/IMonster";
 import IObstacle from "../presets/obstacle/IObstacle";
+import { FrameTimer } from "../sync/ticker";
 // 出怪实例
 // 使用一个刷怪表进行实例化
 
@@ -27,7 +28,7 @@ export default class MonsterSpawner {
     private current_wave_idx: number = 0;
 
     private SpawnTimer: Phaser.Time.TimerEvent; // 出怪
-    private Timer: Phaser.Time.TimerEvent; // 波数
+    private Timer: FrameTimer | null = null; // 波数使用帧驱动定时器，类型为 FrameTimer
     private prev_wave_time: number = 0;
 
     private tmpKilled_count = 0;// 两波之间存击杀数
@@ -60,10 +61,12 @@ export default class MonsterSpawner {
 
     // 整局,触发开始,一局游戏只能调用一次
     startWave() {
+        // 如果存在之前的帧定时器，取消之
         if (this.Timer) {
-            this.Timer.remove();
-            this.Timer.destroy();
+            this.scene.frameTicker.Unregister(this.Timer);
+            this.Timer = null;
         }
+        // 同时取消出怪定时器
         if (this.SpawnTimer) {
             this.SpawnTimer.remove();
             this.SpawnTimer.destroy();
@@ -130,46 +133,30 @@ export default class MonsterSpawner {
 
             // 启动定时器（仅适用于普通波）
             if (this.current_wave_idx >= this.waves.length - 1) return; // 没下一波了
+
             console.log('next wave timer', this.currentWave().maxDelay * 1000);
             if (this.Timer) {
-                this.Timer.reset({
-                    delay: this.currentWave().maxDelay * 1000,
-                    loop: false,
-                    callback: () => {
-                        this.nextWave();
-                    }
-                });
-            } else {
-                this.Timer = this.scene.time.addEvent({
-                    delay: this.currentWave().maxDelay * 1000,
-                    loop: false,
-                    callback: () => {
-                        this.nextWave();
-                    }
-                });
+                this.scene.frameTicker.Unregister(this.Timer); // 取消之前的定时器
+                this.Timer = null; // 重置定时器
             }
+
+            // 使用帧驱动定时器延迟调用 nextWave
+            this.Timer = this.scene.frameTicker.delayedCall(() => {
+                this.nextWave();
+            }, this.currentWave().maxDelay * 1000); // 延迟时间
         };
 
         // 如果是isFlag,那么输出字幕等待一段时间,否则直接开始
         if (this.currentWave().isFlag) {
             this.scene.broadCastFlag();
             if (this.Timer) {
-                this.Timer.reset({
-                    delay: 5000,
-                    loop: false,
-                    callback: () => {
-                        startWave();
-                    }
-                });
-            } else {
-                this.Timer = this.scene.time.addEvent({
-                    delay: 5000,
-                    loop: false,
-                    callback: () => {
-                        startWave();
-                    }
-                });
+                this.scene.frameTicker.Unregister(this.Timer); // 取消之前的定时器
+                this.Timer = null; // 重置定时器
             }
+
+            this.Timer = this.scene.frameTicker.delayedCall(() => {
+                startWave();
+            }, 5000);
         } else {
             startWave();
         }
@@ -506,13 +493,14 @@ export default class MonsterSpawner {
                 if (delay > 6000) {
                     delay = 6000;
                 }
-                this.Timer.reset({
-                    delay: delay,
-                    loop: false,
-                    callback: () => {
-                        this.nextWave();
-                    }
-                });
+
+                if (this.Timer) {
+                    this.scene.frameTicker.Unregister(this.Timer); // 取消之前的定时器
+                    this.Timer = null; // 重置定时器
+                }
+                this.Timer = this.scene.frameTicker.delayedCall(() => {
+                    this.nextWave();
+                }, delay);
                 return;
             } else {
                 // 你怎么会在这里?

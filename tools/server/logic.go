@@ -107,3 +107,20 @@ func (g *GameLogic) UseStarShards(col, row, id, uid int, frameID uint16) {
 	g.cards[row][col] = true
 	g.msgs = append(g.msgs, data)
 }
+
+func (g *GameLogic) BroadGameEnd(room *Room, GameResult uint16) {
+	// 加急直接发送
+	data, err := messages.EncodeMessage(messages.GameEnd{
+		Type:       messages.MsgEndGame,
+		GameResult: GameResult,
+	})
+
+	if err != nil {
+		return
+	}
+
+	var msgs = [][]byte{data}
+	for _, ctx := range room.CtxManager.Clients {
+		ctx.WriteJSON(msgs)
+	}
+}

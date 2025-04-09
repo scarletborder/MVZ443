@@ -5,7 +5,8 @@ import ChapterSelector from './level/ChapterSelector';
 import StageSelector from './level/StageSelector';
 import ParamsSelector from './level/ParamsSelector';
 import { StageDataRecords } from '../../game/utils/loader';
-import BackendWS, { encodeMessageToBinary } from '../../utils/net/sync';
+import BackendWS from '../../utils/net/sync';
+import encodeMessageToBinary from '../../utils/net/encode';
 
 interface LevelSelectorProps {
     width: number;

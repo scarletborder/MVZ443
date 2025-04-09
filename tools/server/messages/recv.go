@@ -111,3 +111,12 @@ type RequestStartGame struct {
 func (m RequestStartGame) GetType() int {
 	return m.Type
 }
+
+type RequestEndGame struct {
+	Type       int    `json:"type"`
+	GameResult uint16 `json:"gameResult"`
+}
+
+func (m RequestEndGame) GetType() int {
+	return m.Type
+}

@@ -26,9 +26,10 @@ type _requestChooseMap = {
     chapterId: number;
 }
 
-// 选卡结束,游戏外的准备
-type _requestStartGame = {
+// 游戏结束
+type _requestEndGame = {
     type: 0x20;
+    GameResult: number; // uint16
 }
 
 // 加载结束,游戏内的准备
@@ -68,7 +69,7 @@ type _requestStarShards = {
     uid: number; // 来源用户
 }
 
-type _requestType = _requestCardPlant | _requestRemovePlant | _requestStarShards | _ready;
+type _requestType = _requestCardPlant | _requestRemovePlant | _requestStarShards | _ready | _requestEndGame;
 
 export default class QueueSend {
     queues: Denque<_requestType>
@@ -114,8 +115,15 @@ export default class QueueSend {
                 seed: Math.random(),
                 myID: this.myID
             });
-        } else {
-            // 单人游戏,直接下一服务器帧的数据进来
+        } else if (data.type === 0x20) {
+            // end game
+            this.singRecvQueue?.push({
+                type: 0x20,
+                GameResult: data.GameResult,
+            });
+        }
+        else {
+            // 单人游戏,游戏中帧,直接下一服务器帧的数据进来
             const nextFrameID = 1 + BackendWS.GetFrameID();
             this.singRecvQueue?.push({
                 ...data,
@@ -129,6 +137,17 @@ export default class QueueSend {
         this.queues.push({
             type: 0x01,
             uid: this.myID,
+        });
+    }
+
+    /**
+     * 发送游戏结束的信息,该信息具有最高的等级,无视frameID(因为处理队列会处理最先传来的数据)
+     * @param result 0-失败, 1-胜利
+     */
+    public sendGameEnd(result: number) {
+        this.queues.push({
+            type: 0x20,
+            GameResult: result,
         });
     }
 

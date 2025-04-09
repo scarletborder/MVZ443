@@ -143,6 +143,14 @@ beforeGame:
 				room.GetNextFrameID(),
 			)
 		case messages.MsgTypeRequestEndGame:
+			msg, ok := decoded.(messages.RequestEndGame)
+			if !ok {
+				log.Println("decode error: invalid message type")
+				continue
+			}
+			// 加急发送
+			room.Logic.BroadGameEnd(room, msg.GameResult)
+
 			room.Destroy()
 			return
 		}

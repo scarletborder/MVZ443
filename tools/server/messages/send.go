@@ -5,6 +5,7 @@ const (
 	MsgTypeRoomInfo = 0x00 // 房间信息
 	MsgChooseMap    = 0x10 // 选择地图
 	MsgTypeError    = 0xF0 // 错误
+	MsgEndGame      = 0x20 // endgame
 
 	MsgTypeGameStart     = 0x01 // 游戏开始
 	MsgTypeCardPlant     = 0x02 // 种植卡片
@@ -103,6 +104,16 @@ type ChooseMap struct {
 }
 
 func (m ChooseMap) GetType() int {
+	return m.Type
+}
+
+// GameEnd 消息: 游戏结束
+type GameEnd struct {
+	Type       int    `json:"type"`
+	GameResult uint16 `json:"gameResult"` // 游戏结果 0:失败 1:胜利
+}
+
+func (m GameEnd) GetType() int {
 	return m.Type
 }
 
