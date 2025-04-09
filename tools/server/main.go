@@ -4,6 +4,7 @@ import (
 	"log"
 	"mvzserver/messages"
 	"sync/atomic"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/websocket/v2"
@@ -151,7 +152,11 @@ beforeGame:
 			// 加急发送
 			room.Logic.BroadGameEnd(room, msg.GameResult)
 
-			room.Destroy()
+			// 未来10s内删除房间
+			go func() {
+				time.Sleep(10 * time.Second)
+				room.Destroy()
+			}()
 			return
 		}
 	}

@@ -64,7 +64,10 @@ func DecodeBinaryMessage(data []byte) (int, interface{}, error) {
 		}, nil
 
 	case MsgTypeRequestEndGame:
-		return msgType, nil, nil
+		return msgType, RequestEndGame{
+			Type:       msgType,
+			GameResult: uint16(binary.BigEndian.Uint16(data[3:5])),
+		}, nil
 	}
 
 	return -1, nil, errors.New("unknown message type")

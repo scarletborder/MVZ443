@@ -312,6 +312,10 @@ export default class QueueReceive {
                 continue;
             }
 
+            if ("FrameID" in data && data.FrameID === 2) {
+                this.game.handleGameFrameStart(); // 刷怪开始
+            }
+
             hasExecuted = true;
             switch (data.type) {
                 case 0x01:

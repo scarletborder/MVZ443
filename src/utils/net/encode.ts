@@ -35,6 +35,9 @@ export default function encodeMessageToBinary(message: _requestType, frameID?: n
         case 0x10:
             view.setUint32(3, message.chapterId);
             break;
+        case 0x20: // gameEnd
+            view.setUint16(3, message.GameResult);
+            break;
     }
 
     return new Uint8Array(buffer);

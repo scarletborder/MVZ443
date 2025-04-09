@@ -252,7 +252,6 @@ export class Game extends Scene {
         this.params.setInitialEnergy(this.stageData.energy);
         AddMapFunction(this);
 
-        this.monsterSpawner.startWave();
         EventBus.emit('boss-dead');
         EventBus.emit('game-progress', { progress: 0 });
         // 销毁waitText
@@ -263,6 +262,11 @@ export class Game extends Scene {
             new MineCart(this, -1, i);
         }
         this.isGameEnd = false;
+    }
+
+    // 和时间敏感事件的游戏开始
+    handleGameFrameStart() {
+        this.monsterSpawner.startWave();
         EventBus.emit('okIsPaused', { paused: false });
     }
 
