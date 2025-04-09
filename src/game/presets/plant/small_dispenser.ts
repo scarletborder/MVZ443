@@ -27,7 +27,7 @@ class smallDispenser extends INightPlant {
         this.maxDistance = maxDistance;
 
         this.Timer = scene.time.addEvent({
-            startAt: 1200, // 已经使用的时间,即开始时间
+            startAt: 500, // 已经使用的时间,即开始时间
             callback: () => {
                 if (this && this.health > 0 && scene) {
                     if (scene.monsterSpawner.hasMonsterInRowAfterX(this.row, this.x, this.maxDistance)) {
@@ -36,7 +36,7 @@ class smallDispenser extends INightPlant {
                 }
             },
             loop: true,
-            delay: 1400,  // 每隔1秒发射一次
+            delay: 1000,  // 每隔1秒发射一次
         });
         console.log(this.Timer.getRemaining())
     }

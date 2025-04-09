@@ -9,11 +9,14 @@ import { Game } from "../../scenes/Game";
 
 class Generator extends INightPlant {
     game: Game;
+    damagedSum: number = 0; // 累计受伤血量
+
     constructor(scene: Game, col: number, row: number, level: number) {
         super(scene, col, row, GeneratorRecord.texture, GeneratorRecord.pid, level);
         this.plant_height = 1;
-        this.setHealthFirstly(GetIncValue(800, level, 1.25));
+        this.setHealthFirstly(GetIncValue(800, level, 1.2));
         this.game = scene;
+        this.damagedSum = 0;
     }
 
     public onStarShards(): void {
@@ -44,14 +47,28 @@ class Generator extends INightPlant {
         amount = Math.min(amount, this.health + 10);
         if (this.health <= 0 || !this.scene) return;
 
+        this.damagedSum += amount;
         const scene = this.game;
-        if (this.isSleeping) {
-            const ratio = (this.level >= 5) ? (this.level >= 9 ? 6 : 7.5) : 10;
-            scene?.broadCastEnergy(Math.ceil(amount / ratio));
-        } else {
-            const ratio = (this.level >= 9) ? 5 : 5.8;
-            scene?.broadCastEnergy(Math.ceil(amount / ratio));
+
+        let energyUpdate = 0;
+        while (this.damagedSum >= 20) {
+            // 每失去20hp,进行恢复energy. 
+            this.damagedSum -= 20;
+            let energy = 5;
+            if (this.isSleeping) {
+                // 睡眠时产能减少
+                // 1 : 3
+                // >5: 4
+                // >9: 6
+                energy = (this.level >= 5) ? (this.level >= 9 ? 6 : 4) : 3;
+            } else {
+                // 1 : 5
+                // >9: 8
+                energy = (this.level >= 9) ? 8 : 5;
+            }
+            energyUpdate += energy;
         }
+        scene?.broadCastEnergy(energyUpdate);
         super.takeDamage(amount, zombie);
     }
 }

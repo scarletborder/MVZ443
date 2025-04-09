@@ -122,7 +122,7 @@ export class IMonster extends Phaser.Physics.Arcade.Sprite {
      * @param speed 数值,无需考虑缩放比例
      */
     SetSpeedFirstly(speed: number) {
-        const ratio = this.scaleFactor * 0.8;
+        const ratio = this.scaleFactor * 0.9;
         this.originalSpeed = speed * ratio;
         this.speed = speed * ratio;
 

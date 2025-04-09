@@ -130,8 +130,8 @@ class triple_dispenser extends IPlant {
             return null;
         }
         return this.scene?.time.addEvent({
-            startAt: 1000,
-            delay: 1130,
+            startAt: 600,
+            delay: 1200,
             loop: true,
             callback: () => {
                 // 这里先判断对象及场景是否有效
@@ -228,10 +228,6 @@ function shootArrow(scene: Game, shooter: IPlant, baseDamage: number = 30, isSta
     //  根据等级略微提高伤害
     let damage = GetIncValue(baseDamage, level, 1.35);
     let penetrate = 1;
-    if (level >= 5) {
-        penetrate += 1;
-    }
-
 
     if (isStar) {
         const topRow = -5; // 确保一个非常上方的行让视觉看起来是散射

@@ -130,8 +130,8 @@ class dispenser extends IPlant {
             return null;
         }
         return this.scene?.time.addEvent({
-            startAt: 900,
-            delay: 930,
+            startAt: 800,
+            delay: 1000,
             loop: true,
             callback: () => {
                 // 这里先判断对象及场景是否有效
@@ -222,7 +222,7 @@ function shootArrow(scene: Game, shooter: IPlant, baseDamage: number = 30, isSta
 
     const level = shooter.level;
     //  根据等级略微提高伤害
-    let damage = GetIncValue(baseDamage, level, 1.4);
+    let damage = GetIncValue(baseDamage, level, 1.35);
     let penetrate = 1;
     if (level >= 3) {
         penetrate += 1;
