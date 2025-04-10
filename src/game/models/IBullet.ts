@@ -14,6 +14,9 @@ export class IBullet extends Phaser.Physics.Arcade.Sprite {
     public targetCamp: 'plant' | 'zombie' = 'zombie'; // 默认打击僵尸
 
     // 私有属性
+    public col: number;
+    public row: number;
+
     public damage: number;
     public penetrate: number = 1; // 穿透次数
     public isFlying: boolean = false; // 是否在空中可以打击空中目标
@@ -25,9 +28,13 @@ export class IBullet extends Phaser.Physics.Arcade.Sprite {
     public duration: number = 0;
 
     // 视觉
-    public col: number;
-    public row: number;
+    private lastUpdateTime: number;
     public baseDepth: number;
+    public visibleSprite: Phaser.GameObjects.Sprite | null = null;
+    private renderX: number;
+    private renderY: number;
+    private lastRealX: number = 0;
+    private lastRealY: number = 0;
 
     static InitGroup(scene: Game) {
         this.Group = scene.physics.add.group({
@@ -62,6 +69,23 @@ export class IBullet extends Phaser.Physics.Arcade.Sprite {
 
         this.baseDepth = DepthManager.getProjectileDepth('bullet', col);
         this.setDepth(this.baseDepth);
+
+        this.updateRealPosition();
+    }
+
+    public addVisible(): void {
+        if (!this.scene) return;
+        // 隐藏原有物理 sprite，避免重复显示
+        this.setVisible(false);
+
+        // 创建非物理显示对象，使用与原 sprite 相同的纹理
+        this.visibleSprite = this.scene.add.sprite(this.x, this.y, this.texture.key);
+        // 同步显示尺寸
+        this.visibleSprite.setDisplaySize(this.displayWidth, this.displayHeight);
+        // 同步原点与深度
+        this.visibleSprite.setOrigin(this.originX, this.originY);
+        this.visibleSprite.setDepth(this.baseDepth);
+        this.visibleSprite.setVisible(true);
     }
 
     CollideObject(object: IMonster | IPlant | IObstacle) {
@@ -134,9 +158,44 @@ export class IBullet extends Phaser.Physics.Arcade.Sprite {
     }
 
     update(...args: any[]): void {
+        if (!this.scene) return;
+
+        const now = this.scene.time.now;
+        const delta = now - (this.lastUpdateTime || now);
+        this.lastUpdateTime = now;
         // 超越边界销毁
         if (this.x > this.ScreenWidth * 1.5 || this.x < -this.ScreenWidth * 0.5) {
             this.destroy();
         }
+
+        // 更新视觉位置
+        if (this.visibleSprite) {
+            const isUpdate = this.updateRealPosition(); // 是否通过real坐标进行更新
+            if (!isUpdate && this.body) {
+                // 进行视觉更新
+                this.renderX = this.renderX + delta * this.body.velocity.x * 0.001;
+                this.renderY = this.renderY + delta * this.body.velocity.y * 0.001;
+            }
+            this.visibleSprite.setPosition(this.renderX, this.renderY);
+        }
+    }
+
+    updateRealPosition(): boolean {
+        if (this.x !== this.lastRealX || this.y !== this.lastRealY) {
+            this.renderX = this.x;
+            this.renderY = this.y;
+            this.lastRealX = this.x;
+            this.lastRealY = this.y;
+            return true;
+        }
+        return false;
+    }
+
+    destroy(fromScene?: boolean): void {
+        if (this.visibleSprite) {
+            this.visibleSprite.destroy();
+            this.visibleSprite = null;
+        }
+        super.destroy(fromScene);
     }
 }

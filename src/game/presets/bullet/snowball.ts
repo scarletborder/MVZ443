@@ -5,7 +5,7 @@ import { Game } from "../../scenes/Game";
 export class SnowBall extends IBullet {
     originalX: number;
     maxDistance: number;
-    game : Game;
+    game: Game;
 
     constructor(scene: Game, col: number, row: number, texture: string,
         damage: number, maxDistance: number, target: 'plant' | 'zombie' = 'zombie') {
@@ -15,6 +15,7 @@ export class SnowBall extends IBullet {
 
         this.originalX = this.x;
         this.setVelocityX(400 * scene.positionCalc.scaleFactor); // 一定要在add    之后设置速度
+        this.addVisible();
     }
 
     update(...args: any[]): void {

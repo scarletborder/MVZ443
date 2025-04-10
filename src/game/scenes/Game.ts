@@ -149,6 +149,8 @@ export class Game extends Scene {
             }
         ).setOrigin(0.5).setDepth(DepthManager.getMenuDepth()).setVisible(false);
 
+        // 禁用物理更新,使用frame的更新
+        this.physics.disableUpdate();
         // 创建分组
         IPlant.InitGroup(this);
         IMonster.InitGroup(this);
@@ -266,6 +268,7 @@ export class Game extends Scene {
 
     // 和时间敏感事件的游戏开始
     handleGameFrameStart() {
+        this.frameTicker.initStart();
         this.monsterSpawner.startWave();
         EventBus.emit('okIsPaused', { paused: false });
     }

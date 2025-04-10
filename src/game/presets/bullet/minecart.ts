@@ -20,7 +20,7 @@ export default class MineCart extends IBullet {
         this.setDisplaySize(64 * this.screenFactor, 64 * this.screenFactor);
 
         this.setVelocityX(0); // 一定要在add    之后设置速度
-
+        this.addVisible();
     }
 
     CollideObject(object: IMonster | IPlant | IObstacle): void {
@@ -40,6 +40,7 @@ export default class MineCart extends IBullet {
     }
 
     update(...args: any[]): void {
+        super.update(...args);
         // 超越边界销毁
         if (this.x > this.screenWidth * 1.2) {
             console.log('minecart out of screen');

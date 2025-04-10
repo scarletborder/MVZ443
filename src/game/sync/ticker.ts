@@ -1,3 +1,4 @@
+// game中掌管时间的神
 import { FrameTick } from "../../../public/constants";
 
 // 定时器基础类，可用作对外接口
@@ -32,9 +33,23 @@ export default class FrameTicker {
     // 用于生成定时器ID
     private nextTimerId: number = 1;
 
+    // global
+    private startTime: number;
+
     constructor() {
         this.frameInterval = FrameTick;
         this.currentFrame = 0;
+    }
+
+    /**
+     * 设置physic.world的开始时间
+     */
+    initStart() {
+        this.startTime = Date.now();
+    }
+
+    getCurrentTime() {
+        return this.startTime + this.currentFrame * this.frameInterval;
     }
 
     /**

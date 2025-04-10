@@ -27,6 +27,7 @@ export class HFireWork extends IBullet {
         this.setVelocityX(+300 * scene.positionCalc.scaleFactor); // 一定要在add    之后设置速度
 
         this.originalX = this.x;
+        this.addVisible();
     }
 
     update(...args: any[]): void {

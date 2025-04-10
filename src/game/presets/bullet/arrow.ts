@@ -19,6 +19,8 @@ class Arrow extends IBullet {
         this.setVelocityX(+300 * scene.positionCalc.scaleFactor); // 一定要在add    之后设置速度
 
         this.originalX = this.x;
+
+        this.addVisible();
     }
 
     update(...args: any[]): void {
@@ -99,7 +101,7 @@ class MutantYAxisArrow extends Arrow {
                 }
             }
         } catch {
-            if (this && this.destroy && this.game) this.destroy();
+            if (this && this.destroy && this.scene) this.destroy();
         }
     }
 }
