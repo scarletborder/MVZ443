@@ -25,7 +25,7 @@
         "build": "node log.js build & vite build --config vite/config.prod.mjs",
         "dev-nolog": "vite --config vite/config.dev.mjs",
         "build-nolog": "vite build --config vite/config.prod.mjs",
-        "predeploy": "npm run build-nolog",
+        "predeploy": "npm run build-nolog & (git rev-list --count HEAD) > dist/version.txt",
         "deploy": "gh-pages -d dist"
     },
     "dependencies": {

@@ -39,6 +39,7 @@ export default function DocFrame({ width, height, sceneRef, setGameParams, gameS
     const [chosenStage, setChosenStage] = useState<number | null>(null);
     const [islord, setIslord] = useState(false);
     const [update_log, setUpdate_log] = useState(i18n.S('update_log')());
+    const [commitVersion, setCommitVersion] = useState('develop');
 
     useEffect(() => {
         // 处理联机事件
@@ -66,8 +67,19 @@ export default function DocFrame({ width, height, sceneRef, setGameParams, gameS
         }
     }, []);
 
-    // 处理更新日志
     useEffect(() => {
+        // 读取版本文件
+        const versionFile = `${publicUrl}/version.txt`;
+        fetch(versionFile)
+            .then(response => response.text())
+            .then(data => {
+                setCommitVersion(data.trim());
+            })
+            .catch(error => {
+                console.error('获取版本信息失败:', error);
+            });
+
+        // 处理更新日志
         setTimeout(() => { console.log(i18n.S('update_log')()); setUpdate_log(i18n.S('update_log')()); }, 1000);
     }, []);
 
@@ -76,7 +88,7 @@ export default function DocFrame({ width, height, sceneRef, setGameParams, gameS
         MC VS Zombie 443
 
         作者：scarletborder
-        版本：V${VERSION}
+        版本：V${VERSION} - COMMIT ${commitVersion}
 
         联系方式：baishuibeef@gmail.com
         bilibili: https://space.bilibili.com/123796349
@@ -241,7 +253,7 @@ export default function DocFrame({ width, height, sceneRef, setGameParams, gameS
                             color: "#888",
                             fontSize: "12px"
                         }}>
-                            版本: v{VERSION}
+                            版本: v{VERSION} - COMMIT {commitVersion}
                         </div>
                     </>
                 )}
