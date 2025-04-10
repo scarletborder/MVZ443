@@ -43,5 +43,9 @@
                 "count": 1
             }
         }
-    ]
+    ],
+    "load": {
+        "bgimg": [ "bg/bgOutterMine.png" ],
+        "bgm": [ "audio/QLCK-002-05.mp3" ]
+    }
 }

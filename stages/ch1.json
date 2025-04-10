@@ -43,5 +43,10 @@
                 "count": 1
             }
         }
-    ]
+    ],
+    "load": {
+        "bgimg": [ "bg/bgDay.png" ],
+        "bgm": [ "audio/QLCK-002-05.mp3" ],
+        "plants": [ 1, 2 ]
+    }
 }

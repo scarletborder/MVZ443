@@ -36,5 +36,9 @@
                 "count": 130
             }
         }
-    ]
+    ],
+    "load": {
+        "bgimg": [ "bg/bgDeepMine.png" ],
+        "bgm": [ "audio/OLJA-0021-08.ogg" ]
+    }
 }
