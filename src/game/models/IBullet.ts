@@ -6,6 +6,8 @@ import { IPlant } from "./IPlant";
 import { IMonster } from "./monster/IMonster";
 
 export class IBullet extends Phaser.Physics.Arcade.Sprite {
+    scene: Game;
+
     public ScreenWidth: number = 1024;
     public ScreenHeight: number = 768;
 
@@ -47,6 +49,7 @@ export class IBullet extends Phaser.Physics.Arcade.Sprite {
         damage: number = 5, target: 'plant' | 'zombie' = 'zombie') {
         const { x, y } = scene.positionCalc.getBulletCenter(col, row);
         super(scene, x, y, texture);
+        this.scene = scene;
 
         this.col = col;
         this.row = row;
@@ -80,12 +83,14 @@ export class IBullet extends Phaser.Physics.Arcade.Sprite {
 
         // 创建非物理显示对象，使用与原 sprite 相同的纹理
         this.visibleSprite = this.scene.add.sprite(this.x, this.y, this.texture.key);
-        // 同步显示尺寸
-        this.visibleSprite.setDisplaySize(this.displayWidth, this.displayHeight);
-        // 同步原点与深度
-        this.visibleSprite.setOrigin(this.originX, this.originY);
-        this.visibleSprite.setDepth(this.baseDepth);
-        this.visibleSprite.setVisible(true);
+        if (this.visibleSprite) {
+            // 同步显示尺寸
+            this.visibleSprite.setDisplaySize(this.displayWidth, this.displayHeight);
+            // 同步原点与深度
+            this.visibleSprite.setOrigin(this.originX, this.originY);
+            this.visibleSprite.setDepth(this.baseDepth);
+            this.visibleSprite.setVisible(true);
+        }
     }
 
     CollideObject(object: IMonster | IPlant | IObstacle) {
@@ -169,7 +174,7 @@ export class IBullet extends Phaser.Physics.Arcade.Sprite {
         }
 
         // 更新视觉位置
-        if (this.visibleSprite) {
+        if (this.visibleSprite && !this.scene.physics.world.isPaused) {
             const isUpdate = this.updateRealPosition(); // 是否通过real坐标进行更新
             if (!isUpdate && this.body) {
                 // 进行视觉更新

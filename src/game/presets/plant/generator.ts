@@ -45,12 +45,9 @@ class Generator extends INightPlant {
 
     public takeDamage(amount: number, zombie: IMonster): void {
         amount = Math.min(amount, this.health + 10);
-        if (this.health <= 0 || !this.scene) return;
-
         this.damagedSum += amount;
-        const scene = this.game;
-
         let energyUpdate = 0;
+
         while (this.damagedSum >= 20) {
             // 每失去20hp,进行恢复energy. 
             this.damagedSum -= 20;
@@ -68,6 +65,8 @@ class Generator extends INightPlant {
             }
             energyUpdate += energy;
         }
+
+        const scene = this.game;
         scene?.broadCastEnergy(energyUpdate);
         super.takeDamage(amount, zombie);
     }

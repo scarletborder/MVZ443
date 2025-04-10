@@ -23,35 +23,28 @@ export default function VCard({ pid, texture, plantName, cooldownTime, sceneRef,
     const [remainingTime, setRemainingTime] = useState(needFirstCoolDown ? cooldownTime : 0);
     const [isChosen, setIsChosen] = useState(false);
     const { energy, isPaused } = useGameContext();
-    const [pausedTime, setPausedTime] = useState(0);
-    const [timeFlow, setTimeFlow] = useState(0.1);
     const settings = useSettings();
-    const speedFactor = timeFlow * 10; // 调整此值以控制冷却速度
-
-    // [保持原有的 useEffect 逻辑不变]
-    useEffect(() => {
-        let timer: NodeJS.Timeout;
-        if (isCoolingDown && remainingTime > 0 && !isPaused) {
-            timer = setInterval(() => {
-                setRemainingTime(prev => Math.max(prev - timeFlow, 0));
-            }, 100);
-        } else if (remainingTime <= 0 && !isPaused) {
-            setIsCoolingDown(false);
-        }
-        return () => clearInterval(timer);
-    }, [isCoolingDown, remainingTime, isPaused]);
 
     useEffect(() => {
-        if (isPaused) {
-            setPausedTime(remainingTime);
-        } else {
-            if (pausedTime > 0) {
-                setRemainingTime(pausedTime);
-                setPausedTime(0);
-                setIsCoolingDown(true);
-            }
-        }
-    }, [isPaused]);
+        const handleSetTimeFlow = (data: { delta: number }) => {
+            setRemainingTime(prevRemainingTime => {
+                const newRemainingTime = parseFloat((prevRemainingTime - data.delta * 0.001).toFixed(3)); // 保留3位小数
+                if (newRemainingTime <= 0) {
+                    setIsCoolingDown(false);
+                    return 0;
+                } else if (newRemainingTime > 0) {
+                    setIsCoolingDown(true);
+                }
+                return newRemainingTime;
+            });
+        };
+
+        EventBus.on('timeFlow-set', handleSetTimeFlow);
+        return () => {
+            EventBus.removeListener('timeFlow-set', handleSetTimeFlow);
+        };
+    }, []); // 保持空的依赖数组
+
 
     useEffect(() => {
         const handleDeselect = (data: { pid: number | null }) => {
@@ -62,10 +55,12 @@ export default function VCard({ pid, texture, plantName, cooldownTime, sceneRef,
         const handlePlant = (data: { pid: number }) => {
             if (data.pid === pid) {
                 setIsChosen(false);
+                // Use the isPaused value from the component scope
                 if (!isPaused) {
                     setIsCoolingDown(true);
                     setRemainingTime(cooldownTime);
                 } else {
+                    // If paused, wait until unpaused to start cooldown
                     setRemainingTime(cooldownTime);
                     setIsCoolingDown(true);
                     const timer = setInterval(() => {
@@ -77,18 +72,17 @@ export default function VCard({ pid, texture, plantName, cooldownTime, sceneRef,
                 }
             }
         };
-        const handleSetTimeFlow = (data: { timeFlow: number }) => {
-            setTimeFlow(data.timeFlow * 0.1);
-        };
+
+
         EventBus.on('card-deselected', handleDeselect);
         EventBus.on('card-plant', handlePlant);
-        EventBus.on('timeFlow-set', handleSetTimeFlow);
+
         return () => {
             EventBus.removeListener('card-deselected', handleDeselect);
             EventBus.removeListener('card-plant', handlePlant);
-            EventBus.removeListener('timeFlow-set', handleSetTimeFlow);
+
         };
-    }, [pid, isPaused, cooldownTime]);
+    }, [pid, isPaused, cooldownTime]); // Add isPaused and cooldownTime to dependencies
 
     const handleClick = () => {
         if (isPaused && !settings.isBluePrint) {
@@ -115,7 +109,7 @@ export default function VCard({ pid, texture, plantName, cooldownTime, sceneRef,
         if (!isCoolingDown) {
             setIsChosen(true);
             scene.chooseCard(pid, level);
-            console.log(`Card (pid=${pid} level=${level}) chosen`);
+            console.log(`Card ${plantName} (pid=${pid} level=${level}) chosen`);
         }
     };
 
@@ -146,8 +140,12 @@ export default function VCard({ pid, texture, plantName, cooldownTime, sceneRef,
                 <div
                     className="Vcooldown-overlay"
                     style={{
-                        animationDuration: `${cooldownTime / speedFactor}s`,
                         animationPlayState: isPaused ? 'paused' : 'running',
+
+                        // 使用剩余时间和冷却时间的比率来设置高度
+                        transform: `scaleX(${remainingTime / cooldownTime})`,
+                        transformOrigin: 'right'
+
                     }}
                 />
             )}

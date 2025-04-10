@@ -23,36 +23,28 @@ export default function Card({ pid, texture, plantName, cooldownTime, sceneRef, 
     const [remainingTime, setRemainingTime] = useState(needFirstCoolDown ? cooldownTime : 0);
     const [isChosen, setIsChosen] = useState(false);
     const { energy, isPaused } = useGameContext();
-    const [pausedTime, setPausedTime] = useState(0);
-    const [timeFlow, setTimeFlow] = useState(0.1);
     const settings = useSettings();
 
-    const speedFactor = timeFlow * 10; // Adjust this value to control the speed of the cooldown
-
     useEffect(() => {
-        let timer: NodeJS.Timeout;
-        if (isCoolingDown && remainingTime > 0 && !isPaused) {
-            // console.log('start cooldown', remainingTime);
-            timer = setInterval(() => {
-                setRemainingTime(prev => Math.max(prev - timeFlow, 0));
-            }, 100);
-        } else if (remainingTime <= 0 && !isPaused) {
-            setIsCoolingDown(false);
-        }
-        return () => clearInterval(timer);
-    }, [isCoolingDown, remainingTime, isPaused]);
+        const handleSetTimeFlow = (data: { delta: number }) => {
+            setRemainingTime(prevRemainingTime => {
+                const newRemainingTime = parseFloat((prevRemainingTime - data.delta * 0.001).toFixed(3)); // 保留3位小数
+                if (newRemainingTime <= 0) {
+                    setIsCoolingDown(false);
+                    return 0;
+                } else if (newRemainingTime > 0) {
+                    setIsCoolingDown(true);
+                }
+                return newRemainingTime;
+            });
+        };
 
-    useEffect(() => {
-        if (isPaused) {
-            setPausedTime(remainingTime);
-        } else {
-            if (pausedTime > 0) {
-                setRemainingTime(pausedTime);
-                setPausedTime(0);
-                setIsCoolingDown(true);
-            }
-        }
-    }, [isPaused]); // 别改
+        EventBus.on('timeFlow-set', handleSetTimeFlow);
+        return () => {
+            EventBus.removeListener('timeFlow-set', handleSetTimeFlow);
+        };
+    }, []); // 保持空的依赖数组
+
 
     useEffect(() => {
         const handleDeselect = (data: { pid: number | null }) => {
@@ -75,23 +67,20 @@ export default function Card({ pid, texture, plantName, cooldownTime, sceneRef, 
                         if (!isPaused) {
                             console.log('resume');
                             clearInterval(timer);
-
                         }
                     }, 100);
                 }
             }
         };
-        const handleSetTimeFlow = (data: { timeFlow: number }) => {
-            setTimeFlow(data.timeFlow * 0.1);
-        };
+
 
         EventBus.on('card-deselected', handleDeselect);
         EventBus.on('card-plant', handlePlant);
-        EventBus.on('timeFlow-set', handleSetTimeFlow);
+
         return () => {
             EventBus.removeListener('card-deselected', handleDeselect);
             EventBus.removeListener('card-plant', handlePlant);
-            EventBus.removeListener('timeFlow-set', handleSetTimeFlow);
+
         };
     }, [pid, isPaused, cooldownTime]); // Add isPaused and cooldownTime to dependencies
 
@@ -152,11 +141,14 @@ export default function Card({ pid, texture, plantName, cooldownTime, sceneRef, 
                 <div
                     className="cooldown-overlay"
                     style={{
-                        animationDuration: `${cooldownTime / speedFactor}s`,
                         animationPlayState: isPaused ? 'paused' : 'running',
+                        // 使用剩余时间和冷却时间的比率来设置高度
+                        transform: `scaleY(${remainingTime / cooldownTime})`,
+                        transformOrigin: 'bottom'
                     }}
                 />
             )}
+
         </button>
     );
 }

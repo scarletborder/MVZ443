@@ -2,6 +2,7 @@ import Denque from "denque";
 import { Game } from "../scenes/Game";
 import BackendWS from "../../utils/net/sync";
 import encodeMessageToBinary from "../../utils/net/encode";
+import { EventBus } from "../EventBus";
 
 // 单人游戏
 interface SingleParams {
@@ -377,6 +378,7 @@ export default class QueueReceive {
             this.game.physics.world.update(this.game.frameTicker.getCurrentTime(), this.game.frameTicker.frameInterval);
             // 例如 plant发出子弹, 刷怪, 避免通过game.timer导致不精确
             this.game.frameTicker.update();
+            EventBus.emit('timeFlow-set', { delta: this.game.frameTicker.frameInterval });
         }
     }
 

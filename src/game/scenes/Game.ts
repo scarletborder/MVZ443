@@ -209,8 +209,6 @@ export class Game extends Scene {
         });
 
         EventBus.on('setIsPaused', this.handlePause, this);
-        // TODO: move to gardener
-        EventBus.on('starShards-chosen', () => { console.log('pick shards') });
         EventBus.on('game-fail', this.handleExit, this);
 
         this.musical = new Musical(this, this.params.gameSettings.isBgm);
@@ -448,10 +446,10 @@ export class Game extends Scene {
         // 多人游戏无效
         if (HasConnected()) return;
         const newTimeFlow = this.time.timeScale === 1 ? 2 : 1; // 切换速率
-        const newPhysicsTimeFlow = this.physics.world.timeScale === 1 ? 0.5 : 1; // 切换物理速率
-        EventBus.emit('timeFlow-set', { timeFlow: newTimeFlow });
         this.time.timeScale = newTimeFlow; // 设置新的游戏速率
-        this.physics.world.timeScale = newPhysicsTimeFlow; // 设置新的物理速率
+        // Deprecated: 现在物理由frame驱动,精准地控制了时间
+        // const newPhysicsTimeFlow = this.physics.world.timeScale === 1 ? 0.5 : 1; // 切换物理速率
+        // this.physics.world.timeScale = newPhysicsTimeFlow; // 设置新的物理速率
         this.speedText.setText(newTimeFlow + '速');
     }
 

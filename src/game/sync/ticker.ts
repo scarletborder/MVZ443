@@ -117,6 +117,7 @@ export default class FrameTicker {
     /**
      * 添加循环定时事件
      * @param callback 定时触发的回调函数
+     * @param startAt 开始于时间(ms)
      * @param delay 延迟的时间（毫秒）
      * @param args 回调的参数
      * @param context 回调函数执行时的上下文
@@ -127,9 +128,40 @@ export default class FrameTicker {
         delay: number,
         args: any[] = [],
         context: any = null,
-        repeat: number = -1
+        repeat: number = -1,
+        startAt: number = 0,
     ): FrameTimer {
-        return this.Register(callback, delay, args, context, repeat);
+        if (startAt > 0) {
+            // 计算和第一次执行之间的时间差
+            const firstDelayMs = delay - startAt;
+
+            const ret = this.Register(() => {
+                const leftRepeat = repeat - 1;
+                // 找到我这个id的定时器
+                const originalID = ret.id;
+                const timer = this.timers.get(originalID);
+                if (!timer) return; // 如果定时器不存在，直接返回
+
+                // 替换repeat为leftRepeat
+                timer.repeat = leftRepeat;
+
+                const frameDelay = Math.ceil(delay / this.frameInterval);
+                const targetFrame = this.currentFrame + frameDelay;
+
+                // 替换targetFrame为当前帧+delay
+                timer.targetFrame = targetFrame;
+                // 替换left为delay
+                timer.left = frameDelay;
+                // 替换interval为delay
+                timer.interval = frameDelay;
+                // 替换callback为原来的callback
+                timer.callback = callback;
+            }, firstDelayMs, args, context, 1);
+
+            return ret;
+        } else {
+            return this.Register(callback, delay, args, context, repeat);
+        }
     }
 
     /**
@@ -147,7 +179,7 @@ export default class FrameTicker {
                 timer.callback.apply(timer.context, timer.args);
 
                 // 如果是循环定时器
-                if (timer.repeat === -1 || timer.repeat > 0) {
+                if (timer.repeat < 0 || timer.repeat > 0) {
                     // 如果是有限重复，则减一
                     if (timer.repeat > 0) {
                         timer.repeat--;
