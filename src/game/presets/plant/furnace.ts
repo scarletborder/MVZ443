@@ -19,7 +19,7 @@ class Furnace extends IPlant {
             this.updateEnergy = 40;
         }
 
-        const cooldownTime = GetDecValue(24500, 0.85, level);
+        const cooldownTime = GetDecValue(25000, 0.85, level);
 
         this.Timer = scene.time.addEvent({
             delay: cooldownTime, // 每18秒生产能量

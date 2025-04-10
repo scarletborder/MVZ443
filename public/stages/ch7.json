@@ -57,5 +57,10 @@
                 "count": 1
             }
         }
-    ]
+    ],
+    "load": {
+        "bgimg": [ "bg/bgInnerMine.png" ],
+        "bgm": [ "audio/ARCD-0036-09.ogg", "audio/ZCDS-0014-05.ogg" ],
+        "plants": [ 1, 2 ]
+    }
 }

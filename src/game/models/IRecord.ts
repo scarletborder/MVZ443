@@ -90,6 +90,12 @@ export interface StageResult {
     progress: number;
 }
 
+export interface preloadData {
+    bgimg: string[]; // 背景图片
+    bgm: string[]; // 背景音乐
+    plants?: number[]; // 器械
+}
+
 // 通过json文件加载的关卡数据
 export interface StageData {
     rows: number; // 行数
@@ -99,4 +105,6 @@ export interface StageData {
     energy: number; // 初始能量
     // 进度奖励
     rewards: ProgressReward[];
+    // 需要加载的数据
+    load: preloadData;
 }

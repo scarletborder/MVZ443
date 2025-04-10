@@ -4,6 +4,7 @@ import { ResourceMapData } from '../../constants/map_data';
 import { EventBus } from '../EventBus';
 import PlantFactoryMap from '../presets/plant';
 import { HasConnected } from '../../utils/net/sync';
+import { preloadData, StageData } from '../models/IRecord';
 
 export class Preloader extends Scene {
     constructor() {
@@ -190,41 +191,42 @@ export class Preloader extends Scene {
         console.log(`Loading stage ${stageId}`);
         // 1. 加载关卡数据
         this.load.json(`ch${stageId}`, `../stages/ch${stageId}.json`);
+        this.load.once(`filecomplete-json-ch${stageId}`, (key: string, type: any, data: StageData) => {
+            // 关卡特定加载
+            this.loadStageSpecified(data.load, params);
+        });
         // 2. 加载关卡怪物
         this.loadAllMonster();
         // 3. 加载关卡植物
         this.loadAllPlant(params.plants);
         // 4. 加载关卡发射物
         this.loadAllProjectile();
-        // 5. 加载关卡地图
-        this.loadBackground(stageId);
 
         this.loadAllSprite();
-
-        // 关卡特定加载
-        this.loadStageSpecified(stageId);
     }
 
-    loadStageSpecified(stageId: number) {
-        if (stageId === 1 || stageId === 7) {
-            // 加载熔炉和发射器
-            if (!this.textures.exists('plant/furnace')) {
-                this.load.spritesheet('plant/furnace', 'plant/furnace.png', {
-                    frameWidth: 64,
-                    frameHeight: 64
-                });
-            }
-
-            if (!this.textures.exists('plant/dispenser')) {
-                this.load.spritesheet('plant/dispenser', 'plant/dispenser.png', {
-                    frameWidth: 64,
-                    frameHeight: 64
-                });
+    loadStageSpecified(preloadData: preloadData, params: GameParams) {
+        // 加载关卡地图 & bgm
+        this.load.image('bgimg', preloadData.bgimg[0]);
+        this.load.audio('bgm', preloadData.bgm[0]);
+        // 如果有多余的bgimg和bgm,则加载
+        for (let i = 1; i < preloadData.bgimg.length; ++i) {
+            this.load.image(`bgimg${i}`, preloadData.bgimg[i]);
+        }
+        if (params.gameSettings.isBgm) {
+            for (let i = 1; i < preloadData.bgm.length; ++i) {
+                this.load.audio(`bgm${i}`, preloadData.bgm[i]);
             }
         }
 
-        if (stageId === 6 || stageId === 7 || stageId === 8 || stageId === 9) {
-            this.load.audio('ZCDS-0014-05', 'audio/ZCDS-0014-05.ogg');
+        // 预先需要加载的器械
+        for (const plantID of preloadData.plants || []) {
+            const texture = PlantFactoryMap[plantID].texture;
+            if (this.textures && !this.textures.exists(texture)) {
+                this.load.spritesheet(texture, texture + '.png', {
+                    frameWidth: 64, frameHeight: 64
+                });
+            }
         }
     }
 }

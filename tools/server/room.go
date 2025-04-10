@@ -14,11 +14,15 @@ type Room struct {
 	CtxManager *ctxManager
 	Logic      *GameLogic
 
+	// 安全
+	key string // 房间密钥
+
 	// 游戏状态
-	ChapterID  int32
-	ReadyCount int32
-	Seed       int32
-	IsRunning  bool
+	ChapterID   int32
+	ReadyCount  int32
+	Seed        int32
+	IsRunning   bool
+	gameStarted bool
 
 	LastActiveTime time.Time // 上次活动时间
 
@@ -42,6 +46,7 @@ func NewRoom(id int) *Room {
 		GameLoopStartChan: make(chan struct{}, 1),
 		FrameID:           0,
 		LastActiveTime:    time.Now(),
+		key:               "",
 	}
 }
 
@@ -103,6 +108,7 @@ waitLoop:
 }
 
 func (r *Room) gameLoop() {
+	r.gameStarted = true
 	r.CtxManager.BroadcastGameStart()
 	timer := time.NewTicker(constants.FrameTick * time.Millisecond)
 

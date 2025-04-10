@@ -199,7 +199,7 @@ export default function Pokedex({ width, height, onBack }: Props) {
             {/* Right Sidebar - Details and Upgrade Controls */}
             <div style={{
                 width: "40%",
-                height: "95%",
+                height: "96%",
                 position: "absolute",
                 right: 0,
                 top: 0,
@@ -213,8 +213,9 @@ export default function Pokedex({ width, height, onBack }: Props) {
             }}>
                 <div className={animationClass} style={{
                     position: "relative",
-                    width: "100%",
-                    height: "100%"
+                    width: "103%",
+                    height: "100%",
+                    overflowY: "auto",
                 }}>
                     <h2 style={{ marginBottom: "2px" }}>{displayedItemName || "未选择"}</h2>
                     {displayedItemName ? (

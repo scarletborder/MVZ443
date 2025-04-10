@@ -6,7 +6,7 @@ import { Game } from "../../scenes/Game";
 import { SkeletonBow } from "./skeleton_bow";
 
 class TurtleSkeletonBow extends SkeletonBow {
-    public attackDamage: number = 400;
+    public attackDamage: number = 40;
     capHealth: number = 375;
     currentHatState = 0;
 
@@ -36,7 +36,7 @@ class TurtleSkeletonBow extends SkeletonBow {
             amount *= 0.5;
             this.capHealth -= amount;
         } else {
-            if (this.capHealth > 0) {
+            if (this.capHealth > 0 && !this.IsFrozen) {
                 this.attachSprites.get('cap')?.setVisible(false);
                 this.capHealth = 0;
                 // 加速+damage

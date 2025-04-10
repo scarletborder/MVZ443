@@ -185,7 +185,7 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
                 items: [
                     {
                         title: "私密图纸模式",
-                        description: "启用后可以在暂停状态中放置和移除器械",
+                        description: "[仅单人]启用后可以在暂停状态中放置和移除器械",
                         controlType: "switcher",
                         controlProps: {
                             value: settingManager.isBluePrint, onToggle: (val) => {
@@ -193,6 +193,16 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
                             }
                         }
                     },
+                    {
+                        title: "背景音乐",
+                        description: "启用/禁用背景音乐, 禁用可以减少网络资源下载",
+                        controlType: "switcher",
+                        controlProps: {
+                            value: settingManager.isBgm, onToggle: (val) => {
+                                debounce((newVal) => settingManager.setIsBgm(newVal), 50)(val);
+                            }
+                        }
+                    }
                 ]
             }
         ],

@@ -92,7 +92,8 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({ stageId, setGameParams,
             setInitialEnergy: garden_ctx.setEnergy,
             gameSettings: {
                 isBluePrint: settings.isBluePrint,
-                isDebug: settings.isDebug
+                isDebug: settings.isDebug,
+                isBgm: settings.isBgm,
             }
         };
         setGameParams(params);

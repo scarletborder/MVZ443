@@ -14,6 +14,7 @@ export interface GameParams {
 export interface GameSettings {
     isBluePrint: boolean;
     isDebug: boolean;
+    isBgm: boolean;
 }
 
 export interface ChapterDescription {

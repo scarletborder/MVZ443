@@ -39,8 +39,9 @@ func (rm *RoomManager) GetNewRoomId() int {
 }
 
 // AddRoom 创建一个新的房间并添加到管理器中
-func (rm *RoomManager) AddRoom(id int) *Room {
+func (rm *RoomManager) AddRoom(id int, key string) *Room {
 	room := NewRoom(id)
+	room.key = key
 	rm.rooms.Store(id, room)
 	return room
 }

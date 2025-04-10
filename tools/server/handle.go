@@ -15,6 +15,8 @@ func HandleWS(c *websocket.Conn) {
 		}
 	}
 
+	key := c.Query("key") // 密钥
+
 	// 如果没有指定房间ID,则创建新房间
 	if roomId == -1 {
 		roomId = roomManager.GetNewRoomId()
@@ -24,12 +26,30 @@ func HandleWS(c *websocket.Conn) {
 	room := roomManager.GetRoom(roomId)
 	if room == nil {
 		// 房间不存在,创建新房间
-		room = roomManager.AddRoom(roomId)
+		room = roomManager.AddRoom(roomId, key)
 	} else {
+		// 房间存在,检查密钥
+		if room.key != key {
+			c.WriteJSON(map[string]interface{}{
+				"error": "密钥错误",
+			})
+			c.Close()
+			return
+		}
+
 		// 房间存在,检查是否已满
 		if room.GetPlayerCount() >= 2 {
 			c.WriteJSON(map[string]interface{}{
 				"error": "房间已满",
+			})
+			c.Close()
+			return
+		}
+
+		// 房间是否started
+		if room.gameStarted {
+			c.WriteJSON(map[string]interface{}{
+				"error": "房间已开始",
 			})
 			c.Close()
 			return

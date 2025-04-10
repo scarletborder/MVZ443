@@ -36,5 +36,9 @@
                 "count": 150
             }
         }
-    ]
+    ],
+    "load": {
+        "bgimg": [ "bg/bgDeepMineWater.png" ],
+        "bgm": [ "audio/OLJA-0021-08.ogg" ]
+    }
 }

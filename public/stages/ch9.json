@@ -20,5 +20,9 @@
         "unLockPlant": [ ]
     },
     "energy": 5555,
-    "rewards": [ ]
+    "rewards": [ ],
+    "load": {
+        "bgimg": [ "bg/bgRainbowCave1.png" ],
+        "bgm": [ "audio/OLJA-0021-08.ogg", "audio/ZCDS-0014-05.ogg" ]
+    }
 }

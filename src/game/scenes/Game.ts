@@ -23,6 +23,7 @@ import DepthManager from '../../utils/depth';
 import { IMonster } from '../models/monster/IMonster';
 import { FrameTick } from '../../../public/constants';
 import FrameTicker from '../sync/ticker';
+import Musical from '../utils/musical';
 
 
 
@@ -63,8 +64,7 @@ export class Game extends Scene {
     // 定期波数的额外游戏设置,如切换地图,进行额外非常规设置,在spawner中消费
     public extraFunc: Map<number, (game: Game, waveIdx: number) => void> = new Map<number, (game: Game) => void>();
 
-    music: Phaser.Sound.BaseSound;
-    dumpMusic: Phaser.Sound.BaseSound | null = null;
+    musical: Musical;
 
     // command queue
     private frameTick: number = 0; // 服务器帧
@@ -81,6 +81,7 @@ export class Game extends Scene {
     }
 
     preload() {
+        BackendWS.FrameID = 0;
         this.params = this.game.registry.get('gameParams') as GameParams;
         this.stageData = this.cache.json.get(`ch${this.params.level}`) as StageData;
         this.innerSettings = this.params.gameSettings;
@@ -212,7 +213,7 @@ export class Game extends Scene {
         EventBus.on('starShards-chosen', () => { console.log('pick shards') });
         EventBus.on('game-fail', this.handleExit, this);
 
-        this.music = this.sound.add('bgm', { loop: true });
+        this.musical = new Musical(this, this.params.gameSettings.isBgm);
         this.sendQueue.sendReady();
     }
 
@@ -246,7 +247,7 @@ export class Game extends Scene {
     // 游戏开始
     handleGameStart(seed: number, myID: number) {
         this.seed = seed;
-        this.music.play();
+        this.musical.playCurrent();
         this.monsterSpawner.setRandomSeed(seed);
         EventBus.emit('current-scene-ready', this);
         this.myID = myID;
@@ -403,7 +404,7 @@ export class Game extends Scene {
         this.tweens?.pauseAll();
         this.time.paused = true;
         try { this.exitText.setInteractive(); } finally { EventBus.emit('okIsPaused', { paused: true }); }
-        this.music.pause();
+        this.musical.pause();
     }
 
     doResume() {
@@ -413,7 +414,7 @@ export class Game extends Scene {
         this.tweens?.resumeAll();
         this.time.paused = false;
         try { this.exitText.disableInteractive(); } finally { EventBus.emit('okIsPaused', { paused: false }); }
-        this.music.resume();
+        this.musical.resume();
     }
 
     // game->app 通知游戏结束
@@ -425,7 +426,7 @@ export class Game extends Scene {
 
     // 游戏退出真实入口, 由消息队列调用
     ExitEntry(isWin: boolean = false) {
-        this.music.stop();
+        this.musical.destroy();
         // 移除所有game的事件监听
         this.sound.stopAll();
         this.input.keyboard?.removeAllKeys(true, true);

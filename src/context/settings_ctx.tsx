@@ -7,11 +7,14 @@ interface GameSettings {
     language: string;
     isBluePrint: boolean;
     isDebug: boolean;
+    isBgm: boolean;
+
     toggleFullScreen: () => void;
     setWidth: (newWidth: number) => void;
     toggleLanguage: () => void;
     setIsBluePrint: (isBluePrint: boolean) => void;
     setIsDebug: (isDebug: boolean) => void;
+    setIsBgm: (isBgm: boolean) => void;
 
     exportAsJson: () => string;
     importFromJson: (jsonString: string) => void;
@@ -36,6 +39,9 @@ export function SettingsProvider(props: Props) {
     const [isBluePrint, setIsBluePrintStatus] = useState<boolean>(false);
     // 调试框
     const [isDebug, setIsDebug] = useState<boolean>(false);
+    // 是否启用bgm
+    const [isBgm, setIsBgm] = useState<boolean>(true);
+
 
     const setIsBluePrint = (isBluePrint: boolean) => {
         debounce((newVal) => setIsBluePrintStatus(newVal), 50)(isBluePrint);
@@ -87,6 +93,7 @@ export function SettingsProvider(props: Props) {
         language,
         isBluePrint,
         isDebug,
+        isBgm,
         toggleFullScreen,
         setWidth,
         toggleLanguage,
@@ -94,6 +101,7 @@ export function SettingsProvider(props: Props) {
         exportAsJson,
         importFromJson,
         setIsDebug,
+        setIsBgm,
     };
 
     return (

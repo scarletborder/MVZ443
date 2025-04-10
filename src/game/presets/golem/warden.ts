@@ -34,10 +34,7 @@ class Warden extends IGolem {
         this.anim.startLegSwing();
 
         // 通过封装的 addTimer 添加定时任务
-        scene.music.pause();
-        scene.dumpMusic = scene.music;
-        scene.music = scene.sound.add('ZCDS-0014-05', { loop: true });
-        scene.music.play();
+        scene.musical.coverCurrent('bgm1');
         this.addTimer(2500, () => {
             this.StandUp();
         });
@@ -294,11 +291,7 @@ class Warden extends IGolem {
 
     destoryZombie(): void {
         this.clearAllTimers();
-        this.game.music.stop();
-        if (this.game.dumpMusic) {
-            this.game.music = this.game.dumpMusic;
-            this.game.music.resume();
-        }
+        this.game.musical.backToDump();
 
         super.destoryZombie();
         EventBus.emit('boss-health', { health: -1 }); // death

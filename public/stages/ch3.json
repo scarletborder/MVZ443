@@ -50,5 +50,9 @@
                 "count": 1
             }
         }
-    ]
+    ],
+    "load": {
+        "bgimg": [ "bg/bgInnerMine.png" ],
+        "bgm": [ "audio/ARCD-0036-09.ogg" ]
+    }
 }
