@@ -284,7 +284,7 @@ const TripleDispenserRecord: IRecord = {
     pid: 13,
     name: '三线发射器',
     cost: (level) => {
-        if (level && level >= 5) return 350;
+        if (level && level >= 9) return 350;
         return 325;
     },
     cooldownTime: () => 10,

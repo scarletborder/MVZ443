@@ -130,7 +130,7 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
                         }
                     },
                     {
-                        title: "语言",
+                        title: "语言 Language",
                         description: "选择游戏语言, only pokedx currently",
                         controlType: "selections",
                         controlProps: {

@@ -277,7 +277,18 @@ func parseLocaleFile(filename string) (map[string]string, map[string]string, err
 func saveLocaleFile(filename string, data map[string]string) error {
 	var sb strings.Builder
 	sb.WriteString("export default {\n")
-	for key, value := range data {
+
+	// 收集所有 key
+	keys := make([]string, 0, len(data))
+	for key := range data {
+		keys = append(keys, key)
+	}
+	// 对 key 进行排序，a 到 z 递增顺序
+	sort.Strings(keys)
+
+	// 按照排序后的 key 依次写入文件
+	for _, key := range keys {
+		value := data[key]
 		sb.WriteString("    " + key + ": ")
 		lines := strings.Split(value, "\n")
 		if len(lines) > 0 {
