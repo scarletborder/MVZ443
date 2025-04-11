@@ -2,49 +2,76 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { cacheDocContent, getDocContent, clearExpiredDocs, getDocsListFromIndexedDB } from '../utils/indexDB';
-import { boyerMooreSearch } from '../utils/algo';
 import { publicUrl } from '../utils/browser';
 import { ArrowLeft, Search } from 'lucide-react';
 import styled from 'styled-components';
 import { useDeviceType } from '../hooks/useDeviceType';
+import { boyerMooreSearch } from '../utils/algo';
 
-const getDocsList = (): string[] => {
-    return ['monsterEDX.md'];
+type docType = {
+    name: string;
+    mod_time: string;
+}
+
+async function getDocsList(): Promise<docType[]> {
+    const response = await fetch(`${publicUrl}/docs/stat.json`);
+    if (!response.ok) {
+        throw new Error('Failed to fetch docs list');
+    }
+    const data = await response.json();
+    return data;
 };
 
 const Docs: React.FC = () => {
-    const [docsList, setDocsList] = useState<string[]>([]);
+    const [docsList, setDocsList] = useState<docType[]>([]);
     const [searchQuery, setSearchQuery] = useState<string>('');
-    const [filteredDocs, setFilteredDocs] = useState<Array<{ file: string, preview: string }>>([]);
-    const deviceType = useDeviceType();
+    const [filteredDocs, setFilteredDocs] = useState<Array<{ file: docType, preview: string }>>([]);
+    const devicetype = useDeviceType();
     const navigate = useNavigate();
 
+    const boyerMooreSearchAlgo = window.boyerMooreSearch ?? boyerMooreSearch;
+
     const refreshFiltered = useCallback(async () => {
-        const processedDocs = await Promise.all(docsList.map(async (file) => {
-            const fileName = file.replace('.md', '');
+        const processedDocs = await Promise.all(docsList.map(async (doc) => {
+            const fileName = doc.name.replace('.md', '');
             let content = await getDocsListFromIndexedDB(fileName);
+            // 如果内容不存在，尝试从服务器获取并缓存
+            if (!content) {
+                try {
+                    const response = await fetch(`${publicUrl}/docs/${fileName}.md`);
+                    if (response.ok) {
+                        content = await response.text();
+                        await cacheDocContent(fileName, content);
+                    } else {
+                        content = null;
+                    }
+                } catch (error) {
+                    console.error(`Failed to fetch ${fileName}:`, error);
+                    content = null;
+                }
+            }
             const preview = content ? content.slice(0, 50) + '...' : 'Loading preview...';
 
             if (!searchQuery) {
-                return { file, preview, matches: true };
+                return { file: doc, preview, matches: true };
             }
 
             const foundInName = fileName.toLowerCase().includes(searchQuery.toLowerCase());
-            const foundInContent = content && boyerMooreSearch(content.toLowerCase(), searchQuery.toLowerCase());
-            return { file, preview, matches: foundInName || foundInContent };
+            const foundInContent = content && boyerMooreSearchAlgo(content.toLowerCase(), searchQuery.toLowerCase());
+            return { file: doc, preview, matches: foundInName || foundInContent };
         }));
 
         setFilteredDocs(processedDocs.filter(item => item.matches));
     }, [searchQuery, docsList]);
 
     useEffect(() => {
-        clearExpiredDocs();
-        const list = getDocsList();
-        setDocsList(list);
-
         const cacheDocuments = async () => {
+            await clearExpiredDocs();
+            const list = await getDocsList();
+            setDocsList(list);
+
             for (const doc of list) {
-                const fileName = doc.replace('.md', '');
+                const fileName = doc.name.replace('.md', '');
                 const content = await getDocContent(fileName);
                 if (!content) {
                     const response = await fetch(`${publicUrl}/docs/${fileName}.md`);
@@ -74,12 +101,12 @@ const Docs: React.FC = () => {
 
     return (
         <PageContainer>
-            <HeaderContainer deviceType={deviceType}>
+            <HeaderContainer deviceType={devicetype}>
                 <BackButton onClick={() => navigate(-1)}>
                     <ArrowLeft size={24} />
                 </BackButton>
                 <Title>Documents</Title>
-                <SearchContainer deviceType={deviceType}>
+                <SearchContainer deviceType={devicetype}>
                     <SearchIcon />
                     <SearchInput
                         type="text"
@@ -93,10 +120,11 @@ const Docs: React.FC = () => {
                 {filteredDocs.map(({ file, preview }, index) => (
                     <DocCard key={index}>
                         <Link
-                            to={`/docs/${file.replace('.md', '')}`}
-                            onClick={() => handleDocClick(file.replace('.md', ''))}
+                            to={`/docs/${file.name.replace('.md', '')}`}
+                            onClick={() => handleDocClick(file.name.replace('.md', ''))}
                         >
-                            <CardTitle>{file.replace('.md', '')}</CardTitle>
+                            <CardTitle>{file.name.replace('.md', '')}</CardTitle>
+                            <CardModTime>Last modified: {new Date(file.mod_time).toLocaleString()}</CardModTime>
                             <CardPreview>{preview}</CardPreview>
                         </Link>
                     </DocCard>
@@ -122,7 +150,6 @@ const HeaderContainer = styled.div<{ deviceType: string }>`
     max-width: 1200px;
     margin: 0 auto;
     display: flex;
-    flex-direction: ${({ deviceType }) => deviceType === 'mobile' ? 'column' : 'row'};
     align-items: ${({ deviceType }) => deviceType === 'mobile' ? 'center' : 'flex-start'};
     position: relative;
     padding: 1rem 0;
@@ -232,6 +259,18 @@ const DocCard = styled.div`
 const CardTitle = styled.h3`
     font-size: 1.25rem;
     font-weight: 500;
+    margin: 0 0 0.5rem 0;
+`;
+
+const CardModTime = styled.p`
+    font-size: 0.85rem;
+    color: #888888;
+    margin: 0 0 0.5rem 0;
+`;
+
+const CardReference = styled.p`
+    font-size: 0.85rem;
+    color: #888888;
     margin: 0 0 0.5rem 0;
 `;
 

@@ -12,7 +12,7 @@ class TurtleZombie extends EnhancedZombie {
         super(scene, col, row, texture, waveID);
         this.waveID = waveID;
         this.scaleFactor = scene.positionCalc.scaleFactor;
-        this.SetSpeedFirstly(20);
+        this.SetSpeedFirstly(18);
         this.capHealth = 370;
 
         const topX = this.x + this.offsetX;
@@ -38,7 +38,7 @@ class TurtleZombie extends EnhancedZombie {
                 this.attachSprites.get('cap')?.setVisible(false);
                 this.capHealth = 0;
                 // 加速+damage
-                this.SetSpeedFirstly(40);
+                this.SetSpeedFirstly(36);
                 this.attackDamage *= 2;
             }
 

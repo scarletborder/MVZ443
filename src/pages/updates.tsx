@@ -77,24 +77,34 @@ const PageContainer = styled.div`
 
 const BackButton = styled.button`
   position: absolute;
-  top: 1.5rem;
-  left: 1.5rem;
+  top: 1rem;
+  left: 1rem;
   background: none;
   border: none;
   color: #ffffff;
   cursor: pointer;
-  padding: 0.5rem;
+  padding: 1rem; /* 增大内边距，扩展点击区域 */
   border-radius: 50%;
-  transition: background-color 0.3s ease;
-  align-self: center;
+  width: 60px; /* 固定宽度 */
+  height: 60px; /* 固定高度 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.3s ease, transform 0.2s ease;
 
   &:hover {
     background-color: rgba(255, 255, 255, 0.1);
+    transform: scale(1.1); /* 悬停时略微放大 */
   }
 
   &:focus {
     outline: none;
-    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
+  }
+
+  & svg {
+    width: 30px; /* 增大图标尺寸 */
+    height: 30px;
   }
 `;
 

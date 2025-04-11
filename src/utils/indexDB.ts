@@ -55,7 +55,7 @@ export const clearExpiredDocs = async () => {
     const currentTime = new Date().getTime();
 
     allDocs.forEach((doc) => {
-        if (currentTime - doc.timestamp > 6 * 60 * 60 * 1000) {
+        if (currentTime - doc.timestamp > 60 * 60 * 1000) {
             store.delete(doc.name); // 删除过期的文档
         }
     });
