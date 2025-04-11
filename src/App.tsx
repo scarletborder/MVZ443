@@ -16,6 +16,7 @@ import UpdatesPage from './pages/updates';
 import SettingsPage from './pages/settings';
 import Docs from './pages/docs';
 import DocDetail from './pages/docDetail';
+import { publicUrl } from './utils/browser';
 
 
 function App() {
@@ -211,12 +212,12 @@ function App() {
     return (
         <Router>
             <Routes>
-                <Route path="/" element={<GameMainWindow />} />
-                <Route path="/settings" element={<SettingsPage width={width} height={width * 3 / 4} />} />
-                <Route path="/updates" element={<UpdatesPage />} />
+                <Route path={`${publicUrl}/`} element={<GameMainWindow />} />
+                <Route path={`${publicUrl}/settings`} element={<SettingsPage width={width} height={width * 3 / 4} />} />
+                <Route path={`${publicUrl}/updates`} element={<UpdatesPage />} />
 
-                <Route path="/docs" element={<Docs />} />
-                <Route path="/docs/:name" element={<DocDetail />} />
+                <Route path={`${publicUrl}/docs`} element={<Docs />} />
+                <Route path={`${publicUrl}/docs/:name`} element={<DocDetail />} />
             </Routes>
         </Router>
     )

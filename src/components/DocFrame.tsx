@@ -174,14 +174,14 @@ export default function DocFrame({ width, height, sceneRef, setGameParams, gameS
                             else if (item === "商店") setCurrentView('shop');
                             else if (item === "更新记录") {
                                 // 跳转
-                                navigate('/updates');
+                                navigate(`${publicUrl}/updates`);
                             }
                             else if (item === "设置") {
-                                navigate('/settings');
+                                navigate(`${publicUrl}/settings`);
                             }
                             else if (item === "关于") setCurrentView('about');
                             else if (item === "游戏文档") {
-                                navigate('/docs');
+                                navigate(`${publicUrl}/docs`);
                             }
                             else if (item === "主页") setCurrentView('main')
                         }}

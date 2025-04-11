@@ -120,7 +120,7 @@ const Docs: React.FC = () => {
                 {filteredDocs.map(({ file, preview }, index) => (
                     <DocCard key={index}>
                         <Link
-                            to={`/docs/${file.name.replace('.md', '')}`}
+                            to={`${publicUrl}/docs/${file.name.replace('.md', '')}`}
                             onClick={() => handleDocClick(file.name.replace('.md', ''))}
                         >
                             <CardTitle>{file.name.replace('.md', '')}</CardTitle>
