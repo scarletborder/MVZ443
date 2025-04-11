@@ -7,12 +7,12 @@ Deploys HellVillager to operate powerful manual turret that destroys armored tar
 Upgrading moderately increases device HP
 Level 5: Cost reduced to 425
 Level 9: Slightly reduces cooldown`
-,
+    ,
     cp1: `This story begins during the second blossom season after Steve and cursed villagers departed for Eternal Night Swamp.
 As the village's guardian, Alex grows increasingly worried about Steve...
 Meanwhile, monster spawns across overworld dwindle. Machines stall from material shortages. The industrialized village faces crisis.
 Time to solve this overworld anomaly.`
-,
+    ,
     dispenser_description: `Cost: 100
 First line of defense firing arrows
 Skill: Barrage of forward arrows
@@ -23,9 +23,9 @@ Level 3 - Arrows penetrate 1 target (50% dmg penalty per penetration)
 Level 5 - Star Fragment arrows penetrate +1 target (Penalty: Slightly reduced dmg)
 Level 9 - Cost reduced to 75
 `
-,
+    ,
     echo_shard: `Echo Shard`
-,
+    ,
     furnace_description: `Cost: 50
 Automatically produces redstone
 Skill: Generates large amounts of redstone
@@ -34,7 +34,7 @@ Blacksmith installed minecart rails connected to generator on original furnace, 
 Upgrading slightly reduces production interval
 Level 5 - Energy cost reduced to 35
 Level 9 - Each production increases to 40`
-,
+    ,
     gatlin_dispenser: `Cost:425
 Fires dense arrow barrage in single line
 Requires Dispenser base
@@ -43,7 +43,7 @@ Deploys HellVillager-operated manual turret. Devastating firepower absolutely su
 Upgrading slightly increases device HP
 Level 5: Cost reduced to 375
 Level 9: Moderately reduces cooldown`
-,
+    ,
     generator_description: `Cost:50
 Converts zombie attacks into mechanical energy through kinetic conversion
 Skill: Activates all devices within 3x3 area
@@ -55,9 +55,9 @@ Upgrading slightly increases HP
 Level 5 - Moderately improves daytime energy conversion efficiency
 Level 9 - Improves all-day energy conversion efficiency
 `
-,
+    ,
     gold: `Gold Coin`
-,
+    ,
     ice_bomb_description: `Cost: 75
 Explodes and freezes all on-screen enemies, slowing them after thawing
 Cannot use Star Fragments on this
@@ -66,17 +66,17 @@ Upgrading slightly increases damage
 Level 5 - Significantly increases damage (Penalty: Energy cost increases to 100)
 Level 9 - Reduces cooldown time
 `
-,
+    ,
     iron: `Iron Ingot`
-,
+    ,
     leather: `Leather`
-,
+    ,
     lily_description: `Cost:25
 Provides platform for devices
 "Elien Day" on 8th/18th/28th of each month
 Upgrading slightly increases HP
 Level 5 - Cost reduced to 0`
-,
+    ,
     magic_powder_description: `Cost:150
 Deals high (laser) damage to all monsters in tile and drops Star Fragment
 Cannot use Star Fragments on this
@@ -86,7 +86,7 @@ Upgrading slightly increases damage
 Level 5 - Cost reduced to 125
 Level 9 - Slightly reduces cooldown
 `
-,
+    ,
     obsidian_description: `Cost: 50
 Obsidian's strong armor can withstand zombie attacks
 Skill: Fully restores HP and gains harder armor
@@ -95,9 +95,9 @@ This obsidian is artificial
 Upgrading slightly increases HP
 Level 5 - Moderately reduces cooldown
 Level 9 - Star Fragment armor resistance significantly increases`
-,
+    ,
     obsidian_medal: `Obsidian Debris`
-,
+    ,
     pumpkin_description: `Cost:100
 Fires mid-range lasers for AoE damage
 Skill: Fires medium-damage lasers across 3 lanes (non-air)
@@ -106,7 +106,7 @@ Blacksmith repurposed Steve's soul furnace with scarlet metal flashlight to fire
 Upgrading slightly increases damage
 Level 5 - Faster attacks
 Level 9 - Attacks slow enemies (Penalty: Cost increases to 150)`
-,
+    ,
     pumpkin_wan_description: `Cost:325
 Fires high-frequency lasers around (non-air)
 Requires Eerie Pumpkin base
@@ -118,21 +118,21 @@ Level 5 - Cost reduced to 275
 Level 7 - Tri-directional suppression (Penalty: Cost 300)
 Level 9 - Expands to 5x5 (Penalty: Longer cooldown)
 `
-,
+    ,
     scb: `Scarlet Crystal (Trailer Version Only)`
-,
+    ,
     sg1: `Since Steve left, monster raids decreased daily
 Alex: Does fewer monsters mean Steve's facing more trouble?
 Blacksmith: Probably. Let's help him with these devices
 --- Level Feature ---
 Energy 50, Start with 2 dispensers in column 1, 3 furnaces in column 2`
-,
+    ,
     sg2: `After automating village defenses, Alex and Blacksmith begin searching for Steve
 Alex: Remember when Steve left with that map to Eternal Night Swamp, claiming it leads to Gensokyo?
 Blacksmith: Now it's a witch hut with no dimensional traces. But I know another possible portal... deep in local mines.
 Alex: Look! Glowing zombies here. Defeating them might drop power-up items.
 `
-,
+    ,
     sg3: `After clearing monsters around the mine entrance, they proceed deeper
 
 Alex: The monster spawn rate inside the mine is dozens times higher than surface world - like having multiple overworld spawners
@@ -140,7 +140,7 @@ Blacksmith: The disappearance of overworld monsters must be related to that "Gen
 Alex: Thanks for the help! As long as we keep moving forward, the path will... extend endlessly? Ugh, solar panels stopped working in this darkness. Good thing photosensitive plants still work
 --- Level Feature ---
 Energy 100`
-,
+    ,
     sg4: `As they delve deeper into the mine, their vision gradually expands. The monsters here are stronger and appear in greater numbers.
 
 Blacksmith: Strange, the Moonlight Generator malfunctioned at this moment. Otherwise, you would've received it in the previous level. But I've collected some parts and modified it - now it works automatically, though...
@@ -149,14 +149,14 @@ Blacksmith: You need external force to keep shaking it
 Alex: Ugh... Then are you going to shake it yourself?
 Blacksmith: The monsters will help us shake it. Just plant it in front. By the way, I finally found a way to expand our equipment backpack. Now you can unlock the 7th card slot in the store
 `
-,
+    ,
     sg5: `Moving forward, natural underground lakes block their path
 Blacksmith: Use new lily pads to place devices. Expand to 8th slot in shop if you have extra materials
 
 --- Level Feature ---
 Lanes 2,3 are water
 `
-,
+    ,
     sg6: `After clearing remaining monsters in the flooded cave layer, they find a glowing fissure in the lake leading deeper
 
 Blacksmith: These rainbow lights aren't from Minecraft. I sense dimensional connections below
@@ -167,7 +167,7 @@ Wearing turtle shell helmets dropped by zombies, they dive through narrow passag
 Alex: These... aren't Minecraft ores!
 (Deep growls and sighs echo)
 Blacksmith: Seems we've got another tough battle ahead`
-,
+    ,
     sg7: `[Difficulty still being balanced]
 
 Alex: Damn these mutant zombies!
@@ -187,7 +187,7 @@ Alex: Finally cleared them! Blacksmith, progress?
 Alex: Blacksmith! What's that black thing?!
 (??? Appears)
 `
-,
+    ,
     sg8: `Alex finds Blacksmith trapped by Obsidian Golem. After intense battle, they discover hidden cave with Enchanted Netherite Pickaxe (Efficiency VI)
 
 Alex: The rainbow obsidian! This pick can dig through!
@@ -199,7 +199,7 @@ Alex: STOP! It's sound-sensitive!
 --- Level Feature ---
 Lanes 2,3 water - Start energy 100
 `
-,
+    ,
     sg9: `After fierce battle, they defeat the Warden
 Blacksmith: That sonic attack nearly burst my eardrums!
 Alex: Now Gensokyo awaits! Let's use this pick...
@@ -234,7 +234,7 @@ As mining echoes through cave, rustling sounds emerge
 (??? Appears)
 ???: You found our secret! Taste my power!
 Blacksmith: Alex, watch out!`
-,
+    ,
     small_dispenser_description: `Cost: 0
 Fires short-range snowballs
 Skill: Shoots long-range explosive snowball
@@ -246,9 +246,9 @@ Upgrading slightly increases damage
 Level 5 - Moderately increases attack range
 Level 9 - Functions normally under strong light
 `
-,
+    ,
     start: 'Start Game'
-,
+    ,
     tnt_description: `Cost:150
 High explosive damage in 3x3 area
 Skill: Using Star Fragment before explosion creates secondary blast
@@ -256,7 +256,7 @@ Skill: Using Star Fragment before explosion creates secondary blast
 Upgrading slightly reduces cooldown
 Level5- +30% damage
 Level7- Leaves cluster bombs post-explosion`
-,
+    ,
     tnt_mines_description: `Cost: 25
 Landmine TNT explodes when zombies approach after arming time
 Skill: Deploys two pre-armed TNT landmines forward
@@ -267,7 +267,7 @@ Level 5 - Slightly reduces cooldown
 Level 7 - Star Fragment ability deploys +1 TNT
 Level 9 - Explosion range slightly expands forward
 `
-,
+    ,
     triple_dispenser_description: `Cost:325
 Fires 1/1/1 bullets to three lanes
 Skill: Scatters 240 arrows in fan-shaped area (Satsuka Gesshō)
@@ -278,48 +278,5 @@ Blacksmith proudly calls it the strongest autonomous dispenser
 Upgrading slightly increases damage
 Level 3: Fires 1/2/1 bullets per lane
 Level 9: Fires 2/2/2 bullets per lane (Penalty: Cost increases to 350)`
-,
-    update_log: `v0.0.4b 
-2025.4.?? Quality of Life Update
-- In-game speed settings
-- Improved shop interface
-- Level selection illustrations
-x Multiplayer lobby
-x More settings options
-
-v0.0.4a
-2025.3.29: Chapter 1 Experience Edition Re-update
-- Completed BOSS level prototype for Chapter 1
-- Reordered levels - current sequence [Rainbow Dragon Cave]:[Two Elite Levels]
-- New devices: Triple Dispenser & Anti-Tank Turret. Unlockable via [Rainbow Dragon Cave] or Elite levels
-- New enemy: Mutant Zombie (appears late-game with devastating attacks)
-- Cumulative balance updates & bug fixes. All zombies slightly slower
-
-v0.0.3b
-2025.3.21: Chapter 1 Experience Edition 3rd Update Part B
-- Completed second elite level in deep mine (Water Elite)
-- Reworked spawn system to resemble PVZ1 Endless Mode    
-- Difficulty still being adjusted
-v0.0.3a
-2025.3.19: Chapter 1 Experience Edition 2nd Update Part A
-- Completed first elite level "Mine Shaft (Elite)"
-- Balance updates: Device/monster stats between MVZ Expand's Hard and Lunatic
-- Bug fixes
-- New devices: Wide-area Pumpkin Pie, Ice Bomb
-- Updated device descriptions
-- New enemies: Pole-vaulting Zombie, Evoker, Vindicator
-- Developer tools: Added tools/spawner
-v0.0.2
-2025.3.15: Chapter 1 Experience Update
-- Completed non-elite/boss levels of Chapter 1 (spawn rates may be unbalanced)
-- Devices: Dispenser, Furnace, Obsidian, Landmine TNT, Small Dispenser, Lily Pad, Instant TNT, Biomass Generator, Eerie Pumpkin, Magic Powder
-- Enemies: Zombie, Leather-hat Zombie, Iron-helmet Zombie, Miner Zombie, Iron-helmet Miner Zombie, Skeleton Archer
-- Upgrade system not implemented yet
-v0.0.1 - Initial Release
-- 3 devices, 2 zombies, 2 bullet types
-- Test levels
-- Archive
-- Spawn mechanism
-2025.3.7: Journey Begins`
-,
+    ,
 }
