@@ -13,6 +13,8 @@ class IceBomb extends IPlant {
     damage: number = 5;
     constructor(scene: Game, col: number, row: number, level: number) {
         super(scene, col, row, IceBombRecord.texture, IceBombRecord.pid, level);
+        // 取消物理效果
+        scene.physics.world.disable(this);
         this.game = scene;
         this.setHealthFirstly(SECKILL);
         this.hasKill = false;

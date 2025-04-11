@@ -180,6 +180,13 @@ export class IBullet extends Phaser.Physics.Arcade.Sprite {
                 // 进行视觉更新
                 this.renderX = this.renderX + delta * this.body.velocity.x * 0.001;
                 this.renderY = this.renderY + delta * this.body.velocity.y * 0.001;
+                if (this.body.velocity.x < 0) {
+                    // 物体向左移动，翻转
+                    this.visibleSprite.setFlipX(true);
+                } else if (this.body.velocity.x > 0) {
+                    // 物体向右移动，不翻转
+                    this.visibleSprite.setFlipX(false);
+                }
             }
             this.visibleSprite.setPosition(this.renderX, this.renderY);
         }

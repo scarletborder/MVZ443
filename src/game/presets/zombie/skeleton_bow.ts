@@ -3,6 +3,7 @@
 import { MIRecord } from "../../models/IRecord";
 import { IZombie } from "../../models/monster/IZombie";
 import { Game } from "../../scenes/Game";
+import { FrameTimer } from "../../sync/ticker";
 import NewArrow from "../bullet/arrow";
 import { EnhancedSkeleton } from "./skeleton";
 
@@ -11,7 +12,7 @@ export class SkeletonBow extends EnhancedSkeleton {
     arrowDamage: number = 70;
     arrowInterval: number = 3500;
 
-    Timer: Phaser.Time.TimerEvent | null = null;
+    Timer: FrameTimer | null = null;
 
     constructor(scene: Game, col: number, row: number, texture: string, waveID: number) {
         super(scene, col, row, texture, waveID);
@@ -34,7 +35,7 @@ export class SkeletonBow extends EnhancedSkeleton {
         this.setDepth(); // 所有有附加元素的,要单独设置一次
 
         // 监听射箭和停止射箭
-        this.Timer = scene.time.addEvent({
+        this.Timer = scene.frameTicker.addEvent({
             delay: this.arrowInterval, // ms
             callback: () => {
                 if (this.hasDebuff('frozen') > 0) return; // 冰冻状态不射箭
@@ -77,8 +78,6 @@ export class SkeletonBow extends EnhancedSkeleton {
         arrow.setX(this.x);
         arrow.setY(this.y - scene.positionCalc.GRID_SIZEY * 0.7);
         arrow.setVelocityX(-200 * scene.positionCalc.scaleFactor);
-        arrow.setScale(-1, 1);
-
     }
 }
 

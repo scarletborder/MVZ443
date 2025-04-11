@@ -49,6 +49,8 @@ class _TntMines extends IPlant {
         // 立刻出土
         this.wakeup();
 
+        // 记录目标位置
+        const targetPositions: { x: number, y: number, col: number, row: number }[] = [];
         // 用于记录已经使用过的行和列
         const usedRows = new Set<number>();
         const usedCols = new Set<number>();
@@ -73,11 +75,8 @@ class _TntMines extends IPlant {
                 // 可以放置 TNT Mines
 
                 const { x: tmpx, y: tmpy } = this.gardener.positionCalc.getPlantBottomCenter(col, row);
-                StartArc(scene, this.x, this.y, tmpx, tmpy, 'plant/tnt_mines', 1000, () => {
-                    const newmine = NewTntMines(scene, col, row, this.level);
-                    newmine.wakeup();
-                })
-
+                // 记录目标位置
+                targetPositions.push({ x: tmpx, y: tmpy, col: col, row: row });
 
                 leftCount--;
                 usedRows.add(row);
@@ -100,22 +99,31 @@ class _TntMines extends IPlant {
                         if (list && list.length > 0) continue; // 该格子有植物
                     }
                     const { x: tmpx, y: tmpy } = this.gardener.positionCalc.getPlantBottomCenter(col, row);
-                    StartArc(scene, this.x, this.y, tmpx, tmpy, 'plant/tnt_mines', 1000, () => {
-                        const newmine = NewTntMines(scene, col, row, this.level);
-                        newmine.wakeup();
-                    })
+                    if (targetPositions.some(pos => pos.x === tmpx && pos.y === tmpy)) continue; // 避免重复
+                    targetPositions.push({ x: tmpx, y: tmpy, col: col, row: row });
 
                     leftCount--;
                 }
             }
+        }
+
+        // 开始放置
+        for (const pos of targetPositions) {
+            scene.frameTicker.delayedCall({
+                delay: 900, callback: () => {
+                    const newmine = NewTntMines(scene, pos.col, pos.row, this.level);
+                    newmine.wakeup();
+                }
+            });
+            StartArc(scene, this.x, this.y, pos.x, pos.y, 'plant/tnt_mines', 1000, () => { });
         }
     }
 
 
     public wakeup(): void {
         if (this.health > 0 && this.isBuried && this.game) {
-            this.head.setVisible(false);
             this.isBuried = false;
+            this.head.setVisible(false);
             createDirtOut(this.game, this.col, this.row, () => {
                 this.setVisible(true);
             });

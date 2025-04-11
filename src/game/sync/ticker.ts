@@ -5,11 +5,41 @@ import { FrameTick } from "../../../public/constants";
 export class FrameTimer {
     ticker: FrameTicker; // 定时器所属的 FrameTicker 实例
     public id: number = 0;        // 定时器唯一ID
-    public left: number = 0;      // 剩余帧数（仅作参考）
+
+    public targetFrame: number = 0; // 目标帧数（到达此帧时执行回调）
+    public callback: (...args: any[]) => void;  // 定时回调函数
+    public args: any[];                // 参数数组
+    public context: any;               // 执行回调时的上下文
+    public repeat: number;             // 重复次数：0表示一次性，正数表示剩余重复次数，-1表示无限重复
+    public interval: number;           // 循环定时任务的帧间隔
+
+    constructor(options: {
+        id: number;
+        targetFrame: number;
+        callback: (...args: any[]) => void;
+        args: any[];
+        context: any;
+        repeat: number;
+        interval: number;
+        ticker: FrameTicker; // 绑定当前的 FrameTicker 实例
+    }) {
+        this.id = options.id;
+        this.targetFrame = options.targetFrame;
+        this.callback = options.callback;
+        this.args = options.args;
+        this.context = options.context;
+        this.repeat = options.repeat;
+        this.interval = options.interval;
+        this.ticker = options.ticker; // 绑定当前的 FrameTicker 实例
+    }
+    // 计算剩余时间(frame)
+    public GetLeftTimeByFrame(): number {
+        return this.targetFrame - this.ticker.currentFrame;
+    }
 
     // 计算剩余时间（毫秒）
-    public GetLeftTime(): number {
-        return this.left * FrameTick;
+    public GetLeftTimeByMs(): number {
+        return this.GetLeftTimeByFrame() * FrameTick;
     }
 
     public remove(): void {
@@ -75,17 +105,6 @@ export class AddEventConfig {
 }
 
 
-
-// 内部的定时器接口，扩展了FrameTimer用于内部调度管理
-interface IFrameTimer extends FrameTimer {
-    targetFrame: number;        // 目标帧数（到达此帧时执行回调）
-    callback: (...args: any[]) => void;  // 定时回调函数
-    args: any[];                // 参数数组
-    context: any;               // 执行回调时的上下文
-    repeat: number;             // 重复次数：0表示一次性，正数表示剩余重复次数，-1表示无限重复
-    interval: number;           // 循环定时任务的帧间隔
-}
-
 export default class FrameTicker {
     // 每帧之间的间隔(ms)
     public frameInterval: number = FrameTick;
@@ -93,7 +112,7 @@ export default class FrameTicker {
     public currentFrame: number = 0;
 
     // 内部定时器列表，key 为 timer.id
-    private timers: Map<number, IFrameTimer> = new Map();
+    private timers: Map<number, FrameTimer> = new Map();
     // 用于生成定时器ID
     private nextTimerId: number = 1;
 
@@ -135,23 +154,16 @@ export default class FrameTicker {
         const frameDelay = Math.ceil(delay / this.frameInterval);
         const targetFrame = this.currentFrame + frameDelay;
         // 构造定时器对象
-        const timer: IFrameTimer = {
+        const timer: FrameTimer = new FrameTimer({
             id: this.nextTimerId++,
-            left: frameDelay,
-            targetFrame,
-            callback,
-            args,
-            context,
-            repeat,
-            interval: frameDelay,
-            GetLeftTime: function (): number {
-                return this.left * FrameTick;
-            },
-            remove: function (): void {
-                this.ticker.Unregister(this);
-            },
-            ticker: this, // 绑定当前的 FrameTicker 实例
-        };
+            targetFrame: targetFrame,
+            callback: callback,
+            args: args,
+            context: context,
+            repeat: repeat,
+            interval: frameDelay, // 循环定时器的间隔
+            ticker: this // 绑定当前的 FrameTicker 实例
+        })
 
         // 添加到定时器列表中
         this.timers.set(timer.id, timer);
@@ -213,8 +225,6 @@ export default class FrameTicker {
 
                 // 替换targetFrame为当前帧+delay
                 timer.targetFrame = targetFrame;
-                // 替换left为delay
-                timer.left = frameDelay;
                 // 替换interval为delay
                 timer.interval = frameDelay;
                 // 替换callback为原来的callback
@@ -252,15 +262,10 @@ export default class FrameTicker {
                     }
                     // 重新计算下次触发的目标帧
                     timer.targetFrame = this.currentFrame + timer.interval;
-                    // 更新left（剩余帧数，可选用于调试）
-                    timer.left = timer.interval;
                 } else {
                     // 一次性定时器或重复结束的定时器，标记为移除
                     timersToRemove.push(timer.id);
                 }
-            } else {
-                // 更新剩余帧数，仅供调试或额外功能使用
-                timer.left = timer.targetFrame - this.currentFrame;
             }
         });
 

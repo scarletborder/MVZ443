@@ -285,6 +285,8 @@ export default class QueueReceive {
 
     // 游戏每次update的入口位置直接调用,循环消费直到空
     Consume() {
+        const executedList: (() => void)[] = [];
+
         // 先获得当前的帧ID
         const nextFrameID = 1 + BackendWS.GetFrameID();
         const tmpLeftFrames = []; // 存放未来frame的数据
@@ -320,16 +322,16 @@ export default class QueueReceive {
             hasExecuted = true;
             switch (data.type) {
                 case 0x01:
-                    this._startGame(data.seed, data.myID);
+                    this._startGame(data.seed, data.myID);;
                     break;
                 case 0x02:
-                    this._cardPlant(data.pid, data.col, data.row, data.level, data.uid);
+                    executedList.push(() => { this._cardPlant(data.pid, data.col, data.row, data.level, data.uid); });
                     break;
                 case 0x04:
-                    this._removePlant(data.pid, data.col, data.row, data.uid);
+                    executedList.push(() => { this._removePlant(data.pid, data.col, data.row, data.uid); });
                     break;
                 case 0x08:
-                    this._useStarShards(data.pid, data.col, data.row, data.uid);
+                    executedList.push(() => { this._useStarShards(data.pid, data.col, data.row, data.uid); });
                     break;
             }
         }
@@ -379,6 +381,7 @@ export default class QueueReceive {
             // 例如 plant发出子弹, 刷怪, 避免通过game.timer导致不精确
             this.game.frameTicker.update();
             EventBus.emit('timeFlow-set', { delta: this.game.frameTicker.frameInterval });
+            executedList.forEach((func) => { func(); });
         }
     }
 

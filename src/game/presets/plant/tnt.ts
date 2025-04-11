@@ -17,6 +17,8 @@ class _Tnt extends IPlant {
 
     constructor(scene: Game, col: number, row: number, level: number) {
         super(scene, col, row, TntRecord.texture, TntRecord.pid, level);
+        // 取消物理效果
+        scene.physics.world.disable(this);
         this.game = scene;
         this.setHealthFirstly(SECKILL);
         this.damage = GetIncValue(1400, 1.35, level);
@@ -34,16 +36,19 @@ class _Tnt extends IPlant {
             yoyo: true,                   // 使得动画完成后反向播放
             repeat: 3,                    // 重复5次（从原状态到高光，再回来，总共3次）
             ease: 'Sine.easeInOut',       // 缓动效果
-            onComplete: () => {           // 动画完成后触发的回调函数
-                if (!this.game) return;
+        });
+        scene.frameTicker.delayedCall({
+            delay: 850,
+            callback: () => {
                 new IExpolsion(this.game, x, _row, {
                     damage: this.damage,
                     rightGrid: 1.5,
                     leftGrid: 1.5,
                     upGrid: 1
                 });
+                this.setVisible(false);
             }
-        });
+        })
         scene.frameTicker.delayedCall({
             delay: 900,
             callback: () => {

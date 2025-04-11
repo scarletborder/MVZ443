@@ -4,10 +4,11 @@ import { IZombie } from '../../models/monster/IZombie';
 import { MIRecord } from '../../models/IRecord';
 import { newNormalEvokerAnim } from '../../sprite/normal_zombie';
 import { MonsterFactoryMap } from '..';
+import { FrameTimer } from '../../sync/ticker';
 
 
 export class EnhancedEvoker extends IZombie {
-    Timer: Phaser.Time.TimerEvent;
+    Timer: FrameTimer;
     summonTimes: number = 3;
     scene: Game;
 
@@ -19,7 +20,7 @@ export class EnhancedEvoker extends IZombie {
         this.attackDamage = 20;
         this.SetSpeedFirstly(25);
 
-        this.Timer = scene.time.addEvent({
+        this.Timer = scene.frameTicker.addEvent({
             delay: 28000,
             startAt: 24000,
             callback: () => {

@@ -7,6 +7,7 @@ import { IPlant } from "../../models/IPlant";
 import { IMonster } from "../../models/monster/IMonster";
 import { Game } from "../../scenes/Game";
 import IMutantAnim from "../../sprite/zombie_mutant";
+import { FrameTimer } from "../../sync/ticker";
 
 export default class IMutant extends IMonster {
     // 动画
@@ -20,7 +21,7 @@ export default class IMutant extends IMonster {
     preAttackedPlants: IPlant | null = null;
 
     // 定时器
-    attackTimer: Phaser.Time.TimerEvent | null = null;
+    attackTimer: FrameTimer | null = null;
 
     constructor(scene: Game, col: number, row: number, waveID: number,
         newAnim: (scene: Game, x: number, y: number) => IMutantAnim) {
@@ -84,41 +85,49 @@ export default class IMutant extends IMonster {
             // 手臂动作
             this.anim.startLeftArmSmash(() => { });
 
-            this.attackTimer = scene.time.delayedCall(1500, () => {
-                if (this.health <= 0 || !this.game || this.IsFrozen) return;
+            this.attackTimer = scene.frameTicker.delayedCall(
+                {
+                    delay: 1500,
+                    callback: () => {
+                        if (this.health <= 0 || !this.game || this.IsFrozen) return;
 
-                const grids: Set<string> = new Set();
-                preDamagedPlants.forEach(plant => {
-                    plant.takeDamage(5500, this);
-                    const key = `${plant.col}-${plant.row}`;
-                    grids.add(key);
-                });
-
-                // 删除所有grids key
-                grids.forEach(key => {
-                    const plant = this.game.gardener.planted.get(key);
-                    if (plant && plant.length > 0) {
-                        plant.forEach(p => {
-                            p.takeDamage(5500, this);
+                        const grids: Set<string> = new Set();
+                        preDamagedPlants.forEach(plant => {
+                            plant.takeDamage(5500, this);
+                            const key = `${plant.col}-${plant.row}`;
+                            grids.add(key);
                         });
+
+                        // 删除所有grids key
+                        grids.forEach(key => {
+                            const plant = this.game.gardener.planted.get(key);
+                            if (plant && plant.length > 0) {
+                                plant.forEach(p => {
+                                    p.takeDamage(5500, this);
+                                });
+                            }
+                        });
+
+                        scene.frameTicker.delayedCall({
+                            delay: 1500,
+                            callback: () => {
+                                if (!this || this.health <= 0 || !this.game || this.IsFrozen) return;
+
+                                this.attackedPlants = [];
+                                if (this.preAttackedPlants) {
+                                    this.attackedPlants.push(this.preAttackedPlants);
+                                    this.preAttackedPlants = null;
+                                    this.startAttackProcess();
+                                } else {
+                                    this.isAttacking = false;
+                                    this.StartMove();
+                                }
+                            }
+                        })
+
                     }
-                });
-
-                scene.time.delayedCall(1500, () => {
-                    if (!this || this.health <= 0 || !this.game || this.IsFrozen) return;
-
-                    this.attackedPlants = [];
-                    if (this.preAttackedPlants) {
-                        this.attackedPlants.push(this.preAttackedPlants);
-                        this.preAttackedPlants = null;
-                        this.startAttackProcess();
-                    } else {
-                        this.isAttacking = false;
-                        this.StartMove();
-                    }
-                })
-
-            });
+                }
+            );
         } finally {
             if (!this) return;
         }

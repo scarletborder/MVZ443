@@ -1,4 +1,5 @@
 import DepthManager from "../../utils/depth";
+import { defaultRandom } from "../../utils/random";
 import IObstacle from "../presets/obstacle/IObstacle";
 import { Game } from "../scenes/Game";
 import { IPlant } from "./IPlant";
@@ -91,13 +92,13 @@ export class IExpolsion extends Phaser.Physics.Arcade.Sprite {
 
                 // 添加多个爆炸以增加密度
                 const explosionsPerCell = Math.floor(density);
-                const extraExplosion = Math.random() < (density - explosionsPerCell) ? 1 : 0;
+                const extraExplosion = defaultRandom() < (density - explosionsPerCell) ? 1 : 0;
                 const totalExplosions = explosionsPerCell + extraExplosion;
 
                 for (let i = 0; i < totalExplosions; i++) {
                     // 添加随机偏移
-                    const offsetX = (Math.random() - 0.5) * spriteBaseSize * 0.8;
-                    const offsetY = (Math.random() - 0.5) * spriteBaseSize * 0.8;
+                    const offsetX = (defaultRandom() - 0.5) * spriteBaseSize * 0.8;
+                    const offsetY = (defaultRandom() - 0.5) * spriteBaseSize * 0.8;
                     const randomX = baseX + offsetX;
                     const randomY = baseY + offsetY;
 
@@ -108,14 +109,14 @@ export class IExpolsion extends Phaser.Physics.Arcade.Sprite {
                         Math.min(randomY, y + upGrid * gridSizeY));
 
                     // 添加随机缩放和旋转
-                    const scale = 0.8 + Math.random() * 0.6; // 0.8-1.4倍随机缩放
+                    const scale = 0.8 + defaultRandom() * 0.6; // 0.8-1.4倍随机缩放
                     const spriteSize = spriteBaseSize * scale;
 
                     const anime = scene.add.sprite(finalX, finalY, 'anime/explosion');
                     anime.setDisplaySize(spriteSize, spriteSize)
                         .setOrigin(0.5, 0.5)
                         .setDepth(DepthManager.getInGameUIElementDepth(-100))
-                        .setRotation(Math.random() * Math.PI * 2);
+                        .setRotation(defaultRandom() * Math.PI * 2);
 
                     explosionSprites.push(anime);
                 }
@@ -124,10 +125,13 @@ export class IExpolsion extends Phaser.Physics.Arcade.Sprite {
 
         IExpolsion.Group.add(this, true);
 
-        scene.time.delayedCall(50, () => {
-            this.destroy();
-            if (onCompleteCallback) {
-                onCompleteCallback();
+        scene.frameTicker.delayedCall({
+            delay: 50,
+            callback: () => {
+                this.destroy();
+                if (onCompleteCallback) {
+                    onCompleteCallback();
+                }
             }
         })
 
@@ -143,7 +147,7 @@ export class IExpolsion extends Phaser.Physics.Arcade.Sprite {
 
         let completedAnimations = 0;
         explosionSprites.forEach((anime, index) => {
-            const delay = Math.random() * 150; // 0-150ms随机延迟
+            const delay = 150 * defaultRandom(); // 0-150ms随机延迟
             scene.time.delayedCall(delay, () => {
                 anime.play('explosion');
                 anime.once('animationcomplete', () => {

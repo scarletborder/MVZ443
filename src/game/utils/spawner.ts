@@ -27,7 +27,7 @@ export default class MonsterSpawner {
     private wavesLeng: number;
     private current_wave_idx: number = 0;
 
-    private SpawnTimer: Phaser.Time.TimerEvent; // 出怪
+    private SpawnTimer: FrameTimer; // 出怪
     private Timer: FrameTimer | null = null; // 波数使用帧驱动定时器，类型为 FrameTimer
     private prev_wave_time: number = 0;
 
@@ -68,7 +68,6 @@ export default class MonsterSpawner {
         // 同时取消出怪定时器
         if (this.SpawnTimer) {
             this.SpawnTimer.remove();
-            this.SpawnTimer.destroy();
         }
 
         this.progress = 0;
@@ -250,7 +249,7 @@ export default class MonsterSpawner {
         let monsterIndex = 0;
         if (this.SpawnTimer) this.SpawnTimer.remove();
 
-        this.SpawnTimer = this.scene.time.addEvent({
+        this.SpawnTimer = this.scene.frameTicker.addEvent({
             delay: interval,
             repeat: totalMonsters.length - 1,
             callback: () => {

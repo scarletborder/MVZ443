@@ -1,9 +1,9 @@
 import DepthManager from "../../../utils/depth";
+import { defaultRandom } from "../../../utils/random";
 import { EventBus } from "../../EventBus";
 import { Game } from "../../scenes/Game";
 import IZombieAnim from "../../sprite/zombie";
-import GridClan from "../../utils/grid_clan";
-import MonsterSpawner from "../../utils/spawner";
+import { FrameTimer } from "../../sync/ticker";
 import { IPlant } from "../IPlant";
 import { IMonster } from "./IMonster";
 
@@ -17,7 +17,7 @@ export class IZombie extends IMonster {
     // 是否是召唤的僵尸(击杀不计数), waveID < 0 即召唤物
 
     // 攻击
-    private attackTimer?: Phaser.Time.TimerEvent; // 攻击定时器
+    private attackTimer: FrameTimer | null = null; // 攻击定时器
     public attackingPlant: IPlant | null = null; // 当前攻击的植物
     public attackInterval: number = 200; // 攻击间隔
     public attackDamage: number = 20; // 攻击伤害
@@ -46,8 +46,8 @@ export class IZombie extends IMonster {
         const y = this.y;
 
         this.zombieAnim = newZombieAnim(scene, x, y);
-        this.offsetX = Math.random() * scene.positionCalc.GRID_SIZEX / 5;
-        this.offsetY = Math.random() * scene.positionCalc.GRID_SIZEY / 10;
+        this.offsetX = defaultRandom() * scene.positionCalc.GRID_SIZEX / 5;
+        this.offsetY = defaultRandom() * scene.positionCalc.GRID_SIZEY / 10;
         this.baseDepth = DepthManager.getZombieBasicDepth(row, this.offsetY);
 
         this.SetSpeedFirstly(20);
@@ -122,7 +122,7 @@ export class IZombie extends IMonster {
         this.zombieAnim.stopLegSwing();
 
         // 启动攻击定时器
-        this.attackTimer = this.game.time.addEvent({
+        this.attackTimer = this.game.frameTicker.addEvent({
             startAt: this.attackInterval * 9 / 10,
             delay: this.attackInterval,
             callback: () => this.hurtPlant(),
@@ -143,8 +143,7 @@ export class IZombie extends IMonster {
         this.zombieAnim?.startLegSwing();
         if (this.attackTimer) {
             this.attackTimer.remove();
-            this.attackTimer.destroy();
-            this.attackTimer = undefined;
+            this.attackTimer = null;
         }
         this.broadcastToPlant();
         this.IsStop = false;
@@ -282,7 +281,7 @@ export class IZombie extends IMonster {
 
         if (this.attackTimer) {
             this.attackTimer.remove();
-            this.attackTimer.destroy();
+            this.attackTimer = null;
         }
         this.playDeathAnimation();
         console.log('Zombie destroyed');
@@ -324,8 +323,10 @@ export class IZombie extends IMonster {
 
     // 覆盖 destroy 方法，确保清理
     destroy(fromScene?: boolean) {
-        this.attackTimer?.remove();
-        this.attackTimer?.destroy();
+        if (this.attackTimer) {
+            this.attackTimer.remove();
+            this.attackTimer = null;
+        }
         // 处理attach
         this.zombieAnim.destroy();
         this.attachSprites.forEach(sprite => sprite.destroy());

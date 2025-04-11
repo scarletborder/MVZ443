@@ -397,7 +397,6 @@ export class Game extends Scene {
 
     doHalt() {
         if (this.isDestroyed) return; // Skip if scene is destroyed
-        this.physics.world?.pause();
         this.anims?.pauseAll();
         this.tweens?.pauseAll();
         this.time.paused = true;
@@ -407,7 +406,6 @@ export class Game extends Scene {
 
     doResume() {
         if (this.isDestroyed) return; // Skip if scene is destroyed
-        this.physics.world?.resume();
         this.anims?.resumeAll();
         this.tweens?.resumeAll();
         this.time.paused = false;
