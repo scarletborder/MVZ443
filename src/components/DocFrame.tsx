@@ -9,6 +9,7 @@ import { useDeviceType } from '../hooks/useDeviceType';
 import BackendWS from '../utils/net/sync';
 import i18n from '../utils/i18n';
 import Shop from './shop/shop';
+import { useNavigate } from 'react-router-dom';
 
 interface Props {
     width: number,
@@ -28,18 +29,20 @@ export default function DocFrame({ width, height, sceneRef, setGameParams, gameS
     const menuItems = [
         "主页",
         "选择关卡",
-        "图鉴",
+        "器械图鉴",
         "商店",
-        "更新记录",
         "设置",
+        "更新记录",
+        "游戏文档",
         "关于"
     ];
 
     const [skipToParams, setSkipToParams] = useState(false);
     const [chosenStage, setChosenStage] = useState<number | null>(null);
     const [islord, setIslord] = useState(false);
-    const [update_log, setUpdate_log] = useState(i18n.S('update_log')());
+
     const [commitVersion, setCommitVersion] = useState('develop');
+    const navigate = useNavigate();
 
     useEffect(() => {
         // 处理联机事件
@@ -78,9 +81,6 @@ export default function DocFrame({ width, height, sceneRef, setGameParams, gameS
             .catch(error => {
                 console.error('获取版本信息失败:', error);
             });
-
-        // 处理更新日志
-        setTimeout(() => { console.log(i18n.S('update_log')()); setUpdate_log(i18n.S('update_log')()); }, 1000);
     }, []);
 
 
@@ -170,11 +170,19 @@ export default function DocFrame({ width, height, sceneRef, setGameParams, gameS
                         }}
                         onClick={() => {
                             if (item === "选择关卡") setCurrentView('levels');
-                            else if (item === "图鉴") setCurrentView('pokedex');
+                            else if (item === "器械图鉴") setCurrentView('pokedex');
                             else if (item === "商店") setCurrentView('shop');
-                            else if (item === "更新记录") setCurrentView('updates');
-                            else if (item === "设置") setCurrentView('settings');
+                            else if (item === "更新记录") {
+                                // 跳转
+                                navigate('/updates');
+                            }
+                            else if (item === "设置") {
+                                navigate('/settings');
+                            }
                             else if (item === "关于") setCurrentView('about');
+                            else if (item === "游戏文档") {
+                                navigate('/docs');
+                            }
                             else if (item === "主页") setCurrentView('main')
                         }}
                     >
@@ -257,7 +265,7 @@ export default function DocFrame({ width, height, sceneRef, setGameParams, gameS
                         </div>
                     </>
                 )}
-                {(currentView === 'updates' || currentView === 'about') && (
+                {(currentView === 'about') && (
                     <div style={{
                         width: "100%",
                         height: "95%",
@@ -269,7 +277,7 @@ export default function DocFrame({ width, height, sceneRef, setGameParams, gameS
                         scrollbarColor: "#666 #333",
                         whiteSpace: "pre-wrap" // 保留换行和空格
                     }}>
-                        {currentView === 'updates' ? update_log : aboutContent}
+                        {aboutContent}
                     </div>
                 )}
             </div>
@@ -279,7 +287,7 @@ export default function DocFrame({ width, height, sceneRef, setGameParams, gameS
     // 根据当前视图渲染不同内容
     return (
         <>
-            {currentView === 'main' || currentView === 'updates' || currentView === 'about' ? <MainMenu /> : null}
+            {currentView === 'main' || currentView === 'about' ? <MainMenu /> : null}
             {currentView === 'levels' && <LevelSelect width={width} height={height} onBack={() => setCurrentView('main')}
                 startGame={gameStart} setGameParams={setGameParams} skipToParams={skipToParams} chosenStage={chosenStage}
                 islord={islord}

@@ -1,7 +1,7 @@
 import { publicUrl } from "./browser";
 
 // i18n.ts
-type Locale = "scarletborder" | "zh_CN" | "en_US"; // 支持的语言类型
+export type Locale = "scarletborder" | "zh_CN" | "en_US"; // 支持的语言类型
 
 interface I18n {
     locale: Locale;

@@ -1,17 +1,31 @@
-import React, { createContext, ReactNode, useCallback, useContext, useState } from 'react';
+import React, { createContext, ReactNode, useCallback, useContext, useState, useEffect } from 'react';
 import { debounce } from '../utils/debounce';
+import { Locale } from '../utils/i18n';
+
+// 加载 cookie 中的值，如果没有则返回默认值
+const loadCookie = <T,>(key: string, defaultValue: T): T => {
+    const value = document.cookie
+        .split('; ')
+        .find(row => row.startsWith(key + '='));
+    return value ? JSON.parse(value.split('=')[1]) : defaultValue;
+};
+
+// 存储值到 cookie
+const storeCookie = <T,>(key: string, value: T): void => {
+    document.cookie = `${key}=${JSON.stringify(value)}; path=/; max-age=31536000`; // 1 year expiration
+};
 
 interface GameSettings {
     isFullScreen: boolean;
     width: number; // width
-    language: string;
+    language: Locale;
     isBluePrint: boolean;
     isDebug: boolean;
     isBgm: boolean;
 
     toggleFullScreen: () => void;
     setWidth: (newWidth: number) => void;
-    toggleLanguage: () => void;
+    toggleLanguage: (lang: Locale) => void;
     setIsBluePrint: (isBluePrint: boolean) => void;
     setIsDebug: (isDebug: boolean) => void;
     setIsBgm: (isBgm: boolean) => void;
@@ -22,42 +36,41 @@ interface GameSettings {
 
 const SettingsContext = createContext<GameSettings | undefined>(undefined);
 
-
 interface Props {
     children: ReactNode
 }
 
 export function SettingsProvider(props: Props) {
     const { children } = props;
-    // 全屏状态
-    const [isFullScreen, setIsFullScreen] = useState<boolean>(false);
-    // 分辨率width(4:3)
-    const [width, setWidth] = useState<number>(800);
-    // 当前语言，示例在英文和中文之间切换
-    const [language, setLanguage] = useState<string>('en');
-    // 是否开启私密蓝图模式
-    const [isBluePrint, setIsBluePrintStatus] = useState<boolean>(false);
-    // 调试框
-    const [isDebug, setIsDebug] = useState<boolean>(false);
-    // 是否启用bgm
-    const [isBgm, setIsBgm] = useState<boolean>(true);
 
+    // 从 cookie 中加载初始值
+    const [isFullScreen, setIsFullScreen] = useState<boolean>(loadCookie('isFullScreen', false));
+    const [width, setWidth] = useState<number>(loadCookie('width', 800));
+    const [language, setLanguage] = useState<Locale>(loadCookie('language', 'zh_CN'));
+    const [isBluePrint, setIsBluePrintStatus] = useState<boolean>(loadCookie('isBluePrint', false));
+    const [isDebug, setIsDebug] = useState<boolean>(loadCookie('isDebug', false));
+    const [isBgm, setIsBgm] = useState<boolean>(loadCookie('isBgm', true));
 
+    // 更新并存储到 cookie
     const setIsBluePrint = (isBluePrint: boolean) => {
-        debounce((newVal) => setIsBluePrintStatus(newVal), 50)(isBluePrint);
-    }
+        debounce((newVal) => {
+            setIsBluePrintStatus(newVal);
+            storeCookie('isBluePrint', newVal); // 存储到 cookie
+        }, 50)(isBluePrint);
+    };
 
-    // 切换全屏
     const toggleFullScreen = () => {
         if (!document.fullscreenElement) {
             document.documentElement.requestFullscreen().then(() => {
                 setIsFullScreen(true);
+                storeCookie('isFullScreen', true); // 存储到 cookie
             }).catch(err => {
                 console.error("开启全屏失败:", err);
             });
         } else {
             document.exitFullscreen().then(() => {
                 setIsFullScreen(false);
+                storeCookie('isFullScreen', false); // 存储到 cookie
             }).catch(err => {
                 console.error("退出全屏失败:", err);
             });
@@ -81,10 +94,9 @@ export function SettingsProvider(props: Props) {
         setIsBluePrint(data.isBluePrint);
     }
 
-
-    // 切换语言（示例在英文和中文间切换）
-    const toggleLanguage = () => {
-        setLanguage(prev => (prev === 'en' ? 'zh' : 'en'));
+    const toggleLanguage = (lang: Locale) => {
+        setLanguage(lang);
+        storeCookie('language', lang); // 存储到 cookie
     };
 
     const settingsValue: GameSettings = {
@@ -103,6 +115,16 @@ export function SettingsProvider(props: Props) {
         setIsDebug,
         setIsBgm,
     };
+
+    useEffect(() => {
+        // 页面初始化时从 cookie 加载设置
+        setIsFullScreen(loadCookie('isFullScreen', false));
+        setWidth(loadCookie('width', 800));
+        setLanguage(loadCookie('language', 'zh_CN'));
+        setIsBluePrintStatus(loadCookie('isBluePrint', false));
+        setIsDebug(loadCookie('isDebug', false));
+        setIsBgm(loadCookie('isBgm', true));
+    }, []);
 
     return (
         <SettingsContext.Provider value={settingsValue}>

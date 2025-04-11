@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useSaveManager } from '../../context/save_ctx';
 import { useSettings } from '../../context/settings_ctx';
 import { debounce } from '../../utils/debounce';
-import i18n from '../../utils/i18n';
+import i18n, { Locale } from '../../utils/i18n';
 // import BackendWS from '../../utils/net/entry_ws';
 import BackendWS from '../../utils/net/sync';
 // import wtClient from '../../utils/net/sync';
@@ -43,7 +43,6 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
     const settingManager = useSettings();
 
     const [selectedCategory, setSelectedCategory] = useState('general');
-    const [displayLanguage, setDisplayLanguage] = useState(i18n.getLang());
     const [isFullscreen, setIsFullscreen] = useState(document.fullscreenElement !== null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const saveManager = useSaveManager();
@@ -53,11 +52,6 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
         onBackOriginal();
         saveManager.saveProgress();
     };
-
-    useEffect(() => {
-        setDisplayLanguage(i18n.getLang());
-    }, [i18n.getLang]);
-
 
     // 处理导入存档
     const handleImportSave = () => {
@@ -134,9 +128,12 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
                         description: "选择游戏语言, only pokedx currently",
                         controlType: "selections",
                         controlProps: {
-                            options: ["zh_CN", "en_US"], selected: displayLanguage, onSelect: (val) => {
-                                i18n.set(val);
-                                setDisplayLanguage(val);
+                            options: ["zh_CN", "en_US"], selected: settingManager.language, onSelect: (val) => {
+                                if (!val) {
+                                    return;
+                                }
+                                i18n.set(val as Locale);
+                                settingManager.toggleLanguage(val as Locale);
                             }
                         }
                     },

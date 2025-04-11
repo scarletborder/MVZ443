@@ -34,12 +34,18 @@
         "@use-gesture/react": "^10.3.1",
         "denque": "^2.1.0",
         "gh-pages": "^6.3.0",
+        "idb": "^8.0.2",
+        "lucide-react": "^0.487.0",
         "phaser": "^3.88.2",
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
+        "react-markdown": "^10.1.0",
+        "react-router-dom": "^7.5.0",
         "react-toastify": "^11.0.5",
+        "remark-gfm": "^4.0.1",
         "save": "^2.9.0",
-        "seedrandom": "^3.0.5"
+        "seedrandom": "^3.0.5",
+        "styled-components": "^6.1.17"
     },
     "devDependencies": {
         "@types/node": "^22.13.10",

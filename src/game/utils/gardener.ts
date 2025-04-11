@@ -337,7 +337,7 @@ export default class Gardener {
         if (this.prePlantPid !== null) {
             // 如果是暂停状态并且没有私密图纸,也不给种
             console.log('blueprint', this.scene.innerSettings.isBluePrint)
-            if (!this.scene.innerSettings.isBluePrint && this.scene.physics.world.isPaused) {
+            if (!this.scene.innerSettings.isBluePrint && this.scene.isPaused) {
                 return;
             }
 

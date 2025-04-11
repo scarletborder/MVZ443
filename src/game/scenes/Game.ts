@@ -73,6 +73,7 @@ export class Game extends Scene {
     sendQueue: QueueSend
     recvQueue: QueueReceive
 
+    isPaused = true; // 是否暂停
     isGameEnd: boolean = true;
 
 
@@ -204,7 +205,7 @@ export class Game extends Scene {
         const escKey = this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
         escKey?.on('down', () => {
             // 判断场景有无暂停
-            const currently = this.physics.world.isPaused;
+            const currently = this.isPaused;
             this.handlePause({ paused: !currently });
         });
 
@@ -269,6 +270,7 @@ export class Game extends Scene {
     handleGameFrameStart() {
         this.frameTicker.initStart();
         this.monsterSpawner.startWave();
+        this.isPaused = false;
         EventBus.emit('okIsPaused', { paused: false });
     }
 
@@ -397,19 +399,23 @@ export class Game extends Scene {
 
     doHalt() {
         if (this.isDestroyed) return; // Skip if scene is destroyed
+        this.physics.world.pause(); // 暂停物理系统
         this.anims?.pauseAll();
         this.tweens?.pauseAll();
         this.time.paused = true;
         try { this.exitText.setInteractive(); } finally { EventBus.emit('okIsPaused', { paused: true }); }
+        this.isPaused = true;
         this.musical.pause();
     }
 
     doResume() {
         if (this.isDestroyed) return; // Skip if scene is destroyed
+        this.physics.world.resume(); // 恢复物理系统
         this.anims?.resumeAll();
         this.tweens?.resumeAll();
         this.time.paused = false;
         try { this.exitText.disableInteractive(); } finally { EventBus.emit('okIsPaused', { paused: false }); }
+        this.isPaused = false;
         this.musical.resume();
     }
 

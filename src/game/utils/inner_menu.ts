@@ -19,8 +19,9 @@ export default function CreateInnerMenu(game: Game) {
     game.pauseBtn.on('pointerup', () => {
         // 判断场景有无暂停
         debounce(() => {
+            console.log('pause')
             if (HasConnected()) return; // 联机模式不准暂停
-            const currently = game.physics.world.isPaused;
+            const currently = game.isPaused;
             game.handlePause({ paused: !currently });
         }, 100)();
     }, game);

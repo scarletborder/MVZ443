@@ -6,6 +6,7 @@ import { useSettings } from "../../context/settings_ctx";
 import { StageDataRecords } from "../../game/utils/loader";
 import { publicUrl } from "../../utils/browser";
 import { useSaveManager } from "../../context/save_ctx";
+import BackendWS from "../../utils/net/sync";
 
 type Props = {
     width: number
@@ -51,7 +52,11 @@ export default function BottomTools({ width, chapterID }: Props) {
 
     useEffect(() => {
         const handleStarShardsConsume = () => {
-            gamectx.updateStarShards(-1);
+            if (BackendWS.isConnected) {
+                gamectx.updateStarShards(-2);
+            } else {
+                gamectx.updateStarShards(-1);
+            }
         };
         const handleStarShardsGet = () => {
             gamectx.updateStarShards(1);

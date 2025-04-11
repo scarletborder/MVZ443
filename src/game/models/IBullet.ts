@@ -174,7 +174,7 @@ export class IBullet extends Phaser.Physics.Arcade.Sprite {
         }
 
         // 更新视觉位置
-        if (this.visibleSprite && !this.scene.physics.world.isPaused) {
+        if (this.visibleSprite && !this.scene.isPaused) {
             const isUpdate = this.updateRealPosition(); // 是否通过real坐标进行更新
             if (!isUpdate && this.body) {
                 // 进行视觉更新
