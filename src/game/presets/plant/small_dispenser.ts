@@ -26,7 +26,7 @@ class smallDispenser extends INightPlant {
         this.setHealthFirstly(300);
         this.maxDistance = maxDistance;
 
-        this.Timer = scene.time.addEvent({
+        this.Timer = scene.frameTicker.addEvent({
             startAt: 500, // 已经使用的时间,即开始时间
             callback: () => {
                 if (this && this.health > 0 && scene) {
@@ -38,7 +38,6 @@ class smallDispenser extends INightPlant {
             loop: true,
             delay: 1000,  // 每隔1秒发射一次
         });
-        console.log(this.Timer.getRemaining())
     }
 
     public onStarShards(): void {

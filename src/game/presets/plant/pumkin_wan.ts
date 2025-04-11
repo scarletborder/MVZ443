@@ -7,6 +7,7 @@ import { NewLaserByGrid } from "../../models/ILaser";
 import { INightPlant, IPlant } from "../../models/IPlant";
 import { IRecord } from "../../models/IRecord";
 import { Game } from "../../scenes/Game";
+import { FrameTimer } from "../../sync/ticker";
 import PumpkinRecord from "./pumkin";
 
 class pumkin_wan extends INightPlant {
@@ -21,7 +22,7 @@ class pumkin_wan extends INightPlant {
         const col = this.col;
         const row = this.row;
 
-        game?.time.addEvent({
+        game?.frameTicker.addEvent({
             delay: 2000,
             repeat: 4,
             startAt: 1800,
@@ -63,10 +64,10 @@ class pumkin_wan extends INightPlant {
         this.Timer = this.normalShootEvent();
     }
 
-    normalShootEvent(): Phaser.Time.TimerEvent {
+    normalShootEvent(): FrameTimer {
         const scene = this.game;
 
-        return scene.time.addEvent({
+        return scene.frameTicker.addEvent({
             startAt: this.attackInterval / 2, // 已经使用的时间,即开始时间
             callback: () => {
                 if (this.health > 0 && this.isSleeping === false && scene) {

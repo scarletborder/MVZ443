@@ -21,13 +21,15 @@ class MagicPowder extends IPlant {
         this.createRects();
         this.damage = GetIncValue(1500, 1.3, level);
 
-        // 立刻创建一道激光
-        NewLaserByGrid(scene, col - 0.4, row, 0.8, this.damage, 'zombie', 200, { toSky: true },
-            { invisible: true, color: 0, alphaFrom: 0.2, alphaTo: 0.1 });
-
-        scene.time.delayedCall(400, () => {
-            EventBus.emit('starshards-get');
-            this.destroyPlant();
+        this.Timer = scene.frameTicker.delayedCall({
+            delay: 500,
+            callback: () => {
+                // 立刻创建一道激光
+                NewLaserByGrid(scene, col - 0.4, row, 0.8, this.damage, 'zombie', 200, { toSky: true },
+                    { invisible: true, color: 0, alphaFrom: 0.2, alphaTo: 0.1 });
+                EventBus.emit('starshards-get');
+                this.destroyPlant();
+            }
         });
     }
 

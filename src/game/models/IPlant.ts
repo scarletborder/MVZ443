@@ -1,5 +1,6 @@
 import DepthManager from "../../utils/depth";
 import { Game } from "../scenes/Game";
+import { FrameTimer } from "../sync/ticker";
 import Gardener from "../utils/gardener";
 import { IMonster } from "./monster/IMonster";
 import { IZombie } from "./monster/IZombie";
@@ -16,7 +17,7 @@ export class IPlant extends Phaser.Physics.Arcade.Sprite {
     plant_height: number = 2; // 高度,影响是否会被怪物子弹打到
 
     public level: number;
-    public Timer?: Phaser.Time.TimerEvent | null;
+    public Timer?: FrameTimer | null;
     public attackingZombie: Set<IZombie> = new Set<IZombie>();
 
     // 效果
@@ -198,12 +199,16 @@ export class IPlant extends Phaser.Physics.Arcade.Sprite {
         console.log('Plant destroyed');
     }
 
-    // 底层摧毁
-    destroy(fromScene?: boolean) {
+    removeTimer() {
         if (this.Timer) {
             this.Timer.remove();
-            this.Timer.destroy();
+            this.Timer = null;
         }
+    }
+
+    // 底层摧毁
+    destroy(fromScene?: boolean) {
+        this.removeTimer();
         this.gardener.registerDestroy(this);
         this.sleepingText?.destroy();
         this.sleepingTween?.stop();

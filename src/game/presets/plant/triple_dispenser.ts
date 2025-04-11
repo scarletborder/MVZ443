@@ -6,6 +6,7 @@ import { IPlant } from "../../models/IPlant";
 import { IRecord } from "../../models/IRecord";
 import { Game } from "../../scenes/Game";
 import createShootBurst from "../../sprite/shoot_anim";
+import { FrameTimer } from "../../sync/ticker";
 import NewArrow, { NewMutantYAxisArrow } from "../bullet/arrow";
 
 class triple_dispenser extends IPlant {
@@ -124,12 +125,12 @@ class triple_dispenser extends IPlant {
     }
 
 
-    normalShootEvent(): Phaser.Time.TimerEvent | null {
+    normalShootEvent(): FrameTimer | null {
         // 如果对象或场景不存在，则直接返回 null
         if (!this.scene || this.health <= 0) {
             return null;
         }
-        return this.scene?.time.addEvent({
+        return this.scene?.frameTicker.addEvent({
             startAt: 600,
             delay: 1200,
             loop: true,
@@ -153,7 +154,7 @@ class triple_dispenser extends IPlant {
         });
     }
 
-    bruteShootEvent(totalArrows: number): Phaser.Time.TimerEvent | null {
+    bruteShootEvent(totalArrows: number): FrameTimer | null {
         // 如果对象或场景不存在，则直接返回 null
         if (!this.scene || this.health <= 0) {
             return null;
@@ -174,7 +175,7 @@ class triple_dispenser extends IPlant {
         });
 
         // 创建 Timer 事件：延迟 200ms 后开始暴力发射箭，每 50ms 一次
-        const bruteTimer = scene?.time.addEvent({
+        const bruteTimer = scene?.frameTicker.addEvent({
             startAt: 200,
             delay: 80,
             repeat: totalArrows - 1,

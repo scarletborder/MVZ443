@@ -22,41 +22,26 @@ class IceBomb extends IPlant {
             this.damage = 350;
         }
 
-        // 发射大道隐藏激光
-        for (let row = 0; row < this.game.positionCalc.Row_Number; row++) {
-            const laser = NewLaserByGrid(this.game, -1, row, 12,
-                this.damage, 'zombie', 90, {
-                debuff: 'frozen',
-                duration: 5000
-            }, {
-                invisible: true,
-                color: 0x00ffff,
-                alphaFrom: 0,
-                alphaTo: 0
+        this.Timer = scene.frameTicker.delayedCall({
+            delay: 500,
+            callback: () => {
+                // 发射大道隐藏激光
+                for (let row = 0; row < this.game.positionCalc.Row_Number; row++) {
+                    const laser = NewLaserByGrid(this.game, -1, row, 12,
+                        this.damage, 'zombie', 90, {
+                        debuff: 'frozen',
+                        duration: 5000
+                    }, {
+                        invisible: true,
+                        color: 0x00ffff,
+                        alphaFrom: 0,
+                        alphaTo: 0
+                    }
+                    );
+                };
+                this.destroyPlant();
             }
-            );
-        }
-
-        this.destroyPlant();
-
-        scene.time.delayedCall(5010, () => {
-            // 发射大道隐藏激光,slow
-            for (let row = 0; row < this.game.positionCalc.Row_Number; row++) {
-                const laser = NewLaserByGrid(this.game, -1, row, 12,
-                    5, 'zombie', 90, {
-                    debuff: 'slow',
-                    duration: 7000
-                }, {
-                    invisible: true,
-                    color: 0x00ffff,
-                    alphaFrom: 0,
-                    alphaTo: 0
-                }
-                );
-            }
-        });
-
-
+        })
     }
 
     createRects() {

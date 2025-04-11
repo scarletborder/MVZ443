@@ -63,8 +63,7 @@ export default class MonsterSpawner {
     startWave() {
         // 如果存在之前的帧定时器，取消之
         if (this.Timer) {
-            this.scene.frameTicker.Unregister(this.Timer);
-            this.Timer = null;
+            this.Timer.remove(); // 取消之前的定时器
         }
         // 同时取消出怪定时器
         if (this.SpawnTimer) {
@@ -136,27 +135,31 @@ export default class MonsterSpawner {
 
             console.log('next wave timer', this.currentWave().maxDelay * 1000);
             if (this.Timer) {
-                this.scene.frameTicker.Unregister(this.Timer); // 取消之前的定时器
-                this.Timer = null; // 重置定时器
+                this.Timer.remove(); // 取消之前的定时器
             }
 
             // 使用帧驱动定时器延迟调用 nextWave
-            this.Timer = this.scene.frameTicker.delayedCall(() => {
-                this.nextWave();
-            }, this.currentWave().maxDelay * 1000); // 延迟时间
+            this.Timer = this.scene.frameTicker.delayedCall({
+                callback: () => {
+                    this.nextWave();
+                },
+                delay: this.currentWave().maxDelay * 1000,
+            }); // 延迟时间
         };
 
         // 如果是isFlag,那么输出字幕等待一段时间,否则直接开始
         if (this.currentWave().isFlag) {
             this.scene.broadCastFlag();
             if (this.Timer) {
-                this.scene.frameTicker.Unregister(this.Timer); // 取消之前的定时器
-                this.Timer = null; // 重置定时器
+                this.Timer.remove(); // 取消之前的定时器
             }
 
-            this.Timer = this.scene.frameTicker.delayedCall(() => {
-                startWave();
-            }, 5000);
+            this.Timer = this.scene.frameTicker.delayedCall({
+                callback: () => {
+                    startWave();
+                },
+                delay: 5000,
+            });
         } else {
             startWave();
         }
@@ -495,12 +498,14 @@ export default class MonsterSpawner {
                 }
 
                 if (this.Timer) {
-                    this.scene.frameTicker.Unregister(this.Timer); // 取消之前的定时器
-                    this.Timer = null; // 重置定时器
+                    this.Timer.remove(); // 取消之前的定时器
                 }
-                this.Timer = this.scene.frameTicker.delayedCall(() => {
-                    this.nextWave();
-                }, delay);
+                this.Timer = this.scene.frameTicker.delayedCall({
+                    callback: () => {
+                        this.nextWave();
+                    },
+                    delay: delay,
+                });
                 return;
             } else {
                 // 你怎么会在这里?

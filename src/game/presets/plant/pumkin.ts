@@ -6,6 +6,7 @@ import { NewLaserByGrid } from "../../models/ILaser";
 import { INightPlant, IPlant } from "../../models/IPlant";
 import { IRecord } from "../../models/IRecord";
 import { Game } from "../../scenes/Game";
+import { FrameTimer } from "../../sync/ticker";
 
 class pumkin extends INightPlant {
     game: Game;
@@ -46,10 +47,10 @@ class pumkin extends INightPlant {
         this.Timer = this.normalShootEvent();
     }
 
-    normalShootEvent(): Phaser.Time.TimerEvent {
+    normalShootEvent(): FrameTimer {
         const scene = this.game;
 
-        return scene.time.addEvent({
+        return scene.frameTicker.addEvent({
             startAt: this.attackInterval * 3 / 4, // 已经使用的时间,即开始时间
             callback: () => {
                 if (this.health > 0 && this.isSleeping === false && scene &&

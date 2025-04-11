@@ -7,6 +7,7 @@ import { IPlant } from "../../models/IPlant";
 import { IRecord } from "../../models/IRecord";
 import { Game } from "../../scenes/Game";
 import createShootBurst from "../../sprite/shoot_anim";
+import FrameTicker, { FrameTimer } from "../../sync/ticker";
 import NewHorizontalFireWork, { HFireWork } from "../bullet/firework";
 import DispenserRecord from "./dispenser";
 
@@ -109,8 +110,6 @@ class at_dispenser extends IPlant {
                         this.depth + 2
                     );
 
-                    shootArrow(this.scene, this);
-
                     // 回弹动画前再次检查
                     if (this.scene && this.head && this.health > 0) {
                         this.scene?.tweens.add({
@@ -138,12 +137,12 @@ class at_dispenser extends IPlant {
     }
 
 
-    normalShootEvent(): Phaser.Time.TimerEvent | null {
+    normalShootEvent(): FrameTimer | null {
         // 如果对象或场景不存在，则直接返回 null
         if (!this.scene || this.health <= 0) {
             return null;
         }
-        return this.scene?.time.addEvent({
+        return this.scene?.frameTicker.addEvent({
             startAt: 2500,
             delay: 3550,
             loop: true,
@@ -158,6 +157,10 @@ class at_dispenser extends IPlant {
                 }
                 if (this.scene?.monsterSpawner.hasMonsterInRowAfterX(this.row, this.x)) {
                     this.shootAnimation();
+                    this.scene?.frameTicker.delayedCall({
+                        delay: 200,
+                        callback: () => { shootArrow(this.scene, this); },
+                    })
                 }
             }
         });

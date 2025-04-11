@@ -31,13 +31,12 @@ class _TntMines extends IPlant {
             .setDisplaySize(size.sizeX, size.sizeY).setDepth(this.depth);
         this.setHealthFirstly(400);
 
-        this.Timer = scene.time.addEvent({
+        this.Timer = scene.frameTicker.addEvent({
             delay: buriedTime, // 出土时间
             loop: false,
             callback: () => {
                 this.wakeup();
             },
-            callbackScope: this,
         });
     }
 

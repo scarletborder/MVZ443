@@ -6,6 +6,7 @@ import { IPlant } from "../../models/IPlant";
 import { IRecord } from "../../models/IRecord";
 import { Game } from "../../scenes/Game";
 import createShootBurst from "../../sprite/shoot_anim";
+import { AddEventConfig, FrameTimer } from "../../sync/ticker";
 import NewArrow from "../bullet/arrow";
 
 class dispenser extends IPlant {
@@ -24,9 +25,7 @@ class dispenser extends IPlant {
         const totalArrows = 50; // Total number of arrows to shoot
 
         // 如果存在 Timer，则先移除（防止多重 Timer 并存）
-        if (this.Timer) {
-            this.Timer.remove();
-        }
+        this.removeTimer();
 
         // 开始暴力发射，并保存 Timer
         this.Timer = this.bruteShootEvent(totalArrows);
@@ -37,9 +36,7 @@ class dispenser extends IPlant {
             if (!this || !this.scene || this.health <= 0) {
                 return;
             }
-            if (this.Timer) {
-                this.Timer.remove();
-            }
+            this.removeTimer();
             this.Timer = this.normalShootEvent();
         });
     }
@@ -95,8 +92,6 @@ class dispenser extends IPlant {
                         this.depth + 2
                     );
 
-                    shootArrow(this.scene, this);
-
                     // 回弹动画前再次检查
                     if (this.scene && this.head && this.health > 0) {
                         this.scene?.tweens.add({
@@ -124,32 +119,38 @@ class dispenser extends IPlant {
     }
 
 
-    normalShootEvent(): Phaser.Time.TimerEvent | null {
+    normalShootEvent(): FrameTimer | null {
         // 如果对象或场景不存在，则直接返回 null
         if (!this.scene || this.health <= 0) {
             return null;
         }
-        return this.scene?.time.addEvent({
-            startAt: 800,
-            delay: 1000,
-            loop: true,
-            callback: () => {
-                // 这里先判断对象及场景是否有效
-                if (!this.scene || this.health <= 0) {
-                    // 如果不再有效，则移除 Timer
-                    if (this.Timer) {
-                        this.Timer.remove();
+
+        return this.scene.frameTicker.addEvent(
+            {
+                startAt: 800,
+                delay: 1000,
+                repeat: -1,
+                callback: () => {
+                    // 这里先判断对象及场景是否有效
+                    if (!this.scene || this.health <= 0) {
+                        // 如果不再有效，则移除 Timer
+                        if (this.Timer) {
+                            this.Timer.remove();
+                        }
+                        return;
                     }
-                    return;
-                }
-                if (this.scene?.monsterSpawner.hasMonsterInRowAfterX(this.row, this.x)) {
-                    this.shootAnimation();
-                }
-            }
-        });
+                    if (this.scene?.monsterSpawner.hasMonsterInRowAfterX(this.row, this.x)) {
+                        this.shootAnimation();
+                        this.scene?.frameTicker.delayedCall({
+                            delay: 200,
+                            callback: () => { shootArrow(this.scene, this); },
+                        })
+                    }
+                },
+            })
     }
 
-    bruteShootEvent(totalArrows: number): Phaser.Time.TimerEvent | null {
+    bruteShootEvent(totalArrows: number): FrameTimer | null {
         // 如果对象或场景不存在，则直接返回 null
         if (!this.scene || this.health <= 0) {
             return null;
@@ -170,14 +171,14 @@ class dispenser extends IPlant {
         });
 
         // 创建 Timer 事件：延迟 200ms 后开始暴力发射箭，每 50ms 一次
-        const bruteTimer = this.game?.time.addEvent({
+        const bruteTimer = this.game.frameTicker.addEvent({
             startAt: 200,
             delay: 50,
             repeat: totalArrows - 1,
             callback: () => {
                 // 每次发射前判断对象是否存活
                 if (!this.scene || this.health <= 0) {
-                    bruteTimer.remove();
+                    this.removeTimer();
                     return;
                 }
                 shootArrow(this.game, this, 32, true);

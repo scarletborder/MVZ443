@@ -3,6 +3,7 @@ import { FrameTick } from "../../../public/constants";
 
 // 定时器基础类，可用作对外接口
 export class FrameTimer {
+    ticker: FrameTicker; // 定时器所属的 FrameTicker 实例
     public id: number = 0;        // 定时器唯一ID
     public left: number = 0;      // 剩余帧数（仅作参考）
 
@@ -10,7 +11,70 @@ export class FrameTimer {
     public GetLeftTime(): number {
         return this.left * FrameTick;
     }
+
+    public remove(): void {
+        // 从 FrameTicker 中注销定时器
+        this.ticker.Unregister(this);
+    }
 }
+
+export type DelayedCallConfigType = {
+    callback: (...args: any[]) => void;
+    delay: number;
+    args?: any[];
+    context?: any;
+};
+
+class DelayedCallConfig {
+    callback: (...args: any[]) => void;
+    delay: number;
+    args: any[];
+    context: any;
+
+    constructor(options: DelayedCallConfigType) {
+        this.callback = options.callback;
+        this.delay = options.delay;
+        this.args = options.args ?? [];
+        this.context = options.context ?? null;
+    }
+}
+
+type AddEventConfigType = {
+    callback: (...args: any[]) => void;
+    delay: number;
+    args?: any[];
+    context?: any;
+    repeat?: number;
+    startAt?: number;
+    loop?: boolean; // 是否循环
+}
+
+export class AddEventConfig {
+    callback: (...args: any[]) => void;
+    delay: number;
+    args: any[];
+    context: any;
+    repeat: number;
+    startAt: number;
+
+    constructor(options: AddEventConfigType) {
+        // 必填属性直接赋值，不存在可以抛异常
+        this.callback = options.callback;
+        this.delay = options.delay;
+        // 可选属性使用 ?? 运算符来提供默认值
+        this.args = options.args ?? [];
+        this.context = options.context ?? null;
+        this.repeat = options.repeat ?? -1;
+        this.startAt = options.startAt ?? 0;
+
+        if (options.loop && options.loop === true) {
+            // 如果是循环定时器，则将 repeat 设置为 -1
+            this.repeat = -1;
+        }
+    }
+}
+
+
 
 // 内部的定时器接口，扩展了FrameTimer用于内部调度管理
 interface IFrameTimer extends FrameTimer {
@@ -60,7 +124,7 @@ export default class FrameTicker {
      * @param context 回调函数执行时的上下文
      * @param repeat 重复次数，0为一次性，-1为无限重复，正数为重复次数
      */
-    private Register(
+    Register(
         callback: (...args: any[]) => void,
         delay: number,
         args: any[] = [],
@@ -82,7 +146,11 @@ export default class FrameTicker {
             interval: frameDelay,
             GetLeftTime: function (): number {
                 return this.left * FrameTick;
-            }
+            },
+            remove: function (): void {
+                this.ticker.Unregister(this);
+            },
+            ticker: this, // 绑定当前的 FrameTicker 实例
         };
 
         // 添加到定时器列表中
@@ -94,7 +162,7 @@ export default class FrameTicker {
      * 取消注册的定时器
      * @param timer 要取消的定时器对象
      */
-    public Unregister(timer: FrameTimer): void {
+    Unregister(timer: FrameTimer): void {
         this.timers.delete(timer.id);
     }
 
@@ -105,14 +173,12 @@ export default class FrameTicker {
      * @param args 回调的参数
      * @param context 回调函数执行时的上下文
      */
-    public delayedCall(
-        callback: (...args: any[]) => void,
-        delay: number,
-        args: any[] = [],
-        context: any = null
-    ): FrameTimer {
+    public delayedCall(config: DelayedCallConfigType): FrameTimer {
+        const delayedConfig = new DelayedCallConfig(config);
+        const { callback, delay, args, context } = delayedConfig;
         return this.Register(callback, delay, args, context, 0);
     }
+
 
     /**
      * 添加循环定时事件
@@ -123,14 +189,11 @@ export default class FrameTicker {
      * @param context 回调函数执行时的上下文
      * @param repeat 重复次数，-1为无限循环，正数为循环次数
      */
-    public addEvent(
-        callback: (...args: any[]) => void,
-        delay: number,
-        args: any[] = [],
-        context: any = null,
-        repeat: number = -1,
-        startAt: number = 0,
-    ): FrameTimer {
+    public addEvent(config: AddEventConfigType): FrameTimer {
+        // 自动填充默认值
+        const eventConfig = new AddEventConfig(config);
+        const { callback, delay, startAt, args, context, repeat } = eventConfig;
+
         if (startAt > 0) {
             // 计算和第一次执行之间的时间差
             const firstDelayMs = delay - startAt;
@@ -156,6 +219,9 @@ export default class FrameTicker {
                 timer.interval = frameDelay;
                 // 替换callback为原来的callback
                 timer.callback = callback;
+
+                // 调用一次
+                callback.apply(context, args);
             }, firstDelayMs, args, context, 1);
 
             return ret;
