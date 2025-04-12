@@ -247,6 +247,7 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
                         controlProps: {
                             onClick: () => {
                                 setNoRoomFlag(false);
+                                setRoomsInfo([]);
                                 debounce(() => {
                                     const req = async () => {
                                         const roomsInfo = await getRoomsInfo(settingManager.linkOptions.baseUrl);

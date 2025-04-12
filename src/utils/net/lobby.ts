@@ -56,7 +56,7 @@ export function RoomListWidget(info: RoomInfo, baseUrl: string, key: string, set
 
     return {
         title: `房间号: ${info.room_id} ${info.need_key ? "私密" : "公开"}`,
-        descrioption: `人数: ${info.player_count} ${info.game_started ? "游戏已开始" : "游戏未开始"}`,
+        description: `人数: ${info.player_count} ${info.game_started ? "游戏已开始" : "游戏未开始"}`,
         controlType: 'button',
         controlProps: {
             onClick: onClick,

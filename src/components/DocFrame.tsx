@@ -97,12 +97,9 @@ export default function DocFrame({ width, height, sceneRef, setGameParams, gameS
         材质来源: Minecraft VS Zombie2 GMS2版
         原作者:  Cuerzor58 
 
-        联机事项:
-        你可以使用游戏发布页面公布的公益服务器或者自行部署服务端
-        部署服务端请克隆项目github.com/scarletborder/MVZ443
-        在tools/server文件夹下使用 go build 构建服务器,
-        并在游戏中地址栏输入 ws://127.0.0.1:28080/ws 进行连接
-        (正常连接后会有提示,如果没有回显则说明连接失败,请查看console获知详情)
+        以下是公益服务器地址可以填进服务器地址输入框
+        枣庄 103.228.12.180:49870
+        美国洛杉矶 scarletborder.cn
     `;
 
     // 主菜单组件
@@ -276,7 +273,11 @@ export default function DocFrame({ width, height, sceneRef, setGameParams, gameS
                         overflowY: "auto",
                         scrollbarWidth: "thin",
                         scrollbarColor: "#666 #333",
-                        whiteSpace: "pre-wrap" // 保留换行和空格
+                        whiteSpace: "pre-wrap",// 保留换行和空格
+                        WebkitUserSelect: "text", // 针对Chrome/Safari
+                        MozUserSelect: "text", // 针对Firefox
+                        msUserSelect: "text", // 针对IE10及以上
+                        userSelect: "text", // 标准属性
                     }}>
                         {aboutContent}
                     </div>
