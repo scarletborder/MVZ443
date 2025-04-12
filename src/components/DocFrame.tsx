@@ -42,6 +42,7 @@ export default function DocFrame({ width, height, sceneRef, setGameParams, gameS
     const [islord, setIslord] = useState(false);
 
     const [commitVersion, setCommitVersion] = useState('develop');
+    const deviceType = useDeviceType();
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -141,7 +142,7 @@ export default function DocFrame({ width, height, sceneRef, setGameParams, gameS
                         style={{
                             width: "100%",
                             padding: '4vh 20px',
-                            maxHeight: useDeviceType() === 'mobile' ? '15vh' : '5vh',
+                            maxHeight: deviceType === 'mobile' ? '15vh' : '5vh',
                             background: "none",
                             border: "none",
                             color: "#ddd",

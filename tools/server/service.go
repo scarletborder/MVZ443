@@ -1,6 +1,7 @@
 package main
 
 import (
+	"mvzserver/messages"
 	"sync"
 	"time"
 )
@@ -24,6 +25,25 @@ func (rm *RoomManager) GetRoom(id int) *Room {
 		}
 	}
 	return nil
+}
+
+func (rm *RoomManager) GetRooms() []messages.RoomsInfo {
+	// 获得所有的房间,用户数量,是否开始游戏,和是否需要密码
+	var rooms []messages.RoomsInfo
+	rm.rooms.Range(func(key, value interface{}) bool {
+		if id, ok := key.(int); ok {
+			if room, ok := value.(*Room); ok {
+				rooms = append(rooms, messages.RoomsInfo{
+					RoomID:      id,
+					NeedKey:     room.key != "",
+					PlayerCount: room.GetPlayerCount(),
+					GameStarted: room.gameStarted,
+				})
+			}
+		}
+		return true
+	})
+	return rooms
 }
 
 // GetNewRoomId 寻找一个未使用的房间id
@@ -78,6 +98,12 @@ func (rm *RoomManager) Clean() {
 
 				// 检查是否超过最大空闲时间
 				if time.Since(room.LastActiveTime) > 5*time.Minute {
+					room.Destroy()
+					rm.rooms.Delete(id)
+				}
+
+				if !room.gameStarted && room.IsRunning {
+					room.IsRunning = false
 					room.Destroy()
 					rm.rooms.Delete(id)
 				}

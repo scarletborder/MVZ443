@@ -23,12 +23,19 @@ interface GameSettings {
     isDebug: boolean;
     isBgm: boolean;
 
+    linkOptions: {
+        baseUrl: string;
+        key: string;
+    };
+
     toggleFullScreen: () => void;
     setWidth: (newWidth: number) => void;
     toggleLanguage: (lang: Locale) => void;
     setIsBluePrint: (isBluePrint: boolean) => void;
     setIsDebug: (isDebug: boolean) => void;
     setIsBgm: (isBgm: boolean) => void;
+
+    setLinkOptions: (baseUrl: string, key: string) => void;
 
     exportAsJson: () => string;
     importFromJson: (jsonString: string) => void;
@@ -49,7 +56,9 @@ export function SettingsProvider(props: Props) {
     const [language, setLanguage] = useState<Locale>(loadCookie('language', 'zh_CN'));
     const [isBluePrint, setIsBluePrintStatus] = useState<boolean>(loadCookie('isBluePrint', false));
     const [isDebug, setIsDebug] = useState<boolean>(loadCookie('isDebug', false));
-    const [isBgm, setIsBgm] = useState<boolean>(loadCookie('isBgm', true));
+    const [isBgm, setIsBgmStatus] = useState<boolean>(loadCookie('isBgm', true));
+    const [linkOptions, setLinkOptionsStatus] = useState<{ baseUrl: string; key: string }>(loadCookie('linkOptions', { baseUrl: '', key: '' }));
+
 
     // 更新并存储到 cookie
     const setIsBluePrint = (isBluePrint: boolean) => {
@@ -99,6 +108,20 @@ export function SettingsProvider(props: Props) {
         storeCookie('language', lang); // 存储到 cookie
     };
 
+    const setIsBgm = (isBgm: boolean) => {
+        debounce((newVal) => {
+            setIsBgmStatus(newVal);
+            storeCookie('isBgm', newVal); // 存储到 cookie
+        }, 50)(isBgm);
+    };
+
+    const setLinkOptions = (baseUrl: string, key: string) => {
+        debounce((newBaseUrl, newKey) => {
+            setLinkOptionsStatus({ baseUrl: newBaseUrl, key: newKey });
+            storeCookie('linkOptions', { baseUrl: newBaseUrl, key: newKey }); // 存储到 cookie
+        }, 50)(baseUrl, key);
+    };
+
     const settingsValue: GameSettings = {
         isFullScreen,
         width,
@@ -106,6 +129,7 @@ export function SettingsProvider(props: Props) {
         isBluePrint,
         isDebug,
         isBgm,
+        linkOptions,
         toggleFullScreen,
         setWidth,
         toggleLanguage,
@@ -114,6 +138,7 @@ export function SettingsProvider(props: Props) {
         importFromJson,
         setIsDebug,
         setIsBgm,
+        setLinkOptions,
     };
 
     useEffect(() => {

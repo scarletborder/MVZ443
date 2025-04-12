@@ -58,27 +58,12 @@ func (r *Room) GetNextFrameID() uint16 {
 }
 
 func (r *Room) Start() {
-	r.IsRunning = true
-
-	// 监控房间状态
-	go r.monitorRoom()
-
 	// 等待游戏开始
 	r.waitGameStart()
 
 	// 开始游戏主循环
+	r.IsRunning = true
 	r.gameLoop()
-}
-
-func (r *Room) monitorRoom() {
-	for {
-		time.Sleep(3 * time.Second)
-		if r.GetPlayerCount() == 0 {
-			r.GameDeadChan <- struct{}{}
-			r.IsRunning = false
-			return
-		}
-	}
 }
 
 func (r *Room) waitGameStart() {
@@ -203,5 +188,6 @@ func (r *Room) Destroy() {
 	// 通知房间关闭
 	r.GameDeadChan <- struct{}{}
 
-	r.IsRunning = false
+	r.IsRunning = true
+	r.gameStarted = false
 }

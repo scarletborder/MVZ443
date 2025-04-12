@@ -1,8 +1,10 @@
 package main
 
 import (
+	"mvzserver/messages"
 	"strconv"
 
+	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/websocket/v2"
 )
 
@@ -31,7 +33,8 @@ func HandleWS(c *websocket.Conn) {
 		// 房间存在,检查密钥
 		if room.key != key {
 			c.WriteJSON(map[string]interface{}{
-				"error": "密钥错误",
+				"success": false,
+				"error":   "密钥错误",
 			})
 			c.Close()
 			return
@@ -40,7 +43,8 @@ func HandleWS(c *websocket.Conn) {
 		// 房间存在,检查是否已满
 		if room.GetPlayerCount() >= 2 {
 			c.WriteJSON(map[string]interface{}{
-				"error": "房间已满",
+				"success": false,
+				"error":   "房间已满",
 			})
 			c.Close()
 			return
@@ -49,13 +53,33 @@ func HandleWS(c *websocket.Conn) {
 		// 房间是否started
 		if room.gameStarted {
 			c.WriteJSON(map[string]interface{}{
-				"error": "房间已开始",
+				"success": false,
+				"error":   "房间已开始",
 			})
 			c.Close()
 			return
 		}
 	}
 
+	c.WriteJSON(map[string]interface{}{
+		"success": true,
+		"room_id": room.ID,
+		"key":     room.key,
+	})
+
 	// 服务用户连接
 	serveUserInRoom(c, room)
+}
+
+func HandleListRoom(c *fiber.Ctx) error {
+	// 获取房间列表
+	rooms := roomManager.GetRooms()
+
+	// 如果 rooms 是空的，将其设置为空数组
+	if len(rooms) == 0 {
+		rooms = []messages.RoomsInfo{} // 将其设置为空数组
+	}
+
+	// 返回房间列表
+	return c.JSON(rooms)
 }

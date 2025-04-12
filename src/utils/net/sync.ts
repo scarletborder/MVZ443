@@ -10,6 +10,8 @@ class WebSocketClient {
     private additionalListeners: ((event: MessageEvent) => void)[] = [];
     public isConnected: boolean = false;
 
+    public key: string = "";// 连接密钥
+
     public FrameID: number = 0; // 当前帧ID
 
     constructor() { }
@@ -48,12 +50,38 @@ class WebSocketClient {
 
         this.ws.onopen = () => {
             console.log("WebSocket connection established.");
-            this.isConnected = true;
-            alert('连接成功');
         };
 
         this.ws.onmessage = (event) => {
-            this.onMessageReceived(event);
+            if (!this.isConnected) {
+                // 尚未正式确立关系
+                const messageData = JSON.parse(event.data);
+                if ("success" in messageData) {
+                    if (messageData.success === true) {
+                        this.isConnected = true;
+                        const keyText = messageData.key === "" ? "公开" : `密钥=${messageData.key}`;
+                        alert(`连接成功, 房间号=${messageData.room_id} ${keyText}`);
+                    } else {
+                        this.isConnected = false;
+                        console.error("WebSocket connection failed:", messageData);
+                        this.ws?.close();
+                        this.ws = null;
+                        alert('连接失败,请检查网络或服务器');
+                        return;
+                    }
+                } else {
+                    // 错误的返回,直接断开连接
+                    console.error("WebSocket connection failed:", messageData);
+                    this.isConnected = false;
+                    this.ws?.close();
+                    this.ws = null;
+                    alert('连接失败,请检查网络或服务器');
+                    return;
+                }
+            } else {
+                // 正常游戏中
+                this.onMessageReceived(event);
+            }
         };
 
         this.ws.onerror = (error) => {

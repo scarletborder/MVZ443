@@ -6,6 +6,7 @@ import { debounce } from '../../utils/debounce';
 import i18n, { Locale } from '../../utils/i18n';
 // import BackendWS from '../../utils/net/entry_ws';
 import BackendWS from '../../utils/net/sync';
+import { createRoom, getRoomsInfo, RoomInfo, RoomListWidget } from '../../utils/net/lobby';
 // import wtClient from '../../utils/net/sync';
 
 interface Props {
@@ -20,10 +21,14 @@ interface SettingItem {
     controlType: 'button' | 'switcher' | 'input' | 'selections';
     controlProps?: {
         onClick?: () => void; // for button
+        btnText?: string; // for button
+
         value?: boolean; // for switcher
         onToggle?: (value: boolean) => void; // for switcher
+
         placeholder?: string; // for input
         onChange?: (value: string) => void; // for input
+
         options?: string[]; // for selections
         selected?: string; // for selections
         onSelect?: (value: string) => void; // for selections
@@ -46,7 +51,20 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
     const [isFullscreen, setIsFullscreen] = useState(document.fullscreenElement !== null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const saveManager = useSaveManager();
-    const [isConnected, setIsConnected] = useState(BackendWS.isConnected);
+
+    const [header, setHeader] = useState<string>("");
+    const [roomsInfo, setRoomsInfo] = useState<RoomInfo[]>([]);
+    const [noRoomFlag, setNoRoomFlag] = useState(false);
+
+    const [linkStatus, setLinkStatus] = useState(false);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setLinkStatus(BackendWS.isConnected);
+        }, 500);
+
+        return () => clearInterval(interval);
+    }, []);
 
     const onBack = () => {
         onBackOriginal();
@@ -159,20 +177,21 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
                         controlProps: {
                             onClick: () => {
                                 saveManager.saveProgress();
-                            }
+                            },
+                            btnText: "保存"
                         }
                     },
                     {
                         title: "导入存档",
                         description: "从本地上传 JSON 存档文件",
                         controlType: "button",
-                        controlProps: { onClick: handleImportSave }
+                        controlProps: { onClick: handleImportSave, btnText: "导入" }
                     },
                     {
                         title: "导出存档",
                         description: "将当前存档下载为 JSON 文件",
                         controlType: "button",
-                        controlProps: { onClick: handleExportSave }
+                        controlProps: { onClick: handleExportSave, btnText: "导出" }
                     }
                 ]
             }
@@ -205,28 +224,68 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
         ],
         online: [
             {
-                title: "联机设置",
+                title: `联机设置${linkStatus ? " (已连接)" : " (未连接)"}`,
                 items: [
                     {
                         title: "服务器地址",
-                        description: "输入服务器地址",
+                        description: "输入服务器基础地址, 例如127.0.0.1:28080",
                         controlType: "input",
                         controlProps: {
-                            placeholder: BackendWS.url, onChange: (val) => {
-                                debounce((newVal) => {
-                                    BackendWS.setConnectionUrl(newVal);
-                                }, 50)(val);
+                            placeholder: settingManager.linkOptions.baseUrl, onChange: (val) => {
+                                if (!val) {
+                                    return;
+                                }
+                                settingManager.setLinkOptions(val, settingManager.linkOptions.key);
                             }
                         }
                     },
                     {
-                        title: "连接",
-                        description: `连接服务器`,
+                        title: "刷新房间列表",
+                        description: `获得当前房间列表`,
                         controlType: "button",
                         controlProps: {
                             onClick: () => {
-                                BackendWS.startConnection();
-                                setIsConnected(BackendWS.isConnected);
+                                setNoRoomFlag(false);
+                                debounce(() => {
+                                    const req = async () => {
+                                        const roomsInfo = await getRoomsInfo(settingManager.linkOptions.baseUrl);
+                                        if (roomsInfo === null) {
+                                            alert("获取房间列表失败，请检查服务器地址或网络连接。");
+                                            return;
+                                        }
+                                        if (roomsInfo.length === 0) {
+                                            setNoRoomFlag(true);
+                                            return;
+                                        }
+                                        setRoomsInfo(roomsInfo);
+                                    };
+                                    req();
+                                }, 50)();
+                            },
+                            btnText: "刷新"
+                        }
+                    },
+                    {
+                        title: "创建房间",
+                        description: "创建一个新的房间",
+                        controlType: "button",
+                        controlProps: {
+                            onClick: () => {
+                                createRoom(settingManager.linkOptions.baseUrl, settingManager.linkOptions.key);
+                            },
+                            btnText: "创建"
+                        }
+                    },
+                    {
+                        title: "设置全局密钥",
+                        description: "设置全局密钥, 创建房间或连接时使用",
+                        controlType: "input",
+                        controlProps: {
+                            placeholder: settingManager.linkOptions.key, onChange: (val) => {
+                                if (!val) {
+                                    return;
+                                }
+                                settingManager.setLinkOptions(settingManager.linkOptions.baseUrl, val);
                             }
                         }
                     },
@@ -237,12 +296,29 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
                         controlProps: {
                             onClick: () => {
                                 BackendWS.closeConnection();
-                                setIsConnected(BackendWS.isConnected);
                             }
                         }
                     }
                 ]
-            }
+            },
+            (roomsInfo.length > 0) ? {
+                title: "房间列表",
+                items: (
+                    roomsInfo.map((info) => {
+                        return RoomListWidget(info, settingManager.linkOptions.baseUrl, settingManager.linkOptions.key, setHeader);
+                    })
+                )
+            } : null,
+            (noRoomFlag) ? {
+                title: "房间列表",
+                items: [
+                    {
+                        title: "没有房间",
+                        description: "当前没有可用的房间",
+                    }
+                ]
+            } : null,
+
         ]
     };
 
@@ -391,7 +467,7 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
                                             }}
                                             onClick={item.controlProps?.onClick}
                                         >
-                                            执行
+                                            {item.controlProps?.btnText || "执行"}
                                         </button>
                                     )}
                                     {item.controlType === 'switcher' && (

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/websocket/v2"
 )
 
@@ -14,9 +15,21 @@ var roomManager = NewRoomManager()
 
 func main() {
 	app := fiber.New()
-
+	// 使用 CORS 中间件
+	app.Use(cors.New(cors.Config{
+		// 允许所有域名访问，如果需要限制，请指定具体的域名，例如 "http://example.com"
+		AllowOrigins: "*",
+		// 允许的请求方法
+		AllowMethods: "GET,POST,PUT,DELETE,OPTIONS",
+		// 允许的请求头
+		AllowHeaders: "Origin, Content-Type, Accept",
+		// 允许浏览器发送 Cookie 及认证信息
+		AllowCredentials: false,
+		// 预检请求的缓存时间，单位秒
+		MaxAge: 3600,
+	}))
 	app.Get("/ws", websocket.New(HandleWS))
-	// app.Get("/list", HandleListRoom)
+	app.Get("/list", HandleListRoom)
 
 	log.Fatal(app.Listen(":28080"))
 }
@@ -155,7 +168,8 @@ beforeGame:
 			// 未来10s内删除房间
 			go func() {
 				time.Sleep(10 * time.Second)
-				room.Destroy()
+				room.IsRunning = true
+				room.gameStarted = false
 			}()
 			return
 		}
