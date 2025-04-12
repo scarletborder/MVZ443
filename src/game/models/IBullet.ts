@@ -73,6 +73,7 @@ export class IBullet extends Phaser.Physics.Arcade.Sprite {
         this.baseDepth = DepthManager.getProjectileDepth('bullet', col);
         this.setDepth(this.baseDepth);
 
+        this.lastUpdateTime = scene.time.now;
         this.updateRealPosition();
     }
 

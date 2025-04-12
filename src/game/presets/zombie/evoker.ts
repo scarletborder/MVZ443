@@ -51,11 +51,14 @@ export class EnhancedEvoker extends IZombie {
             summons.push(this.addVindicator(col - 1, row));
         }
         summons.push(this.addVindicator(col + 1, row));
-        this.scene?.time.delayedCall(3000, () => {
-            if (this && this.health > 0) {
-                this.zombieAnim.stopArmSwing();
-                this.zombieAnim.startLegSwing();
-                if (this.hasDebuff('frozen') === 0) this.StartMove();
+        this.scene?.frameTicker.delayedCall({
+            delay: 3000,
+            callback: () => {
+                if (this && this.health > 0) {
+                    this.zombieAnim.stopArmSwing();
+                    this.zombieAnim.startLegSwing();
+                    if (this.hasDebuff('frozen') === 0) this.StartMove();
+                }
             }
         });
     }

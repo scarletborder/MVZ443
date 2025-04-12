@@ -31,6 +31,29 @@ class StickZombie extends EnhancedZombie {
         this.attachSprites.set('stick', stick);
 
         this.setDepth(); // 所有有附加元素的,要单独设置一次
+
+        // 进行检测事件
+        const timer = scene.frameTicker.addEvent({
+            delay: 200,
+            callback: () => {
+                // 如果已经死亡
+                if (!this || this.health <= 0) {
+                    timer.remove();
+                    return;
+                }
+
+                if (this.x < this.vaultTargetX && this.isFlying) {
+                    // 越过了
+                    this.isFlying = false;
+                    this.attachSprites.get('stick')?.setVisible(false);
+                    // 减速
+                    this.SetSpeedFirstly(20);
+                    if (this.health > 0 && !this.IsFrozen) {
+                        this.setVelocityX(-this.speed);
+                    }
+                }
+            }
+        })
     }
 
     public startAttacking(plant: IPlant): void {
@@ -50,16 +73,6 @@ class StickZombie extends EnhancedZombie {
     }
 
     update(): void {
-        if (this.x < this.vaultTargetX && this.isFlying) {
-            // 越过了
-            this.isFlying = false;
-            this.attachSprites.get('stick')?.setVisible(false);
-            // 减速
-            this.SetSpeedFirstly(20);
-            if (this.health > 0 && !this.IsFrozen) {
-                this.setVelocityX(-this.speed);
-            }
-        }
         if (this.isFlying) {
             this.zombieAnim.updatePosition(this.x + this.offsetX,
                 this.y + this.offsetY - this.game.positionCalc.GRID_SIZEY * 0.4);
@@ -75,6 +88,7 @@ class StickZombie extends EnhancedZombie {
         return this;
     }
 }
+
 
 
 function NewZombie(scene: Game, x: number, y: number, waveID: number): IZombie {
