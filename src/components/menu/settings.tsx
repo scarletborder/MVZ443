@@ -224,7 +224,7 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
         ],
         online: [
             {
-                title: `联机设置${linkStatus ? " (已连接)" : " (未连接)"}`,
+                title: `联机设置${linkStatus ? `-已连接->id: ${BackendWS.room_id}` : "-未连接"}`,
                 items: [
                     {
                         title: "服务器地址",

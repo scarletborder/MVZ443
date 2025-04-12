@@ -11,6 +11,7 @@ class WebSocketClient {
     public isConnected: boolean = false;
 
     public key: string = "";// 连接密钥
+    public room_id: string = "";// 房间号
 
     public FrameID: number = 0; // 当前帧ID
 
@@ -60,6 +61,7 @@ class WebSocketClient {
                     if (messageData.success === true) {
                         this.isConnected = true;
                         const keyText = messageData.key === "" ? "公开" : `密钥=${messageData.key}`;
+                        this.room_id = messageData.room_id;
                         alert(`连接成功, 房间号=${messageData.room_id} ${keyText}`);
                     } else {
                         this.isConnected = false;

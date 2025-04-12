@@ -1,37 +1,119 @@
 package main
 
 import (
+	"crypto/tls"
+	"flag"
+	"fmt"
 	"log"
 	"mvzserver/messages"
+	"net/http"
 	"sync/atomic"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/websocket/v2"
+	"golang.org/x/crypto/acme/autocert"
 )
 
 var roomManager = NewRoomManager()
 
 func main() {
+	// 定义命令行参数, -p 表示使用 cert 自动获取证书的模式
+	useCert := flag.Bool("s", false, "启用通过 Let's Encrypt 自动管理证书")
+	useSelfCert := flag.String("c", "", "启用自签名证书,例如 `/etc/letsencrypt/live/scarletborder.cn`")
+	usePort := flag.Int("p", 28080, "指定监听端口")
+	flag.Parse()
+
+	// 创建 Fiber 实例
 	app := fiber.New()
-	// 使用 CORS 中间件
+
+	// 使用 CORS 中间件配置
 	app.Use(cors.New(cors.Config{
-		// 允许所有域名访问，如果需要限制，请指定具体的域名，例如 "http://example.com"
-		AllowOrigins: "*",
-		// 允许的请求方法
-		AllowMethods: "GET,POST,PUT,DELETE,OPTIONS",
-		// 允许的请求头
-		AllowHeaders: "Origin, Content-Type, Accept",
-		// 允许浏览器发送 Cookie 及认证信息
+		AllowOrigins:     "*", // 如需限制域名，请修改此处
+		AllowMethods:     "GET,POST,PUT,DELETE,OPTIONS",
+		AllowHeaders:     "Origin, Content-Type, Accept",
 		AllowCredentials: false,
-		// 预检请求的缓存时间，单位秒
-		MaxAge: 3600,
+		MaxAge:           3600,
 	}))
+
+	// 注册路由（包括 websocket 和其它接口）
 	app.Get("/ws", websocket.New(HandleWS))
 	app.Get("/list", HandleListRoom)
 
-	log.Fatal(app.Listen(":28080"))
+	if *useCert {
+		// 使用 Let's Encrypt 自动管理证书模式
+		// 配置 autocert.Manager 自动管理 Let's Encrypt 证书
+		m := autocert.Manager{
+			Prompt:     autocert.AcceptTOS,
+			HostPolicy: autocert.HostWhitelist("scarletborder.cn"), // 允许的域名
+			Cache:      autocert.DirCache("certs"),                 // 证书缓存目录
+		}
+
+		// 构造 TLS 配置，自动获取证书
+		tlsConfig := &tls.Config{
+			GetCertificate: m.GetCertificate,
+		}
+
+		// 启动 HTTPS 服务
+		ln, err := tls.Listen("tcp", ":443", tlsConfig)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// 同时在 80 端口启动 HTTP 服务响应 ACME HTTP-01 验证请求
+		go func() {
+			httpServer := &http.Server{
+				Addr:    ":80",
+				Handler: m.HTTPHandler(nil),
+			}
+			log.Fatal(httpServer.ListenAndServe())
+		}()
+
+		log.Println("启用 HTTPS 模式，监听 443 端口")
+		log.Fatal(app.Listener(ln))
+	} else {
+		// 监听指定端口
+		portText := fmt.Sprintf(":%d", *usePort)
+		if *useSelfCert != "" {
+			// 使用自签名证书模式
+			log.Println("启用自签名证书模式，监听 443 端口")
+			cer, err := tls.LoadX509KeyPair(fmt.Sprintf("%s/cert.pem", *useSelfCert), fmt.Sprintf("%s/privkey.pem", *useSelfCert))
+			if err != nil {
+				log.Fatal("加载证书失败:", err)
+			}
+
+			config := &tls.Config{
+				Certificates: []tls.Certificate{cer},
+			}
+
+			ln, err := tls.Listen("tcp", ":443", config)
+			if err != nil {
+				log.Fatal("监听端口失败:", err)
+			}
+
+			log.Fatal(app.Listener(ln))
+		} else {
+			// 使用默认模式，通过 28080 端口启动服务
+			log.Println("启用普通模式，监听 28080 端口")
+			// Create tls certificate
+			cer, err := tls.LoadX509KeyPair("certs/ssl.cert", "certs/ssl.key")
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			config := &tls.Config{Certificates: []tls.Certificate{cer}}
+
+			// Create custom listener
+			ln, err := tls.Listen("tcp", portText, config)
+			if err != nil {
+				panic(err)
+			}
+
+			// Start server with https/ssl enabled on http://localhost:443
+			log.Fatal(app.Listener(ln))
+		}
+	}
 }
 
 func serveUserInRoom(c *websocket.Conn, room *Room) {

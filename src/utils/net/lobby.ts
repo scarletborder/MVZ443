@@ -2,6 +2,7 @@
 
 // 处理连接到服务器大厅
 
+import { publicUrl } from "../browser";
 import BackendWS from "./sync";
 
 export type RoomInfo = {
@@ -14,7 +15,7 @@ export type RoomInfo = {
 export function getRoomsInfo(lobbyUrl: string): Promise<RoomInfo[] | null> {
     return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
-        xhr.open("GET", `http://${lobbyUrl}/list`, true);
+        xhr.open("GET", `https://${lobbyUrl}/list`, true);
         xhr.setRequestHeader("Content-Type", "application/json");
         xhr.onreadystatechange = () => {
             if (xhr.readyState === XMLHttpRequest.DONE) {
@@ -39,7 +40,7 @@ export function getRoomsInfo(lobbyUrl: string): Promise<RoomInfo[] | null> {
 export function RoomListWidget(info: RoomInfo, baseUrl: string, key: string, setHeader: (arg0: string) => void): any {
     BackendWS.key = key; // 设置密钥
     const myKey = BackendWS.key;
-    const wsUrl = `ws://${baseUrl}/ws?id=${info.room_id}&key=${myKey}`;
+    const wsUrl = `wss://${baseUrl}/ws?id=${info.room_id}&key=${myKey}`;
 
     const onClick = () => {
         if (BackendWS.isConnected) {
@@ -70,7 +71,7 @@ export function createRoom(baseUrl: string, key: string) {
     }
     BackendWS.key = key; // 设置密钥
     const myKey = BackendWS.key;
-    const wsUrl = `ws://${baseUrl}/ws?key=${myKey}`;
+    const wsUrl = `wss://${baseUrl}/ws?key=${myKey}`;
     BackendWS.setConnectionUrl(wsUrl);
     BackendWS.startConnection();
 }
