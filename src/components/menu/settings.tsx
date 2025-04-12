@@ -233,6 +233,7 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
                         controlProps: {
                             placeholder: settingManager.linkOptions.baseUrl, onChange: (val) => {
                                 if (!val) {
+                                    settingManager.setLinkOptions("", settingManager.linkOptions.key);
                                     return;
                                 }
                                 settingManager.setLinkOptions(val, settingManager.linkOptions.key);
@@ -282,8 +283,9 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
                         controlType: "input",
                         controlProps: {
                             placeholder: settingManager.linkOptions.key, onChange: (val) => {
+                                console.log(val)
                                 if (!val) {
-                                    return;
+                                    settingManager.setLinkOptions(settingManager.linkOptions.baseUrl, "");
                                 }
                                 settingManager.setLinkOptions(settingManager.linkOptions.baseUrl, val);
                             }

@@ -291,7 +291,6 @@ export default function DocFrame({ width, height, sceneRef, setGameParams, gameS
             {currentView === 'main' || currentView === 'about' ? <MainMenu /> : null}
             {currentView === 'levels' && <LevelSelect width={width} height={height} onBack={() => setCurrentView('main')}
                 startGame={gameStart} setGameParams={setGameParams} skipToParams={skipToParams} chosenStage={chosenStage}
-                islord={islord}
             />}
             {currentView === 'pokedex' && <Pokedex sceneRef={sceneRef} width={width} height={height} onBack={() => setCurrentView('main')} />}
             {currentView === 'shop' && <Shop width={width} height={height} onBack={() => setCurrentView('main')} />}

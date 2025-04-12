@@ -17,11 +17,11 @@ interface LevelSelectorProps {
 
     skipToParams?: boolean;
     chosenStage?: number;
-    islord?: boolean;
 }
 
 const LevelSelector: React.FC<LevelSelectorProps> = ({ setGameParams, startGame, width, height, onBack,
-    skipToParams, chosenStage, islord }) => {
+    skipToParams, chosenStage }) => {
+    const islord = BackendWS.isLord();
     const [currentStep, setCurrentStep] = useState<'chapter' | 'stage' | 'params'>('chapter');
     const [selectedChapterId, setSelectedChapterId] = useState<number | null>(null);
     const [selectedStageId, setSelectedStageId] = useState<number | null>(null);

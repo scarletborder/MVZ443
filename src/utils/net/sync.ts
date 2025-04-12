@@ -13,13 +13,31 @@ class WebSocketClient {
     public key: string = "";// 连接密钥
     public room_id: string = "";// 房间号
 
+    public my_id: number = 51;// 玩家ID
+    public lord_id: number = 50;// 主机ID
+
     public FrameID: number = 0; // 当前帧ID
 
-    constructor() { }
+    constructor() {
+        // 创建一个默认的Handler
+        const defaultLordHandler = (event: MessageEvent) => {
+            console.log(event.data);
+            const data = JSON.parse(event.data);
+            if (data.type === 0x00) {
+                this.lord_id = data.lordID;
+                this.my_id = data.myID;
+            }
+        }
+        this.additionalListeners.push(defaultLordHandler);
+    }
 
     setQueue(receiveQueue: QueueReceive, sendQueue: QueueSend) {
         this.receiveQueue = receiveQueue;
         this.sendQueue = sendQueue;
+    }
+
+    isLord() {
+        return this.my_id === this.lord_id;
     }
 
     public GetFrameID() {
@@ -37,7 +55,9 @@ class WebSocketClient {
 
     // Method to establish a WebSocket connection
     startConnection() {
-        console.log('try to link')
+        console.log('try to link');
+        this.lord_id = 50; // reset
+        this.my_id = 51; // reset
         if (this.isConnected) {
             console.error("WebSocket connection already established.");
             return;
