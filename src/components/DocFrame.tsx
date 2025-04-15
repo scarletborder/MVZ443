@@ -98,7 +98,7 @@ export default function DocFrame({ width, height, sceneRef, setGameParams, gameS
         原作者:  Cuerzor58 
 
         以下是公益服务器地址可以填进服务器地址输入框
-        枣庄 103.228.12.180:49870
+        山东枣庄 103.228.12.180:49870
         美国洛杉矶 scarletborder.cn
     `;
 

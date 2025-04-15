@@ -7,7 +7,7 @@ import { IPlant } from "../../models/IPlant";
 import { IRecord } from "../../models/IRecord";
 import { Game } from "../../scenes/Game";
 import createShootBurst from "../../sprite/shoot_anim";
-import FrameTicker, { FrameTimer } from "../../sync/ticker";
+import { FrameTimer } from "../../sync/ticker";
 import NewHorizontalFireWork, { HFireWork } from "../bullet/firework";
 import DispenserRecord from "./dispenser";
 
@@ -160,7 +160,7 @@ class at_dispenser extends IPlant {
                     this.scene?.frameTicker.delayedCall({
                         delay: 200,
                         callback: () => { shootArrow(this.scene, this); },
-                    })
+                    });
                 }
             }
         });
@@ -185,8 +185,8 @@ function shootArrow(scene: Game, shooter: IPlant, baseDamage: number = 300, isSt
 
     const level = shooter.level;
     //  根据等级略微提高伤害
-    let damage = GetIncValue(baseDamage, level, 1.4);
-    let penetrate = 1;
+    const damage = GetIncValue(baseDamage, level, 1.4);
+    const penetrate = 1;
 
     const arrow = NewHorizontalFireWork(scene, shooter.col, shooter.row, scene.positionCalc.GRID_SIZEX * 32, damage, 'zombie', 100);
     arrow.penetrate = penetrate;

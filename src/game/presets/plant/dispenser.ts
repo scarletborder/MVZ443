@@ -31,13 +31,16 @@ class dispenser extends IPlant {
         this.Timer = this.bruteShootEvent(totalArrows);
         // 根据暴力发射的总时长，发射结束后恢复 normalShootEvent
         const overallDuration = 200 + 50 * (totalArrows - 1);
-        this.game.time.delayedCall(overallDuration, () => {
-            // 再次判断对象是否有效
-            if (!this || !this.scene || this.health <= 0) {
-                return;
+        this.game.frameTicker.delayedCall({
+            delay: overallDuration,
+            callback: () => {
+                // 再次判断对象是否有效
+                if (!this || !this.scene || this.health <= 0) {
+                    return;
+                }
+                this.removeTimer();
+                this.Timer = this.normalShootEvent();
             }
-            this.removeTimer();
-            this.Timer = this.normalShootEvent();
         });
     }
 
