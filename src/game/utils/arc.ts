@@ -6,25 +6,33 @@ import { Game } from "../scenes/Game";
 
 export function StartArc(game: Game, x1: number, y1: number, x2: number, y2: number,
     texture: string, duration: number, callback: () => void, _arcHeight?: number) {
-    // 定义一个 arcHeight 参数，用来决定弧线的高度（截距），值越大弧线越高
-    let arcHeight = (_arcHeight || 200) * game.positionCalc.scaleFactor;
+    // 使用frameTicker规定onComplete
+    game.frameTicker.delayedCall({
+        delay: duration,
+        callback: () => {
+            callback(); // 真实的callback
+        },
+    });
 
-    let start = new Phaser.Math.Vector2(x1, y1);
-    let end = new Phaser.Math.Vector2(x2, y2);
+    // 定义一个 arcHeight 参数，用来决定弧线的高度（截距），值越大弧线越高
+    const arcHeight = (_arcHeight || 200) * game.positionCalc.scaleFactor;
+
+    const start = new Phaser.Math.Vector2(x1, y1);
+    const end = new Phaser.Math.Vector2(x2, y2);
     // 控制点在起点和终点中点的基础上，垂直上移 arcHeight
-    let controlPoint = new Phaser.Math.Vector2(
+    const controlPoint = new Phaser.Math.Vector2(
         (x1 + x2) / 2,
         Math.min(y1, y2) - arcHeight
     );
 
     // 创建二次贝塞尔曲线
-    let curve = new Phaser.Curves.QuadraticBezier(start, controlPoint, end);
+    const curve = new Phaser.Curves.QuadraticBezier(start, controlPoint, end);
 
     // 创建一个临时贴图，假设 'tempTexture' 是预加载的贴图 key
-    let tempImage = game.add.image(x1, y1, texture).setDepth(DepthManager.getProjectileDepth('projectile', 0));
+    const tempImage = game.add.image(x1, y1, texture).setDepth(DepthManager.getProjectileDepth('projectile', 0));
 
     // 用于记录曲线进度的对象和临时向量
-    let path = { t: 0, vec: new Phaser.Math.Vector2() };
+    const path = { t: 0, vec: new Phaser.Math.Vector2() };
 
     // 使用 Tween 让 t 从 0 变化到 1，并更新临时贴图的位置
     game.tweens.add({
@@ -40,8 +48,6 @@ export function StartArc(game: Game, x1: number, y1: number, x2: number, y2: num
         onComplete: () => {
             // 曲线移动完成后销毁临时贴图
             tempImage.destroy();
-            // 在终点位置调用回调函数创建新的 sprite
-            callback();
         }
     });
 }

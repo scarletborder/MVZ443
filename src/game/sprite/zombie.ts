@@ -277,7 +277,7 @@ export default class IZombieAnim {
         }
 
         this.slowEffectTimer = this.scene.time.addEvent({
-            delay: 1000,  // Emit every second
+            delay: 800,  // Emit every second
             loop: true,
             callback: () => {
                 const depth = this.body.depth + 1;

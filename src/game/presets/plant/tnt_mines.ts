@@ -109,13 +109,10 @@ class _TntMines extends IPlant {
 
         // 开始放置
         for (const pos of targetPositions) {
-            scene.frameTicker.delayedCall({
-                delay: 900, callback: () => {
-                    const newmine = NewTntMines(scene, pos.col, pos.row, this.level);
-                    newmine.wakeup();
-                }
+            StartArc(scene, this.x, this.y, pos.x, pos.y, 'plant/tnt_mines', 1000, () => {
+                const newmine = NewTntMines(scene, pos.col, pos.row, this.level);
+                newmine.wakeup();
             });
-            StartArc(scene, this.x, this.y, pos.x, pos.y, 'plant/tnt_mines', 1000, () => { });
         }
     }
 

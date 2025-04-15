@@ -754,10 +754,10 @@ export default class IMutantAnim {
                 const textCount = 6;
 
                 for (let i = 0; i < textCount; i++) {
-                    let posX = Phaser.Math.Between(centerX - rangeWidth / 3, centerX + rangeWidth / 2);
-                    let posY = Phaser.Math.Between(centerY - rangeHeight / 2, centerY + rangeHeight / 2);
+                    const posX = Phaser.Math.Between(centerX - rangeWidth / 3, centerX + rangeWidth / 2);
+                    const posY = Phaser.Math.Between(centerY - rangeHeight / 2, centerY + rangeHeight / 2);
 
-                    let textObj = this.scene.add.text(posX, posY, '*', { fontSize: textSize + "px", color: "#4A90E2" }).setDepth(depth);
+                    const textObj = this.scene.add.text(posX, posY, '*', { fontSize: textSize + "px", color: "#4A90E2" }).setDepth(depth);
                     textObj.setOrigin(0.5, 0.5);
                     this.scene.tweens.add({
                         targets: textObj,
@@ -875,15 +875,15 @@ export default class IMutantAnim {
 
         for (let i = 0; i < textCount; i++) {
             // 在范围内随机生成文本的中心坐标
-            let posX = Phaser.Math.Between(centerX - rangeWidth / 3, centerX + rangeWidth / 2);
-            let posY = Phaser.Math.Between(centerY - rangeHeight / 2, centerY + rangeHeight / 2);
+            const posX = Phaser.Math.Between(centerX - rangeWidth / 3, centerX + rangeWidth / 2);
+            const posY = Phaser.Math.Between(centerY - rangeHeight / 2, centerY + rangeHeight / 2);
 
             // 根据 i 的奇偶性选择不同的颜色（这里使用十六进制字符串形式）
             const color = i % 2 === 0 ? "#C5B59B" : "#A79A8A";
             const ffont = i % 2 === 0 ? "X" : "+";
 
             // 创建文本对象，显示字符 "X"
-            let textObj = this.scene.add.text(posX, posY, ffont, { fontSize: textSize + "px", color: color }).setDepth(depth);
+            const textObj = this.scene.add.text(posX, posY, ffont, { fontSize: textSize + "px", color: color }).setDepth(depth);
             textObj.setOrigin(0.5, 0.5);
             this.scene.tweens.add({
                 targets: textObj,
