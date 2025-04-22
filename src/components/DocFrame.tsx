@@ -7,7 +7,6 @@ import { GameParams } from '../game/models/GameParams';
 import { publicUrl } from '../utils/browser';
 import { useDeviceType } from '../hooks/useDeviceType';
 import BackendWS from '../utils/net/sync';
-import i18n from '../utils/i18n';
 import Shop from './shop/shop';
 import { useNavigate } from 'react-router-dom';
 

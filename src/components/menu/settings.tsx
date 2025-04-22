@@ -132,10 +132,10 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
                     },
                     {
                         title: "切换分辨率",
-                        description: "选择游戏分辨率,移动端推荐选择画面缩小50%并选用924x693",
+                        description: "选择游戏分辨率,移动端推荐选择画面缩小50%并选用924x693. 联机模式下请确保所有玩家分辨率一致",
                         controlType: "selections",
                         controlProps: {
-                            options: ["800x600", "924x693", "1024x768", "1200x900", "1600x1200"], selected: `${width}x${width / 4 * 3}`, onSelect: (val) => {
+                            options: ["800x600", "924x693", "1024x768", "1200x900"], selected: `${width}x${width / 4 * 3}`, onSelect: (val) => {
                                 let twidth = parseInt(val);
                                 settingManager.setWidth(twidth);
                             }
