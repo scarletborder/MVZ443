@@ -11,6 +11,7 @@ export type explosionParams = {
     leftGrid: number // 中心向左
     upGrid: number // 中心向上,必须>=0的实数,为0意思是仅本行,1为本行和上一行
     downGrid?: number // [为空时等于up]中心向下,必须>=0的实数,为0意思是仅本行
+    targetCamp?: 'plant' | 'zombie' // 目标阵营,默认打僵尸 
 }
 
 export class IExpolsion extends Phaser.Physics.Arcade.Sprite {

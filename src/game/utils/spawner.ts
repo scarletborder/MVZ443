@@ -335,6 +335,14 @@ export default class MonsterSpawner {
         return false;
     }
 
+    // 某一row中有怪物并且有elastic putin
+    hasMonsterInRowWithElastic(row: number) {
+        const hasMonster = this.hasMonsterInRow(row);
+        if (!hasMonster) return false;
+
+        return this.scene.gardener.elastic_putin_nums[row] > 0;
+    }
+
     // 排序Monsters,根据monster.x从小到大,这里monsterd的每一个element都是数组,他们都是基本有序的
     sortMonsters() {
         this.monstered.forEach((list, key) => {

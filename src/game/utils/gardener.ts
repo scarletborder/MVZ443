@@ -17,6 +17,8 @@ export default class Gardener {
      */
     planted: Map<string, Array<IPlant>> = new Map();
 
+    elastic_putin_nums = [0, 0, 0, 0, 0, 0, 0, 0];
+
     positionCalc: PositionCalc;
     prevCol: number = -1;
     prevRow: number = -1;
@@ -42,6 +44,9 @@ export default class Gardener {
     private highlightTween: Phaser.Tweens.Tween | null = null;
 
     constructor(scene: Game, positionCalc: PositionCalc) {
+        this.planted = new Map();
+        this.elastic_putin_nums = [0, 0, 0, 0, 0, 0, 0, 0];
+
         this.usePickaxe = false;
         this.useStarShards = false;
 

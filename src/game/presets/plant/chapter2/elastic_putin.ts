@@ -3,6 +3,7 @@ import { IBullet } from "../../../models/IBullet";
 import { IPlant } from "../../../models/IPlant";
 import { IRecord } from "../../../models/IRecord";
 import { Game } from "../../../scenes/Game";
+import { Arrow } from "../../bullet/arrow";
 
 
 
@@ -28,6 +29,7 @@ class ElasticPutin extends IPlant {
         // 设置反弹属性
         if (this.body) {
             this.setImmovable(true);
+            scene.gardener.elastic_putin_nums[row]++;
             this.colliderBullet = scene.physics.add.collider(
                 IBullet.Group,
                 this,
@@ -39,6 +41,7 @@ class ElasticPutin extends IPlant {
     }
 
     public onStarShards(): void {
+        super.onStarShards();
         const scene = this.scene;
         if (!scene) return;
         // 为所有反弹的子弹添加雷电属性
@@ -52,10 +55,10 @@ class ElasticPutin extends IPlant {
                 // TODO 取消动画
             }
         })
-
     }
 
     destroy(fromScene?: boolean): void {
+        this.scene.gardener.elastic_putin_nums[this.row]++;
         this.colliderBullet.destroy();
         // 清空set
         this.collideredBullets.clear();
@@ -79,7 +82,8 @@ class ElasticPutin extends IPlant {
      * @param {Phaser.Physics.Arcade.Image} wall           撞到的墙壁
      */
     bounceBulletOffWall(wall: IPlant, bullet: IBullet) {
-        if (!bullet.body) {
+        // 只会反弹arrow或者arrow的变体(原型链)
+        if (!bullet.body || !(bullet instanceof Arrow)) {
             return;
         }
 
@@ -95,9 +99,10 @@ class ElasticPutin extends IPlant {
             bullet.setVelocityX(-vx * f);
         }
 
-        // TODO: 如果有其他能力
-        // 设置新的回调
-
+        // 如果isLightning,对过来的arrow设置lightning
+        if (this.isLightning) {
+            bullet.catchEnhancement('lightning');
+        }
 
         // 结束
         if (bullet._prevX) {
@@ -118,7 +123,7 @@ const ElasticPutinRecord: IRecord = {
     cost: () => 100,
     cooldownTime: () => 8,
     NewFunction: NewElasticPutin,
-    texture: 'plant/furnace',
+    texture: 'plant/elastic_putin',
     description: () => 'tan tan',
     NextLevelStuff: (level: number) => {
         return [{

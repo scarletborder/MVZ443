@@ -77,15 +77,19 @@ function shootSnowBall(scene: Game, shooter: IPlant, maxDistance: number) {
 
 class BombSnowBall extends SnowBall {
     destroy(): void {
+        const scene = this.game;
+        const x = this.x;
+        const row = this.row;
+        const dmg = this.damage;
         super.destroy();
-        if (!this.game) return;
+        if (!scene) return;
         // 生成大爆炸
-        new IExpolsion(this.game, this.x, this.row, {
-            damage: this.damage,
+        new IExpolsion(scene, x, row, {
+            damage: dmg,
             rightGrid: 1.75,
             leftGrid: 1.5,
             upGrid: 1,
-        })
+        });
     }
 }
 

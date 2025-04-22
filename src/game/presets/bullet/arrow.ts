@@ -1,11 +1,42 @@
+import { _TypeArrowEnhancement } from "../../../constants/game";
 import { IBullet } from "../../models/IBullet";
+import { IExpolsion } from "../../models/IExplosion";
+import { IPlant } from "../../models/IPlant";
+import { IMonster } from "../../models/monster/IMonster";
 import { Game } from "../../scenes/Game";
+import IObstacle from "../obstacle/IObstacle";
 
 
 
-class Arrow extends IBullet {
+export class Arrow extends IBullet {
     originalX: number;
     maxDistance: number = 100;
+
+    enhancement: _TypeArrowEnhancement = 'none';
+    trail: any | null = null; // 尾迹
+
+    catchEnhancement(en: _TypeArrowEnhancement) {
+        this.enhancement = en;
+
+        // TODO: 如果有enhancement,设置材质
+        const trail_depth = this.baseDepth + 1;
+        const scene = this.scene;
+        if (!scene) return;
+        switch (this.enhancement) {
+            case 'fire':
+                this.trail = scene.add.image(this.x, this.y, 'anime/fire_trail')
+                    .setScale(scene.positionCalc.scaleFactor);
+                break;
+            case 'lightning':
+                this.trail = scene.add.image(this.x, this.y, 'anime/lightning_trail')
+                    .setScale(scene.positionCalc.scaleFactor);
+                break;
+            case 'ice':
+                this.trail = scene.add.image(this.x, this.y, 'anime/ice_trail')
+                    .setScale(scene.positionCalc.scaleFactor);
+                break;
+        }
+    }
 
     constructor(scene: Game, col: number, row: number, texture: string,
         damage: number, maxDistance: number, target: 'plant' | 'zombie') {
@@ -28,6 +59,54 @@ class Arrow extends IBullet {
         if ((this.x - this.originalX) > this.maxDistance) {
             this.destroy();
         }
+    }
+
+    protected preUpdate(time: number, delta: number): void {
+        super.preUpdate(time, delta);
+
+        if (this.trail && this.body) {
+            const angle = this.body.velocity.angle();
+            const offsetX = +Math.cos(angle) * this.width * 0.5;
+            const offsetY = +Math.sin(angle) * this.height * 0.5;
+            this.trail.setPosition(this.x + offsetX, this.y + offsetY);
+        }
+    }
+
+    CollideObject(object: IMonster | IPlant | IObstacle): void {
+        // 如果附魔fire, 本次攻击会暂时提高伤害
+        const _prevDamage = this.damage;
+        if (this.enhancement === 'fire') {
+            this.damage = Math.floor(_prevDamage * 1.5);
+        }
+
+        super.CollideObject(object);
+
+        // 如果有ice效果,施加slow
+        if (this.enhancement === 'ice'
+            && object instanceof IMonster
+            && this.targetCamp === 'zombie'
+        ) {
+            object.catchDebuff('slow', 5000);
+        }
+
+        // 恢复
+        this.damage = _prevDamage;
+    }
+
+    destroy(fromScene?: boolean): void {
+        const scene = this.scene;
+        // 判断arrow的属性,如果被附魔了lightning, 会爆炸
+        if (scene && this.enhancement === 'lightning') {
+            new IExpolsion(scene, this.x, this.row, {
+                damage: Math.ceil(this.damage / 4),
+                rightGrid: 1,
+                leftGrid: 1,
+                upGrid: 1,
+                targetCamp: this.targetCamp,
+            });
+        }
+
+        super.destroy(fromScene);
     }
 }
 
