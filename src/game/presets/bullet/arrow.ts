@@ -64,7 +64,7 @@ export class Arrow extends IBullet {
     protected preUpdate(time: number, delta: number): void {
         super.preUpdate(time, delta);
 
-        if (this.trail && this.body) {
+        if (this.trail && this.body && !this.scene.isPaused) {
             const angle = this.body.velocity.angle();
             const offsetX = +Math.cos(angle) * this.width * 0.5;
             const offsetY = +Math.sin(angle) * this.height * 0.5;

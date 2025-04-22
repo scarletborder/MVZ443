@@ -14,6 +14,7 @@ import SmallDispenserRecord from "./chapter1/small_dispenser";
 import TntRecord from "./chapter1/tnt";
 import TntMines from "./chapter1/tnt_mines";
 import TripleDispenserRecord from "./chapter1/triple_dispenser";
+import DoubleDispenser_Record from "./chapter2/double_dispenser";
 import ElasticPutinRecord from "./chapter2/elastic_putin";
 
 const PlantFactoryMap: Record<number, IRecord> = {
@@ -32,6 +33,7 @@ const PlantFactoryMap: Record<number, IRecord> = {
     13: TripleDispenserRecord,
     14: ATDispenserRecord,
     15: ElasticPutinRecord,
+    16: DoubleDispenser_Record,
 }
 
 export default PlantFactoryMap;

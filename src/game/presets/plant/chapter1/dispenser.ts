@@ -148,7 +148,7 @@ class dispenser extends IPlant {
                         this.scene?.frameTicker.delayedCall({
                             delay: 200,
                             callback: () => { shootArrow(this.scene, this); },
-                        })
+                        });
                     }
                 },
             })

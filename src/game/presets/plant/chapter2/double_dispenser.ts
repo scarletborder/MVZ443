@@ -9,6 +9,7 @@ import { IRecord } from "../../../models/IRecord";
 import { Game } from "../../../scenes/Game";
 import createShootBurst from "../../../sprite/shoot_anim";
 import { FrameTimer } from "../../../sync/ticker";
+import NewArrow from "../../bullet/arrow";
 
 class double_dispenser extends IPlant {
     base: Phaser.GameObjects.Sprite; // 底座, frame1
@@ -69,8 +70,6 @@ class double_dispenser extends IPlant {
                         this.depth + 2
                     );
 
-                    shootArrow(this.scene, this);
-
                     // 回弹动画前再次检查
                     if (this.scene && this.head && this.health > 0) {
                         this.scene?.tweens.add({
@@ -119,17 +118,41 @@ class double_dispenser extends IPlant {
                 const scene = this.scene;
                 if (!scene) return;
                 if (
-                    scene.monsterSpawner.hasMonsterInRowWithElastic(this.row)
-                    || scene.monsterSpawner.hasMonsterInRowAfterX(this.row, this.x)) {
+                    scene.monsterSpawner.hasMonsterInRow(this.row)) {
                     this.shootAnimation();
+                    this.scene?.frameTicker.delayedCall({
+                        delay: 200,
+                        callback: () => { shootArrow(this.scene, this); },
+                    });
                 }
             }
         });
     }
 }
 
-function shootArrow(scene:Game, shooter:IPlant, baseDamage: number = 30) {
-    
+function shootArrow(scene: Game, shooter: IPlant, baseDamage: number = 30) {
+    if (!scene || !shooter || shooter.health <= 0) {
+        return;
+    }
+
+    const arrow1 = NewArrow(scene, shooter.col, shooter.row, scene.positionCalc.GRID_SIZEX * 32, baseDamage);
+    arrow1.penetrate = 1;
+
+    const arrow2 = NewArrow(scene, shooter.col, shooter.row, scene.positionCalc.GRID_SIZEX * 32, baseDamage);
+    arrow2.setVelocityX(-300 * scene.positionCalc.scaleFactor);
+    arrow2.penetrate = 1;
+
+    scene.frameTicker.delayedCall({
+        delay: 100,
+        callback: () => {
+            if (!scene || !shooter || shooter.health <= 0) {
+                return;
+            }
+            const arrow3 = NewArrow(scene, shooter.col, shooter.row, scene.positionCalc.GRID_SIZEX * 32, baseDamage);
+            arrow3.setVelocityX(-300 * scene.positionCalc.scaleFactor);
+            arrow3.penetrate = 1;
+        }
+    });
 }
 
 function NewDoubleDispenser(scene: Game, col: number, row: number, level: number
@@ -154,3 +177,5 @@ const DoubleDispenser_Record: IRecord = {
     description: () => "双头发射器",
     NextLevelStuff: levelAndstuff,
 }
+
+export default DoubleDispenser_Record;

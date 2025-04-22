@@ -97,8 +97,6 @@ class triple_dispenser extends IPlant {
                         this.depth + 2
                     );
 
-                    shootArrow(this.scene, this);
-
                     // 回弹动画前再次检查
                     if (this.scene && this.head && this.health > 0) {
                         this.scene?.tweens.add({
@@ -154,6 +152,11 @@ class triple_dispenser extends IPlant {
                     || scene.monsterSpawner.hasMonsterInRowAfterX(this.row - 1, this.x)
                     || scene.monsterSpawner.hasMonsterInRowAfterX(this.row + 1, this.x)) {
                     this.shootAnimation();
+
+                    this.scene?.frameTicker.delayedCall({
+                        delay: 200,
+                        callback: () => { shootArrow(this.scene, this); },
+                    });
                 }
             }
         });
