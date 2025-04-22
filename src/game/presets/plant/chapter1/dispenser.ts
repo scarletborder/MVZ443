@@ -1,13 +1,13 @@
-import { SECKILL } from "../../../../public/constants";
-import { item } from "../../../components/shop/types";
-import i18n from "../../../utils/i18n";
-import { GetIncValue } from "../../../utils/numbervalue";
-import { IPlant } from "../../models/IPlant";
-import { IRecord } from "../../models/IRecord";
-import { Game } from "../../scenes/Game";
-import createShootBurst from "../../sprite/shoot_anim";
-import { AddEventConfig, FrameTimer } from "../../sync/ticker";
-import NewArrow from "../bullet/arrow";
+import { SECKILL } from "../../../../../public/constants";
+import { item } from "../../../../components/shop/types";
+import i18n from "../../../../utils/i18n";
+import { GetIncValue } from "../../../../utils/numbervalue";
+import { IPlant } from "../../../models/IPlant";
+import { IRecord } from "../../../models/IRecord";
+import { Game } from "../../../scenes/Game";
+import createShootBurst from "../../../sprite/shoot_anim";
+import { AddEventConfig, FrameTimer } from "../../../sync/ticker";
+import NewArrow from "../../bullet/arrow";
 
 class dispenser extends IPlant {
     game: Game;
@@ -31,13 +31,16 @@ class dispenser extends IPlant {
         this.Timer = this.bruteShootEvent(totalArrows);
         // 根据暴力发射的总时长，发射结束后恢复 normalShootEvent
         const overallDuration = 200 + 50 * (totalArrows - 1);
-        this.game.time.delayedCall(overallDuration, () => {
-            // 再次判断对象是否有效
-            if (!this || !this.scene || this.health <= 0) {
-                return;
+        this.game.frameTicker.delayedCall({
+            delay: overallDuration,
+            callback: () => {
+                // 再次判断对象是否有效
+                if (!this || !this.scene || this.health <= 0) {
+                    return;
+                }
+                this.removeTimer();
+                this.Timer = this.normalShootEvent();
             }
-            this.removeTimer();
-            this.Timer = this.normalShootEvent();
         });
     }
 

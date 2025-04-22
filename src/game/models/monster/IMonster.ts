@@ -1,5 +1,7 @@
 import { SECKILL } from "../../../../public/constants";
+import { _Typedebuffs } from "../../../constants/game";
 import { Game } from "../../scenes/Game";
+import { FrameTimer } from "../../sync/ticker";
 import GridClan from "../../utils/grid_clan";
 import MonsterSpawner from "../../utils/spawner";
 import { IBullet } from "../IBullet";
@@ -30,7 +32,7 @@ export class IMonster extends Phaser.Physics.Arcade.Sprite {
     public maxHealth: number;
     public originalSpeed: number; // 默认情况速度,(静态值,不受buff影响)
     public speed: number; // 当前速度
-    protected debuffs: { [key: string]: { remaining: number, timer: Phaser.Time.TimerEvent } } = {};  // 存储每个debuff的剩余时间和定时器
+    protected debuffs: { [key: string]: { remaining: number, timer: FrameTimer } } = {};  // 存储每个debuff的剩余时间和定时器
 
 
     public IsFrozen: boolean = false;
@@ -137,25 +139,61 @@ export class IMonster extends Phaser.Physics.Arcade.Sprite {
     }
 
     // catchDebuff函数，处理增加debuff
-    public catchDebuff(debuff: 'slow' | 'frozen', duration: number) { }
+    public catchDebuff(debuff: _Typedebuffs, duration: number) {
+        console.log(`catchDebuff: ${debuff}, duration: ${duration}, now:${Date.now()}`);
+    }
 
     // 修改 removeDebuff，处理 frozen 移除后的恢复逻辑
-    protected removeDebuff(debuff: 'slow' | 'frozen') { }
+    protected removeDebuff(debuff: _Typedebuffs) {
+        console.log(`removeDebuff: ${debuff}  now: ${Date.now()}`);
+
+    }
 
     /**
      * 根据debuff名字判断是否有debuff,如果有返回对应剩余时间(否则为0)
      * @param name debuff name
      * @returns 剩余时间(0表示没有debuff)
      */
-    public hasDebuff(name: 'slow' | 'frozen'): number {
+    public hasDebuff(name: _Typedebuffs): number {
+        if (name === null) return 0;
+
         try {
             if (this.debuffs[name]) {
-                this.debuffs[name].remaining = Math.max(this.debuffs[name].timer.getRemaining(), 0);
+                this.debuffs[name].remaining = Math.max(this.debuffs[name].timer.GetLeftTimeByMs(), 0);
             }
-        } finally {
-            return this.debuffs[name]?.remaining || 0;
+        } catch (error) {
+            console.error("Error checking debuff status:", error);
+        }
+        return this.debuffs[name]?.remaining || 0;
+    }
+
+    updateDebuffTime(debuff: _Typedebuffs, duration: number) {
+        if (debuff === null) return;
+
+        if (this.health <= 0 || !this.game) return;
+        const game = this.game;
+        if (!game) return;
+
+        // 如果 debuff 已存在，则更新剩余时间和定时器
+        if (this.debuffs[debuff]) {
+            this.debuffs[debuff].remaining = Math.max(this.debuffs[debuff].timer.GetLeftTimeByMs(), duration);
+            // 重新设置定时器
+            this.debuffs[debuff].timer.remove();
+            this.debuffs[debuff].timer = game.frameTicker.delayedCall({
+                delay: this.debuffs[debuff].remaining,
+                callback: () => this.removeDebuff(debuff),
+            });
+        } else {
+            this.debuffs[debuff] = {
+                remaining: duration,
+                timer: this.game.frameTicker.delayedCall({
+                    delay: duration,
+                    callback: () => this.removeDebuff(debuff),
+                })
+            };
         }
     }
+
 
     // 与刷怪有关的属性
     getWaveID: () => number = () => this.waveID;

@@ -2,6 +2,7 @@
 // not for boss, but for normal monster
 // 提供给如 "突变僵尸", "重炮突变僵尸" 这样的僵尸使用
 
+import { _Typedebuffs } from "../../../constants/game";
 import DepthManager from "../../../utils/depth";
 import { IPlant } from "../../models/IPlant";
 import { IMonster } from "../../models/monster/IMonster";
@@ -129,7 +130,8 @@ export default class IMutant extends IMonster {
                 }
             );
         } finally {
-            if (!this) return;
+            // No need to check for 'this' in finally block
+            // As it will always exist in this context
         }
 
     }
@@ -145,27 +147,15 @@ export default class IMutant extends IMonster {
         this.preAttackedPlants = null;
     }
 
-    public catchDebuff(debuff: 'slow' | 'frozen', duration: number) {
+    public catchDebuff(debuff: _Typedebuffs, duration: number) {
         if (this.health <= 0 || !this.game) return;
         if (debuff === 'slow') {
             console.log('slow');
-            this.anim.startSlowEffect();
             // 如果 debuff 已存在，则更新剩余时间和定时器
-            if (this.debuffs[debuff]) {
-                this.debuffs[debuff].remaining = Math.max(this.debuffs[debuff].timer.getRemaining(), duration);
-                this.debuffs[debuff].timer.reset({
-                    delay: this.debuffs[debuff].remaining,
-                    callback: () => this.removeDebuff(debuff),
-                    callbackScope: this
-                });
-            } else {
-                this.debuffs[debuff] = {
-                    remaining: duration,
-                    timer: this.game.time.delayedCall(duration, () => this.removeDebuff(debuff), [], this)
-                };
-            }
+            this.updateDebuffTime('slow', duration);
             // 仅在不处于 frozen 状态下应用 slow 效果
             if (!this.IsFrozen) {
+                this.anim.startSlowEffect();
                 this.speed = this.originalSpeed * 0.6;
                 if (!this.isAttacking
                     && this.attackedPlants.length === 0
@@ -176,19 +166,7 @@ export default class IMutant extends IMonster {
             console.log('frozen');
             this.anim.startFrozenEffect();
             // 如果 frozen 已存在，则更新剩余时间和定时器
-            if (this.debuffs[debuff]) {
-                this.debuffs[debuff].remaining = Math.max(this.debuffs[debuff].timer.getRemaining(), duration);
-                this.debuffs[debuff].timer.reset({
-                    delay: this.debuffs[debuff].remaining,
-                    callback: () => this.removeDebuff(debuff),
-                    callbackScope: this
-                });
-            } else {
-                this.debuffs[debuff] = {
-                    remaining: duration,
-                    timer: this.game.time.delayedCall(duration, () => this.removeDebuff(debuff), [], this)
-                };
-            }
+            this.updateDebuffTime('frozen', duration);
             // frozen 的优先级更高：直接冻结
             this.IsFrozen = true;
             this.speed = 0;
@@ -202,7 +180,7 @@ export default class IMutant extends IMonster {
     }
 
     // 修改 removeDebuff，处理 frozen 移除后的恢复逻辑
-    removeDebuff(debuff: 'slow' | 'frozen') {
+    removeDebuff(debuff: _Typedebuffs) {
         if (this.health <= 0 || !this.game) return;
 
         if (debuff === 'slow') {
@@ -228,6 +206,7 @@ export default class IMutant extends IMonster {
             // 判断是否还有 slow 存在：有则恢复 slow 速度，否则恢复原速
             if (this.debuffs['slow']) {
                 this.speed = this.originalSpeed * 0.6;
+                this.anim.startSlowEffect();
             } else {
                 this.speed = this.originalSpeed;
             }

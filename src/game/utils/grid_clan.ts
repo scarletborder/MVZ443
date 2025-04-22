@@ -4,7 +4,7 @@
  */
 
 import { IPlant } from "../models/IPlant";
-import MagicPowderRecord from "../presets/plant/magic_powder";
+import MagicPowderRecord from "../presets/plant/chapter1/magic_powder";
 import Gardener from "./gardener";
 
 // 特殊的植物种植规则

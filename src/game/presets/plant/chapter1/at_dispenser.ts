@@ -1,14 +1,14 @@
-import { SECKILL } from "../../../../public/constants";
-import { item } from "../../../components/shop/types";
-import i18n from "../../../utils/i18n";
-import { GetIncValue } from "../../../utils/numbervalue";
-import { IExpolsion } from "../../models/IExplosion";
-import { IPlant } from "../../models/IPlant";
-import { IRecord } from "../../models/IRecord";
-import { Game } from "../../scenes/Game";
-import createShootBurst from "../../sprite/shoot_anim";
-import FrameTicker, { FrameTimer } from "../../sync/ticker";
-import NewHorizontalFireWork, { HFireWork } from "../bullet/firework";
+import { SECKILL } from "../../../../../public/constants";
+import { item } from "../../../../components/shop/types";
+import i18n from "../../../../utils/i18n";
+import { GetIncValue } from "../../../../utils/numbervalue";
+import { IExpolsion } from "../../../models/IExplosion";
+import { IPlant } from "../../../models/IPlant";
+import { IRecord } from "../../../models/IRecord";
+import { Game } from "../../../scenes/Game";
+import createShootBurst from "../../../sprite/shoot_anim";
+import { FrameTimer } from "../../../sync/ticker";
+import NewHorizontalFireWork, { HFireWork } from "../../bullet/firework";
 import DispenserRecord from "./dispenser";
 
 
@@ -32,7 +32,7 @@ class at_dispenser extends IPlant {
 
 
     constructor(scene: Game, col: number, row: number, texture: string, level: number) {
-        // TODO: 首先获得当前格子中作为基座的 发射器destroyPlant基座植物
+        // 首先获得当前格子中作为基座的 发射器destroyPlant基座植物
         const key = `${col}-${row}`;
         const plants = scene.gardener.planted.get(key) || [];
 
@@ -160,7 +160,7 @@ class at_dispenser extends IPlant {
                     this.scene?.frameTicker.delayedCall({
                         delay: 200,
                         callback: () => { shootArrow(this.scene, this); },
-                    })
+                    });
                 }
             }
         });
@@ -185,8 +185,8 @@ function shootArrow(scene: Game, shooter: IPlant, baseDamage: number = 300, isSt
 
     const level = shooter.level;
     //  根据等级略微提高伤害
-    let damage = GetIncValue(baseDamage, level, 1.4);
-    let penetrate = 1;
+    const damage = GetIncValue(baseDamage, level, 1.4);
+    const penetrate = 1;
 
     const arrow = NewHorizontalFireWork(scene, shooter.col, shooter.row, scene.positionCalc.GRID_SIZEX * 32, damage, 'zombie', 100);
     arrow.penetrate = penetrate;

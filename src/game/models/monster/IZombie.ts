@@ -1,3 +1,4 @@
+import { _Typedebuffs } from "../../../constants/game";
 import DepthManager from "../../../utils/depth";
 import { defaultRandom } from "../../../utils/random";
 import { EventBus } from "../../EventBus";
@@ -153,28 +154,17 @@ export class IZombie extends IMonster {
 
     // 移动相关
     // catchDebuff函数，处理增加debuff
-    public catchDebuff(debuff: 'slow' | 'frozen', duration: number) {
+    public catchDebuff(debuff: _Typedebuffs, duration: number) {
         if (this.health <= 0 || !this.game) return;
+        const game = this.game;
+        if (!game) return;
 
         if (debuff === 'slow') {
             console.log('slow');
-            this.zombieAnim.startSlowEffect();
-            // 如果 debuff 已存在，则更新剩余时间和定时器
-            if (this.debuffs[debuff]) {
-                this.debuffs[debuff].remaining = Math.max(this.debuffs[debuff].timer.getRemaining(), duration);
-                this.debuffs[debuff].timer.reset({
-                    delay: this.debuffs[debuff].remaining,
-                    callback: () => this.removeDebuff(debuff),
-                    callbackScope: this
-                });
-            } else {
-                this.debuffs[debuff] = {
-                    remaining: duration,
-                    timer: this.game.time.delayedCall(duration, () => this.removeDebuff(debuff), [], this)
-                };
-            }
+            this.updateDebuffTime('slow', duration);
             // 仅在不处于 frozen 状态下应用 slow 效果
             if (!this.IsFrozen) {
+                this.zombieAnim.startSlowEffect();
                 this.speed = this.originalSpeed * 0.6;
                 if (!this.attackingPlant)
                     this.StartMove();
@@ -183,29 +173,19 @@ export class IZombie extends IMonster {
             console.log('frozen');
             this.zombieAnim.startFrozenEffect();
             // 如果 frozen 已存在，则更新剩余时间和定时器
-            if (this.debuffs[debuff]) {
-                this.debuffs[debuff].remaining = Math.max(this.debuffs[debuff].timer.getRemaining(), duration);
-                this.debuffs[debuff].timer.reset({
-                    delay: this.debuffs[debuff].remaining,
-                    callback: () => this.removeDebuff(debuff),
-                    callbackScope: this
-                });
-            } else {
-                this.debuffs[debuff] = {
-                    remaining: duration,
-                    timer: this.game.time.delayedCall(duration, () => this.removeDebuff(debuff), [], this)
-                };
-            }
+            this.updateDebuffTime('frozen', duration);
             // frozen 的优先级更高：直接冻结
             this.IsFrozen = true;
             this.speed = 0;
             this.stopAttacking();
             this.StopMove();
         }
+
+        super.catchDebuff(debuff, duration);
     }
 
     // 修改 removeDebuff，处理 frozen 移除后的恢复逻辑
-    removeDebuff(debuff: 'slow' | 'frozen') {
+    removeDebuff(debuff: _Typedebuffs) {
         if (this.health <= 0 || !this.game) return;
 
         if (debuff === 'slow') {
@@ -229,12 +209,15 @@ export class IZombie extends IMonster {
             // 判断是否还有 slow 存在：有则恢复 slow 速度，否则恢复原速
             if (this.debuffs['slow']) {
                 this.speed = this.originalSpeed * 0.6;
+                this.zombieAnim.startSlowEffect();
             } else {
                 this.speed = this.originalSpeed;
             }
             if (!this.attackingPlant)
                 this.StartMove();
         }
+
+        super.removeDebuff(debuff);
     }
 
     public StartMove() {

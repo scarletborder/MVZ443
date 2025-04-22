@@ -1,13 +1,13 @@
 import seedrandom from "seedrandom";
-import { SECKILL } from "../../../../public/constants";
-import { item } from "../../../components/shop/types";
-import i18n from "../../../utils/i18n";
-import { GetDecValue, GetIncValue } from "../../../utils/numbervalue";
-import { IExpolsion, NewExplosionByGrid } from "../../models/IExplosion";
-import { IPlant } from "../../models/IPlant";
-import { IRecord } from "../../models/IRecord";
-import { Game } from "../../scenes/Game";
-import { StartArc } from "../../utils/arc";
+import { SECKILL } from "../../../../../public/constants";
+import { item } from "../../../../components/shop/types";
+import i18n from "../../../../utils/i18n";
+import { GetDecValue, GetIncValue } from "../../../../utils/numbervalue";
+import { IExpolsion, NewExplosionByGrid } from "../../../models/IExplosion";
+import { IPlant } from "../../../models/IPlant";
+import { IRecord } from "../../../models/IRecord";
+import { Game } from "../../../scenes/Game";
+import { StartArc } from "../../../utils/arc";
 
 class _Tnt extends IPlant {
     game: Game;
@@ -100,33 +100,28 @@ class _Tnt extends IPlant {
         const targets = getExplosionTargets(scene, this.col, this.row);
         targets.forEach(([targetCol, targetRow]) => {
             const { x, y } = this.gardener.positionCalc.getPlantBottomCenter(targetCol, targetRow);
-            scene.frameTicker.delayedCall({
-                delay: 800,
-                callback: () => {
-                    NewExplosionByGrid(scene, targetCol, targetRow, {
-                        damage: this.damage,
-                        rightGrid: 1.5,
-                        leftGrid: 1.5,
-                        upGrid: 1
-                    });
+            StartArc(scene, this.x, this.y, x, y, 'plant/tnt', 800, () => {
+                NewExplosionByGrid(scene, targetCol, targetRow, {
+                    damage: this.damage,
+                    rightGrid: 1.5,
+                    leftGrid: 1.5,
+                    upGrid: 1
+                });
 
-                    if ((this.level || 1) >= 7) {
-                        scene?.frameTicker.delayedCall({
-                            delay: 3900,
-                            callback: () => {
-                                NewExplosionByGrid(scene, targetCol, targetRow, {
-                                    damage: this.damage / 3,
-                                    rightGrid: 1.5,
-                                    leftGrid: 1.5,
-                                    upGrid: 1
-                                });
-                            }
-                        });
-                    }
+                if ((this.level || 1) >= 7) {
+                    scene?.frameTicker.delayedCall({
+                        delay: 3900,
+                        callback: () => {
+                            NewExplosionByGrid(scene, targetCol, targetRow, {
+                                damage: this.damage / 3,
+                                rightGrid: 1.5,
+                                leftGrid: 1.5,
+                                upGrid: 1
+                            });
+                        }
+                    });
                 }
             });
-
-            StartArc(scene, this.x, this.y, x, y, 'plant/tnt', 800, () => { });
         });
 
     }

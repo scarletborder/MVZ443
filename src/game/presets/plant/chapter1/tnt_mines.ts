@@ -1,15 +1,15 @@
 import seedrandom from "seedrandom";
-import { SECKILL } from "../../../../public/constants";
-import { item } from "../../../components/shop/types";
-import i18n from "../../../utils/i18n";
-import { GetDecValue } from "../../../utils/numbervalue";
-import { IExpolsion } from "../../models/IExplosion";
-import { IPlant } from "../../models/IPlant";
-import { IRecord } from "../../models/IRecord";
-import { Game } from "../../scenes/Game";
-import { StartArc } from "../../utils/arc";
-import createDirtOut from "../../sprite/dirt_out";
-import { IMonster } from "../../models/monster/IMonster";
+import { SECKILL } from "../../../../../public/constants";
+import { item } from "../../../../components/shop/types";
+import i18n from "../../../../utils/i18n";
+import { GetDecValue } from "../../../../utils/numbervalue";
+import { IExpolsion } from "../../../models/IExplosion";
+import { IPlant } from "../../../models/IPlant";
+import { IRecord } from "../../../models/IRecord";
+import { Game } from "../../../scenes/Game";
+import { StartArc } from "../../../utils/arc";
+import createDirtOut from "../../../sprite/dirt_out";
+import { IMonster } from "../../../models/monster/IMonster";
 
 class _TntMines extends IPlant {
     game: Game;
@@ -109,13 +109,10 @@ class _TntMines extends IPlant {
 
         // 开始放置
         for (const pos of targetPositions) {
-            scene.frameTicker.delayedCall({
-                delay: 900, callback: () => {
-                    const newmine = NewTntMines(scene, pos.col, pos.row, this.level);
-                    newmine.wakeup();
-                }
+            StartArc(scene, this.x, this.y, pos.x, pos.y, 'plant/tnt_mines', 1000, () => {
+                const newmine = NewTntMines(scene, pos.col, pos.row, this.level);
+                newmine.wakeup();
             });
-            StartArc(scene, this.x, this.y, pos.x, pos.y, 'plant/tnt_mines', 1000, () => { });
         }
     }
 

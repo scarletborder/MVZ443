@@ -9,13 +9,14 @@ import { MonsterFactoryMap } from "..";
 import { EventBus } from "../../EventBus";
 import { generateBossWaveScript } from "../../game_events/stage_script";
 import IGolem from "../../models/monster/IGolem";
+import { FrameTimer } from "../../sync/ticker";
 
 const soliderID = 11;
 
 class ObsidianGolem extends IGolem {
     random: seedrandom.PRNG;
     // 定时器列表，用于管理所有延时任务
-    timers: Phaser.Time.TimerEvent[] = [];
+    timers: FrameTimer[] = [];
     callCount: number = 0;
 
     constructor(scene: Game, col: number, row: number, waveID: number) {
@@ -206,7 +207,7 @@ class ObsidianGolem extends IGolem {
             newRows.push(this.row + 1);
         }
 
-        let wait = 1200;
+        const wait = 1200;
         const height = 250;
         newRows.forEach(row => {
             const { x: tmpx, y: tmpy } = this.game.positionCalc.getPlantBottomCenter(newCol, row);
@@ -330,18 +331,21 @@ class ObsidianGolem extends IGolem {
     }
 
     // 封装定时器添加方法
-    addTimer(delay: number, callback: () => void): Phaser.Time.TimerEvent {
-        const timer = this.game.time.delayedCall(delay, () => {
-            // 回调执行完毕后从列表中删除
-            callback();
-            this.removeTimer(timer);
-        }, [], this);
+    addTimer(delay: number, callback: () => void): FrameTimer {
+        const timer = this.game.frameTicker.delayedCall({
+            delay: delay,
+            callback: () => {
+                // 回调执行完毕后从列表中删除
+                callback();
+                this.removeTimer(timer);
+            }
+        });
         this.timers.push(timer);
         return timer;
     }
 
     // 移除定时器
-    removeTimer(timer: Phaser.Time.TimerEvent) {
+    removeTimer(timer: FrameTimer) {
         const index = this.timers.indexOf(timer);
         if (index !== -1) {
             this.timers.splice(index, 1);
@@ -351,7 +355,7 @@ class ObsidianGolem extends IGolem {
     // 清空所有定时器（用于销毁时）
     clearAllTimers() {
         this.timers.forEach(timer => {
-            timer.remove(false);
+            timer.remove();
         });
         this.timers = [];
     }

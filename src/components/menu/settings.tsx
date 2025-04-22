@@ -241,6 +241,43 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
                         }
                     },
                     {
+                        title: '尝试联通性',
+                        description: '如果无法信任证书,会辅助信任证书. 其他原因也会一并曝出',
+                        controlType: 'button',
+                        controlProps: {
+                            onClick: () => {
+                                function checkAndOpenUrl(url: string) {
+                                    // 发起一个 fetch 请求来检测证书
+                                    fetch(url, { method: 'HEAD' })
+                                        .then(response => {
+                                            // 如果响应成功，不是自签证书
+                                            alert('有效并且证书已被信任');
+                                        })
+                                        .catch(error => {
+                                            if (error instanceof TypeError) {
+                                                // 这里的 TypeError 通常表示网络问题或证书错误
+                                                console.error('Network error or SSL certificate issue', error);
+                                                // 引导用户手动信任自签名证书
+                                                alert("目标服务器证书没有被信任,现在开始手动信任流程,浏览器会提示您的连接不是私密连接”，点击'高级' 继续前往（不安全)这样浏览器会把该证书加入“例外”列表。");
+
+                                                // window.open(url, '_blank');
+                                                const newTab = window.open('', '_blank');
+                                                if (newTab) {
+                                                    newTab.location.href = url;
+                                                }
+                                            } else {
+                                                // 处理其他类型的错误
+                                                console.error('An error occurred:', error);
+                                                alert(`其他错误 ${error}`);
+                                            }
+                                        });
+                                }
+                                checkAndOpenUrl(`https://${settingManager.linkOptions.baseUrl}/list`);
+                            },
+                            btnText: '尝试',
+                        }
+                    },
+                    {
                         title: "刷新房间列表",
                         description: `获得当前房间列表`,
                         controlType: "button",
@@ -252,7 +289,7 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
                                     const req = async () => {
                                         const roomsInfo = await getRoomsInfo(settingManager.linkOptions.baseUrl);
                                         if (roomsInfo === null) {
-                                            alert("获取房间列表失败，请检查服务器地址或网络连接。");
+                                            alert("获取房间列表失败，请检查服务器地址或网络连接, 或者尝试测试联通性。");
                                             return;
                                         }
                                         if (roomsInfo.length === 0) {

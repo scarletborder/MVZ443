@@ -15,6 +15,8 @@ export class IBullet extends Phaser.Physics.Arcade.Sprite {
     public static Group: Phaser.Physics.Arcade.Group;
     public targetCamp: 'plant' | 'zombie' = 'zombie'; // 默认打击僵尸
 
+    public destoryCallback: (() => void)[] = []; // 销毁回调函数
+
     // 私有属性
     public col: number;
     public row: number;
@@ -37,6 +39,9 @@ export class IBullet extends Phaser.Physics.Arcade.Sprite {
     private renderY: number;
     private lastRealX: number = 0;
     private lastRealY: number = 0;
+
+
+    [key: string]: any;
 
     static InitGroup(scene: Game) {
         this.Group = scene.physics.add.group({
@@ -166,6 +171,7 @@ export class IBullet extends Phaser.Physics.Arcade.Sprite {
     update(...args: any[]): void {
         if (!this.scene) return;
 
+        // 视觉效果更新
         const now = this.scene.time.now;
         const delta = now - (this.lastUpdateTime || now);
         this.lastUpdateTime = now;
@@ -209,6 +215,10 @@ export class IBullet extends Phaser.Physics.Arcade.Sprite {
             this.visibleSprite.destroy();
             this.visibleSprite = null;
         }
+        // 销毁回调函数列表
+        this.destoryCallback.forEach(fn => fn());
+        this.destoryCallback = [];
+
         super.destroy(fromScene);
     }
 }
