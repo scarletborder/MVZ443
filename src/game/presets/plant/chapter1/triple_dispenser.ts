@@ -13,7 +13,6 @@ class triple_dispenser extends IPlant {
     game: Game;
     base: Phaser.GameObjects.Sprite; // 底座，frame 0
     head: Phaser.GameObjects.Sprite; // 头部，frame 1
-    container: Phaser.GameObjects.Container;
 
     headX: number;
 
@@ -53,13 +52,15 @@ class triple_dispenser extends IPlant {
         this.setHealthFirstly(300);
 
         // anim
-        let size = scene.positionCalc.getPlantDisplaySize();
+        const size = scene.positionCalc.getPlantDisplaySize();
+        size.sizeX *= 1.2;
+        size.sizeY *= 1.2;
         // 头部：frame 1，初始位置与底座对齐
         this.head = scene.add.sprite(this.x, this.y, texture, 2).setOrigin(0.5, 1)
-            .setDisplaySize(size.sizeX * 1.2, size.sizeY * 1.2).setDepth(this.depth);
+            .setDisplaySize(size.sizeX, size.sizeY).setDepth(this.depth);
         // 底座：frame 0
         this.base = scene.add.sprite(this.x, this.y, texture, 1).setOrigin(0.5, 1)
-            .setDisplaySize(size.sizeX * 1.2, size.sizeY * 1.2).setDepth(this.depth - 1);
+            .setDisplaySize(size.sizeX, size.sizeY).setDepth(this.depth - 1);
         // !important: 不要用container,很神奇吧,也不要add existing
         this.headX = this.head.x;
         this.Timer = this.normalShootEvent();
