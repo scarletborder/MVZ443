@@ -1,13 +1,13 @@
-import { SECKILL } from "../../../../public/constants";
-import { item } from "../../../components/shop/types";
-import i18n from "../../../utils/i18n";
-import { GetIncValue } from "../../../utils/numbervalue";
-import { IExpolsion } from "../../models/IExplosion";
-import { IPlant, INightPlant } from "../../models/IPlant";
-import { IRecord } from "../../models/IRecord";
-import { Game } from "../../scenes/Game";
-import createShootBurst from "../../sprite/shoot_anim";
-import NewSnowBullet, { SnowBall } from "../bullet/snowball";
+import { SECKILL } from "../../../../../public/constants";
+import { item } from "../../../../components/shop/types";
+import i18n from "../../../../utils/i18n";
+import { GetIncValue } from "../../../../utils/numbervalue";
+import { IExpolsion } from "../../../models/IExplosion";
+import { IPlant, INightPlant } from "../../../models/IPlant";
+import { IRecord } from "../../../models/IRecord";
+import { Game } from "../../../scenes/Game";
+import createShootBurst from "../../../sprite/shoot_anim";
+import NewSnowBullet, { SnowBall } from "../../bullet/snowball";
 
 class smallDispenser extends INightPlant {
     maxDistance: number; // 画面的绝对坐标,非格子

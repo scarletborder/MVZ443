@@ -48,8 +48,6 @@ export default class MonsterSpawner {
         if (!randomSeed) randomSeed = Math.random();
         this.setRandomSeed(randomSeed);
     }
-    // TODO: 追加新的波数, 例如精英关卡开启
-
 
     currentWave() {
         return this.waves[this.current_wave_idx];

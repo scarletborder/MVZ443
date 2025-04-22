@@ -22,7 +22,7 @@ class Warden extends IGolem {
     private callCount: number = 0;
 
     constructor(scene: Game, col: number, row: number, waveID: number) {
-        //TODO: 构造前,elite spawner会emit 给progress bar, boss战斗开始
+        // 构造前,elite spawner会emit 给progress bar, boss战斗开始
         const animProps = WardenGolemAnimProps;
         super(scene, col, row, waveID, animProps);
         this.SetHealthFirsty(18000);

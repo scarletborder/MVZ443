@@ -1,14 +1,14 @@
-import { SECKILL } from "../../../../public/constants";
-import { item } from "../../../components/shop/types";
-import i18n from "../../../utils/i18n";
-import { GetIncValue } from "../../../utils/numbervalue";
-import { IExpolsion } from "../../models/IExplosion";
-import { IPlant } from "../../models/IPlant";
-import { IRecord } from "../../models/IRecord";
-import { Game } from "../../scenes/Game";
-import createShootBurst from "../../sprite/shoot_anim";
-import { FrameTimer } from "../../sync/ticker";
-import NewHorizontalFireWork, { HFireWork } from "../bullet/firework";
+import { SECKILL } from "../../../../../public/constants";
+import { item } from "../../../../components/shop/types";
+import i18n from "../../../../utils/i18n";
+import { GetIncValue } from "../../../../utils/numbervalue";
+import { IExpolsion } from "../../../models/IExplosion";
+import { IPlant } from "../../../models/IPlant";
+import { IRecord } from "../../../models/IRecord";
+import { Game } from "../../../scenes/Game";
+import createShootBurst from "../../../sprite/shoot_anim";
+import { FrameTimer } from "../../../sync/ticker";
+import NewHorizontalFireWork, { HFireWork } from "../../bullet/firework";
 import DispenserRecord from "./dispenser";
 
 
@@ -32,7 +32,7 @@ class at_dispenser extends IPlant {
 
 
     constructor(scene: Game, col: number, row: number, texture: string, level: number) {
-        // TODO: 首先获得当前格子中作为基座的 发射器destroyPlant基座植物
+        // 首先获得当前格子中作为基座的 发射器destroyPlant基座植物
         const key = `${col}-${row}`;
         const plants = scene.gardener.planted.get(key) || [];
 

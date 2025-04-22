@@ -1,13 +1,13 @@
 import seedrandom from "seedrandom";
-import { SECKILL } from "../../../../public/constants";
-import { item } from "../../../components/shop/types";
-import i18n from "../../../utils/i18n";
-import { GetDecValue, GetIncValue } from "../../../utils/numbervalue";
-import { IExpolsion, NewExplosionByGrid } from "../../models/IExplosion";
-import { IPlant } from "../../models/IPlant";
-import { IRecord } from "../../models/IRecord";
-import { Game } from "../../scenes/Game";
-import { StartArc } from "../../utils/arc";
+import { SECKILL } from "../../../../../public/constants";
+import { item } from "../../../../components/shop/types";
+import i18n from "../../../../utils/i18n";
+import { GetDecValue, GetIncValue } from "../../../../utils/numbervalue";
+import { IExpolsion, NewExplosionByGrid } from "../../../models/IExplosion";
+import { IPlant } from "../../../models/IPlant";
+import { IRecord } from "../../../models/IRecord";
+import { Game } from "../../../scenes/Game";
+import { StartArc } from "../../../utils/arc";
 
 class _Tnt extends IPlant {
     game: Game;

@@ -1,10 +1,10 @@
-import { Game } from "../../scenes/Game";
-import { IPlant } from "../../models/IPlant";
-import { IRecord } from "../../models/IRecord";
-import i18n from "../../../utils/i18n";
-import { item } from "../../../components/shop/types";
-import { GetIncValue } from "../../../utils/numbervalue";
-import { SECKILL } from "../../../../public/constants";
+import { Game } from "../../../scenes/Game";
+import { IPlant } from "../../../models/IPlant";
+import { IRecord } from "../../../models/IRecord";
+import i18n from "../../../../utils/i18n";
+import { item } from "../../../../components/shop/types";
+import { GetIncValue } from "../../../../utils/numbervalue";
+import { SECKILL } from "../../../../../public/constants";
 
 class _Lily extends IPlant {
     game: Game;

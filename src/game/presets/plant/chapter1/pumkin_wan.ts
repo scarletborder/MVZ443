@@ -1,13 +1,13 @@
-import { SECKILL } from "../../../../public/constants";
-import { item } from "../../../components/shop/types";
-import i18n from "../../../utils/i18n";
-import { GetIncValue } from "../../../utils/numbervalue";
-import { NewExplosionByGrid } from "../../models/IExplosion";
-import { NewLaserByGrid } from "../../models/ILaser";
-import { INightPlant, IPlant } from "../../models/IPlant";
-import { IRecord } from "../../models/IRecord";
-import { Game } from "../../scenes/Game";
-import { FrameTimer } from "../../sync/ticker";
+import { SECKILL } from "../../../../../public/constants";
+import { item } from "../../../../components/shop/types";
+import i18n from "../../../../utils/i18n";
+import { GetIncValue } from "../../../../utils/numbervalue";
+import { NewExplosionByGrid } from "../../../models/IExplosion";
+import { NewLaserByGrid } from "../../../models/ILaser";
+import { INightPlant, IPlant } from "../../../models/IPlant";
+import { IRecord } from "../../../models/IRecord";
+import { Game } from "../../../scenes/Game";
+import { FrameTimer } from "../../../sync/ticker";
 import PumpkinRecord from "./pumkin";
 
 class pumkin_wan extends INightPlant {
@@ -38,7 +38,7 @@ class pumkin_wan extends INightPlant {
     }
 
     constructor(scene: Game, col: number, row: number, texture: string, level: number) {
-        // TODO: 首先获得当前格子中作为基座的 阴森南瓜头,判断其isSleeping属性, 并稍后用来实例化自己,destroyPlant基座植物
+        // 首先获得当前格子中作为基座的 阴森南瓜头,判断其isSleeping属性, 并稍后用来实例化自己,destroyPlant基座植物
         const key = `${col}-${row}`;
         const plants = scene.gardener.planted.get(key) || [];
         let isSleeping = false;

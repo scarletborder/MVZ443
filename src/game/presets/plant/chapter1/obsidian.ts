@@ -1,11 +1,11 @@
-import { SECKILL } from "../../../../public/constants";
-import { item } from "../../../components/shop/types";
-import i18n from "../../../utils/i18n";
-import { GetIncValue } from "../../../utils/numbervalue";
-import { IPlant } from "../../models/IPlant";
-import { IRecord } from "../../models/IRecord";
-import { IMonster } from "../../models/monster/IMonster";
-import { Game } from "../../scenes/Game";
+import { SECKILL } from "../../../../../public/constants";
+import { item } from "../../../../components/shop/types";
+import i18n from "../../../../utils/i18n";
+import { GetIncValue } from "../../../../utils/numbervalue";
+import { IPlant } from "../../../models/IPlant";
+import { IRecord } from "../../../models/IRecord";
+import { IMonster } from "../../../models/monster/IMonster";
+import { Game } from "../../../scenes/Game";
 
 class Obsidian extends IPlant {
     shieldHealth: number = 0;

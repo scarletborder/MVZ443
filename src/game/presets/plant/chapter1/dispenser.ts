@@ -1,13 +1,13 @@
-import { SECKILL } from "../../../../public/constants";
-import { item } from "../../../components/shop/types";
-import i18n from "../../../utils/i18n";
-import { GetIncValue } from "../../../utils/numbervalue";
-import { IPlant } from "../../models/IPlant";
-import { IRecord } from "../../models/IRecord";
-import { Game } from "../../scenes/Game";
-import createShootBurst from "../../sprite/shoot_anim";
-import { AddEventConfig, FrameTimer } from "../../sync/ticker";
-import NewArrow from "../bullet/arrow";
+import { SECKILL } from "../../../../../public/constants";
+import { item } from "../../../../components/shop/types";
+import i18n from "../../../../utils/i18n";
+import { GetIncValue } from "../../../../utils/numbervalue";
+import { IPlant } from "../../../models/IPlant";
+import { IRecord } from "../../../models/IRecord";
+import { Game } from "../../../scenes/Game";
+import createShootBurst from "../../../sprite/shoot_anim";
+import { AddEventConfig, FrameTimer } from "../../../sync/ticker";
+import NewArrow from "../../bullet/arrow";
 
 class dispenser extends IPlant {
     game: Game;
