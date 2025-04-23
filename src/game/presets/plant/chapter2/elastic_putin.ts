@@ -30,10 +30,12 @@ class ElasticPutin extends INightPlant {
         if (this.body) {
             this.setImmovable(true);
             scene.gardener.elastic_putin_nums[row]++;
+
             this.colliderBullet = scene.physics.add.collider(
                 IBullet.Group,
                 this,
                 this.colliderCallback,
+                // @ts-ignore
                 this.processCollider,
                 this
             );

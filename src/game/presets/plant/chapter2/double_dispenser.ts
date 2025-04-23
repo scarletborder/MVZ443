@@ -5,12 +5,14 @@
 import { SECKILL } from "../../../../../public/constants";
 import { item } from "../../../../components/shop/types";
 import i18n from "../../../../utils/i18n";
+import { GetIncValue } from "../../../../utils/numbervalue";
 import { IPlant } from "../../../models/IPlant";
 import { IRecord } from "../../../models/IRecord";
 import { Game } from "../../../scenes/Game";
 import createShootBurst from "../../../sprite/shoot_anim";
 import { FrameTimer } from "../../../sync/ticker";
 import NewArrow from "../../bullet/arrow";
+import NewHorizontalFireWork from "../../bullet/firework";
 
 class double_dispenser extends IPlant {
     base: Phaser.GameObjects.Sprite; // 底座, frame1
@@ -173,6 +175,7 @@ class double_dispenser extends IPlant {
         });
 
         // 创建 Timer 事件：延迟 200ms 后开始暴力发射箭，每 50ms 一次
+        const elapsed = Math.floor(front / back);
         const bruteTimer = scene.frameTicker.addEvent({
             startAt: 200,
             delay: 50,
@@ -184,8 +187,13 @@ class double_dispenser extends IPlant {
                     return;
                 }
                 // 向前发射普通箭矢
-                shootArrow(scene, this, 32);
+                shootFrontArrow(scene, this, 32);
+
                 // 向后发射firework箭矢
+                if (context.count % elapsed === 0) {
+                    shootBackFirework(scene, this, 32);
+                }
+                context.count++;
             },
             context: { count: 0 },
         });
@@ -251,7 +259,20 @@ function shootBackArrow(scene: Game, shooter: IPlant, baseDamage: number = 30) {
     });
 }
 
-function shootBackFirework(scene: Game, shooter: IPlant, baseDamage: number = 30) { }
+function shootBackFirework(scene: Game, shooter: IPlant, baseDamage: number = 30) {
+    if (!scene || !shooter || shooter.health <= 0) {
+        return;
+    }
+
+    const level = shooter.level;
+    //  根据等级略微提高伤害
+    const damage = GetIncValue(baseDamage, level, 1.4);
+    const penetrate = 1;
+
+    const arrow = NewHorizontalFireWork(scene, shooter.col, shooter.row, scene.positionCalc.GRID_SIZEX * 32, damage, 'zombie', 100);
+    arrow.penetrate = penetrate;
+    return arrow;
+}
 
 
 function NewDoubleDispenser(scene: Game, col: number, row: number, level: number
