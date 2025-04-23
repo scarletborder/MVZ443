@@ -4,22 +4,7 @@ import { IBullet } from "../../../models/IBullet";
 import { INightPlant, IPlant } from "../../../models/IPlant";
 import { IRecord } from "../../../models/IRecord";
 import { Game } from "../../../scenes/Game";
-import { Arrow } from "../../bullet/arrow";
-import { HFireWork } from "../../bullet/firework";
-
-
-// 允许反弹的类
-const BounceableBullet = [Arrow, HFireWork];
-
-function couldBounce(bullet: IBullet): boolean {
-    // 只允许反弹的类
-    for (const b of BounceableBullet) {
-        if (bullet instanceof b) {
-            return true;
-        }
-    }
-    return false;
-}
+import BounceableBullet from "../../bullet/bounceable";
 
 
 class ElasticPutin extends INightPlant {
@@ -85,7 +70,7 @@ class ElasticPutin extends INightPlant {
     // 处理前
     processCollider(wall: IPlant, bullet: IBullet) {
         // 保存原先速度
-        if (bullet.body && !wall.isSleeping && couldBounce(bullet)) {
+        if (bullet.body && !wall.isSleeping && (bullet instanceof BounceableBullet)) {
             bullet._prevX = bullet.body.velocity.x;
             return true;
         }
@@ -99,7 +84,7 @@ class ElasticPutin extends INightPlant {
      */
     bounceBulletOffWall(wall: IPlant, bullet: IBullet) {
         // 只会反弹arrow或者arrow的变体(原型链)
-        if (!bullet.body || !(couldBounce(bullet))) {
+        if (!bullet.body || !((bullet instanceof BounceableBullet))) {
             return;
         }
 
@@ -117,7 +102,7 @@ class ElasticPutin extends INightPlant {
 
         // 如果isLightning,对过来的arrow设置lightning
         if (this.isLightning) {
-            bullet.catchEnhancement('fire');
+            bullet.catchEnhancement('lightning');
         }
 
         // 结束

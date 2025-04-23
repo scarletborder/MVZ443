@@ -129,16 +129,111 @@ class double_dispenser extends IPlant {
             }
         });
     }
+
+    public onStarShards(): void {
+        super.onStarShards();
+
+        this.removeTimer();
+        const front = 35;
+        const back = 5;
+        this.Timer = this.bruteShootEvent(front, back);
+
+        // 恢复
+        const overallDuration = 200 + Math.max(50 * front, 150 * back);
+        this.scene.frameTicker.delayedCall({
+            delay: overallDuration,
+            callback: () => {
+                if (!this || !this.scene || this.health <= 0) return;
+
+                this.removeTimer();
+                this.Timer = this.normalShootEvent();
+            }
+        });
+
+
+    }
+
+    bruteShootEvent(front: number, back: number): FrameTimer | null {
+        // 如果对象或场景不存在，则直接返回 null
+        if (!this.scene || this.health <= 0) {
+            return null;
+        }
+        const scene = this.scene;
+
+        const moveDistance = this.head.displayWidth * 0.15;
+        const originalX = this.head.x;
+
+        // Tween：先向左移动
+        scene?.tweens.add({
+            targets: this.head,
+            x: originalX - moveDistance,
+            duration: 200,
+            ease: 'Sine.easeOut',
+            // 动画完成后也不必在这里发射箭，发射逻辑由 Timer 控制
+        });
+
+        // 创建 Timer 事件：延迟 200ms 后开始暴力发射箭，每 50ms 一次
+        const bruteTimer = scene.frameTicker.addEvent({
+            startAt: 200,
+            delay: 50,
+            repeat: front - 1,
+            callback: (context) => {
+                // 每次发射前判断对象是否存活
+                if (!this.scene || this.health <= 0) {
+                    this.removeTimer();
+                    return;
+                }
+                // 向前发射普通箭矢
+                shootArrow(scene, this, 32);
+                // 向后发射firework箭矢
+            },
+            context: { count: 0 },
+        });
+
+        // 计算总持续时间：Tween 200ms + Timer 发射的时长
+        const overallDuration = 200 + Math.max(50 * front, 150 * back);
+        // 发射结束后回归 Tween
+        scene.time.delayedCall(overallDuration, () => {
+            if (!this.scene || this.health <= 0) {
+                return;
+            }
+            this.scene?.tweens.add({
+                targets: this.head,
+                x: originalX,
+                duration: 200,
+                ease: 'Sine.easeIn'
+            });
+        });
+
+        return bruteTimer;
+    }
+
+    destroy(fromScene?: boolean): void {
+        this.head?.destroy();
+        this.base?.destroy();
+        super.destroy(fromScene);
+    }
 }
 
+
+
 function shootArrow(scene: Game, shooter: IPlant, baseDamage: number = 30) {
+    shootBackArrow(scene, shooter, baseDamage);
+    shootFrontArrow(scene, shooter, baseDamage);
+}
+
+function shootFrontArrow(scene: Game, shooter: IPlant, baseDamage: number = 30) {
     if (!scene || !shooter || shooter.health <= 0) {
         return;
     }
-
     const arrow1 = NewArrow(scene, shooter.col, shooter.row, scene.positionCalc.GRID_SIZEX * 32, baseDamage);
     arrow1.penetrate = 1;
+}
 
+function shootBackArrow(scene: Game, shooter: IPlant, baseDamage: number = 30) {
+    if (!scene || !shooter || shooter.health <= 0) {
+        return;
+    }
     const arrow2 = NewArrow(scene, shooter.col, shooter.row, scene.positionCalc.GRID_SIZEX * 32, baseDamage);
     arrow2.setVelocityX(-300 * scene.positionCalc.scaleFactor);
     arrow2.penetrate = 1;
@@ -155,6 +250,9 @@ function shootArrow(scene: Game, shooter: IPlant, baseDamage: number = 30) {
         }
     });
 }
+
+function shootBackFirework(scene: Game, shooter: IPlant, baseDamage: number = 30) { }
+
 
 function NewDoubleDispenser(scene: Game, col: number, row: number, level: number
 ): double_dispenser {

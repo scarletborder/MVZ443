@@ -1,6 +1,5 @@
 import { Scene } from 'phaser';
 import { GameParams } from '../models/GameParams';
-import { ResourceMapData } from '../../constants/map_data';
 import { EventBus } from '../EventBus';
 import PlantFactoryMap from '../presets/plant';
 import { HasConnected } from '../../utils/net/sync';
@@ -122,8 +121,15 @@ export class Preloader extends Scene {
             { frameWidth: 16, frameHeight: 16 });
         this.load.spritesheet('anime/explosion', 'anime/explosion.png',
             { frameWidth: 32, frameHeight: 32 });
+
         this.load.spritesheet('anime/fire', 'anime/fire.png',
             { frameWidth: 16, frameHeight: 16 });
+        this.load.spritesheet('anime/ice_trail', 'anime/ice_trail.png',
+            { frameWidth: 16, frameHeight: 16 });
+        this.load.spritesheet('anime/lightning_trail', 'anime/lightning_trail.png',
+            { frameWidth: 16, frameHeight: 16 });
+
+
         this.load.image('shoot_bomb', 'anime/shoot_bomb.png');
         this.load.spritesheet('anime/dirt_out', 'anime/dirt_out.png',
             { frameWidth: 64, frameHeight: 64 });
@@ -178,14 +184,6 @@ export class Preloader extends Scene {
         this.load.image('sprMutantCover', 'sprite/mutant/cover.png');
     }
 
-    // 加载bgimg和bgm 
-    loadBackground(stageId: number) {
-        const mapdata = ResourceMapData.get(stageId);
-        this.load.image('bgimg', mapdata?.bgimg);
-        this.load.audio('bgm', mapdata?.bgm);
-        // this.load.image('bgpix1', 'bg/bgPaper1.png');
-        // this.load.image('bgpix3', 'bg/bgPaper3.png');
-    }
 
     // 加载指定关卡
     loadStage(params: GameParams) {

@@ -1,4 +1,4 @@
-import { _Typedebuffs } from "../../constants/game";
+import { _TypeArrowEnhancement, _Typedebuffs } from "../../constants/game";
 import DepthManager from "../../utils/depth";
 import IObstacle from "../presets/obstacle/IObstacle";
 import { Game } from "../scenes/Game";
@@ -211,6 +211,7 @@ export class IBullet extends Phaser.Physics.Arcade.Sprite {
     }
 
     destroy(fromScene?: boolean): void {
+        // 销毁物理对象
         if (this.visibleSprite) {
             this.visibleSprite.destroy();
             this.visibleSprite = null;

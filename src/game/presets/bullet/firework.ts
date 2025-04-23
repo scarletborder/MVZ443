@@ -3,10 +3,11 @@
 import { IBullet } from "../../models/IBullet";
 import { IExpolsion } from "../../models/IExplosion";
 import { Game } from "../../scenes/Game";
+import BounceableBullet from "./bounceable";
 
 
 
-export class HFireWork extends IBullet {
+export class HFireWork extends BounceableBullet {
     scene: Game;
     originalX: number;
     maxDistance: number = 100;
