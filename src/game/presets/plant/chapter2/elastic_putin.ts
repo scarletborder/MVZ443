@@ -1,13 +1,28 @@
 import { SECKILL } from "../../../../../public/constants";
+import i18n from "../../../../utils/i18n";
 import { IBullet } from "../../../models/IBullet";
-import { IPlant } from "../../../models/IPlant";
+import { INightPlant, IPlant } from "../../../models/IPlant";
 import { IRecord } from "../../../models/IRecord";
 import { Game } from "../../../scenes/Game";
 import { Arrow } from "../../bullet/arrow";
+import { HFireWork } from "../../bullet/firework";
 
 
+// 允许反弹的类
+const BounceableBullet = [Arrow, HFireWork];
 
-class ElasticPutin extends IPlant {
+function couldBounce(bullet: IBullet): boolean {
+    // 只允许反弹的类
+    for (const b of BounceableBullet) {
+        if (bullet instanceof b) {
+            return true;
+        }
+    }
+    return false;
+}
+
+
+class ElasticPutin extends INightPlant {
     // 技能, 是否让穿过的bullet带上雷电爆炸属性
     isLightning: boolean = false;
 
@@ -42,6 +57,7 @@ class ElasticPutin extends IPlant {
 
     public onStarShards(): void {
         super.onStarShards();
+        this.setSleeping(false); // 立即唤醒
         const scene = this.scene;
         if (!scene) return;
         // 为所有反弹的子弹添加雷电属性
@@ -69,7 +85,7 @@ class ElasticPutin extends IPlant {
     // 处理前
     processCollider(wall: IPlant, bullet: IBullet) {
         // 保存原先速度
-        if (bullet.body) {
+        if (bullet.body && !wall.isSleeping && couldBounce(bullet)) {
             bullet._prevX = bullet.body.velocity.x;
             return true;
         }
@@ -83,7 +99,7 @@ class ElasticPutin extends IPlant {
      */
     bounceBulletOffWall(wall: IPlant, bullet: IBullet) {
         // 只会反弹arrow或者arrow的变体(原型链)
-        if (!bullet.body || !(bullet instanceof Arrow)) {
+        if (!bullet.body || !(couldBounce(bullet))) {
             return;
         }
 
@@ -101,7 +117,7 @@ class ElasticPutin extends IPlant {
 
         // 如果isLightning,对过来的arrow设置lightning
         if (this.isLightning) {
-            bullet.catchEnhancement('lightning');
+            bullet.catchEnhancement('fire');
         }
 
         // 结束
@@ -124,7 +140,7 @@ const ElasticPutinRecord: IRecord = {
     cooldownTime: () => 8,
     NewFunction: NewElasticPutin,
     texture: 'plant/elastic_putin',
-    description: () => 'tan tan',
+    description: i18n.S('elastic_putin_description'),
     NextLevelStuff: (level: number) => {
         return [{
             type: SECKILL,

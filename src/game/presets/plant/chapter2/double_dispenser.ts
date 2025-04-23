@@ -4,6 +4,7 @@
 
 import { SECKILL } from "../../../../../public/constants";
 import { item } from "../../../../components/shop/types";
+import i18n from "../../../../utils/i18n";
 import { IPlant } from "../../../models/IPlant";
 import { IRecord } from "../../../models/IRecord";
 import { Game } from "../../../scenes/Game";
@@ -174,7 +175,7 @@ const DoubleDispenser_Record: IRecord = {
     cooldownTime: () => 10,
     NewFunction: NewDoubleDispenser,
     texture: "plant/double_dispenser",
-    description: () => "双头发射器",
+    description: i18n.S('double_dispenser_description'),
     NextLevelStuff: levelAndstuff,
 }
 

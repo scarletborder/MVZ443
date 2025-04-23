@@ -155,6 +155,7 @@ class at_dispenser extends IPlant {
                     }
                     return;
                 }
+                if (this.isSleeping) return;
                 if (this.scene.monsterSpawner.hasMonsterInRowWithElastic(this.row)
                     || this.scene?.monsterSpawner.hasMonsterInRowAfterX(this.row, this.x)) {
                     this.shootAnimation();

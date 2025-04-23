@@ -142,8 +142,9 @@ class triple_dispenser extends IPlant {
                     }
                     return;
                 }
+                if (this.isSleeping) return;
+
                 const scene = this.scene;
-                if (!scene) return;
                 if (
                     scene.monsterSpawner.hasMonsterInRowWithElastic(this.row - 1)
                     || scene.monsterSpawner.hasMonsterInRowWithElastic(this.row)

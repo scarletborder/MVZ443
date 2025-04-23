@@ -3,29 +3,45 @@ import { item } from "../../../../components/shop/types";
 import i18n from "../../../../utils/i18n";
 import { GetIncValue } from "../../../../utils/numbervalue";
 import { NewLaserByGrid } from "../../../models/ILaser";
-import { IPlant } from "../../../models/IPlant";
+import { INightPlant, IPlant } from "../../../models/IPlant";
 import { IRecord } from "../../../models/IRecord";
 import { Game } from "../../../scenes/Game";
 
-class IceBomb extends IPlant {
+class IceBomb extends INightPlant {
     game: Game;
-    hasKill: boolean;
     damage: number = 5;
     constructor(scene: Game, col: number, row: number, level: number) {
         super(scene, col, row, IceBombRecord.texture, IceBombRecord.pid, level);
         // 取消物理效果
-        scene.physics.world.disable(this);
         this.game = scene;
-        this.setHealthFirstly(SECKILL);
-        this.hasKill = false;
-        this.createRects();
+        this.setHealthFirstly(600);
         this.damage = GetIncValue(14, 2, level);
         if (level >= 5) {
             this.damage = 350;
         }
-        const damage = this.damage;
 
-        this.Timer = scene.frameTicker.delayedCall({
+        if (!this.isSleeping) {
+            this.shootLaser();
+        }
+    }
+
+    public onStarShards(): void {
+        this.shootLaser();
+    }
+
+    setSleeping(value: boolean): void {
+        super.setSleeping(value);
+        if (false === value) {
+            this.shootLaser();
+        }
+    }
+
+    shootLaser() {
+        if (!this.scene || this.health <= 0) return;
+        this.createRects();
+        const scene = this.scene;
+        const damage = this.damage;
+        scene.frameTicker.delayedCall({
             delay: 500,
             callback: () => {
                 this.setVisible(false);
@@ -65,10 +81,10 @@ class IceBomb extends IPlant {
                     }
                     );
                 }
-
-                this.destroyPlant();
             }
         });
+
+        this.destroyPlant();
     }
 
     createRects() {
