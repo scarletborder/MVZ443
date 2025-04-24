@@ -1,5 +1,6 @@
 import { SECKILL } from "../../../../../public/constants";
 import { item } from "../../../../components/shop/types";
+import ProjectileDamage from "../../../../constants/damage";
 import i18n from "../../../../utils/i18n";
 import { GetIncValue } from "../../../../utils/numbervalue";
 import { IExpolsion } from "../../../models/IExplosion";
@@ -51,7 +52,7 @@ class at_dispenser extends IPlant {
         this.setHealthFirstly(health);
 
         // anim
-        let size = scene.positionCalc.getPlantDisplaySize();
+        const size = scene.positionCalc.getPlantDisplaySize();
         // 头部：frame 1，初始位置与底座对齐
         this.head = scene.add.sprite(this.x, this.y, texture, 2).setOrigin(0.5, 1)
             .setDisplaySize(size.sizeX * 1.2, size.sizeY * 1.2).setDepth(this.depth);
@@ -180,17 +181,18 @@ function NewATDispenser(scene: Game, col: number, row: number, level: number): I
     return peashooter;
 }
 
-function shootArrow(scene: Game, shooter: IPlant, baseDamage: number = 300, isStar: boolean = false) {
+function shootArrow(scene: Game, shooter: IPlant) {
     if (!scene || !shooter || shooter.health <= 0) {
         return;
     }
 
     const level = shooter.level;
     //  根据等级略微提高伤害
-    const damage = GetIncValue(baseDamage, level, 1.4);
+    const damage = GetIncValue(ProjectileDamage.bullet.firework, level, 1.4);
     const penetrate = 1;
 
-    const arrow = NewHorizontalFireWork(scene, shooter.col, shooter.row, scene.positionCalc.GRID_SIZEX * 32, damage, 'zombie', 100);
+    const arrow = NewHorizontalFireWork(scene, shooter.col, shooter.row,
+        scene.positionCalc.GRID_SIZEX * 32, damage, 'zombie', ProjectileDamage.bullet.firework_splash);
     arrow.penetrate = penetrate;
     return arrow;
 }

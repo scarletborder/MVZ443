@@ -11,9 +11,3 @@ export function EnhancementPriority(new_en: _TypeArrowEnhancement, old_en: _Type
     return priority[new_en] > priority[old_en];
 }
 
-
-export const ProjectileDamage = {
-    arrow: 20,
-    firework: 2000,
-
-}

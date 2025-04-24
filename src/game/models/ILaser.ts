@@ -70,7 +70,7 @@ export class ILaser extends Phaser.GameObjects.Rectangle {
         this.ScreenHeight = scene.sys.canvas.height;
 
         this.targetCamp = target;
-        this.isFlying = params?.toSky || false;
+        this.isFlying = params?.toSky ?? false;
         this.damage = damage;
 
         if (params) {

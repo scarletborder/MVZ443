@@ -12,6 +12,7 @@ export type explosionParams = {
     upGrid: number // 中心向上,必须>=0的实数,为0意思是仅本行,1为本行和上一行
     downGrid?: number // [为空时等于up]中心向下,必须>=0的实数,为0意思是仅本行
     targetCamp?: 'plant' | 'zombie' // 目标阵营,默认打僵尸 
+    disableAnime?: boolean // 是否禁用爆炸特效,默认不禁用
 }
 
 export class IExpolsion extends Phaser.Physics.Arcade.Sprite {
@@ -53,13 +54,15 @@ export class IExpolsion extends Phaser.Physics.Arcade.Sprite {
 
 
         // Get explosion range
-        let { rightGrid, leftGrid, upGrid, downGrid } = params;
+        let { rightGrid, leftGrid, upGrid, downGrid, disableAnime } = params;
         if (!downGrid) downGrid = upGrid;
 
         const rightWidth = rightGrid * scene.positionCalc.GRID_SIZEX;
         const leftWidth = leftGrid * scene.positionCalc.GRID_SIZEX;
         const upHeight = (upGrid + 1 / 3) * scene.positionCalc.GRID_SIZEY;
         const downHeight = (downGrid + 1 / 3) * scene.positionCalc.GRID_SIZEY;
+        const _disableAnime = disableAnime ?? false;
+
 
         // Calculate collision box dimensions
         const totalWidth = rightWidth + leftWidth;
@@ -71,6 +74,21 @@ export class IExpolsion extends Phaser.Physics.Arcade.Sprite {
             .setOrigin(0, 0)
             .setVisible(false) // Make the sprite invisible
             .setOffset(-leftWidth, -upHeight); // Position the box correctly relative to center
+
+
+        IExpolsion.Group.add(this, true);
+
+        scene.frameTicker.delayedCall({
+            delay: 50,
+            callback: () => {
+                this.destroy();
+                if (onCompleteCallback) {
+                    onCompleteCallback();
+                }
+            }
+        });
+
+        if (_disableAnime === true) return;
 
         // Set up and play animation
         // 创建多个动画对象
@@ -124,18 +142,6 @@ export class IExpolsion extends Phaser.Physics.Arcade.Sprite {
             }
         }
 
-        IExpolsion.Group.add(this, true);
-
-        scene.frameTicker.delayedCall({
-            delay: 50,
-            callback: () => {
-                this.destroy();
-                if (onCompleteCallback) {
-                    onCompleteCallback();
-                }
-            }
-        })
-
         // 创建并播放动画
         if (!scene.anims.exists('explosion')) {
             scene.anims.create({
@@ -146,14 +152,12 @@ export class IExpolsion extends Phaser.Physics.Arcade.Sprite {
             });
         }
 
-        let completedAnimations = 0;
         explosionSprites.forEach((anime, index) => {
             const delay = 150 * defaultRandom(); // 0-150ms随机延迟
             scene.time.delayedCall(delay, () => {
                 anime.play('explosion');
                 anime.once('animationcomplete', () => {
                     anime.destroy();
-                    completedAnimations++;
                 });
             });
         });

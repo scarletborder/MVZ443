@@ -1,5 +1,6 @@
 import { SECKILL } from "../../../../../public/constants";
 import { item } from "../../../../components/shop/types";
+import ProjectileDamage from "../../../../constants/damage";
 import i18n from "../../../../utils/i18n";
 import { GetIncValue } from "../../../../utils/numbervalue";
 import { NewExplosionByGrid } from "../../../models/IExplosion";
@@ -28,7 +29,7 @@ class pumkin_wan extends INightPlant {
             startAt: 1800,
             callback: () => {
                 NewExplosionByGrid(game, col, row, {
-                    damage: 350,
+                    damage: 275,
                     upGrid: 1,
                     leftGrid: 1.5,
                     rightGrid: 1.5,
@@ -94,7 +95,7 @@ function NewPumpkinWan(scene: Game, col: number, row: number, level: number): IP
 
 function shootLaser(scene: Game, shooter: IPlant) {
     const level = shooter.level;
-    const damage = GetIncValue(65, 1.35, level);
+    const damage = GetIncValue(ProjectileDamage.laser.heavy_laser, 1.35, level);
     const start = (level >= 9 ? 2.5 : 1.5);
     const distance = (level >= 9 ? 5 : 3);
 

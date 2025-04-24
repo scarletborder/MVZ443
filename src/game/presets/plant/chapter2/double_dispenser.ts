@@ -4,6 +4,7 @@
 
 import { SECKILL } from "../../../../../public/constants";
 import { item } from "../../../../components/shop/types";
+import ProjectileDamage from "../../../../constants/damage";
 import i18n from "../../../../utils/i18n";
 import { GetIncValue } from "../../../../utils/numbervalue";
 import { IPlant } from "../../../models/IPlant";
@@ -119,7 +120,7 @@ class double_dispenser extends IPlant {
                     return;
                 }
                 const scene = this.scene;
-                if (!scene) return;
+                if (!scene || this.isSleeping) return;
                 if (
                     scene.monsterSpawner.hasMonsterInRow(this.row)) {
                     this.shootAnimation();
@@ -137,11 +138,12 @@ class double_dispenser extends IPlant {
 
         this.removeTimer();
         const front = 35;
+        const frontInterval = 50;
         const back = 5;
-        this.Timer = this.bruteShootEvent(front, back);
+        this.Timer = this.bruteShootEvent(front, back, frontInterval);
 
         // 恢复
-        const overallDuration = 200 + Math.max(50 * front, 150 * back);
+        const overallDuration = 200 + frontInterval * front;
         this.scene.frameTicker.delayedCall({
             delay: overallDuration,
             callback: () => {
@@ -155,7 +157,9 @@ class double_dispenser extends IPlant {
 
     }
 
-    bruteShootEvent(front: number, back: number): FrameTimer | null {
+    bruteShootEvent(front: number, back: number,
+        frontInterval: number
+    ): FrameTimer | null {
         // 如果对象或场景不存在，则直接返回 null
         if (!this.scene || this.health <= 0) {
             return null;
@@ -178,7 +182,7 @@ class double_dispenser extends IPlant {
         const elapsed = Math.floor(front / back);
         const bruteTimer = scene.frameTicker.addEvent({
             startAt: 200,
-            delay: 50,
+            delay: frontInterval,
             repeat: front - 1,
             callback: (context) => {
                 // 每次发射前判断对象是否存活
@@ -187,11 +191,11 @@ class double_dispenser extends IPlant {
                     return;
                 }
                 // 向前发射普通箭矢
-                shootFrontArrow(scene, this, 32);
+                shootFrontArrow(scene, this, 30);
 
                 // 向后发射firework箭矢
                 if (context.count % elapsed === 0) {
-                    shootBackFirework(scene, this, 32);
+                    shootBackFirework(scene, this);
                 }
                 context.count++;
             },
@@ -199,7 +203,7 @@ class double_dispenser extends IPlant {
         });
 
         // 计算总持续时间：Tween 200ms + Timer 发射的时长
-        const overallDuration = 200 + Math.max(50 * front, 150 * back);
+        const overallDuration = 200 + frontInterval * front;
         // 发射结束后回归 Tween
         scene.time.delayedCall(overallDuration, () => {
             if (!this.scene || this.health <= 0) {
@@ -225,7 +229,8 @@ class double_dispenser extends IPlant {
 
 
 
-function shootArrow(scene: Game, shooter: IPlant, baseDamage: number = 30) {
+function shootArrow(scene: Game, shooter: IPlant) {
+    const baseDamage = GetIncValue(ProjectileDamage.bullet.arrow, 1.3, shooter.level);
     shootBackArrow(scene, shooter, baseDamage);
     shootFrontArrow(scene, shooter, baseDamage);
 }
@@ -259,14 +264,14 @@ function shootBackArrow(scene: Game, shooter: IPlant, baseDamage: number = 30) {
     });
 }
 
-function shootBackFirework(scene: Game, shooter: IPlant, baseDamage: number = 30) {
+function shootBackFirework(scene: Game, shooter: IPlant) {
     if (!scene || !shooter || shooter.health <= 0) {
         return;
     }
 
     const level = shooter.level;
     //  根据等级略微提高伤害
-    const damage = GetIncValue(baseDamage, level, 1.4);
+    const damage = GetIncValue(150, level, 1.2);
     const penetrate = 1;
 
     const arrow = NewHorizontalFireWork(scene, shooter.col, shooter.row, scene.positionCalc.GRID_SIZEX * 32, damage, 'zombie', 100);

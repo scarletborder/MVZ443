@@ -1,5 +1,6 @@
 import { SECKILL } from "../../../../../public/constants";
 import { item } from "../../../../components/shop/types";
+import ProjectileDamage from "../../../../constants/damage";
 import i18n from "../../../../utils/i18n";
 import { GetIncValue } from "../../../../utils/numbervalue";
 import { IExpolsion } from "../../../models/IExplosion";
@@ -11,7 +12,7 @@ import NewSnowBullet, { SnowBall } from "../../bullet/snowball";
 
 class smallDispenser extends INightPlant {
     maxDistance: number; // 画面的绝对坐标,非格子
-    damage: number;
+
     game: Game
     constructor(scene: Game, col: number, row: number, texture: string, level: number) {
         let maxDistance = (3.8 * scene.positionCalc.GRID_SIZEX);
@@ -48,7 +49,8 @@ class smallDispenser extends INightPlant {
         // 射出一个炸弹雪球
 
         const snowball = new BombSnowBall(this.game, this.col, this.row, 'bullet/snowball',
-            GetIncValue(1050, 1.2, this.level), this.game?.positionCalc.GRID_SIZEY * 12, 'zombie');
+            GetIncValue(ProjectileDamage.bullet.bomb_fireBall, 1.2, this.level),
+            this.game?.positionCalc.GRID_SIZEY * 12, 'zombie');
     }
 }
 
@@ -64,7 +66,7 @@ function NewDispenser(scene: Game, col: number, row: number, level: number): IPl
 function shootSnowBall(scene: Game, shooter: IPlant, maxDistance: number) {
     const level = shooter.level;
     //  根据等级略微提高伤害
-    const damage = GetIncValue(30, level, 1.3);
+    const damage = GetIncValue(ProjectileDamage.bullet.snowBall, level, 1.3);
 
 
     if (!shooter.isSleeping) {
@@ -80,7 +82,7 @@ class BombSnowBall extends SnowBall {
         const scene = this.game;
         const x = this.x;
         const row = this.row;
-        const dmg = this.damage;
+        const dmg = ProjectileDamage.bullet.bomb_fireBall_splash;
         super.destroy();
         if (!scene) return;
         // 生成大爆炸

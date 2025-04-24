@@ -1,5 +1,6 @@
 import { SECKILL } from "../../../../../public/constants";
 import { item } from "../../../../components/shop/types";
+import ProjectileDamage from "../../../../constants/damage";
 import i18n from "../../../../utils/i18n";
 import { GetDecValue, GetIncValue } from "../../../../utils/numbervalue";
 import { NewLaserByGrid } from "../../../models/ILaser";
@@ -75,13 +76,13 @@ class pumkin extends INightPlant {
         const row = this.row;
         for (let i = Math.max(0, row - 1); i <= Math.min(this.game?.positionCalc.Row_Number - 1, row + 1); i++) {
             NewLaserByGrid(this.game, col, i, 12,
-                GetIncValue(625, 1.35, this.level), 'zombie', 1000);
+                GetIncValue(300, 1.3, this.level), 'zombie', 1000);
         }
     }
 }
 
 function attackDistance(level: number = 1) {
-    return 4.8;
+    return 4.6;
 }
 
 function NewPumpkin(scene: Game, col: number, row: number, level: number): IPlant {
@@ -91,7 +92,7 @@ function NewPumpkin(scene: Game, col: number, row: number, level: number): IPlan
 
 function shootLaser(scene: Game, shooter: IPlant) {
     const level = shooter.level;
-    const damage = GetIncValue(42, 1.35, level);
+    const damage = GetIncValue(ProjectileDamage.laser.light_laser, 1.35, level);
 
     if (level < 9) {
         const laser = NewLaserByGrid(scene, shooter.col, shooter.row,

@@ -1,5 +1,6 @@
 import { SECKILL } from "../../../../../public/constants";
 import { item } from "../../../../components/shop/types";
+import ProjectileDamage from "../../../../constants/damage";
 import i18n from "../../../../utils/i18n";
 import { GetIncValue } from "../../../../utils/numbervalue";
 import { IPlant } from "../../../models/IPlant";
@@ -186,7 +187,7 @@ class dispenser extends IPlant {
                     this.removeTimer();
                     return;
                 }
-                shootArrow(this.game, this, 32, true);
+                shootArrow(this.game, this, true);
             }
         });
 
@@ -221,14 +222,14 @@ function NewDispenser(scene: Game, col: number, row: number, level: number): IPl
     return peashooter;
 }
 
-function shootArrow(scene: Game, shooter: IPlant, baseDamage: number = 30, isStar: boolean = false) {
+function shootArrow(scene: Game, shooter: IPlant, isStar: boolean = false) {
     if (!scene || !shooter || shooter.health <= 0) {
         return;
     }
 
     const level = shooter.level;
     //  根据等级略微提高伤害
-    let damage = GetIncValue(baseDamage, level, 1.35);
+    let damage = GetIncValue(ProjectileDamage.bullet.arrow, level, 1.35);
     let penetrate = 1;
     if (level >= 3) {
         penetrate += 1;

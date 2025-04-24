@@ -15,7 +15,7 @@ class IceBomb extends INightPlant {
         // 取消物理效果
         this.game = scene;
         this.setHealthFirstly(600);
-        this.damage = GetIncValue(14, 2, level);
+        this.damage = GetIncValue(15, 2, level);
         if (level >= 5) {
             this.damage = 350;
         }
@@ -52,7 +52,8 @@ class IceBomb extends INightPlant {
                     const laser = NewLaserByGrid(scene, -1, row, 12,
                         damage, 'zombie', 90, {
                         debuff: 'frozen',
-                        duration: 5000
+                        duration: 5000,
+                        toSky: true
                     }, {
                         invisible: true,
                         color: 0x00ffff,
@@ -70,9 +71,10 @@ class IceBomb extends INightPlant {
                 // 发射大道隐藏slow激光
                 for (let row = 0; row < scene.positionCalc.Row_Number; row++) {
                     const laser = NewLaserByGrid(scene, -1, row, 12,
-                        damage, 'zombie', 90, {
+                        10, 'zombie', 90, {
                         debuff: 'slow',
-                        duration: 5000
+                        duration: 5000,
+                        toSky: true
                     }, {
                         invisible: true,
                         color: 0x00ffff,
