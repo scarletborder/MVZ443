@@ -218,6 +218,16 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
                                 debounce((newVal) => settingManager.setIsBgm(newVal), 50)(val);
                             }
                         }
+                    },
+                    {
+                        title: "音效",
+                        description: "启用/禁用音效",
+                        controlType: "switcher",
+                        controlProps: {
+                            value: settingManager.isSoundAudio, onToggle: (val) => {
+                                debounce((newVal) => settingManager.setIsSoundAudio(newVal), 50)(val);
+                            }
+                        }
                     }
                 ]
             }

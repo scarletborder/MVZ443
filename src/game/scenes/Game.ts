@@ -212,7 +212,7 @@ export class Game extends Scene {
         EventBus.on('setIsPaused', this.handlePause, this);
         EventBus.on('game-fail', this.handleExit, this);
 
-        this.musical = new Musical(this, this.params.gameSettings.isBgm, true);
+        this.musical = new Musical(this, this.params.gameSettings.isBgm, this.params.gameSettings.isSoundAudio);
         this.sendQueue.sendReady();
     }
 
@@ -297,6 +297,8 @@ export class Game extends Scene {
     handleRemovePlant(pid: number, col: number, row: number) {
         // 本地移除
         this.gardener.removePlant(pid, col, row);
+        // 音效
+        this.musical.plantAudio.play('plantRemove');
     }
 
     handleStarShards(pid: number, col: number, row: number, uid: number) {
@@ -308,6 +310,7 @@ export class Game extends Scene {
     }
 
     broadCastFlag() {
+        this.musical.unlimitAudio.play('wave1');
         // 创建新的广播文本
         const zombieText = this.add.text(
             this.cameras.main.width / 2,
@@ -325,6 +328,7 @@ export class Game extends Scene {
         this.time.addEvent({
             delay: 4000,
             callback: () => {
+                this.musical.unlimitAudio.play('wave2');
                 zombieText.setText('来袭!!');
                 // 3秒后销毁文本对象
                 this.time.addEvent({
@@ -347,6 +351,8 @@ export class Game extends Scene {
     chooseCard(pid: number, level: number) {
         this.gardener.setPrePlantPid(pid, level);
         EventBus.emit('card-deselected', { pid }); // 通知所有卡片取消选中
+        // 播放音效
+        this.musical.plantAudio.play('plantChoose');
     }
 
     // app->game 取消预种植

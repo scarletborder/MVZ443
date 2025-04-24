@@ -208,7 +208,7 @@ export class Preloader extends Scene {
         this.load.audioSprite(
             'sfx',
             'audio/sounds/sfx-sprite.json',
-            'audio/sounds/sfx-sprite.wav',
+            'audio/sounds/sfx-sprite.ogg',
         );
     }
 

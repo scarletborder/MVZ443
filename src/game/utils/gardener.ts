@@ -73,6 +73,9 @@ export default class Gardener {
             } else {
                 this.pickAxe();
             }
+
+            // 音效
+            this.scene.musical.plantAudio.play('plantRemove');
         });
 
         EventBus.on('starshards-click', () => {

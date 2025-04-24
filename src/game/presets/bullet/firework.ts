@@ -29,6 +29,8 @@ export class HFireWork extends BounceableBullet {
 
         this.originalX = this.x;
         this.addVisible();
+
+        scene.musical.shootFireworkPool.play(); // 播放音效
     }
 
     update(...args: any[]): void {

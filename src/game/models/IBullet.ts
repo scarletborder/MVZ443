@@ -82,6 +82,13 @@ export class IBullet extends Phaser.Physics.Arcade.Sprite {
         this.updateRealPosition();
     }
 
+    // 反向X速度,不能在collider中使用
+    reverseVelocityX(): void {
+        if (this.body) {
+            this.setVelocityX(-this.body.velocity.x);
+        }
+    }
+
     public addVisible(): void {
         if (!this.scene) return;
         // 隐藏原有物理 sprite，避免重复显示

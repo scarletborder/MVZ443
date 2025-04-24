@@ -77,7 +77,7 @@ export class SkeletonBow extends EnhancedSkeleton {
             scene.positionCalc.GRID_SIZEX * 32, damage, 'plant');
         arrow.setX(this.x);
         arrow.setY(this.y - scene.positionCalc.GRID_SIZEY * 0.7);
-        arrow.setVelocityX(-200 * scene.positionCalc.scaleFactor);
+        arrow.reverseVelocityX();
     }
 }
 

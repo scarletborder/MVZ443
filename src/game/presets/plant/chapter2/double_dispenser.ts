@@ -249,7 +249,7 @@ function shootBackArrow(scene: Game, shooter: IPlant, baseDamage: number = 30) {
         return;
     }
     const arrow2 = NewArrow(scene, shooter.col, shooter.row, scene.positionCalc.GRID_SIZEX * 32, baseDamage);
-    arrow2.setVelocityX(-300 * scene.positionCalc.scaleFactor);
+    arrow2.reverseVelocityX();
     arrow2.penetrate = 1;
 
     scene.frameTicker.delayedCall({
@@ -259,7 +259,7 @@ function shootBackArrow(scene: Game, shooter: IPlant, baseDamage: number = 30) {
                 return;
             }
             const arrow3 = NewArrow(scene, shooter.col, shooter.row, scene.positionCalc.GRID_SIZEX * 32, baseDamage);
-            arrow3.setVelocityX(-300 * scene.positionCalc.scaleFactor);
+            arrow3.reverseVelocityX();
             arrow3.penetrate = 1;
         }
     });
@@ -276,7 +276,7 @@ function shootBackFirework(scene: Game, shooter: IPlant) {
     const penetrate = 1;
 
     const arrow = NewHorizontalFireWork(scene, shooter.col, shooter.row, scene.positionCalc.GRID_SIZEX * 32, damage, 'zombie', 100);
-    arrow.setVelocityX(-250 * scene.positionCalc.scaleFactor);
+    arrow.reverseVelocityX();
     arrow.penetrate = penetrate;
     return arrow;
 }

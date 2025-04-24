@@ -12,9 +12,12 @@ export default class Musical {
     private music: Phaser.Sound.BaseSound;
     private dumpMusic: Phaser.Sound.BaseSound | null = null;
 
+    unlimitAudio: ThrottledAudio; // 无限制音效
     plantAudio: ThrottledAudio; // 植物音效节流
 
     shootArrowPool: AudioPool; // 射箭音效池
+    shootFireworkPool: AudioPool; // 烟花音效池
+    shootLaserPool: AudioPool; // 激光音效池
 
     zombieSpawnAudio: ThrottledAudio; // 僵尸出生音效节流
     zombieDeathPool: AudioPool; // 僵尸死亡音效池
@@ -22,6 +25,7 @@ export default class Musical {
     skeletonSpawnAudio: ThrottledAudio; // 骷髅出生音效节流
     skeletonDeathPool: AudioPool; // 骷髅死亡音效池
     shieldHitAudio: ThrottledAudio; // 通用防具音效节流
+    explodeAudio: ThrottledAudio; // 爆炸音效节流
 
 
     constructor(game: Game, isBgm: boolean, isSound: boolean) {
@@ -36,14 +40,22 @@ export default class Musical {
         // 音效 
         const isMuted = !isSound; // 静音
 
+        this.unlimitAudio = new ThrottledAudio(this.game, 50, isMuted); // 无限制音效
         this.plantAudio = new ThrottledAudio(this.game, 200, isMuted); // 植物音效节流
         this.shootArrowPool = new AudioPool(this.game, 'sfx', 'shootArrow', 4, isMuted);
+        this.shootFireworkPool = new AudioPool(this.game, 'sfx', 'shootFirework', 4, isMuted);
+        this.shootLaserPool = new AudioPool(this.game, 'sfx', 'shootLaser', 4, isMuted);
+
+
         this.zombieSpawnAudio = new ThrottledAudio(this.game, 1500, isMuted);
         this.zombieDeathPool = new AudioPool(this.game, 'sfx', 'zombieDeath', 4, isMuted);
         this.skeletonSpawnAudio = new ThrottledAudio(this.game, 1500, isMuted);
         this.skeletonDeathPool = new AudioPool(this.game, 'sfx', 'skeletonDeath', 4, isMuted);
         this.generalHitAudio = new ThrottledAudio(this.game, 200, isMuted);
         this.shieldHitAudio = new ThrottledAudio(this.game, 200, isMuted);
+
+        this.explodeAudio = new ThrottledAudio(this.game, 500, isMuted);
+
     }
 
     public playCurrent() {

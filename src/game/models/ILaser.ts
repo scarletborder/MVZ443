@@ -99,6 +99,9 @@ export class ILaser extends Phaser.GameObjects.Rectangle {
                 this.destroy();
             }
         });
+
+        // 音效
+        scene.musical.shootLaserPool.play();
     }
 
     CollideObject(object: IMonster | IPlant | IObstacle) {

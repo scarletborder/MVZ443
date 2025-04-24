@@ -15,6 +15,7 @@ export interface GameSettings {
     isBluePrint: boolean;
     isDebug: boolean;
     isBgm: boolean;
+    isSoundAudio: boolean;
 }
 
 export interface ChapterDescription {

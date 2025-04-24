@@ -22,6 +22,7 @@ interface GameSettings {
     isBluePrint: boolean;
     isDebug: boolean;
     isBgm: boolean;
+    isSoundAudio: boolean;
 
     linkOptions: {
         baseUrl: string;
@@ -34,6 +35,7 @@ interface GameSettings {
     setIsBluePrint: (isBluePrint: boolean) => void;
     setIsDebug: (isDebug: boolean) => void;
     setIsBgm: (isBgm: boolean) => void;
+    setIsSoundAudio: (isSoundAudio: boolean) => void;
 
     setLinkOptions: (baseUrl: string, key: string) => void;
 
@@ -57,6 +59,7 @@ export function SettingsProvider(props: Props) {
     const [isBluePrint, setIsBluePrintStatus] = useState<boolean>(loadCookie('isBluePrint', false));
     const [isDebug, setIsDebug] = useState<boolean>(loadCookie('isDebug', false));
     const [isBgm, setIsBgmStatus] = useState<boolean>(loadCookie('isBgm', true));
+    const [isSoundAudio, setIsSoundAudioStatus] = useState<boolean>(loadCookie('isSoundAudio', true)); // 声音开关
     const [linkOptions, setLinkOptionsStatus] = useState<{ baseUrl: string; key: string }>(loadCookie('linkOptions', { baseUrl: '', key: '' }));
 
 
@@ -122,6 +125,13 @@ export function SettingsProvider(props: Props) {
         }, 50)(baseUrl, key);
     };
 
+    const setIsSoundAudio = (isSoundAudio: boolean) => {
+        debounce((newVal) => {
+            setIsSoundAudioStatus(newVal);
+            storeCookie('isSoundAudio', newVal); // 存储到 cookie
+        }, 50)(isSoundAudio);
+    };
+
     const settingsValue: GameSettings = {
         isFullScreen,
         width,
@@ -130,6 +140,7 @@ export function SettingsProvider(props: Props) {
         isDebug,
         isBgm,
         linkOptions,
+        isSoundAudio,
         toggleFullScreen,
         setWidth,
         toggleLanguage,
@@ -139,6 +150,8 @@ export function SettingsProvider(props: Props) {
         setIsDebug,
         setIsBgm,
         setLinkOptions,
+        setIsSoundAudio,
+
     };
 
     useEffect(() => {

@@ -138,6 +138,9 @@ export class IPlant extends Phaser.Physics.Arcade.Sprite {
                 }
             });
         });
+
+        // 音效
+        this.scene.musical.plantAudio.play('plantStarshards');
     }
 
     // 游戏中effect

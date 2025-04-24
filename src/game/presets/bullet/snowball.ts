@@ -16,6 +16,9 @@ export class SnowBall extends IBullet {
         this.originalX = this.x;
         this.setVelocityX(400 * scene.positionCalc.scaleFactor); // 一定要在add    之后设置速度
         this.addVisible();
+
+        // 音效
+        scene.musical.shootArrowPool.play();
     }
 
     update(...args: any[]): void {

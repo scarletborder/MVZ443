@@ -89,6 +89,9 @@ export class IExpolsion extends Phaser.Physics.Arcade.Sprite {
         });
 
         if (_disableAnime === true) return;
+        // 音效
+        const audio_name = `explode${Math.floor(Math.random() * 3) + 1}`;
+        scene.musical.explodeAudio.play(audio_name);
 
         // Set up and play animation
         // 创建多个动画对象

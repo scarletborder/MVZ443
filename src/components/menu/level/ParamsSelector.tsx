@@ -94,6 +94,7 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({ stageId, setGameParams,
                 isBluePrint: settings.isBluePrint,
                 isDebug: settings.isDebug,
                 isBgm: settings.isBgm,
+                isSoundAudio: settings.isSoundAudio,
             }
         };
         setGameParams(params);
