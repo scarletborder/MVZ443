@@ -15,10 +15,10 @@ class smallDispenser extends INightPlant {
 
     game: Game
     constructor(scene: Game, col: number, row: number, texture: string, level: number) {
-        let maxDistance = (3.8 * scene.positionCalc.GRID_SIZEX);
+        let maxDistance = (3.6 * scene.positionCalc.GRID_SIZEX);
         // 精英1, 提升攻击范围
         if (level >= 5) {
-            maxDistance = 5.2 * scene.positionCalc.GRID_SIZEX;
+            maxDistance = 5.6 * scene.positionCalc.GRID_SIZEX;
         }
 
         super(scene, col, row, texture, SmallDispenserRecord.pid, level);

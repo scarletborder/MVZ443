@@ -71,6 +71,11 @@ class ElasticPutin extends INightPlant {
 
     // 处理前
     processCollider(wall: IPlant, bullet: IBullet) {
+        // 判断是否已经碰撞过
+        if (this.collideredBullets.has(bullet)) {
+            return false;
+        }
+
         // 保存原先速度
         if (bullet.body && !wall.isSleeping && (bullet instanceof BounceableBullet)) {
             bullet._prevX = bullet.body.velocity.x;

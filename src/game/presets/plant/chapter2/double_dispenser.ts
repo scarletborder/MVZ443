@@ -108,7 +108,7 @@ class double_dispenser extends IPlant {
         }
         return this.scene?.frameTicker.addEvent({
             startAt: 600,
-            delay: 1200,
+            delay: 900,
             loop: true,
             callback: () => {
                 // 这里先判断对象及场景是否有效
@@ -180,6 +180,7 @@ class double_dispenser extends IPlant {
 
         // 创建 Timer 事件：延迟 200ms 后开始暴力发射箭，每 50ms 一次
         const elapsed = Math.floor(front / back);
+        let count_ctx = { count: 0 };
         const bruteTimer = scene.frameTicker.addEvent({
             startAt: 200,
             delay: frontInterval,
@@ -199,7 +200,7 @@ class double_dispenser extends IPlant {
                 }
                 context.count++;
             },
-            context: { count: 0 },
+            args: [count_ctx],
         });
 
         // 计算总持续时间：Tween 200ms + Timer 发射的时长
@@ -275,6 +276,7 @@ function shootBackFirework(scene: Game, shooter: IPlant) {
     const penetrate = 1;
 
     const arrow = NewHorizontalFireWork(scene, shooter.col, shooter.row, scene.positionCalc.GRID_SIZEX * 32, damage, 'zombie', 100);
+    arrow.setVelocityX(-250 * scene.positionCalc.scaleFactor);
     arrow.penetrate = penetrate;
     return arrow;
 }

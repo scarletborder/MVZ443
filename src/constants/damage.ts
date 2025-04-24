@@ -5,7 +5,7 @@ const ProjectileDamage = {
         firework: 300,
         firework_splash: 100,
 
-        snowBall: 22,
+        snowBall: 24,
         bomb_fireBall: 550,
         bomb_fireBall_splash: 200,
     },

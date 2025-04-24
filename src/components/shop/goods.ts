@@ -225,6 +225,44 @@ class NinthSlot implements IGoods {
     }
 }
 
+class Chapter2Plants implements IGoods {
+    id: number = 7;
+    name: string = "第二章前期器械包";
+    price: number = 0;
+
+    constructor(
+        private purchasedIds: Set<number>,
+        private onPurchase: (id: number) => void
+    ) { }
+
+    description = () => "解锁第二章前期器械弹性布丁,双头发射器,萤石粉\n解锁chapter1-stage6";
+    hasBought = (id: number, progress: GameProgress) => {
+        const plants = progress.plants;
+        let hasBought = false;
+        for (let i = 0; i < plants.length; i++) {
+            if (plants[i].pid === 15 || plants[i].pid === 16 || plants[i].pid === 17) {
+                hasBought = true;
+                break;
+            }
+        }
+        return this.purchasedIds.has(id) || hasBought;
+    };
+    afterBought = (id: number, save: GameManager) => {
+        this.purchasedIds.add(id);
+        this.onPurchase(id);
+        save.currentProgress.plants.push({ pid: 15, level: 1 });
+        save.currentProgress.plants.push({ pid: 16, level: 1 });
+        save.currentProgress.plants.push({ pid: 17, level: 1 });
+    };
+    getPriceStructure = (): price => ({
+        items: [{ type: SECKILL, count: 1 }]
+    });
+    canPurchase = (progress: GameProgress) => {
+        if (progress.level.has(6)) return true;
+        return false;
+    }
+}
+
 export default function NewGoodLists(purchasedIds: Set<number>, onPurchase: (id: number) => void): IGoods[] {
     return [
         new SeventhSlot(purchasedIds, onPurchase),
@@ -234,5 +272,6 @@ export default function NewGoodLists(purchasedIds: Set<number>, onPurchase: (id:
         new PumpkinWan(purchasedIds, onPurchase),
         new ATDispenser(purchasedIds, onPurchase),
         new NinthSlot(purchasedIds, onPurchase),
+        new Chapter2Plants(purchasedIds, onPurchase),
     ];
 }
