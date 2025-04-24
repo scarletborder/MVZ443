@@ -1,0 +1,132 @@
+{
+  "resources": [
+    "sfx-sprite.ogg"
+  ],
+  "spritemap": {
+    "explode1": {
+      "start": 0,
+      "end": 2.5541950113378684,
+      "loop": false
+    },
+    "explode2": {
+      "start": 2.5541950113378684,
+      "end": 5.851428571428571,
+      "loop": false
+    },
+    "explode3": {
+      "start": 5.851428571428571,
+      "end": 9.148662131519274,
+      "loop": false
+    },
+    "explode4": {
+      "start": 9.148662131519274,
+      "end": 12.445895691609977,
+      "loop": false
+    },
+    "freeze": {
+      "start": 12.445895691609977,
+      "end": 15.223242630385487,
+      "loop": false
+    },
+    "generalHit": {
+      "start": 15.223242630385487,
+      "end": 15.687641723356009,
+      "loop": false
+    },
+    "ironHit": {
+      "start": 15.687641723356009,
+      "end": 16.012721088435374,
+      "loop": false
+    },
+    "leatherHit": {
+      "start": 16.012721088435374,
+      "end": 16.244920634920636,
+      "loop": false
+    },
+    "placePlant": {
+      "start": 16.244920634920636,
+      "end": 16.75575963718821,
+      "loop": false
+    },
+    "plantChoose": {
+      "start": 16.75575963718821,
+      "end": 17.266598639455783,
+      "loop": false
+    },
+    "plantHit": {
+      "start": 17.266598639455783,
+      "end": 17.916757369614512,
+      "loop": false
+    },
+    "plantRemove": {
+      "start": 17.916757369614512,
+      "end": 18.195396825396827,
+      "loop": false
+    },
+    "plantStarshards": {
+      "start": 18.195396825396827,
+      "end": 18.759931972789115,
+      "loop": false
+    },
+    "shootArrow": {
+      "start": 18.759931972789115,
+      "end": 19.27077097505669,
+      "loop": false
+    },
+    "shootFireball": {
+      "start": 19.27077097505669,
+      "end": 19.98952380952381,
+      "loop": false
+    },
+    "shootFirework": {
+      "start": 19.98952380952381,
+      "end": 21.61845804988662,
+      "loop": false
+    },
+    "shootLaser": {
+      "start": 21.61845804988662,
+      "end": 22.61845804988662,
+      "loop": false
+    },
+    "skeletonDeath": {
+      "start": 22.61845804988662,
+      "end": 24.150975056689344,
+      "loop": false
+    },
+    "skeletonSpawn": {
+      "start": 24.150975056689344,
+      "end": 24.75469387755102,
+      "loop": false
+    },
+    "wave1": {
+      "start": 24.75469387755102,
+      "end": 31.349160997732426,
+      "loop": false
+    },
+    "wave2": {
+      "start": 31.349160997732426,
+      "end": 34.69283446712018,
+      "loop": false
+    },
+    "zombieDeath": {
+      "start": 34.69283446712018,
+      "end": 35.48231292517007,
+      "loop": false
+    },
+    "zombieSpawn1": {
+      "start": 35.48231292517007,
+      "end": 37.01482993197279,
+      "loop": false
+    },
+    "zombieSpawn2": {
+      "start": 37.01482993197279,
+      "end": 38.454467120181405,
+      "loop": false
+    },
+    "zombieSpawn3": {
+      "start": 38.454467120181405,
+      "end": 40.590702947845806,
+      "loop": false
+    }
+  }
+}
