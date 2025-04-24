@@ -1,0 +1,72 @@
+{
+  "resources": [
+    "sfx-sprite.wav"
+  ],
+  "spritemap": {
+    "boneHit": {
+      "start": 0,
+      "end": 0.10006802721088436,
+      "loop": false
+    },
+    "generalHit": {
+      "start": 0.10006802721088436,
+      "end": 0.5644671201814059,
+      "loop": false
+    },
+    "ironHit": {
+      "start": 0.5644671201814059,
+      "end": 0.889546485260771,
+      "loop": false
+    },
+    "leatherHit": {
+      "start": 0.889546485260771,
+      "end": 1.1217460317460317,
+      "loop": false
+    },
+    "placePlant": {
+      "start": 1.1217460317460317,
+      "end": 1.6325850340136054,
+      "loop": false
+    },
+    "plantHit": {
+      "start": 1.6325850340136054,
+      "end": 2.2827437641723356,
+      "loop": false
+    },
+    "shootArrow": {
+      "start": 2.2827437641723356,
+      "end": 2.793582766439909,
+      "loop": false
+    },
+    "skeletonDeath": {
+      "start": 2.793582766439909,
+      "end": 4.32609977324263,
+      "loop": false
+    },
+    "skeletonSpawn": {
+      "start": 4.32609977324263,
+      "end": 4.929818594104308,
+      "loop": false
+    },
+    "zombieDeath": {
+      "start": 4.929818594104308,
+      "end": 5.719297052154195,
+      "loop": false
+    },
+    "zombieSpawn1": {
+      "start": 5.719297052154195,
+      "end": 7.251814058956916,
+      "loop": false
+    },
+    "zombieSpawn2": {
+      "start": 7.251814058956916,
+      "end": 8.691451247165533,
+      "loop": false
+    },
+    "zombieSpawn3": {
+      "start": 8.691451247165533,
+      "end": 10.827687074829932,
+      "loop": false
+    }
+  }
+}

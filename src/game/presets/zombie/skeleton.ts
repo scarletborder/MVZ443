@@ -35,6 +35,19 @@ export class EnhancedSkeleton extends IZombie {
     destroy(fromScene?: boolean): void {
         super.destroy(fromScene);
     }
+
+
+    playSpawnAudio(): void {
+        if (this.game) {
+            this.game.musical.skeletonSpawnAudio.play('skeletonSpawn');
+        }
+    }
+
+    playDeathAudio(): void {
+        if (this.game) {
+            this.game.musical.skeletonDeathPool.play();
+        }
+    }
 }
 
 function NewSkeleton(scene: Game, col: number, row: number, waveID: number): IZombie {

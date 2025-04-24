@@ -81,6 +81,8 @@ export class EnhancedVindicator extends IZombie {
                     this.currentShieldState = 1;
                 }
                 this.attachSprites.get('shield')?.setFrame(this.currentShieldState);
+
+                this.game.musical.shieldHitAudio.play('ironHit');
             }
         } else {
             // laser

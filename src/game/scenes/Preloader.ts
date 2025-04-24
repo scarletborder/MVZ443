@@ -202,7 +202,14 @@ export class Preloader extends Scene {
         // 4. 加载关卡发射物
         this.loadAllProjectile();
 
+        // 5. 加载所有附着物
         this.loadAllSprite();
+        // 6. 加载音频
+        this.load.audioSprite(
+            'sfx',
+            'audio/sounds/sfx-sprite.json',
+            'audio/sounds/sfx-sprite.wav',
+        );
     }
 
     loadStageSpecified(preloadData: preloadData, params: GameParams) {

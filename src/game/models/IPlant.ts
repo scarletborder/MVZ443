@@ -96,6 +96,9 @@ export class IPlant extends Phaser.Physics.Arcade.Sprite {
      */
     public takeDamage(amount: number, zombie: IMonster | null = null) {
         this.setHealth(this.health - amount);
+        if (amount > 0 && this.scene && this.health > 0) {
+            this.scene.musical.plantAudio.play('plantHit');
+        }
     }
 
     // 星之碎片
@@ -196,7 +199,6 @@ export class IPlant extends Phaser.Physics.Arcade.Sprite {
         });
         // 停止物理效果（已在 destroy 中自动处理）
         this.destroy(true); // 移除植物
-        console.log('Plant destroyed');
     }
 
     removeTimer() {

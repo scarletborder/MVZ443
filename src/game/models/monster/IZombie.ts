@@ -10,6 +10,7 @@ import { IMonster } from "./IMonster";
 
 
 
+// 长得像普通僵尸的,比如各种变种僵尸,骷髅,灾厄村民
 export class IZombie extends IMonster {
     public IsFrozen: boolean = false;
     public IsStop: boolean = false;

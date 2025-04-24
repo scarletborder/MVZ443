@@ -46,6 +46,9 @@ class CapZombie extends EnhancedZombie {
                 this.currentHatState = 2;
             }
             this.attachSprites.get('cap')?.setFrame(this.currentHatState);
+
+            // 播放音效
+            this.game.musical.shieldHitAudio.play('leatherHit');
         }
     }
 

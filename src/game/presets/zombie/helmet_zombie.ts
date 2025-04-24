@@ -46,6 +46,8 @@ class HelmetZombie extends EnhancedZombie {
                 this.currentHatState = 2;
             }
             this.attachSprites.get('cap')?.setFrame(this.currentHatState);
+
+            this.game.musical.shieldHitAudio.play('ironHit');
         }
     }
 

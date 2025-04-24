@@ -212,7 +212,7 @@ export class Game extends Scene {
         EventBus.on('setIsPaused', this.handlePause, this);
         EventBus.on('game-fail', this.handleExit, this);
 
-        this.musical = new Musical(this, this.params.gameSettings.isBgm);
+        this.musical = new Musical(this, this.params.gameSettings.isBgm, true);
         this.sendQueue.sendReady();
     }
 
@@ -288,6 +288,8 @@ export class Game extends Scene {
                 this.cancelPrePlant(); //现在可以取消预种植了
                 // 可以进行冷却 
                 this.broadCastPlant(pid);
+                // 播放音效
+                this.musical.plantAudio.play('placePlant');
             }
         }
     }

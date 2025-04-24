@@ -80,6 +80,9 @@ export class IMonster extends Phaser.Physics.Arcade.Sprite {
         // 进组
         IMonster.Group.add(this, true);
         this.Spawner.registerMonster(this);
+
+        // 播放音效
+        this.playSpawnAudio();
     }
 
     // 交互
@@ -102,6 +105,9 @@ export class IMonster extends Phaser.Physics.Arcade.Sprite {
     ) {
         const newHealth = this.health - damage;
         this.setHealth(newHealth);
+        if (damage > 10 && this.game && this.health > 0) {
+            this.playHitAudio();
+        }
     }
 
     /**
@@ -219,6 +225,7 @@ export class IMonster extends Phaser.Physics.Arcade.Sprite {
 
     playDeathSmokeAnimation(depth: number) {
         if (!this.game) return;
+        this.playDeathAudio();
         const game = this.game;
 
         // 创建临时的白烟 sprite
@@ -243,4 +250,25 @@ export class IMonster extends Phaser.Physics.Arcade.Sprite {
     }
 
 
+    // 音效
+    playSpawnAudio() {
+        if (this.game) {
+            // 召唤时候发出音效, 共有3个变种
+            const idx = Math.floor(Math.random() * 3) + 1;
+            this.game.musical.zombieSpawnAudio.play(`zombieSpawn${idx}`);
+        }
+    }
+
+    playDeathAudio() {
+        // 播放死亡音效
+        if (this.game) {
+            this.game.musical.zombieDeathPool.play();
+        }
+    }
+
+    playHitAudio() {
+        if (this.game) {
+            this.game.musical.generalHitAudio.play('generalHit');
+        }
+    }
 }
