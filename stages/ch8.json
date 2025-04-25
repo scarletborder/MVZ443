@@ -53,8 +53,8 @@
         {
             "progress": 100,
             "reward": {
-                "type": 4,
-                "count": 1
+                "type": 5,
+                "count": 2
             }
         }
     ],
