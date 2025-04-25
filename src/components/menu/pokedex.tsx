@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useSaveManager } from '../../context/save_ctx';
 import PlantFactoryMap from '../../game/presets/plant';
 import { publicUrl } from '../../utils/browser';
@@ -32,6 +32,12 @@ export default function Pokedex({ width, height, onBack }: Props) {
     const [upgradeMaterials, setUpgradeMaterials] = useState<MaterialRequirement[]>([]);
     const [loadingMaterials, setLoadingMaterials] = useState<boolean>(false);
 
+    // 新增：保存当前选中的项目作为状态变量，确保它始终有效
+    const [selectedItem, setSelectedItem] = useState<PokedexItem | null>(null);
+
+    // 跟踪是否正在进行动画
+    const isAnimating = useRef(false);
+
     const saveManager = useSaveManager();
     const plants = saveManager.currentProgress.plants;
 
@@ -51,46 +57,74 @@ export default function Pokedex({ width, height, onBack }: Props) {
         setPokedexItems(tmpList);
     }, [plants]);
 
+    // 当选中项目名称变化时，启动动画并更新显示
     useEffect(() => {
         if (selectedItemName === null) return;
+
+        isAnimating.current = true;
         setAnimationClass('slide-out');
+
         const timer = setTimeout(() => {
             setDisplayedItemName(selectedItemName);
             setAnimationClass('slide-in');
-        }, 300);
+
+            // 在动画完成后标记动画结束
+            setTimeout(() => {
+                isAnimating.current = false;
+            }, 400); // 匹配 slide-in 动画的持续时间
+
+        }, 300); // 匹配 slide-out 动画的持续时间
+
         return () => clearTimeout(timer);
     }, [selectedItemName]);
 
+    // 当显示的项目名称改变时，更新选中的项目对象
+    useEffect(() => {
+        if (displayedItemName) {
+            const item = pokedexItems.find(i => i.name === displayedItemName);
+            if (item) {
+                setSelectedItem(item);
+            }
+        } else {
+            setSelectedItem(null);
+        }
+    }, [displayedItemName, pokedexItems]);
+
     // 加载数据库中的升级材料
     useEffect(() => {
-        const selected = pokedexItems.find(item => item.name === displayedItemName);
-        if (!selected) {
+        // 直接使用 selectedItem 而不是通过 displayedItemName 查找
+        if (!selectedItem) {
             setUpgradeMaterials([]);
             return;
         }
+
         setLoadingMaterials(true);
-        getUpgradeMaterials(selected.pid, selected.level)
+        getUpgradeMaterials(selectedItem.pid, selectedItem.level)
             .then(mats => setUpgradeMaterials(mats))
             .catch(err => {
                 console.error('加载升级材料失败', err);
                 setUpgradeMaterials([]);
             })
             .finally(() => setLoadingMaterials(false));
-    }, [displayedItemName, pokedexItems]);
+    }, [selectedItem]);
 
     const getCurrentItems = (): item[] => {
         return Array.from(saveManager.currentProgress.items.values());
     };
 
     const canUpgrade = (): boolean => {
-        if (loadingMaterials) return false;
+        if (loadingMaterials || !selectedItem) return false;
         const currentItems = getCurrentItems();
         const currentMap = new Map(currentItems.map(i => [i.type, i.count]));
         return upgradeMaterials.length > 0 && upgradeMaterials.every(mat => (currentMap.get(mat.type) || 0) >= mat.count);
     };
 
-    const handleUpgrade = (pid: number, level: number) => {
-        if (!canUpgrade()) return;
+    const handleUpgrade = () => {
+        // 防止动画过渡中点击或重复点击
+        if (isAnimating.current || !selectedItem || !canUpgrade()) return;
+
+        // 使用状态中保存的 selectedItem，而不是每次重新查找
+        const { pid, level } = selectedItem;
 
         upgradeMaterials.forEach(mat => {
             saveManager.updateItemCount(mat.type, -mat.count);
@@ -98,28 +132,39 @@ export default function Pokedex({ width, height, onBack }: Props) {
 
         const plantIndex = plants.findIndex(p => p.pid === pid && p.level === level);
         if (plantIndex !== -1) {
+            // 更新植物等级
             plants[plantIndex].level += 1;
             saveManager.saveProgress();
+
+            // 更新项目列表
+            const newLevel = level + 1;
+            const newName = `${PlantFactoryMap[pid].name} LV.${newLevel}`;
+
             setPokedexItems(prev =>
                 prev.map(item =>
                     item.pid === pid && item.level === level
-                        ? { ...item, name: `${PlantFactoryMap[pid].name} LV.${level + 1}`, level: level + 1 }
+                        ? { ...item, name: newName, level: newLevel }
                         : item
                 )
             );
-            setSelectedItemName(`${PlantFactoryMap[pid].name} LV.${level + 1}`);
+
+            // 直接更新选中项
+            setSelectedItem({
+                ...selectedItem,
+                name: newName,
+                level: newLevel
+            });
+
+            // 更新显示名称（先更新选中名称，触发动画）
+            setSelectedItemName(newName);
         }
     };
-
-    const selected = pokedexItems.find(i => i.name === displayedItemName);
-
-
 
     return (
         <div style={{
             width: `${width}px`,
             height: `${height}px`,
-            perspective: '1200px', // 保留 perspective 以增强3D效果
+            perspective: '1200px',
             background: "linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)",
             position: "relative",
             overflow: "hidden",
@@ -127,7 +172,7 @@ export default function Pokedex({ width, height, onBack }: Props) {
             boxShadow: "0 0 15px rgba(0, 0, 0, 0.5)",
             animation: "frameFadeIn 0.5s ease-out"
         }}>
-            {/* Left Sidebar - Scrollable List */}
+            {/* 左侧边栏（保持不变） */}
             <div style={{
                 width: "50%",
                 height: "90%",
@@ -141,6 +186,7 @@ export default function Pokedex({ width, height, onBack }: Props) {
                 scrollbarColor: "#666 #333",
                 padding: "60px 20px 20px 20px"
             }}>
+                {/* 返回按钮（保持不变） */}
                 <button
                     style={{
                         position: "absolute",
@@ -175,6 +221,7 @@ export default function Pokedex({ width, height, onBack }: Props) {
                     fontWeight: "bold"
                 }}>图鉴</p>
 
+                {/* 项目网格（保持不变） */}
                 {Array(Math.ceil(pokedexItems.length / 5)).fill(0).map((_, rowIndex) => (
                     <div key={rowIndex} style={{
                         display: "flex",
@@ -214,7 +261,7 @@ export default function Pokedex({ width, height, onBack }: Props) {
                 ))}
             </div>
 
-            {/* Right Sidebar - Details and Upgrade Controls */}
+            {/* 右侧详情面板 */}
             <div style={{
                 width: "40%",
                 height: "96%",
@@ -227,33 +274,34 @@ export default function Pokedex({ width, height, onBack }: Props) {
                 scrollbarWidth: "thin",
                 scrollbarColor: "#666 #333",
                 background: "rgba(30, 30, 30, 0.9)",
-                overflow: "hidden" // 确保超出部分隐藏，使滑动动画看起来更自然
+                overflow: "hidden"
             }}>
-
                 <div className={animationClass} style={{
                     position: "relative",
                     width: "103%",
                     height: "100%",
                     overflowY: "auto",
                 }}>
-                    <h2 style={{ marginBottom: '8px' }}>{displayedItemName || '未选择'}</h2>
+                    <h2 style={{ marginBottom: '8px' }}>
+                        {displayedItemName || '未选择'}
+                    </h2>
 
-                    {displayedItemName ? (
+                    {selectedItem ? (
                         <>
                             <div style={{ whiteSpace: 'pre-wrap', marginBottom: '16px' }}>
-                                {selected?.details || '未找到详情'}
+                                {selectedItem.details}
                             </div>
                             <hr style={{ borderColor: '#666', margin: '16px 0' }} />
                             <div>
                                 <h3 style={{ margin: '0 0 12px 0' }}>
-                                    升级到 LV.{selected!.level + 1}
+                                    升级到 LV.{selectedItem.level + 1}
                                 </h3>
                                 {/* 材料列表 */}
                                 <StuffList items={upgradeMaterials} currentItems={getCurrentItems()} />
 
-                                {/* 升级按钮 */}
+                                {/* 升级按钮 - 使用新的handleUpgrade函数，不依赖selected参数 */}
                                 <button
-                                    onClick={() => selected && handleUpgrade(selected.pid, selected.level)}
+                                    onClick={handleUpgrade}
                                     disabled={!canUpgrade()}
                                     style={{
                                         padding: '10px 24px',
@@ -278,6 +326,7 @@ export default function Pokedex({ width, height, onBack }: Props) {
                 </div>
             </div>
 
+            {/* 样式定义（保持不变） */}
             <style>
                 {`
                     @keyframes frameFadeIn {
