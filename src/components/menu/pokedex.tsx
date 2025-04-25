@@ -4,6 +4,7 @@ import PlantFactoryMap from '../../game/presets/plant';
 import { publicUrl } from '../../utils/browser';
 import { item } from '../shop/types';
 import StuffList from '../shop/stuff_list';
+import { getUpgradeMaterials, MaterialRequirement } from '../../game/utils/sqlite/materials';
 
 interface Props {
     width: number;
@@ -26,10 +27,10 @@ export default function Pokedex({ width, height, onBack }: Props) {
 
     const [pokedexItems, setPokedexItems] = useState<PokedexItem[]>([]);
     const [selectedItemName, setSelectedItemName] = useState<string | null>(null);
-
-    // 用于实现滑动动画的状态
     const [displayedItemName, setDisplayedItemName] = useState<string | null>(null);
     const [animationClass, setAnimationClass] = useState<string>('');
+    const [upgradeMaterials, setUpgradeMaterials] = useState<MaterialRequirement[]>([]);
+    const [loadingMaterials, setLoadingMaterials] = useState<boolean>(false);
 
     const saveManager = useSaveManager();
     const plants = saveManager.currentProgress.plants;
@@ -50,52 +51,69 @@ export default function Pokedex({ width, height, onBack }: Props) {
         setPokedexItems(tmpList);
     }, [plants]);
 
-    // 当selectedItemName发生变化时，触发滑动动画
     useEffect(() => {
         if (selectedItemName === null) return;
-        // 触发"滑出"动画
         setAnimationClass('slide-out');
         const timer = setTimeout(() => {
             setDisplayedItemName(selectedItemName);
             setAnimationClass('slide-in');
-        }, 300); // 滑出动画持续300ms，可根据需要调整
+        }, 300);
         return () => clearTimeout(timer);
     }, [selectedItemName]);
+
+    // 加载数据库中的升级材料
+    useEffect(() => {
+        const selected = pokedexItems.find(item => item.name === displayedItemName);
+        if (!selected) {
+            setUpgradeMaterials([]);
+            return;
+        }
+        setLoadingMaterials(true);
+        getUpgradeMaterials(selected.pid, selected.level)
+            .then(mats => setUpgradeMaterials(mats))
+            .catch(err => {
+                console.error('加载升级材料失败', err);
+                setUpgradeMaterials([]);
+            })
+            .finally(() => setLoadingMaterials(false));
+    }, [displayedItemName, pokedexItems]);
 
     const getCurrentItems = (): item[] => {
         return Array.from(saveManager.currentProgress.items.values());
     };
 
-    const canUpgrade = (pid: number, level: number): boolean => {
-        const nextLevelStuff = PlantFactoryMap[pid].NextLevelStuff(level);
+    const canUpgrade = (): boolean => {
+        if (loadingMaterials) return false;
         const currentItems = getCurrentItems();
-        const currentItemsMap = new Map(currentItems.map(item => [item.type, item.count]));
-        return nextLevelStuff.every(item => (currentItemsMap.get(item.type) || 0) >= item.count);
+        const currentMap = new Map(currentItems.map(i => [i.type, i.count]));
+        return upgradeMaterials.length > 0 && upgradeMaterials.every(mat => (currentMap.get(mat.type) || 0) >= mat.count);
     };
 
     const handleUpgrade = (pid: number, level: number) => {
-        if (!canUpgrade(pid, level)) return;
+        if (!canUpgrade()) return;
 
-        const nextLevelStuff = PlantFactoryMap[pid].NextLevelStuff(level);
-        nextLevelStuff.forEach(item => {
-            saveManager.updateItemCount(item.type, -item.count);
+        upgradeMaterials.forEach(mat => {
+            saveManager.updateItemCount(mat.type, -mat.count);
         });
 
         const plantIndex = plants.findIndex(p => p.pid === pid && p.level === level);
         if (plantIndex !== -1) {
             plants[plantIndex].level += 1;
             saveManager.saveProgress();
-            setPokedexItems(prevItems =>
-                prevItems.map(item =>
+            setPokedexItems(prev =>
+                prev.map(item =>
                     item.pid === pid && item.level === level
                         ? { ...item, name: `${PlantFactoryMap[pid].name} LV.${level + 1}`, level: level + 1 }
                         : item
                 )
             );
-            // 升级后直接选中新等级的项
             setSelectedItemName(`${PlantFactoryMap[pid].name} LV.${level + 1}`);
         }
     };
+
+    const selected = pokedexItems.find(i => i.name === displayedItemName);
+
+
 
     return (
         <div style={{
@@ -211,52 +229,51 @@ export default function Pokedex({ width, height, onBack }: Props) {
                 background: "rgba(30, 30, 30, 0.9)",
                 overflow: "hidden" // 确保超出部分隐藏，使滑动动画看起来更自然
             }}>
+
                 <div className={animationClass} style={{
                     position: "relative",
                     width: "103%",
                     height: "100%",
                     overflowY: "auto",
                 }}>
-                    <h2 style={{ marginBottom: "2px" }}>{displayedItemName || "未选择"}</h2>
+                    <h2 style={{ marginBottom: '8px' }}>{displayedItemName || '未选择'}</h2>
+
                     {displayedItemName ? (
-                        <div style={{ whiteSpace: "pre-wrap" }}>
-                            {pokedexItems.find(item => item.name === displayedItemName)?.details || "未找到详情"}
-                            <hr style={{ border: "1px solid #666", margin: "20px 0" }} />
+                        <>
+                            <div style={{ whiteSpace: 'pre-wrap', marginBottom: '16px' }}>
+                                {selected?.details || '未找到详情'}
+                            </div>
+                            <hr style={{ borderColor: '#666', margin: '16px 0' }} />
+                            <div>
+                                <h3 style={{ margin: '0 0 12px 0' }}>
+                                    升级到 LV.{selected!.level + 1}
+                                </h3>
+                                {/* 材料列表 */}
+                                <StuffList items={upgradeMaterials} currentItems={getCurrentItems()} />
 
-                            {/* 升级控件区域 */}
-                            {(() => {
-                                const selectedItem = pokedexItems.find(item => item.name === displayedItemName);
-                                if (!selectedItem) return null;
-
-                                const nextLevelStuff = PlantFactoryMap[selectedItem.pid].NextLevelStuff(selectedItem.level);
-                                const currentItems = getCurrentItems();
-                                const canUpgradeNow = canUpgrade(selectedItem.pid, selectedItem.level);
-
-                                return (
-                                    <div>
-                                        <h3 style={{ margin: "0 0 10px 0" }}>升级到 LV.{selectedItem.level + 1}</h3>
-                                        <StuffList items={nextLevelStuff} currentItems={currentItems} />
-                                        <button
-                                            onClick={() => handleUpgrade(selectedItem.pid, selectedItem.level)}
-                                            disabled={!canUpgradeNow}
-                                            style={{
-                                                padding: "10px 20px",
-                                                background: canUpgradeNow ? "#007bff" : "#ff4444",
-                                                border: "none",
-                                                color: "#fff",
-                                                cursor: canUpgradeNow ? "pointer" : "not-allowed",
-                                                marginTop: "10px",
-                                                borderRadius: "4px"
-                                            }}
-                                        >
-                                            {canUpgradeNow ? "升级" : "材料不足"}
-                                        </button>
-                                    </div>
-                                );
-                            })()}
-                        </div>
+                                {/* 升级按钮 */}
+                                <button
+                                    onClick={() => selected && handleUpgrade(selected.pid, selected.level)}
+                                    disabled={!canUpgrade()}
+                                    style={{
+                                        padding: '10px 24px',
+                                        marginTop: '16px',
+                                        border: 'none',
+                                        borderRadius: '4px',
+                                        background: canUpgrade() ? '#007bff' : '#555',
+                                        color: '#fff',
+                                        cursor: canUpgrade() ? 'pointer' : 'not-allowed',
+                                        opacity: loadingMaterials ? 0.6 : 1,
+                                    }}
+                                >
+                                    {loadingMaterials ? '加载中...' : (canUpgrade() ? '升级' : '材料不足')}
+                                </button>
+                            </div>
+                        </>
                     ) : (
-                        <div>请在左侧选择一个项目以查看详情</div>
+                        <div style={{ paddingTop: '40px', textAlign: 'center', color: '#888' }}>
+                            请选择左侧项目查看详情
+                        </div>
                     )}
                 </div>
             </div>

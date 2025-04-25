@@ -189,57 +189,6 @@ function cooldownTime(level?: number): number {
 }
 
 
-function levelAndstuff(level: number): item[] {
-    switch (level) {
-        case 1:
-            return [{
-                type: 1,
-                count: 120
-            }, {
-                type: 3,
-                count: 1
-            }];
-        case 2:
-            return [{
-                type: 1,
-                count: 160
-            }, {
-                type: 2,
-                count: 5
-            }, {
-                type: 3,
-                count: 1
-            }];
-        case 3:
-            return [{
-                type: 1,
-                count: 300
-            }, {
-                type: 3,
-                count: 2
-            }, {
-                type: 4,
-                count: 2
-            }];
-        case 4:
-            return [{
-                type: 1,
-                count: 500
-            }, {
-                type: 3,
-                count: 3
-            }, {
-                type: 5,
-                count: 2
-            }];
-    }
-    return [{
-        type: SECKILL,
-        count: 1
-    }];
-    return [];
-}
-
 const TntMines: IRecord = {
     pid: 4,
     name: 'TNT地雷',
@@ -249,7 +198,7 @@ const TntMines: IRecord = {
     texture: 'plant/tnt_mines',
     description: i18n.S('tnt_mines_description'),
     needFirstCoolDown: true,
-    NextLevelStuff: levelAndstuff
+
 };
 
 export default TntMines;

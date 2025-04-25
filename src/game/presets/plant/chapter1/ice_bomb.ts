@@ -140,38 +140,6 @@ function cooldownTime(level?: number): number {
     return 52;
 }
 
-function levelAndstuff(level: number): item[] {
-    switch (level) {
-        case 1:
-            return [
-                {
-                    type: 1,
-                    count: 300
-                }, {
-                    type: 2,
-                    count: 3
-                }];
-        case 2:
-            return [
-                {
-                    type: 1,
-                    count: 450
-                }, {
-                    type: 2,
-                    count: 4
-                }, {
-                    type: 3,
-                    count: 2
-                }];
-
-    }
-
-    return [{
-        type: SECKILL,
-        count: 1
-    }];
-    return [];
-}
 
 const IceBombRecord: IRecord = {
     pid: 12,
@@ -182,7 +150,7 @@ const IceBombRecord: IRecord = {
     texture: 'plant/ice_bomb',
     description: i18n.S('ice_bomb_description'),
     needFirstCoolDown: true,
-    NextLevelStuff: levelAndstuff
+
 };
 
 export default IceBombRecord;

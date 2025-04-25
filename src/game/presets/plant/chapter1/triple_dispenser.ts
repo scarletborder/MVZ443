@@ -284,12 +284,6 @@ function shootArrow(scene: Game, shooter: IPlant, isStar: boolean = false) {
         }
     }
 }
-function levelAndstuff(level: number): item[] {
-    return [{
-        type: SECKILL,
-        count: 1
-    }];
-}
 
 const TripleDispenserRecord: IRecord = {
     pid: 13,
@@ -302,7 +296,7 @@ const TripleDispenserRecord: IRecord = {
     NewFunction: NewTripleDispenser,
     texture: 'plant/triple_dispenser',
     description: i18n.S('triple_dispenser_description'),
-    NextLevelStuff: levelAndstuff
+
 };
 
 export default TripleDispenserRecord;

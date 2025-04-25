@@ -62,57 +62,6 @@ function NewLily(scene: Game, col: number, row: number, level: number): IPlant {
     return lily;
 }
 
-function levelAndstuff(level: number): item[] {
-    switch (level) {
-        case 1:
-            return [{
-                type: 1,
-                count: 150
-            }, {
-                type: 2,
-                count: 2
-            }];
-        case 2:
-            return [{
-                type: 1,
-                count: 200
-            }, {
-                type: 2,
-                count: 5
-            }];
-        case 3:
-            return [
-                {
-                    type: 1,
-                    count: 400
-                }, {
-                    type: 3,
-                    count: 6
-                }, {
-                    type: 4,
-                    count: 1
-                }];
-        case 4:
-            return [{
-                type: 1,
-                count: 650
-            }, {
-                type: 3,
-                count: 8
-            }, {
-                type: 4,
-                count: 1
-            }, {
-                type: 5,
-                count: 1
-            }];
-    }
-    return [{
-        type: SECKILL,
-        count: 1
-    }];
-    return [];
-}
 
 const Lily: IRecord = {
     pid: 6,
@@ -122,7 +71,7 @@ const Lily: IRecord = {
     NewFunction: NewLily,
     texture: 'plant/lily',
     description: i18n.S('lily_description'),
-    NextLevelStuff: levelAndstuff
+
 };
 
 export default Lily;

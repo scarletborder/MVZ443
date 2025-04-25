@@ -77,55 +77,6 @@ function NewGenerator(scene: Game, col: number, row: number, level: number): IPl
     return furnace;
 }
 
-
-function levelAndstuff(level: number): item[] {
-    switch (level) {
-        case 1:
-            return [{
-                type: 1,
-                count: 250
-            }, {
-                type: 3,
-                count: 3
-            }];
-        case 2:
-            return [{
-                type: 1,
-                count: 360
-            }, {
-                type: 2,
-                count: 4
-            }];
-        case 3:
-            return [
-                {
-                    type: 1,
-                    count: 550
-                }, {
-                    type: 3,
-                    count: 8
-                }, {
-                    type: 4,
-                    count: 2
-                }];
-        case 4:
-            return [{
-                type: 1,
-                count: 900
-            }, {
-                type: 4,
-                count: 3
-            }, {
-                type: 5,
-                count: 1
-            }];
-    }
-    return [{
-        type: SECKILL,
-        count: 1
-    }];
-    return [];
-}
 const GeneratorRecord: IRecord = {
     pid: 8,
     name: '生物质发电机',
@@ -134,7 +85,7 @@ const GeneratorRecord: IRecord = {
     NewFunction: NewGenerator,
     texture: 'plant/generator',
     description: i18n.S('generator_description'),
-    NextLevelStuff: levelAndstuff
+
 };
 
 export default GeneratorRecord;

@@ -20,7 +20,6 @@ export interface IRecord {
      * @param level 当前等级
      * @returns 物品列表
      */
-    NextLevelStuff: (level: number) => item[],
 }
 
 

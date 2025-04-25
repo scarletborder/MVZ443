@@ -246,62 +246,6 @@ function shootArrow(scene: Game, shooter: IPlant, isStar: boolean = false) {
     arrow.penetrate = penetrate;
     return arrow;
 }
-function levelAndstuff(level: number): item[] {
-    switch (level) {
-        case 1:
-            return [{
-                type: 1,
-                count: 100
-            }, {
-                type: 2,
-                count: 1
-            }];
-        case 2:
-            return [{
-                type: 1,
-                count: 200
-            }, {
-                type: 2,
-                count: 4
-            }, {
-                type: 3,
-                count: 1
-            }];
-        case 3:
-            return [
-                {
-                    type: 1,
-                    count: 400
-                }, {
-                    type: 3,
-                    count: 6
-                }, {
-                    type: 4,
-                    count: 1
-                }];
-        case 4:
-            return [{
-                type: 1,
-                count: 650
-            }, {
-                type: 3,
-                count: 8
-            }, {
-                type: 4,
-                count: 1
-            }, {
-                type: 5,
-                count: 1
-            }];
-
-
-    }
-    return [{
-        type: SECKILL,
-        count: 1
-    }];
-}
-
 const DispenserRecord: IRecord = {
     pid: 1,
     name: '发射器',
@@ -313,7 +257,7 @@ const DispenserRecord: IRecord = {
     NewFunction: NewDispenser,
     texture: 'plant/dispenser',
     description: i18n.S('dispenser_description'),
-    NextLevelStuff: levelAndstuff
+
 };
 
 export default DispenserRecord;

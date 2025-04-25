@@ -7,6 +7,12 @@ const idToName = new Map<number, string>(
     [3, 'iron'],
     [4, 'obsidian_medal'],
     [5, 'echo_shard'],
+    [6, 'dragon_ball'],
+    [7, "Mechanical_Gear"],
+    [8, "Tengu_Fluff"],
+    [9, "Optical_Lens"],
+    [10, "NIXXOR_Lens"],
+    [11, "Miracle_Omikuji"],
     [SECKILL, 'scb'],
     ]);
 

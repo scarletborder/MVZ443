@@ -66,7 +66,7 @@ class _Tnt extends IPlant {
         const scene = this.game;
 
         function getExplosionTargets(game: Game, col: number, row: number) {
-            const targets = [];
+            const targets: number[][] = [];
             if (col === game.GRID_COLS - 1) {
                 // 最右边的列：在左侧生成爆炸，针对上下边缘分别处理
                 if (row === 0) {
@@ -158,46 +158,6 @@ function cooldownTime(level?: number): number {
 }
 
 
-function levelAndstuff(level: number): item[] {
-    switch (level) {
-        case 1:
-            return [{
-                type: 1,
-                count: 200
-            }, {
-                type: 3,
-                count: 2
-            }];
-        case 2:
-            return [{
-                type: 1,
-                count: 350
-            }, {
-                type: 2,
-                count: 3
-            }, {
-                type: 4,
-                count: 1
-            }];
-        case 3:
-            return [{
-                type: 1,
-                count: 500
-            }, {
-                type: 3,
-                count: 4
-            }, {
-                type: 5,
-                count: 2
-            }];
-    }
-    return [{
-        type: SECKILL,
-        count: 1
-    }];
-    return [];
-}
-
 const TntRecord: IRecord = {
     pid: 7,
     name: '瞬炸TNT',
@@ -207,7 +167,7 @@ const TntRecord: IRecord = {
     texture: 'plant/tnt',
     description: i18n.S('tnt_description'),
     needFirstCoolDown: true,
-    NextLevelStuff: levelAndstuff
+
 };
 
 export default TntRecord;

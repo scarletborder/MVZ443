@@ -69,51 +69,6 @@ function NewObsidian(scene: Game, col: number, row: number, level: number): IPla
     return furnace;
 }
 
-function levelAndstuff(level: number): item[] {
-    switch (level) {
-        case 1:
-            return [{
-                type: 1,
-                count: 120
-            }, {
-                type: 3,
-                count: 1
-            }];
-        case 2:
-            return [{
-                type: 1,
-                count: 290
-            }, {
-                type: 3,
-                count: 3
-            }];
-        case 3:
-            return [{
-                type: 1,
-                count: 490
-            }, {
-                type: 3,
-                count: 4
-            }, {
-                type: 4,
-                count: 1
-            }];
-        case 4:
-            return [{
-                type: 1,
-                count: 800
-            }, {
-                type: 4,
-                count: 2
-            }];
-    }
-    return [{
-        type: SECKILL,
-        count: 1
-    }];
-    return [];
-}
-
 function cooldownTime(level?: number): number {
     if ((level || 1) >= 5) return 24;
     return 32;
@@ -128,7 +83,7 @@ const ObsidianRecord: IRecord = {
     texture: 'plant/obsidian',
     description: i18n.S('obsidian_description'),
     needFirstCoolDown: true,
-    NextLevelStuff: levelAndstuff
+
 };
 
 export default ObsidianRecord;

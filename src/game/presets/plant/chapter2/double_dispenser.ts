@@ -287,12 +287,6 @@ function NewDoubleDispenser(scene: Game, col: number, row: number, level: number
     return new double_dispenser(scene, col, row, DoubleDispenser_Record.texture, level);
 }
 
-function levelAndstuff(level: number): item[] {
-    return [{
-        type: SECKILL,
-        count: 1
-    }];
-}
 
 const DoubleDispenser_Record: IRecord = {
     pid: 16,
@@ -302,7 +296,7 @@ const DoubleDispenser_Record: IRecord = {
     NewFunction: NewDoubleDispenser,
     texture: "plant/double_dispenser",
     description: i18n.S('double_dispenser_description'),
-    NextLevelStuff: levelAndstuff,
+
 }
 
 export default DoubleDispenser_Record;

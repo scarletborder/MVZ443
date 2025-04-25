@@ -57,56 +57,6 @@ function cost(level?: number): number {
     if ((level || 1) >= 5) return 35;
     return 50;
 }
-function levelAndstuff(level: number): item[] {
-    switch (level) {
-        case 1:
-            return [{
-                type: 1,
-                count: 180
-            }, {
-                type: 3,
-                count: 1
-            }];
-        case 2:
-            return [{
-                type: 1,
-                count: 230
-            }, {
-                type: 2,
-                count: 3
-            }, {
-                type: 3,
-                count: 2
-            }];
-        case 3:
-            return [
-                {
-                    type: 1,
-                    count: 450
-                }, {
-                    type: 3,
-                    count: 6
-                }, {
-                    type: 4,
-                    count: 1
-                }];
-        case 4:
-            return [{
-                type: 1,
-                count: 700
-            }, {
-                type: 2,
-                count: 6
-            }, {
-                type: 4,
-                count: 2
-            }];
-    }
-    return [{
-        type: SECKILL,
-        count: 1
-    }];
-}
 
 const FurnaceRecord: IRecord = {
     pid: 2,
@@ -116,7 +66,7 @@ const FurnaceRecord: IRecord = {
     NewFunction: NewFurnace,
     texture: 'plant/furnace',
     description: i18n.S('furnace_description'),
-    NextLevelStuff: levelAndstuff
+
 };
 
 export default FurnaceRecord;

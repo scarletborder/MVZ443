@@ -95,57 +95,6 @@ class BombSnowBall extends SnowBall {
     }
 }
 
-function levelAndstuff(level: number): item[] {
-    switch (level) {
-        case 1:
-            return [{
-                type: 1,
-                count: 140
-            }, {
-                type: 3,
-                count: 1
-            }];
-        case 2:
-            return [{
-                type: 1,
-                count: 200
-            }, {
-                type: 2,
-                count: 2
-            }, {
-                type: 3,
-                count: 1
-            }];
-        case 3:
-            return [{
-                type: 1,
-                count: 400
-            }, {
-                type: 3,
-                count: 2
-            }, {
-                type: 4,
-                count: 2
-            }];
-        case 4:
-            return [{
-                type: 1,
-                count: 600
-            }, {
-                type: 3,
-                count: 3
-            }, {
-                type: 5,
-                count: 3
-            }];
-    }
-    return [{
-        type: SECKILL,
-        count: 1
-    }];
-    return [];
-}
-
 const SmallDispenserRecord: IRecord = {
     pid: 5,
     name: '小发射器',
@@ -154,7 +103,7 @@ const SmallDispenserRecord: IRecord = {
     NewFunction: NewDispenser,
     texture: 'plant/small_dispenser',
     description: i18n.S('small_dispenser_description'),
-    NextLevelStuff: levelAndstuff
+
 };
 
 export default SmallDispenserRecord;

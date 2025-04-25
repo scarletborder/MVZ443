@@ -53,13 +53,13 @@ class ElasticPutin extends INightPlant {
 
         if (this.level)
 
-        scene.frameTicker.delayedCall({
-            delay: 5000,
-            callback: () => {
-                this.isLightning = false;
-                // TODO 取消动画
-            }
-        })
+            scene.frameTicker.delayedCall({
+                delay: 5000,
+                callback: () => {
+                    this.isLightning = false;
+                    // TODO 取消动画
+                }
+            })
     }
 
     destroy(fromScene?: boolean): void {
@@ -135,13 +135,6 @@ const ElasticPutinRecord: IRecord = {
     NewFunction: NewElasticPutin,
     texture: 'plant/elastic_putin',
     description: i18n.S('elastic_putin_description'),
-    NextLevelStuff: (level: number) => {
-        return [{
-            type: SECKILL,
-            count: 1
-        }];
-    }
-
 }
 
 

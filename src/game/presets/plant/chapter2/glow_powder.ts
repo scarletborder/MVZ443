@@ -88,45 +88,6 @@ function cooldownTime(level?: number): number {
     return GetDecValue(8, 0.6, level || 1);
 }
 
-function levelAndstuff(level: number): item[] {
-    switch (level) {
-        case 1:
-            return [{
-                type: 1,
-                count: 200
-            }, {
-                type: 3,
-                count: 2
-            }];
-        case 2:
-            return [{
-                type: 1,
-                count: 400
-            }, {
-                type: 2,
-                count: 3
-            }, {
-                type: 4,
-                count: 1
-            }];
-        case 3:
-            return [{
-                type: 1,
-                count: 650
-            }, {
-                type: 3,
-                count: 4
-            }, {
-                type: 4,
-                count: 2
-            }];
-    }
-    return [{
-        type: SECKILL,
-        count: 1
-    }];
-    return [];
-}
 
 const GlowPowderRecord: IRecord = {
     pid: 17,
@@ -137,7 +98,7 @@ const GlowPowderRecord: IRecord = {
     texture: 'plant/glow_powder',
     description: i18n.S('glow_powder_description'),
     needFirstCoolDown: true,
-    NextLevelStuff: levelAndstuff
+
 };
 
 export default GlowPowderRecord;

@@ -248,12 +248,6 @@ class at_air_HFirework extends HFireWork {
     }
 }
 
-function levelAndstuff(level: number): item[] {
-    return [{
-        type: SECKILL,
-        count: 1
-    }];
-}
 
 const ATDispenserRecord: IRecord = {
     pid: 14,
@@ -269,7 +263,6 @@ const ATDispenserRecord: IRecord = {
     NewFunction: NewATDispenser,
     texture: 'plant/at_dispenser',
     description: i18n.S('at_dispenser'),
-    NextLevelStuff: levelAndstuff
 };
 
 export default ATDispenserRecord;

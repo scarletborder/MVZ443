@@ -110,27 +110,6 @@ function shootLaser(scene: Game, shooter: IPlant) {
     });
 }
 
-function levelAndstuff(level: number): item[] {
-    switch (level) {
-        case 1:
-            return [{
-                type: 1,
-                count: 300
-            }, {
-                type: 3,
-                count: 4
-            }, {
-                type: 2,
-                count: 2
-            }]
-    }
-    return [{
-        type: SECKILL,
-        count: 1
-    }];
-    return [];
-}
-
 function cost(level?: number): number {
     if ((level || 1) >= 5 && (level || 1) < 7) return 275;
     if ((level || 1) >= 7) return 300;
@@ -151,7 +130,7 @@ const PumpkinWanRecord: IRecord = {
     NewFunction: NewPumpkinWan,
     texture: 'plant/pumpkin_wan',
     description: i18n.S('pumpkin_wan_description'),
-    NextLevelStuff: levelAndstuff,
+
     needFirstCoolDown: false
 };
 

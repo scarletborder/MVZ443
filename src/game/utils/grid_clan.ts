@@ -124,7 +124,7 @@ export default class GridClan {
         const canPlant = (pid: number, plants: IPlant[]) => {
             // 先考虑所有特殊植物
             // 粉尘植物,随意种植
-            if (POWDER_PLANT.includes(pid)) {
+            if (this.isPowder(pid)) {
                 return true;
             }
 
