@@ -23,17 +23,30 @@
     "energy": 50,
     "rewards": [
         {
+            "progress": 55,
+            "reward": {
+                "type": 1,
+                "count": 70
+            }
+        },
+        {
             "progress": 75,
             "reward": {
                 "type": 2,
-                "count": 3
+                "count": 2
             }
         },
         {
             "progress": 95,
             "reward": {
                 "type": 1,
-                "count": 150
+                "count": 100
+            }
+        }, {
+            "progress": 98,
+            "reward": {
+                "type": 3,
+                "count": 1
             }
         }
     ],

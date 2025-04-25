@@ -33,21 +33,14 @@
             "progress": 85,
             "reward": {
                 "type": 1,
-                "count": 75
+                "count": 80
             }
         },
         {
             "progress": 94,
             "reward": {
                 "type": 2,
-                "count": 1
-            }
-        },
-        {
-            "progress": 95,
-            "reward": {
-                "type": 3,
-                "count": 1
+                "count": 2
             }
         }
     ],
