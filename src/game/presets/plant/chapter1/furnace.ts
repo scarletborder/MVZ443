@@ -29,9 +29,9 @@ class Furnace extends IPlant {
                 if (this.isSleeping) return;
                 if (this.health > 0 && scene && scene.time) {
                     this.setFrame(1);
+                    scene.broadCastEnergy(+this.updateEnergy);
                     scene?.time.delayedCall(1000, () => {
                         if (this && this.health && this.health > 0) {
-                            scene.broadCastEnergy(+this.updateEnergy);
                             this.setFrame(0);
                         }
                     });

@@ -51,6 +51,8 @@ class ElasticPutin extends INightPlant {
         this.isLightning = true;
         // TODO: 设置动画
 
+        if (this.level)
+
         scene.frameTicker.delayedCall({
             delay: 5000,
             callback: () => {

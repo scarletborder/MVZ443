@@ -55,7 +55,6 @@ export default class Musical {
         this.shieldHitAudio = new ThrottledAudio(this.game, 200, isMuted);
 
         this.explodeAudio = new ThrottledAudio(this.game, 500, isMuted);
-
     }
 
     public playCurrent() {

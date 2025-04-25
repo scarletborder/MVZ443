@@ -10,12 +10,15 @@ import { Game } from "../../../scenes/Game";
 import { StartArc } from "../../../utils/arc";
 import createDirtOut from "../../../sprite/dirt_out";
 import { IMonster } from "../../../models/monster/IMonster";
+import { IZombie } from "../../../models/monster/IZombie";
 
 class _TntMines extends IPlant {
     game: Game;
     isBuried: boolean = true;
     head: Phaser.GameObjects.Sprite;
     random: seedrandom.PRNG;
+
+    colliderZombie: Phaser.Physics.Arcade.Collider | null = null;
 
     constructor(scene: Game, col: number, row: number, level: number, buriedTime: number) {
         super(scene, col, row, TntMines.texture, TntMines.pid, level);
@@ -124,6 +127,18 @@ class _TntMines extends IPlant {
             createDirtOut(this.game, this.col, this.row, () => {
                 this.setVisible(true);
             });
+
+            // 设置新的碰撞回调
+            this.colliderZombie = this.scene.physics.add.overlap(
+                IZombie.Group,
+                this,
+                (plant: IPlant, zombie: IZombie) => {
+                    if (this.isBuried || this.health <= 0) return;
+                    this.explode();
+                },
+                null,
+                this
+            )
         }
     }
 
@@ -133,18 +148,26 @@ class _TntMines extends IPlant {
         if (this.isBuried) {
             super.takeDamage(amount, monster);
         } else {
-            const rightDistance = this.level >= 9 ? 1.5 : 1;
-            new IExpolsion(this.game, this.x, this.row, {
-                damage: 1500,
-                rightGrid: rightDistance,
-                leftGrid: 0.5,
-                upGrid: 0
-            });
-            this.destroyPlant();
+            this.explode();
         }
     }
 
+    private explode() {
+        // 爆炸
+        const rightDistance = this.level >= 9 ? 1.5 : 1;
+        new IExpolsion(this.game, this.x, this.row, {
+            damage: 1500,
+            rightGrid: rightDistance,
+            leftGrid: 0.5,
+            upGrid: 0
+        });
+        this.destroyPlant();
+    }
+
     destroy(fromScene?: boolean): void {
+        if (this.colliderZombie) {
+            this.colliderZombie.destroy();
+        }
         this.head?.destroy();
         super.destroy(fromScene);
     }
