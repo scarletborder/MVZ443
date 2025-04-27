@@ -279,4 +279,131 @@ Upgrading slightly increases damage
 Level 3: Fires 1/2/1 bullets per lane
 Level 9: Fires 2/2/2 bullets per lane (Penalty: Cost increases to 350)`
     ,
+
+
+
+
+    menu_about_text: `MC VS Zombie 443
+
+        Author: scarletborder
+        Version: V{VERSION} - COMMIT {commitVersion}
+
+        Contact: baishuibeef@gmail.com
+        bilibili: https://space.bilibili.com/123796349
+
+        Texture Source: Minecraft VS Zombie2 GMS2 Edition
+        Original Author: Cuerzor58 
+
+        Below are public server addresses you can enter in the server address field:
+        Northern China: 103.228.12.180:49870
+        Western US: scarletborder.cn`,
+
+    menu_homepage_text: `The game is still in development. Current state does not represent final quality.
+
+    Unlock more devices by completing levels. Current progress reaches Chapter1-Stage8. The storyline is still being refined. Balance and levels may change multiple times during iterations.
+    
+    The multiplayer feature in this beta version is in testing phase. Please search for the multiplayer tutorial on the game documentation page for more details.
+    `,
+    menu_homepage_title: `My World VS Zombies 443 Edition`,
+    menu_homepage_version: `Version`,
+
+    menu_back: `Back`,
+    menu_next: `Next`,
+    menu_settings_general: `General`,
+    menu_settings_gaming: `Gameplay`,
+    menu_settings_online: `Multiplayer`,
+
+    menu_settings_general_display: `Display`,
+    menu_settings_general_fullscreen: `Fullscreen Mode`,
+    menu_settings_general_fullscreen_t: `Toggle fullscreen mode`,
+    menu_settings_general_resolution: `Change Resolution`,
+    menu_settings_general_resolution_t: `Select game resolution. For mobile devices, recommended to choose 50% scaled-down with 924x693. In multiplayer mode, ensure all players use the same resolution`,
+    menu_settings_general_language: `Language 语言`,
+    menu_settings_general_language_t: `Select game display language`,
+    menu_settings_general_debug: `Show Debug Info`,
+    menu_settings_general_debug_t: `Toggle debug information display, only collision boxes`,
+
+    menu_settings_general_saves: `Save Management`,
+    menu_settings_general_save_progress: `Save Progress`,
+    menu_settings_general_save_progress_t: `Manually save current game progress`,
+    menu_settings_general_import_save: `Import Save`,
+    menu_settings_general_import_save_t: `Upload JSON save file from local storage`,
+    menu_settings_general_export_save: `Export Save`,
+    menu_settings_general_export_save_t: `Download current save as JSON file`,
+
+    menu_settings_gaming_gamesettings: `Game Settings`,
+    menu_settings_gaming_private_blueprints: `Private Blueprint Mode`,
+    menu_settings_gaming_private_blueprints_t: `[Single-player only] When enabled, allows placing and removing devices while paused`,
+    menu_settings_gaming_background_music: `Background Music`,
+    menu_settings_gaming_background_music_t: `Enable/disable background music. Disabling may reduce network resource downloads`,
+    menu_settings_gaming_sound_effects: `Sound Effects`,
+    menu_settings_gaming_sound_effects_t: `Enable/disable sound effects`,
+
+    menu_settings_server_address: `Server Address`,
+    menu_settings_server_address_t: `Enter server base address, e.g. 127.0.0.1:28080`,
+    menu_settings_try_connectivity: `Test Connectivity`,
+    menu_settings_try_connectivity_t: `Will help trust certificate if untrusted. Other issues will also be reported`,
+    menu_settings_refresh_room_list: `Refresh Room List`,
+    menu_settings_refresh_room_list_t: `Get current room list`,
+    menu_settings_create_room: `Create Room`,
+    menu_settings_create_room_t: `Create a new room`,
+    menu_settings_set_global_key: `Set Global Key`,
+    menu_settings_set_global_key_t: `Set global key for creating or joining rooms`,
+    menu_settings_disconnect: `Disconnect`,
+    menu_settings_disconnect_t: `Disconnect from server`,
+
+    menu_settings_save: `Save`,
+    menu_settings_import: `Import`,
+    menu_settings_export: `Export`,
+
+    menu_level_choose_chapter_tip: `Please select a chapter`,
+    menu_level_choose_level_tip: `Please select a level`,
+    menu_level_chosen_plants: `Selected Devices`,
+
+    chapter_cp1: `Beneath the Village`,
+    level_sg1: `Peaceful Village`,
+    level_sg2: `Outside the Mine`,
+    level_sg3: `Mine Tunnels`,
+    level_sg4: `Deep Mine`,
+    level_sg5: `Deep Mine (Water)`,
+    level_sg6: `Rainbow Dragon Cave`,
+    level_sg7: `Mine Tunnels (Elite)`,
+    level_sg8: `Deep Mine (Water Elite)`,
+    level_sg9: `Rainbow Dragon Cave (BOSS)`,
+
+    menu_endding_result: `Game Result`,
+    menu_endding_win: `Victory!`,
+    menu_endding_unlocked_level: `Unlocked Level`,
+    menu_endding_unlocked_plants: `Unlocked Devices`,
+    menu_endding_fail: `Failed, try again`,
+    menu_endding_progress: `Progress`,
+    menu_endding_reward: `Reward`,
+    menu_endding_noreward: `No progress reward yet`,
+
+    name_at_dispenser: `Anti-Tank Turret`,
+    name_dispenser: `Dispenser`,
+    name_furnace: `Furnace`,
+    name_generator: `Biomass Generator`,
+    name_ice_bomb: `Frost Bomb`,
+    name_lily: `Water Lily`,
+    name_magic_powder: `Magic Powder`,
+    name_obsidian: `Obsidian`,
+    name_pumpkin_wan: `Wide-Area Pumpkin Pie`,
+    name_pumpkin: `Spooky Pumpkin Head`,
+    name_small_dispenser: `Small Dispenser`,
+    name_tnt_mines: `TNT Mines`,
+    name_tnt: `Instant TNT`,
+    name_triple_dispenser: `Triple Dispenser`,
+    name_double_dispenser: `Dual Dispenser`,
+    name_elastic_putin: `Elastic Pudding`,
+    name_glow_powder: `Glowstone Powder`,
+
+    menu_homepage: `Home`,
+    menu_choose_level: `Select Level`,
+    menu_pokedex: `Device Index`,
+    menu_shop: `Shop`,
+    menu_settings: `Settings`,
+    menu_updates: `Changelog`,
+    menu_docs: `Documentation`,
+    menu_about: `About`,
 }

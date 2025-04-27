@@ -1,5 +1,5 @@
 export default {
-    at_dispenser: `消耗:450
+    at_dispenser_description: `消耗:450
 向前发射高伤害的烟花火箭,命中怪物会造成爆炸
 需要种植在发射器上
 技能:向前发射一枚短引信烟花火箭,销毁时释放集束炸弹
@@ -7,12 +7,12 @@ export default {
 升级可以中幅度提高器械生命值
 5级: 消耗减少到425
 9级:冷却时间小幅度减少`
-,
+    ,
     cp1: `这个故事发生在Steve与坑爹村民前往永夜沼泽后的第二度花信.
 作为留守在村庄中的Alex非常担心Steve...
 而与此同时,overworld到处刷怪量急剧减少,机器由于原材料的短缺逐渐停工,工业化的村庄面临着无法供养庞大村民的问题.
 是时候站出来解决这场overworld的异变了.`
-,
+    ,
     dispenser_description: `消耗: 100
 发射器是你的第一道防线，它们发射箭来保卫你的房子。
 技能：朝前方发射大量箭矢
@@ -23,23 +23,23 @@ export default {
 5级 - 星之碎片能力箭矢多穿透一个目标(惩罚: 星之碎片箭矢伤害小幅度降低)
 9级 - 降低消耗至75
 `
-,
+    ,
     double_dispenser_description: `消耗:125
-双头发射器可以同时攻击前方和后方的地面单位
+双向发射器可以同时攻击前方和后方的地面单位
 技能:向前方发射大量箭矢,向后方连射火箭
 
-铁匠:双头发射器是解决后排敌人的专家,这样你就不需要携带弹性布丁,真是又节省卡槽又节省能量呀
+铁匠:双向发射器是解决后排敌人的专家,这样你就不需要携带弹性布丁,真是又节省卡槽又节省能量呀
 Alex: 但是我偏要带
 铁匠:😅
 
 提升等级可以略微提高攻击伤害
 5级:对前后各发射2发子弹,共4发(惩罚:能量消耗提高到150)
 9级:对前发射2发子弹,对后发射3发,共5发(惩罚:能量消耗提高到200)`
-,
+    ,
     dragon_ball: `龙珠`
-,
+    ,
     echo_shard: `回响碎片`
-,
+    ,
     elastic_putin_description: `消耗:100
 弹性布丁可以反弹己方箭矢,火箭这些子弹
 光敏作物,睡眠时无法反弹
@@ -49,7 +49,7 @@ Alex: 但是我偏要带
 
 3级:减少消耗到75
 7级:星之碎片能力带电时间提升`
-,
+    ,
     furnace_description: `消耗: 50
 熔炉能为你自动生产红石
 技能：生成大量红石
@@ -58,7 +58,7 @@ Alex: 但是我偏要带
 提升等级可以略微减少产能间隔
 5级 - 减少能量消耗至35
 9级 - 每次产能提高至40`
-,
+    ,
     gatlin_dispenser: `消耗:425
 单行倾泻密集的箭矢
 需要种植在发射器上
@@ -67,7 +67,7 @@ Alex: 但是我偏要带
 升级可以略微增加器械生命值
 5级:消耗降低至375
 9级:中幅度降低冷却时间`
-,
+    ,
     generator_description: `消耗:50
 被僵尸攻击时,将怪物的动能转化为机械能
 技能:唤醒周围3x3的所有器械
@@ -79,16 +79,16 @@ Alex: 但是我偏要带
 5级 - 白天的能量转化效率中幅度提高
 9级 - 提高全天候的能量转化效率
 `
-,
+    ,
     glow_powder_description: `消耗:75
 萤石粉可以唤醒睡眠的器械
 
 在睡梦中遇到爱的魔女终究会苏醒吗
 提升等级可以略微减少冷却时间
 5级: 能量消耗减少到50`
-,
+    ,
     gold: `金币`
-,
+    ,
     ice_bomb_description: `消耗: 75
 光敏作物,白天种植无法立即生效
 技能: 立即生效
@@ -100,18 +100,18 @@ Alex: 但是我偏要带
 5级 - 大幅度增加造成的伤害(惩罚:能量消耗增加至100)
 9级 - 减少冷却时间
 `
-,
+    ,
     iron: `铁锭`
-,
+    ,
     leather: `皮革`
-,
+    ,
     lily_description: `消耗:25
 为你在水面承载植物
 技能: 在3x3水域种植睡莲
 2月8日、18日、28日这三天带8的日子是爱莲之日哦
 升级可以略微提升生命值
 5级 - 能量消耗减少至0`
-,
+    ,
     magic_powder_description: `消耗:175
 对一个格子内的所有怪物造成高额(激光属性)伤害并获得一个星之碎片
 无法对其使用星之碎片
@@ -121,7 +121,15 @@ Alex: 但是我偏要带
 5级 - 减少花费至150
 9级 - 小幅度减少冷却时间
 `
-,
+    ,
+    menu_homepage: `主页`,
+    menu_choose_level: `选择关卡`,
+    menu_pokedex: `器械图鉴`,
+    menu_shop: `商店`,
+    menu_settings: `设置`,
+    menu_updates: `更新记录`,
+    menu_docs: `游戏文档`,
+    menu_about: `关于`,
     obsidian_description: `消耗: 50
 黑曜石的强力装甲能够抵御僵尸的攻击。
 技能：恢复所有生命值，并获得更加坚硬的护甲
@@ -130,9 +138,9 @@ Alex: 但是我偏要带
 提升等级可以略微提升生命值
 5级 - 中幅度减少冷却时间
 9级 - 星之碎片装甲抗性大幅度提高`
-,
+    ,
     obsidian_medal: `黑曜石残骸`
-,
+    ,
     pumpkin_description: `消耗:100
 向前发射中距离激光造成大范围伤害
 技能:前方三行发射中等伤害激光(无法对空)
@@ -141,7 +149,7 @@ Alex: 但是我偏要带
 提高等级可以略微提高伤害
 5级 - 加速攻击
 9级 - 攻击造成减速效果(惩罚:消耗增加至150)`
-,
+    ,
     pumpkin_wan_description: `消耗:325
 向周围发射高频激光(无法对空)
 需要种植在阴森南瓜头上
@@ -153,9 +161,9 @@ Alex: 但是我偏要带
 7级 - 海陆空三线管制(惩罚:消耗增加至300)
 9级 - 攻击范围扩大到5x5(惩罚:冷却时间小幅度延长)
 `
-,
+    ,
     scb: `黯绯结晶Trailer Version Only`
-,
+    ,
     sg1: `自从Steve离开后,平日里袭击村庄的怪物数量在逐日减少
 Alex: 你说Steve出门冒险后,overworld里的怪物种群在变小,这是否意味着Steve他们遇到了更多的怪物?
 铁匠: 我猜想你是对的,Steve可能确实遇到了棘手的麻烦,虽然他的实力很强并且还有图书管理员伴他左右
@@ -163,13 +171,13 @@ Alex:我们需要去帮助他们!用这些遗留的器械!
 铁匠wait,他们来了,现在放置你的器械抵御他们,同时重拾过去的使用经验吧.
 --- 关卡特性 ---
 能量50,开局1列赠送2个发射器,2列赠送3个熔炉`
-,
+    ,
     sg2: `在将村庄防务问题解决给自动化器械和其他村民后,Alex和铁匠踏上了寻找Steve的路
 Alex:还记得Steve他们离开时的场景吗?当时他们兴奋地展示了一张地图,指着永夜沼泽兴奋的说,前往那里就能去往传说中的幻想乡
 铁匠:是的,但是现在那处已经被改造成了女巫塔,而施工队没有发现任何结界波动的迹象.不过我还知道一处可能存在时空信道的入口...就是附近的一处矿洞的底层,曾经我做冒险者的时候去过那里.
 Alex:你看好多僵尸聚集在那里,还有些僵尸在闪烁发光,我预感击败他们可以获得短时间增强植物能力的重要道具.
 `
-,
+    ,
     sg3: `解决完毕了聚集在矿洞外围的怪物后,二人继续前行
 
 Alex:矿洞内的刷怪量与外边的世界比起来可不是差了一点两点,就像放了过去overworld的十几个刷怪笼
@@ -177,7 +185,7 @@ Alex:矿洞内的刷怪量与外边的世界比起来可不是差了一点两点
 Alex:呀,真感谢你的帮助,只要继续前进就好了，只要不停下脚步，道路就会...不断延伸?呃呃呃,这黑灯瞎火的地方太阳能板停止运作了,还好光敏植物可以开始运作
 --- 关卡特性 ---
 能量100`
-,
+    ,
     sg4: `深入矿洞视野不断开阔,这里出现的怪物更加强力并且数量更加庞大.
 
 铁匠: 真是奇怪,月光发电机这个时候竟然坏了,否则上一关就会发给你的. 不过好在我收集了一些配件改装了一下,现在它可以自动工作了,不过...
@@ -186,14 +194,14 @@ Alex: 不过什么?
 Alex: 汗...那你上场摇他吗
 铁匠:这不是有怪物帮我们摇吗,把他种在前面就好了.顺便一提,我终于找到了扩展我们器械背包的方法,现在可以你可以在商店中解锁第7个卡槽了
 `
-,
+    ,
     sg5: `继续前进,地下积水形成的天然湖泊挡住了前进的路
 铁匠: 别慌,用新获得的睡莲承载器械,另外如果你有多余的材料还可以在商店中扩展第8个卡槽
 
 --- 关卡特性 ---
 2,3水路
 `
-,
+    ,
     sg6: `清理完残留在洞穴水层的怪物,他们在湖水中找到了一条通往更深层次的间隙,间隙中散射着七彩的光芒
 
 铁匠:这绚烂的光彩不可能是我们Minecraft的东西,我预感这底下绝对有着和异空间的连接
@@ -204,7 +212,7 @@ Alex: Let's move!
 Alex:这些,不是Minecraft的矿物!
 (深处传来怪物的嘶吼,其中夹杂着低沉的叹息)
 铁匠:看来又有一场苦仗要打了`
-,
+    ,
     sg7: `[难度依然在平衡中]
 
 Alex: 该死,这些突变僵尸真难对付
@@ -224,7 +232,7 @@ Alex: 终于重新摆平那些怪物了,铁匠你那里进展如何
 Alex:铁匠!铁匠!该死那块黑色东西是什么
 (???上场)
 `
-,
+    ,
     sg8: `Alex发现黑曜石傀儡用黑曜石禁锢住铁匠,并派出怪物向自己发动了攻击,随着激烈的战斗打响,Alex最后成功解救了铁匠.并且二人在被怪物吞没前敲破了黑曜石墙,发现了一个隐秘的洞穴空腔,这里竖立着一把附魔下界合金镐
 .
 
@@ -241,7 +249,7 @@ Alex: 快停下!!!他对声音敏感!!!!!
 --- 关卡特性 ---
 2,3水路,初始能量100
 `
-,
+    ,
     sg9: `在一番苦战之后,二人终于击败了warden
 铁匠:这warden发出的音波可快把我耳膜弄炸了
 Alex:安啦,现在幻想乡在向我们招手,只要用这把审稿...
@@ -277,7 +285,7 @@ Alex:看来这些mob又重新消停了,审稿...启动!
 (???上场)
 ???:终于查到这里了,你们这些妄想侵略幻想乡的方块怪物,看招!
 铁匠:Alex小心!`
-,
+    ,
     small_dispenser_description: `消耗: 0
 小型发射器能发射短距离的雪球。
 技能：射出一个长距离爆炸雪球
@@ -289,9 +297,9 @@ Alex:看来这些mob又重新消停了,审稿...启动!
 5级 - 攻击范围中幅度增加
 9级 - 强光环境不会失效
 `
-,
+    ,
     start: '开始游戏'
-,
+    ,
     tnt_description: `消耗:150
 TNT可以在3x3范围内造成高额爆炸伤害
 技能: 在爆炸前使用星之碎片可以向周边造成同等的2次同等的TNT爆炸
@@ -302,7 +310,7 @@ TNT可以在3x3范围内造成高额爆炸伤害
 升级可以略微减少冷却时间
 5级-伤害增加30%
 7级-爆炸后原地留下短时间的集束炸弹,3秒后再次爆炸`
-,
+    ,
     tnt_mines_description: `消耗: 25
 地雷TNT在一定时间的装填后能够炸飞接近的僵尸。
 技能:向前方生成两颗已经部署好的TNT地雷
@@ -313,7 +321,7 @@ TNT可以在3x3范围内造成高额爆炸伤害
 7级 - 星之碎片能力可以多生成一个TNT地雷
 9级 - 爆炸范围向前略微扩大
 `
-,
+    ,
     triple_dispenser_description: `消耗:325
 向前方三路分别发射1/1/1发子弹
 技能: 向前方扇形区域散射240发箭矢(刹華月翔)
@@ -326,5 +334,119 @@ Alex: 我看未必
 升级可以略微提高攻击伤害
 3级：向前方三路分别发射1/2/1发子弹
 9级：向前方三路分别发射2/2/2发子弹(惩罚:能量消耗提高到350)`
-,
+    ,
+    name_at_dispenser: `反坦克炮台`,
+    name_dispenser: `发射器`,
+    name_furnace: `熔炉`,
+    name_generator: `生物质发电机`,
+    name_ice_bomb: `寒冰炸弹`,
+    name_lily: `睡莲`,
+    name_magic_powder: `魔术粉`,
+    name_obsidian: `黑曜石`,
+    name_pumpkin_wan: `广域南瓜派`,
+    name_pumpkin: `阴森南瓜头`,
+    name_small_dispenser: `小发射器`,
+    name_tnt_mines: `TNT地雷`,
+    name_tnt: `瞬炸TNT`,
+    name_triple_dispenser: `三线发射器`,
+    name_double_dispenser: `双向发射器`,
+    name_elastic_putin: `弹性布丁`,
+    name_glow_powder: `萤石粉`,
+
+    menu_about_text: `MC VS Zombie 443
+
+        作者：scarletborder
+        版本：V{VERSION} - COMMIT {commitVersion}
+
+        联系方式：baishuibeef@gmail.com
+        bilibili: https://space.bilibili.com/123796349
+
+        材质来源: Minecraft VS Zombie2 GMS2版
+        原作者:  Cuerzor58 
+
+        以下是公益服务器地址可以填进服务器地址输入框
+        中国北部 103.228.12.180:49870
+        美国西部 scarletborder.cn`,
+
+    menu_homepage_text: `游戏仍在开发中, 当前状态不代表最终品质.
+
+    通过过关获得更多器械,目前进度以至chapter1-stage8,剧情仍然在完善中,在迭代期间平衡性和关卡会发生多次变化
+    
+    体验版本联机功能处于测试阶段,请在游戏文档页面搜索联机教程查看更多描述
+    `,
+    menu_homepage_title: `我的世界大战僵尸 443版`,
+    menu_homepage_version: `版本`,
+
+    menu_back: `返回`,
+    menu_next: `下一步`,
+    menu_settings_general: `通用`,
+    menu_settings_gaming: `游戏性`,
+    menu_settings_online: `联机`,
+
+    menu_settings_general_display: `显示`,
+    menu_settings_general_fullscreen: `全屏模式`,
+    menu_settings_general_fullscreen_t: `切换全屏模式`,
+    menu_settings_general_resolution: `切换分辨率`,
+    menu_settings_general_resolution_t: `选择游戏分辨率,移动端推荐选择画面缩小50%并选用924x693. 联机模式下请确保所有玩家分辨率一致`,
+    menu_settings_general_language: `Language 语言`,
+    menu_settings_general_language_t: `选择游戏显示语言`,
+    menu_settings_general_debug: `显示调试信息`,
+    menu_settings_general_debug_t: `开关调试信息显示,仅碰撞箱`,
+
+    menu_settings_general_saves: `存档管理`,
+    menu_settings_general_save_progress: `保存进度`,
+    menu_settings_general_save_progress_t: `手动保存当前游戏进度`,
+    menu_settings_general_import_save: `导入存档`,
+    menu_settings_general_import_save_t: `从本地上传 JSON 存档文件`,
+    menu_settings_general_export_save: `导出存档`,
+    menu_settings_general_export_save_t: `将当前存档下载为 JSON 文件`,
+
+    menu_settings_gaming_gamesettings: `游戏设置`,
+    menu_settings_gaming_private_blueprints: `私密图纸模式`,
+    menu_settings_gaming_private_blueprints_t: `[仅单人]启用后可以在暂停状态中放置和移除器械`,
+    menu_settings_gaming_background_music: `背景音乐`,
+    menu_settings_gaming_background_music_t: `启用/禁用背景音乐, 禁用可以减少网络资源下载`,
+    menu_settings_gaming_sound_effects: `音效`,
+    menu_settings_gaming_sound_effects_t: `启用/禁用音效`,
+
+    menu_settings_server_address: `服务器地址`,
+    menu_settings_server_address_t: `输入服务器基础地址, 例如127.0.0.1:28080`,
+    menu_settings_try_connectivity: `尝试联通性`,
+    menu_settings_try_connectivity_t: `如果无法信任证书,会辅助信任证书. 其他原因也会一并曝出`,
+    menu_settings_refresh_room_list: `刷新房间列表`,
+    menu_settings_refresh_room_list_t: `获得当前房间列表`,
+    menu_settings_create_room: `创建房间`,
+    menu_settings_create_room_t: `创建一个新的房间`,
+    menu_settings_set_global_key: `设置全局密钥`,
+    menu_settings_set_global_key_t: `设置全局密钥, 创建房间或连接时使用`,
+    menu_settings_disconnect: `断开`,
+    menu_settings_disconnect_t: `断开服务器连接`,
+
+    menu_settings_save: `保存`,
+    menu_settings_import: `导入`,
+    menu_settings_export: `导出`,
+
+    menu_level_choose_chapter_tip: `请选择一个章节`,
+    menu_level_choose_level_tip: `请选择一个关卡`,
+    menu_level_chosen_plants: `已选择器械`,
+
+    chapter_cp1: `村庄之下`,
+    level_sg1: `安心村庄`,
+    level_sg2: `矿洞之外`,
+    level_sg3: `矿道`,
+    level_sg4: `矿洞深处`,
+    level_sg5: `矿洞深处(水)`,
+    level_sg6: `虹龙洞`,
+    level_sg7: `矿道(elite)`,
+    level_sg8: `矿洞深处(水elite)`,
+    level_sg9: `虹龙洞(BOSS)`,
+
+    menu_endding_result: `游戏结果`,
+    menu_endding_win: `胜利!`,
+    menu_endding_unlocked_level: `解锁关卡`,
+    menu_endding_unlocked_plants: `解锁器械`,
+    menu_endding_fail: `失败,请再接再厉`,
+    menu_endding_progress: `进度`,
+    menu_endding_reward: `奖励`,
+    menu_endding_noreward: `暂无进度奖励`,
 }
