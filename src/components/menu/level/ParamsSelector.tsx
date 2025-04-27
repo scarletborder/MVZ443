@@ -147,14 +147,14 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({ stageId, setGameParams,
                         }}
                         onClick={onBack}
                     >
-                        返回
+                        {translate('menu_back')}
                     </button>
                     <div style={{
                         marginLeft: '10px',
                         color: '#ddd',
                         fontSize: '16px'
                     }}>
-                        {`stage ${stageId} - ${StageDataRecords[stageId].nameKey}`}
+                        {`stage ${stageId} - ${translate(StageDataRecords[stageId].nameKey)}`}
                     </div>
                 </div>
                 <div style={{
@@ -204,7 +204,7 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({ stageId, setGameParams,
                                 fontSize: '12px',
                                 marginTop: '5px'
                             }}>
-                                {plant.name}
+                                {translate(plant.name)}
                             </span>
                         </div>
                     ))}
@@ -222,7 +222,7 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({ stageId, setGameParams,
                 flexDirection: 'column'
             }}>
                 <h3>
-                    已选择器械{' '}
+                    {`${translate('menu_level_chosen_plants')} `}
                     <span style={{
                         color: isOverLimit ? 'red' : '#ddd',
                         transition: 'color 0.3s ease'
@@ -270,7 +270,7 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({ stageId, setGameParams,
                                         draggable="false"
                                     />
                                 </div>
-                                <span style={{ marginLeft: '10px' }}>{plant.name}</span>
+                                <span style={{ marginLeft: '10px' }}>{translate(plant.name)}</span>
                             </div>
                         );
                     })}

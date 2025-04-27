@@ -5,7 +5,7 @@ import { useSettings } from '../../context/settings_ctx';
 import { debounce } from '../../utils/debounce';
 import BackendWS from '../../utils/net/sync';
 import { createRoom, getRoomsInfo, RoomInfo, RoomListWidget } from '../../utils/net/lobby';
-
+import { Locale, useLocaleMessages } from '../../hooks/useLocaleMessages';
 
 interface Props {
     width: number;
@@ -14,8 +14,8 @@ interface Props {
 }
 
 interface SettingItem {
-    title: string;
-    description: string;
+    titleKey: string;
+    descriptionKey: string;
     controlType: 'button' | 'switcher' | 'input' | 'selections';
     controlProps?: {
         onClick?: () => void; // for button
@@ -55,6 +55,7 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
     const [noRoomFlag, setNoRoomFlag] = useState(false);
 
     const [linkStatus, setLinkStatus] = useState(false);
+    const { translate } = useLocaleMessages();
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -80,7 +81,7 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
             const reader = new FileReader();
             reader.onload = (e) => {
                 const content = e.target?.result as string;
-                saveManager.importSave(content)
+                saveManager.importSave(content);
                 console.log('导入存档:', content);
             };
             reader.readAsText(file);
@@ -104,19 +105,17 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
         });
-
     };
-
 
     // 设置类别和对应的面板数据
     const settingsData: { [key: string]: (SettingPanel | null)[] } = {
         general: [
             {
-                title: "显示",
+                title: "menu_settings_general_display",
                 items: [
                     {
-                        title: "全屏模式",
-                        description: "切换全屏显示",
+                        titleKey: "menu_settings_general_fullscreen",
+                        descriptionKey: "menu_settings_general_fullscreen_t",
                         controlType: "switcher",
                         controlProps: {
                             value: isFullscreen, onToggle: (val) => {
@@ -129,8 +128,8 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
                         }
                     },
                     {
-                        title: "切换分辨率",
-                        description: "选择游戏分辨率,移动端推荐选择画面缩小50%并选用924x693. 联机模式下请确保所有玩家分辨率一致",
+                        titleKey: "menu_settings_general_resolution",
+                        descriptionKey: "menu_settings_general_resolution_t",
                         controlType: "selections",
                         controlProps: {
                             options: ["800x600", "924x693", "1024x768", "1200x900"], selected: `${width}x${width / 4 * 3}`, onSelect: (val) => {
@@ -140,8 +139,8 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
                         }
                     },
                     {
-                        title: "语言 Language",
-                        description: "选择游戏语言, only pokedx currently",
+                        titleKey: "menu_settings_general_language",
+                        descriptionKey: "menu_settings_general_language_t",
                         controlType: "selections",
                         controlProps: {
                             options: ["zh_CN", "en_US"], selected: settingManager.language, onSelect: (val) => {
@@ -153,8 +152,8 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
                         }
                     },
                     {
-                        title: "显示调试信息",
-                        description: "开启/关闭调试信息显示",
+                        titleKey: "menu_settings_general_debug",
+                        descriptionKey: "menu_settings_general_debug_t",
                         controlType: "switcher",
                         controlProps: {
                             value: settingManager.isDebug, onToggle: (val) => {
@@ -165,40 +164,40 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
                 ],
             },
             {
-                title: "存档管理",
+                title: "menu_settings_general_saves",
                 items: [
                     {
-                        title: "保存进度",
-                        description: "手动保存当前游戏进度",
+                        titleKey: "menu_settings_general_save_progress",
+                        descriptionKey: "menu_settings_general_save_progress_t",
                         controlType: "button",
                         controlProps: {
                             onClick: () => {
                                 saveManager.saveProgress();
                             },
-                            btnText: "保存"
+                            btnText: "menu_settings_save"
                         }
                     },
                     {
-                        title: "导入存档",
-                        description: "从本地上传 JSON 存档文件",
+                        titleKey: "menu_settings_general_import_save",
+                        descriptionKey: "menu_settings_general_import_save_t",
                         controlType: "button",
-                        controlProps: { onClick: handleImportSave, btnText: "导入" }
+                        controlProps: { onClick: handleImportSave, btnText: "menu_settings_import" }
                     },
                     {
-                        title: "导出存档",
-                        description: "将当前存档下载为 JSON 文件",
+                        titleKey: "menu_settings_general_export_save",
+                        descriptionKey: "menu_settings_general_export_save_t",
                         controlType: "button",
-                        controlProps: { onClick: handleExportSave, btnText: "导出" }
+                        controlProps: { onClick: handleExportSave, btnText: "menu_settings_export" }
                     }
                 ]
             }
         ], game: [
             {
-                title: "游戏设置",
+                title: "menu_settings_gaming_gamesettings",
                 items: [
                     {
-                        title: "私密图纸模式",
-                        description: "[仅单人]启用后可以在暂停状态中放置和移除器械",
+                        titleKey: "menu_settings_gaming_private_blueprints",
+                        descriptionKey: "menu_settings_gaming_private_blueprints_t",
                         controlType: "switcher",
                         controlProps: {
                             value: settingManager.isBluePrint, onToggle: (val) => {
@@ -207,8 +206,8 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
                         }
                     },
                     {
-                        title: "背景音乐",
-                        description: "启用/禁用背景音乐, 禁用可以减少网络资源下载",
+                        titleKey: "menu_settings_gaming_background_music",
+                        descriptionKey: "menu_settings_gaming_background_music_t",
                         controlType: "switcher",
                         controlProps: {
                             value: settingManager.isBgm, onToggle: (val) => {
@@ -217,8 +216,8 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
                         }
                     },
                     {
-                        title: "音效",
-                        description: "启用/禁用音效",
+                        titleKey: "menu_settings_gaming_sound_effects",
+                        descriptionKey: "menu_settings_gaming_sound_effects_t",
                         controlType: "switcher",
                         controlProps: {
                             value: settingManager.isSoundAudio, onToggle: (val) => {
@@ -231,11 +230,11 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
         ],
         online: [
             {
-                title: `联机设置${linkStatus ? `-已连接->id: ${BackendWS.room_id}` : "-未连接"}`,
+                title: `Online Settings${linkStatus ? `-Connected->id: ${BackendWS.room_id}` : "-Disconnected"}`,
                 items: [
                     {
-                        title: "服务器地址",
-                        description: "输入服务器基础地址, 例如127.0.0.1:28080",
+                        titleKey: "menu_settings_server_address",
+                        descriptionKey: "menu_settings_server_address_t",
                         controlType: "input",
                         controlProps: {
                             placeholder: settingManager.linkOptions.baseUrl, onChange: (val) => {
@@ -248,8 +247,8 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
                         }
                     },
                     {
-                        title: '尝试联通性',
-                        description: '如果无法信任证书,会辅助信任证书. 其他原因也会一并曝出',
+                        titleKey: 'menu_settings_try_connectivity',
+                        descriptionKey: 'menu_settings_try_connectivity_t',
                         controlType: 'button',
                         controlProps: {
                             onClick: () => {
@@ -281,12 +280,12 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
                                 }
                                 checkAndOpenUrl(`https://${settingManager.linkOptions.baseUrl}/list`);
                             },
-                            btnText: '尝试',
+                            btnText: 'menu_settings_try_connectivity',
                         }
                     },
                     {
-                        title: "刷新房间列表",
-                        description: `获得当前房间列表`,
+                        titleKey: "menu_settings_refresh_room_list",
+                        descriptionKey: "menu_settings_refresh_room_list_t",
                         controlType: "button",
                         controlProps: {
                             onClick: () => {
@@ -308,23 +307,23 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
                                     req();
                                 }, 50)();
                             },
-                            btnText: "刷新"
+                            btnText: "menu_settings_refresh_room_list"
                         }
                     },
                     {
-                        title: "创建房间",
-                        description: "创建一个新的房间",
+                        titleKey: "menu_settings_create_room",
+                        descriptionKey: "menu_settings_create_room_t",
                         controlType: "button",
                         controlProps: {
                             onClick: () => {
                                 createRoom(settingManager.linkOptions.baseUrl, settingManager.linkOptions.key);
                             },
-                            btnText: "创建"
+                            btnText: "menu_settings_create_room"
                         }
                     },
                     {
-                        title: "设置全局密钥",
-                        description: "设置全局密钥, 创建房间或连接时使用",
+                        titleKey: "menu_settings_set_global_key",
+                        descriptionKey: "menu_settings_set_global_key_t",
                         controlType: "input",
                         controlProps: {
                             placeholder: settingManager.linkOptions.key, onChange: (val) => {
@@ -337,8 +336,8 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
                         }
                     },
                     {
-                        title: "断开",
-                        description: "断开服务器连接",
+                        titleKey: "menu_settings_disconnect",
+                        descriptionKey: "menu_settings_disconnect_t",
                         controlType: "button",
                         controlProps: {
                             onClick: () => {
@@ -360,19 +359,18 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
                 title: "房间列表",
                 items: [
                     {
-                        title: "没有房间",
-                        description: "当前没有可用的房间",
+                        titleKey: "没有房间",
+                        descriptionKey: "当前没有可用的房间",
                     }
                 ]
             } : null,
-
         ]
     };
 
     const menuItems = [
-        { name: "通用", key: "general" },
-        { name: "游戏性", key: "game" },
-        { name: "联机", key: "online" }
+        { name: "menu_settings_general", key: "general" },
+        { name: "menu_settings_gaming", key: "game" },
+        { name: "menu_settings_online", key: "online" }
     ];
     return (
         <div style={{
@@ -385,7 +383,7 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
             boxShadow: "0 0 15px rgba(0, 0, 0, 0.5)",
             animation: "frameFadeIn 0.5s ease-out"
         }}>
-            {/* 左侧30% - 菜单栏 */}
+            {/* Left menu */}
             <div style={{
                 width: "25%",
                 height: "100%",
@@ -426,7 +424,7 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
                     }}
                     onClick={onBack}
                 >
-                    返回
+                    {translate("menu_back")}
                 </button>
                 {menuItems.map((item) => (
                     <button
@@ -454,12 +452,12 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
                         }}
                         onClick={() => setSelectedCategory(item.key)}
                     >
-                        {item.name}
+                        {translate(item.name)}
                     </button>
                 ))}
             </div>
 
-            {/* 右侧70% - 设置页面 */}
+            {/* Right settings page */}
             <div style={{
                 width: "70%",
                 height: "100%",
@@ -480,7 +478,7 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
                         padding: "15px",
                         borderRadius: "5px"
                     }}>
-                        <h3 style={{ marginBottom: "15px", color: "#fff" }}>{panel.title}</h3>
+                        <h3 style={{ marginBottom: "15px", color: "#fff" }}>{translate(panel.title)}</h3>
                         {panel.items.map((item, idx) => (
                             <div key={idx} style={{
                                 display: "flex",
@@ -490,8 +488,8 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
                                 borderBottom: idx < panel.items.length - 1 ? "1px solid rgba(100, 100, 100, 0.3)" : "none"
                             }}>
                                 <div style={{ flex: 1 }}>
-                                    <div style={{ fontSize: "16px", color: "#fff" }}>{item.title}</div>
-                                    <div style={{ fontSize: "12px", color: "#aaa" }}>{item.description}</div>
+                                    <div style={{ fontSize: "16px", color: "#fff" }}>{translate(item.titleKey)}</div>
+                                    <div style={{ fontSize: "12px", color: "#aaa" }}>{translate(item.descriptionKey)}</div>
                                 </div>
                                 <div style={{ width: "200px", textAlign: "right" }}>
                                     {item.controlType === 'button' && (
@@ -514,7 +512,7 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
                                             }}
                                             onClick={item.controlProps?.onClick}
                                         >
-                                            {item.controlProps?.btnText || "执行"}
+                                            {translate(item.controlProps?.btnText!) || "执行"}
                                         </button>
                                     )}
                                     {item.controlType === 'switcher' && (
@@ -600,11 +598,11 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
 
             <style>
                 {`
-    @keyframes frameFadeIn {
+                    @keyframes frameFadeIn {
                         from { opacity: 0; transform: scale(0.95); }
                         to { opacity: 1; transform: scale(1); }
-    }
-    `}
+                    }
+                `}
             </style>
         </div>
     );

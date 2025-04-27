@@ -1,5 +1,6 @@
 // genericView.tsx
 import { useState } from 'react';
+import { useLocaleMessages } from '../../hooks/useLocaleMessages';
 
 interface Item {
     name: string;
@@ -19,6 +20,7 @@ interface Props {
 export default function GenericView({ width, height, title, items, onBack }: Props) {
     const [selectedItem, setSelectedItem] = useState<string | null>(null);
     const [selectedItemImage, setSelectedItemImage] = useState<string | null>(null);
+    const { translate } = useLocaleMessages();
 
     return (
         <div style={{
@@ -67,7 +69,7 @@ export default function GenericView({ width, height, title, items, onBack }: Pro
                     }}
                     onClick={onBack}
                 >
-                    返回
+                    {translate('menu_back')}
                 </button>
                 <p style={{
                     position: "absolute",

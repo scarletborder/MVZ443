@@ -244,7 +244,7 @@ export default function Pokedex({ width, height, onBack }: Props) {
                     }}
                     onClick={onBack}
                 >
-                    返回
+                    {translate('menu_back')}
                 </button>
                 <p style={{
                     position: "absolute",

@@ -7,6 +7,7 @@ import { StageDataRecords } from "../../game/utils/loader";
 import { publicUrl } from "../../utils/browser";
 import { useSaveManager } from "../../context/save_ctx";
 import BackendWS from "../../utils/net/sync";
+import { useLocaleMessages } from "../../hooks/useLocaleMessages";
 
 type Props = {
     width: number
@@ -17,6 +18,7 @@ export default function BottomTools({ width, chapterID }: Props) {
     const gamectx = useGameContext();
     const savectx = useSaveManager();
     const { isBluePrint } = useSettings();
+    const { translate } = useLocaleMessages();
     const starUri = `${publicUrl}/assets/sprite/star.png`;
 
     const [bossHealth, setBossHealth] = useState<number>(-1);
@@ -154,7 +156,7 @@ export default function BottomTools({ width, chapterID }: Props) {
                     </div>
                 )
             }
-            <div className='stageDisplay' onClick={handleSetPause}>{chapterID ? StageDataRecords[chapterID].nameKey : 'loading'}</div>
+            <div className='stageDisplay' onClick={handleSetPause}>{chapterID ? translate(StageDataRecords[chapterID].nameKey) : 'loading'}</div>
         </div >
     );
 }

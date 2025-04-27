@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { VERSION, announcement } from '../../public/constants'
+import { VERSION } from '../../public/constants'
 import LevelSelect from './menu/levelSelect';
 import Pokedex from './menu/pokedex';
 import Settings from './menu/settings';
@@ -85,23 +85,6 @@ export default function DocFrame({ width, height, sceneRef, setGameParams, gameS
             });
     }, []);
 
-
-    const aboutContent = `
-        MC VS Zombie 443
-
-        作者：scarletborder
-        版本：V${VERSION} - COMMIT ${commitVersion}
-
-        联系方式：baishuibeef@gmail.com
-        bilibili: https://space.bilibili.com/123796349
-
-        材质来源: Minecraft VS Zombie2 GMS2版
-        原作者:  Cuerzor58 
-
-        以下是公益服务器地址可以填进服务器地址输入框
-        山东枣庄 103.228.12.180:49870
-        美国洛杉矶 scarletborder.cn
-    `;
 
     // 主菜单组件
     const MainMenu = () => (
@@ -230,7 +213,7 @@ export default function DocFrame({ width, height, sceneRef, setGameParams, gameS
                             fontWeight: "bold",
                             textShadow: "2px 2px 4px rgba(0, 0, 0, 0.5)"
                         }}>
-                            MC VS Zombie 443
+                            {translate('menu_homepage_title')}
                         </div>
                         <div style={{
                             position: 'absolute',
@@ -242,7 +225,7 @@ export default function DocFrame({ width, height, sceneRef, setGameParams, gameS
                             textShadow: "2px 2px 4px rgba(0, 0, 0, 0.5)",
                             whiteSpace: "pre-wrap"
                         }}>
-                            {announcement}
+                            {translate('menu_homepage_text')}
                         </div>
                         <div style={{
                             position: "absolute",
@@ -260,7 +243,7 @@ export default function DocFrame({ width, height, sceneRef, setGameParams, gameS
                             color: "#888",
                             fontSize: "12px"
                         }}>
-                            版本: v{VERSION} - COMMIT {commitVersion}
+                            {translate('menu_homepage_version')}: v{VERSION} - COMMIT {commitVersion}
                         </div>
                     </>
                 )}
@@ -280,7 +263,10 @@ export default function DocFrame({ width, height, sceneRef, setGameParams, gameS
                         msUserSelect: "text", // 针对IE10及以上
                         userSelect: "text", // 标准属性
                     }}>
-                        {aboutContent}
+                        {translate('menu_about_text', {
+                            VERSION: VERSION,
+                            commitVersion: commitVersion,
+                        })}
                     </div>
                 )}
             </div>

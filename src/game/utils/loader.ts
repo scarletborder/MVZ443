@@ -12,8 +12,8 @@ chapterData.forEach((chapter: any) => {
     const chapterId = chapter.id;
     ChapterDataRecords[chapterId] = {
         id: chapterId,
-        nameKey: chapter.name,
-        descriptionKey: chapter.description,
+        nameKey: `chapter_${chapter.tag}`,
+        descriptionKey: chapter.tag,
         stages: []
     };
 
@@ -22,8 +22,8 @@ chapterData.forEach((chapter: any) => {
         const stageId = stage.id;
         StageDataRecords[stageId] = {
             id: stageId,
-            nameKey: stage.name,
-            descriptionKey: stage.description,
+            nameKey: `level_${stage.tag}`,
+            descriptionKey: stage.tag,
             chapterID: chapterId,
             illustration: stage.illustration
         };

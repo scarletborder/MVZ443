@@ -57,7 +57,7 @@ const ChapterSelector: React.FC<ChapterSelectorProps> = ({ onSelect, onBack }) =
                     className='backbutton'
                     onClick={onBack}
                 >
-                    返回
+                    {translate('menu_back')}
                 </button>
 
                 {Object.values(availableChapters).map((chapter) => (
@@ -102,7 +102,7 @@ const ChapterSelector: React.FC<ChapterSelectorProps> = ({ onSelect, onBack }) =
                 background: 'rgba(30, 30, 30, 0.9)',
                 scrollbarColor: '#666 #333',
             }}>
-                {selectedChapter ? translate(ChapterDataRecords[selectedChapter].descriptionKey) : '请选择一个章节'}
+                {selectedChapter ? translate(ChapterDataRecords[selectedChapter].descriptionKey) : translate('menu_level_choose_chapter_tip')}
                 {/* 下一步按钮 */}
                 <button
                     style={{
@@ -120,7 +120,7 @@ const ChapterSelector: React.FC<ChapterSelectorProps> = ({ onSelect, onBack }) =
                     disabled={!selectedChapter}
                     onClick={() => selectedChapter && onSelect(selectedChapter)}
                 >
-                    下一步
+                    {translate('menu_next')}
                 </button>
             </div>
 

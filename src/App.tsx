@@ -82,16 +82,6 @@ function App() {
         };
     }, []);
 
-    // 设置语言
-    useEffect(() => {
-        const lang = navigator.language;
-        if (lang.startsWith('zh')) {
-            toggleLanguage('zh_CN');
-        } else {
-            toggleLanguage('en_US');
-        }
-    }, []);
-
     useEffect(() => {
         // 在游戏启动时添加全局错误处理
         window.addEventListener('error', function (event) {

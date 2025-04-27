@@ -63,7 +63,7 @@ const StageSelector: React.FC<StageSelectorProps> = ({ chapterId, onSelect, onBa
                     }}
                     onClick={onBack}
                 >
-                    返回
+                    {translate('menu_back')}
                 </button>
                 {stagesIds.map((stageId) => (
                     <button
@@ -117,7 +117,7 @@ const StageSelector: React.FC<StageSelectorProps> = ({ chapterId, onSelect, onBa
                         marginBottom: '20px',
                     }}
                 /> : null}
-                {selectedStage ? translate(StageDataRecords[selectedStage].descriptionKey) : '请选择一个关卡'}
+                {selectedStage ? translate(StageDataRecords[selectedStage].descriptionKey) : translate('menu_level_choose_level_tip')}
                 {/* 下一步按钮 */}
                 <br />
                 <button
@@ -134,7 +134,7 @@ const StageSelector: React.FC<StageSelectorProps> = ({ chapterId, onSelect, onBa
                     disabled={!selectedStage}
                     onClick={() => selectedStage && onSelect(selectedStage)}
                 >
-                    下一步
+                    {translate('menu_next')}
                 </button>
             </div>
 

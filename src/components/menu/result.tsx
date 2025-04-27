@@ -118,7 +118,7 @@ export default function GameResultView({ width, height, isWin, onWin, progressRe
                 }}
                 onClick={onBack}
             >
-                返回主页
+                {translate('menu_back')}
             </button>
 
             {/* 左侧：游戏结果 */}
@@ -137,20 +137,20 @@ export default function GameResultView({ width, height, isWin, onWin, progressRe
                 color: "#ddd"
             }}>
                 <h2 style={{ fontSize: "24px", fontWeight: "bold", marginBottom: "20px" }}>
-                    游戏结果
+                    {translate('menu_endding_result')}
                 </h2>
                 {isWin ? (
                     <div>
-                        <p style={{ fontSize: "18px", marginBottom: "10px" }}>胜利！</p>
+                        <p style={{ fontSize: "18px", marginBottom: "10px" }}>{translate('menu_endding_win')}</p>
                         {onWin && (
                             <>
-                                <p>解锁关卡: {unlockedLevelsStr}</p>
-                                <p>解锁器械: {unlockedPlantsStr}</p>
+                                <p>{translate('menu_endding_unlocked_level')}: {unlockedLevelsStr}</p>
+                                <p>{translate('menu_endding_unlocked_plants')}: {unlockedPlantsStr}</p>
                             </>
                         )}
                     </div>
                 ) : (
-                    <p style={{ fontSize: "18px" }}>失败！请再接再厉。</p>
+                    <p style={{ fontSize: "18px" }}>{translate('menu_endding_fail')}</p>
                 )}
             </div>
 
@@ -169,18 +169,18 @@ export default function GameResultView({ width, height, isWin, onWin, progressRe
                 background: "rgba(30, 30, 30, 0.9)"
             }}>
                 <h2 style={{ fontSize: "24px", fontWeight: "bold", marginBottom: "20px" }}>
-                    进度奖励 : {myProgress}%
+                    {`${translate('menu_endding_progress')}${translate('menu_endding_reward')} : ${myProgress}%`}
                 </h2>
                 {(progressRewards !== undefined && progressRewards.length > 0) ? (
                     progressRewards.map((reward, index) => (
                         (myProgress >= reward.progress) &&
                         (<div key={index} style={{ marginBottom: "15px" }}>
-                            <p>进度: {reward.progress}%</p>
-                            <p>奖励: {Stuff(reward.reward.type, translate)}: {reward.reward.count}</p>
+                            <p>{translate('menu_endding_progress')}: {reward.progress}%</p>
+                            <p>{translate('menu_endding_reward')}: {Stuff(reward.reward.type, translate)}: {reward.reward.count}</p>
                         </div>)
                     ))
                 ) : (
-                    <p>暂无进度奖励</p>
+                    <p>{translate('menu_endding_noreward')}</p>
                 )}
             </div>
 
