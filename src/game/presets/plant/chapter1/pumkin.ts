@@ -1,7 +1,7 @@
 import { SECKILL } from "../../../../../public/constants";
 import { item } from "../../../../components/shop/types";
 import ProjectileDamage from "../../../../constants/damage";
-import i18n from "../../../../utils/i18n";
+
 import { GetDecValue, GetIncValue } from "../../../../utils/numbervalue";
 import { NewLaserByGrid } from "../../../models/ILaser";
 import { INightPlant, IPlant } from "../../../models/IPlant";
@@ -114,12 +114,12 @@ function cost(level?: number): number {
 
 const PumpkinRecord: IRecord = {
     pid: 9,
-    name: '阴森南瓜头',
+    nameKey: 'name_pumpkin',
     cost: cost,
     cooldownTime: () => 16,
     NewFunction: NewPumpkin,
     texture: 'plant/pumpkin',
-    description: i18n.S('pumpkin_description'),
+    descriptionKey: 'pumpkin_description',
 
 
 };

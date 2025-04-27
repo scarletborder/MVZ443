@@ -1,6 +1,6 @@
 import { SECKILL } from "../../../../../public/constants";
 import { item } from "../../../../components/shop/types";
-import i18n from "../../../../utils/i18n";
+
 import { GetIncValue } from "../../../../utils/numbervalue";
 import { NewLaserByGrid } from "../../../models/ILaser";
 import { INightPlant, IPlant } from "../../../models/IPlant";
@@ -143,12 +143,12 @@ function cooldownTime(level?: number): number {
 
 const IceBombRecord: IRecord = {
     pid: 12,
-    name: '寒冰炸弹',
+    nameKey: 'name_ice_bomb',
     cost: cost,
     cooldownTime: cooldownTime,
     NewFunction: NewIceBomb,
     texture: 'plant/ice_bomb',
-    description: i18n.S('ice_bomb_description'),
+    descriptionKey: 'ice_bomb_description',
     needFirstCoolDown: true,
 
 };

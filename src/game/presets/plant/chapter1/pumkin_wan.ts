@@ -1,7 +1,7 @@
 import { SECKILL } from "../../../../../public/constants";
 import { item } from "../../../../components/shop/types";
 import ProjectileDamage from "../../../../constants/damage";
-import i18n from "../../../../utils/i18n";
+
 import { GetIncValue } from "../../../../utils/numbervalue";
 import { NewExplosionByGrid } from "../../../models/IExplosion";
 import { NewLaserByGrid } from "../../../models/ILaser";
@@ -124,12 +124,12 @@ function coolDownTime(level?: number): number {
 
 const PumpkinWanRecord: IRecord = {
     pid: 11,
-    name: '广域南瓜派',
+    nameKey: 'name_pumpkin_wan',
     cost: cost,
     cooldownTime: coolDownTime,
     NewFunction: NewPumpkinWan,
     texture: 'plant/pumpkin_wan',
-    description: i18n.S('pumpkin_wan_description'),
+    descriptionKey: 'pumpkin_wan_description',
 
     needFirstCoolDown: false
 };

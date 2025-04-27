@@ -1,7 +1,7 @@
 import seedrandom from "seedrandom";
 import { SECKILL } from "../../../../../public/constants";
 import { item } from "../../../../components/shop/types";
-import i18n from "../../../../utils/i18n";
+
 import { GetDecValue } from "../../../../utils/numbervalue";
 import { IExpolsion } from "../../../models/IExplosion";
 import { IPlant } from "../../../models/IPlant";
@@ -132,6 +132,7 @@ class _TntMines extends IPlant {
             this.colliderZombie = this.scene.physics.add.overlap(
                 IZombie.Group,
                 this,
+                /* @ts-ignore */
                 (plant: IPlant, zombie: IZombie) => {
                     if (this.isBuried || this.health <= 0) return;
                     this.explode();
@@ -191,12 +192,12 @@ function cooldownTime(level?: number): number {
 
 const TntMines: IRecord = {
     pid: 4,
-    name: 'TNT地雷',
+    nameKey: 'name_tnt_mines',
     cost: cost,
     cooldownTime: cooldownTime,
     NewFunction: NewTntMines,
     texture: 'plant/tnt_mines',
-    description: i18n.S('tnt_mines_description'),
+    descriptionKey: 'tnt_mines_description',
     needFirstCoolDown: true,
 
 };

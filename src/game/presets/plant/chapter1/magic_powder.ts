@@ -1,6 +1,6 @@
 import { SECKILL } from "../../../../../public/constants";
 import { item } from "../../../../components/shop/types";
-import i18n from "../../../../utils/i18n";
+
 import { GetIncValue } from "../../../../utils/numbervalue";
 import { EventBus } from "../../../EventBus";
 import { NewLaserByGrid } from "../../../models/ILaser";
@@ -88,12 +88,12 @@ function cooldownTime(level?: number): number {
 
 const MagicPowderRecord: IRecord = {
     pid: 10,
-    name: '魔术粉',
+    nameKey: 'name_magic_powder',
     cost: cost,
     cooldownTime: cooldownTime,
     NewFunction: NewMagicPowder,
     texture: 'plant/magic_powder',
-    description: i18n.S('magic_powder_description'),
+    descriptionKey: 'magic_powder_description',
     needFirstCoolDown: true,
 
 };

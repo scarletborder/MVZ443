@@ -1,6 +1,6 @@
 import { SECKILL } from "../../../../../public/constants";
 import { item } from "../../../../components/shop/types";
-import i18n from "../../../../utils/i18n";
+
 import { GetIncValue } from "../../../../utils/numbervalue";
 import { IPlant } from "../../../models/IPlant";
 import { IRecord } from "../../../models/IRecord";
@@ -76,12 +76,12 @@ function cooldownTime(level?: number): number {
 
 const ObsidianRecord: IRecord = {
     pid: 3,
-    name: '黑曜石',
+    nameKey: 'name_obsidian',
     cost: () => 50,
     cooldownTime: cooldownTime,
     NewFunction: NewObsidian,
     texture: 'plant/obsidian',
-    description: i18n.S('obsidian_description'),
+    descriptionKey: 'obsidian_description',
     needFirstCoolDown: true,
 
 };

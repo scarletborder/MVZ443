@@ -1,5 +1,5 @@
 import { SECKILL } from "../../public/constants";
-import i18n from "../utils/i18n";
+
 
 const idToName = new Map<number, string>(
     [[1, 'gold'],
@@ -16,10 +16,8 @@ const idToName = new Map<number, string>(
     [SECKILL, 'scb'],
     ]);
 
-function stuffLocale(key: string) {
-    return i18n(key);
-}
 
-export default function Stuff(id: number) {
-    return stuffLocale(idToName.get(id) || 'unknown');
+
+export default function Stuff(id: number, translate: (key: string, params?: Record<string, string>) => string) {
+    return translate(idToName.get(id) || 'unknown');
 }

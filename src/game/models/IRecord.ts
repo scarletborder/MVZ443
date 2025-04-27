@@ -7,13 +7,13 @@ import { IMonster } from "./monster/IMonster";
 // plant
 export interface IRecord {
     pid: number;
-    name: string;
+    nameKey: string;
+    descriptionKey: string; // 图鉴描述
+
     cooldownTime: ((level?: number) => number);
     cost: ((level?: number) => number);
     NewFunction: (scene: Game, col: number, row: number, level: number) => IPlant;
     texture: string; // 也用于加载
-    brief?: () => string; // 游戏内卡片描述
-    description: () => string; // 图鉴描述
     needFirstCoolDown?: boolean; // 是否需要第一次冷却
     /**
      * 传入当前等级,升级到level+1需要的材料

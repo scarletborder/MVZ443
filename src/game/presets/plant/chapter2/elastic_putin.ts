@@ -1,5 +1,5 @@
 import { SECKILL } from "../../../../../public/constants";
-import i18n from "../../../../utils/i18n";
+
 import { IBullet } from "../../../models/IBullet";
 import { INightPlant, IPlant } from "../../../models/IPlant";
 import { IRecord } from "../../../models/IRecord";
@@ -129,12 +129,12 @@ function NewElasticPutin(scene: Game, col: number, row: number, level: number): 
 
 const ElasticPutinRecord: IRecord = {
     pid: 15,
-    name: '弹性布丁',
+    nameKey: 'name_elastic_putin',
     cost: () => 100,
     cooldownTime: () => 8,
     NewFunction: NewElasticPutin,
     texture: 'plant/elastic_putin',
-    description: i18n.S('elastic_putin_description'),
+    descriptionKey: 'elastic_putin_description',
 }
 
 

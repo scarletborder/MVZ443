@@ -160,7 +160,7 @@ export function CardSlotHorizontal({ sceneRef, gameParams }: slotProps) {
         {plants.map((plant, index) => (
             <Card
                 key={index}
-                plantName={plant.name}
+                plantName={plant.nameKey}
                 cooldownTime={plant.cooldownTime((pidToLevelMap.get(plant.pid) || 1))}
                 sceneRef={sceneRef}
                 pid={plant.pid}
@@ -217,7 +217,7 @@ export function CardSlotVertical({ sceneRef, gameParams }: slotProps) {
             {plants.map((plant, index) => (
                 <VCard
                     key={index}
-                    plantName={plant.name} // 保留参数但不显示
+                    plantName={plant.nameKey} // 保留参数但不显示
                     cooldownTime={plant.cooldownTime((pidToLevelMap.get(plant.pid) || 1))}
                     sceneRef={sceneRef}
                     pid={plant.pid}
@@ -281,7 +281,7 @@ export function ViceCardSlot({ sceneRef, gameParams }: slotProps) {
             {plants.map((plant, index) => (
                 <Card
                     key={index}
-                    plantName={plant.name}
+                    plantName={plant.nameKey}
                     cooldownTime={plant.cooldownTime((pidToLevelMap.get(plant.pid) || 1))}
                     sceneRef={sceneRef}
                     pid={plant.pid}

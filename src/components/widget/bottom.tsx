@@ -154,7 +154,7 @@ export default function BottomTools({ width, chapterID }: Props) {
                     </div>
                 )
             }
-            <div className='stageDisplay' onClick={handleSetPause}>{chapterID ? StageDataRecords[chapterID].name : 'loading'}</div>
+            <div className='stageDisplay' onClick={handleSetPause}>{chapterID ? StageDataRecords[chapterID].nameKey : 'loading'}</div>
         </div >
     );
 }

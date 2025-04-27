@@ -1,7 +1,7 @@
 import seedrandom from "seedrandom";
 import { SECKILL } from "../../../../../public/constants";
 import { item } from "../../../../components/shop/types";
-import i18n from "../../../../utils/i18n";
+
 import { GetDecValue, GetIncValue } from "../../../../utils/numbervalue";
 import { IExpolsion, NewExplosionByGrid } from "../../../models/IExplosion";
 import { IPlant } from "../../../models/IPlant";
@@ -160,14 +160,13 @@ function cooldownTime(level?: number): number {
 
 const TntRecord: IRecord = {
     pid: 7,
-    name: '瞬炸TNT',
+    nameKey: 'name_tnt',
     cost: cost,
     cooldownTime: cooldownTime,
     NewFunction: NewTnt,
     texture: 'plant/tnt',
-    description: i18n.S('tnt_description'),
+    descriptionKey: 'tnt_description',
     needFirstCoolDown: true,
-
 };
 
 export default TntRecord;

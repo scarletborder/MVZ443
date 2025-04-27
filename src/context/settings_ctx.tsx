@@ -1,6 +1,6 @@
 import React, { createContext, ReactNode, useCallback, useContext, useState, useEffect } from 'react';
 import { debounce } from '../utils/debounce';
-import { Locale } from '../utils/i18n';
+import { Locale } from '../hooks/useLocaleMessages';
 
 // 加载 cookie 中的值，如果没有则返回默认值
 const loadCookie = <T,>(key: string, defaultValue: T): T => {

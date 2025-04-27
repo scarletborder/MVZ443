@@ -5,7 +5,7 @@
 import { SECKILL } from "../../../../../public/constants";
 import { item } from "../../../../components/shop/types";
 import ProjectileDamage from "../../../../constants/damage";
-import i18n from "../../../../utils/i18n";
+
 import { GetIncValue } from "../../../../utils/numbervalue";
 import { IPlant } from "../../../models/IPlant";
 import { IRecord } from "../../../models/IRecord";
@@ -290,12 +290,12 @@ function NewDoubleDispenser(scene: Game, col: number, row: number, level: number
 
 const DoubleDispenser_Record: IRecord = {
     pid: 16,
-    name: "双头发射器",
+    nameKey: "name_double_dispenser",
     cost: (level?: number) => 125,
     cooldownTime: () => 10,
     NewFunction: NewDoubleDispenser,
     texture: "plant/double_dispenser",
-    description: i18n.S('double_dispenser_description'),
+    descriptionKey: 'double_dispenser_description',
 
 }
 

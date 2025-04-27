@@ -3,11 +3,9 @@ import { useState, useRef, useEffect } from 'react';
 import { useSaveManager } from '../../context/save_ctx';
 import { useSettings } from '../../context/settings_ctx';
 import { debounce } from '../../utils/debounce';
-import i18n, { Locale } from '../../utils/i18n';
-// import BackendWS from '../../utils/net/entry_ws';
 import BackendWS from '../../utils/net/sync';
 import { createRoom, getRoomsInfo, RoomInfo, RoomListWidget } from '../../utils/net/lobby';
-// import wtClient from '../../utils/net/sync';
+
 
 interface Props {
     width: number;
@@ -150,7 +148,6 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
                                 if (!val) {
                                     return;
                                 }
-                                i18n.set(val as Locale);
                                 settingManager.toggleLanguage(val as Locale);
                             }
                         }

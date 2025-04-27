@@ -2,6 +2,7 @@
  * 在这里放商店页面的控件
  */
 
+import { useLocaleMessages } from "../../hooks/useLocaleMessages";
 import { randomFortuneCard as RandomFortuneCard } from "./fortune_card";
 import StuffList, { CurrentStuffs } from "./stuff_list";
 import { IGoods, item } from "./types";
@@ -65,6 +66,7 @@ interface DetailGoodsProps {
 
 export function DetailGoods({ good, canAfford, canPurchase, hasBought,
     priceItems, myItems, handlePurchase }: DetailGoodsProps) {
+    const { translate } = useLocaleMessages();
 
     return (
         <div>
@@ -73,6 +75,7 @@ export function DetailGoods({ good, canAfford, canPurchase, hasBought,
             <StuffList
                 items={priceItems}
                 currentItems={myItems}
+                translate={translate}
             />
 
             {canPurchase ? (
@@ -122,6 +125,8 @@ interface initDetailProps {
 
 
 export function InitDetail({ myItems }: initDetailProps) {
+    const { translate } = useLocaleMessages();
+
     return (<div
         style={
             {
@@ -149,7 +154,7 @@ export function InitDetail({ myItems }: initDetailProps) {
                 width: "50%",
                 overflowY: "auto",
             }}
-        >{CurrentStuffs(myItems)}</div>
+        >{CurrentStuffs(myItems, translate)}</div>
 
         <div
             style={{

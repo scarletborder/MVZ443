@@ -5,7 +5,6 @@ import BottomTools from './components/widget/bottom';
 import DocFrame from './components/DocFrame';
 import { useSettings } from './context/settings_ctx';
 import { GameParams } from './game/models/GameParams';
-import i18n from './utils/i18n';
 import { StageResult } from './game/models/IRecord';
 import GameResultView from './components/menu/result';
 import { useDeviceType } from './hooks/useDeviceType';
@@ -31,7 +30,7 @@ function App() {
     //  References to the PhaserGame component (game and scene are exposed)
     const phaserRef = useRef<IRefPhaserGame | null>(null);
 
-    const { width } = useSettings();
+    const { width, toggleLanguage } = useSettings();
 
     const gameStart = useCallback(() => {
         setShowGameScreen(true);
@@ -87,9 +86,9 @@ function App() {
     useEffect(() => {
         const lang = navigator.language;
         if (lang.startsWith('zh')) {
-            i18n.set('zh_CN');
+            toggleLanguage('zh_CN');
         } else {
-            i18n.set('en_US');
+            toggleLanguage('en_US');
         }
     }, []);
 

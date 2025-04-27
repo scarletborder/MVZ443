@@ -9,6 +9,7 @@ import { useDeviceType } from '../hooks/useDeviceType';
 import BackendWS from '../utils/net/sync';
 import Shop from './shop/shop';
 import { useNavigate } from 'react-router-dom';
+import { useLocaleMessages } from '../hooks/useLocaleMessages';
 
 interface Props {
     width: number,
@@ -26,19 +27,20 @@ export default function DocFrame({ width, height, sceneRef, setGameParams, gameS
     // 状态管理
     const [currentView, setCurrentView] = useState('main'); // main, levels, pokedex, shop, export, updates, about
     const menuItems = [
-        "主页",
-        "选择关卡",
-        "器械图鉴",
-        "商店",
-        "设置",
-        "更新记录",
-        "游戏文档",
-        "关于"
+        "menu_homepage",
+        "menu_choose_level",
+        "menu_pokedex",
+        "menu_shop",
+        "menu_settings",
+        "menu_updates",
+        "menu_docs",
+        "menu_about",
     ];
 
     const [skipToParams, setSkipToParams] = useState(false);
     const [chosenStage, setChosenStage] = useState<number | null>(null);
     const [islord, setIslord] = useState(false);
+    const { translate } = useLocaleMessages();
 
     const [commitVersion, setCommitVersion] = useState('develop');
     const deviceType = useDeviceType();
@@ -166,21 +168,21 @@ export default function DocFrame({ width, height, sceneRef, setGameParams, gameS
                             target.style.color = "#ddd";
                         }}
                         onClick={() => {
-                            if (item === "选择关卡") setCurrentView('levels');
-                            else if (item === "器械图鉴") setCurrentView('pokedex');
-                            else if (item === "商店") setCurrentView('shop');
-                            else if (item === "更新记录") {
+                            if (item === "menu_choose_level") setCurrentView('levels');
+                            else if (item === "menu_pokedex") setCurrentView('pokedex');
+                            else if (item === "menu_shop") setCurrentView('shop');
+                            else if (item === "menu_updates") {
                                 // 跳转
                                 navigate(`${publicUrl}/updates`);
                             }
-                            else if (item === "设置") {
+                            else if (item === "menu_settings") {
                                 navigate(`${publicUrl}/settings`);
                             }
-                            else if (item === "关于") setCurrentView('about');
-                            else if (item === "游戏文档") {
+                            else if (item === "menu_about") setCurrentView('about');
+                            else if (item === "menu_docs") {
                                 navigate(`${publicUrl}/docs`);
                             }
-                            else if (item === "主页") setCurrentView('main')
+                            else if (item === "menu_homepage") setCurrentView('main')
                         }}
                     >
                         <span style={{
@@ -203,7 +205,7 @@ export default function DocFrame({ width, height, sceneRef, setGameParams, gameS
                             borderRight: "2px solid #888",
                             opacity: 0.7
                         }}></span>
-                        {item}
+                        {translate(item)}
                     </button>
                 ))}
             </div>

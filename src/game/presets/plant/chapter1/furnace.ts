@@ -1,6 +1,6 @@
 import { SECKILL } from "../../../../../public/constants";
 import { item } from "../../../../components/shop/types";
-import i18n from "../../../../utils/i18n";
+
 import { GetDecValue } from "../../../../utils/numbervalue";
 import { IPlant } from "../../../models/IPlant";
 import { IRecord } from "../../../models/IRecord";
@@ -60,12 +60,12 @@ function cost(level?: number): number {
 
 const FurnaceRecord: IRecord = {
     pid: 2,
-    name: '熔炉',
+    nameKey: 'name_furnace',
     cost: cost,
     cooldownTime: () => 6,
     NewFunction: NewFurnace,
     texture: 'plant/furnace',
-    description: i18n.S('furnace_description'),
+    descriptionKey: 'furnace_description',
 
 };
 

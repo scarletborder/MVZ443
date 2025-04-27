@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { ChapterDataRecords, StageDataRecords } from '../../../game/utils/loader';
 import { useSaveManager } from '../../../context/save_ctx';
+import { useLocaleMessages } from '../../../hooks/useLocaleMessages';
 
 
 
@@ -14,6 +15,7 @@ const ChapterSelector: React.FC<ChapterSelectorProps> = ({ onSelect, onBack }) =
     const [selectedChapter, setSelectedChapter] = useState<number | null>(null);
     const [availableChapters, setAvailableChapters] = useState<number[]>([]);
     const saveManager = useSaveManager();
+    const { translate } = useLocaleMessages();
 
 
     useEffect(() => {
@@ -82,7 +84,7 @@ const ChapterSelector: React.FC<ChapterSelectorProps> = ({ onSelect, onBack }) =
                         }}
                         onClick={() => setSelectedChapter(chapter)}
                     >
-                        {ChapterDataRecords[chapter].name}
+                        {translate(ChapterDataRecords[chapter].nameKey)}
                     </button>
                 ))}
             </div>
@@ -100,7 +102,7 @@ const ChapterSelector: React.FC<ChapterSelectorProps> = ({ onSelect, onBack }) =
                 background: 'rgba(30, 30, 30, 0.9)',
                 scrollbarColor: '#666 #333',
             }}>
-                {selectedChapter ? ChapterDataRecords[selectedChapter].description() : '请选择一个章节'}
+                {selectedChapter ? translate(ChapterDataRecords[selectedChapter].descriptionKey) : '请选择一个章节'}
                 {/* 下一步按钮 */}
                 <button
                     style={{

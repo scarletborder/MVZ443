@@ -1,7 +1,7 @@
 import { SECKILL } from "../../../../../public/constants";
 import { item } from "../../../../components/shop/types";
 import ProjectileDamage from "../../../../constants/damage";
-import i18n from "../../../../utils/i18n";
+
 import { GetIncValue } from "../../../../utils/numbervalue";
 import { IExpolsion } from "../../../models/IExplosion";
 import { IPlant, INightPlant } from "../../../models/IPlant";
@@ -97,12 +97,12 @@ class BombSnowBall extends SnowBall {
 
 const SmallDispenserRecord: IRecord = {
     pid: 5,
-    name: '小发射器',
+    nameKey: 'name_small_dispenser',
     cost: () => 0,
     cooldownTime: () => 10,
     NewFunction: NewDispenser,
     texture: 'plant/small_dispenser',
-    description: i18n.S('small_dispenser_description'),
+    descriptionKey: 'small_dispenser_description',
 
 };
 

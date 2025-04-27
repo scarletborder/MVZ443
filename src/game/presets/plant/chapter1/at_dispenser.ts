@@ -1,7 +1,4 @@
-import { SECKILL } from "../../../../../public/constants";
-import { item } from "../../../../components/shop/types";
 import ProjectileDamage from "../../../../constants/damage";
-import i18n from "../../../../utils/i18n";
 import { GetIncValue } from "../../../../utils/numbervalue";
 import { IExpolsion } from "../../../models/IExplosion";
 import { IPlant } from "../../../models/IPlant";
@@ -251,7 +248,7 @@ class at_air_HFirework extends HFireWork {
 
 const ATDispenserRecord: IRecord = {
     pid: 14,
-    name: '反坦克炮台',
+    nameKey: 'name_at_dispenser',
     cost: (level) => {
         if (level && level >= 5) return 425;
         return 450;
@@ -262,7 +259,7 @@ const ATDispenserRecord: IRecord = {
     },
     NewFunction: NewATDispenser,
     texture: 'plant/at_dispenser',
-    description: i18n.S('at_dispenser'),
+    descriptionKey: 'at_dispenser_description',
 };
 
 export default ATDispenserRecord;

@@ -1,6 +1,6 @@
 import { SECKILL } from "../../../../../public/constants";
 import { item } from "../../../../components/shop/types";
-import i18n from "../../../../utils/i18n";
+
 import { GetDecValue, GetIncValue } from "../../../../utils/numbervalue";
 import { IPlant } from "../../../models/IPlant";
 import { IRecord } from "../../../models/IRecord";
@@ -91,12 +91,12 @@ function cooldownTime(level?: number): number {
 
 const GlowPowderRecord: IRecord = {
     pid: 17,
-    name: '萤石粉',
+    nameKey: 'name_glow_powder',
     cost: cost,
     cooldownTime: cooldownTime,
     NewFunction: NewMagicPowder,
     texture: 'plant/glow_powder',
-    description: i18n.S('glow_powder_description'),
+    descriptionKey: 'glow_powder_description',
     needFirstCoolDown: true,
 
 };

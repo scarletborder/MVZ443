@@ -6,6 +6,7 @@ import { useGameContext } from '../../context/garden_ctx';
 import { useSettings } from '../../context/settings_ctx';
 import { publicUrl } from '../../utils/browser';
 import PlantFactoryMap from '../../game/presets/plant';
+import { useLocaleMessages } from '../../hooks/useLocaleMessages';
 
 interface CardProps {
     pid: number;
@@ -24,6 +25,7 @@ export default function Card({ pid, texture, plantName, cooldownTime, sceneRef, 
     const [isChosen, setIsChosen] = useState(false);
     const { energy, isPaused } = useGameContext();
     const settings = useSettings();
+    const { translate } = useLocaleMessages();
 
     useEffect(() => {
         const handleSetTimeFlow = (data: { delta: number }) => {
@@ -121,7 +123,7 @@ export default function Card({ pid, texture, plantName, cooldownTime, sceneRef, 
             disabled={isCoolingDown}
         >
             <div className="card-content">
-                <div className="plant-name">{plantName}</div>
+                <div className="plant-name">{translate(plantName)}</div>
                 <div className="plant-image">
                     {texture && texture !== "" && (
                         <img

@@ -5,6 +5,7 @@ import { ChapterDataRecords, StageDataRecords } from '../../game/utils/loader';
 import PlantFactoryMap from '../../game/presets/plant';
 import Stuff from '../../constants/stuffs';
 import { useGameContext } from '../../context/garden_ctx';
+import { useLocaleMessages } from '../../hooks/useLocaleMessages';
 
 interface Props {
     width: number;
@@ -23,8 +24,10 @@ export default function GameResultView({ width, height, isWin, onWin, progressRe
     const hasSavedRef = useRef(false);
 
     // 状态存储计算好的字符串显示
-    const [unlockedLevelsStr, setUnlockedLevelsStr] = useState<string>("无");
-    const [unlockedPlantsStr, setUnlockedPlantsStr] = useState<string>("无");
+    const [unlockedLevelsStr, setUnlockedLevelsStr] = useState<string>("none");
+    const [unlockedPlantsStr, setUnlockedPlantsStr] = useState<string>("none");
+
+    const { translate } = useLocaleMessages();
 
     useEffect(() => {
         if (!isPaused) setIsPaused(true);
@@ -64,14 +67,14 @@ export default function GameResultView({ width, height, isWin, onWin, progressRe
                 const computedLevels = onWin.unLock.map((cpid) => {
                     const stage = StageDataRecords[cpid];
                     const chapter = ChapterDataRecords[stage.chapterID];
-                    return `${chapter.name} - ${stage.name}`;
+                    return `${chapter.nameKey} - ${stage.nameKey}`;
                 }).filter(item => item !== "");
                 levelsStr = computedLevels.length > 0 ? computedLevels.join(" ") : "无";
             }
 
             if (onWin.unLockPlant && onWin.unLockPlant.length > 0) {
                 const computedPlants = onWin.unLockPlant.map((pid) => {
-                    return PlantFactoryMap[pid].name;
+                    return PlantFactoryMap[pid].nameKey;
                 }).filter(item => item !== "");
                 plantsStr = computedPlants.length > 0 ? computedPlants.join(" ") : "无";
             }
@@ -173,7 +176,7 @@ export default function GameResultView({ width, height, isWin, onWin, progressRe
                         (myProgress >= reward.progress) &&
                         (<div key={index} style={{ marginBottom: "15px" }}>
                             <p>进度: {reward.progress}%</p>
-                            <p>奖励: {Stuff(reward.reward.type)}: {reward.reward.count}</p>
+                            <p>奖励: {Stuff(reward.reward.type, translate)}: {reward.reward.count}</p>
                         </div>)
                     ))
                 ) : (

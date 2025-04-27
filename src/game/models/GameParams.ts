@@ -20,15 +20,15 @@ export interface GameSettings {
 
 export interface ChapterDescription {
     id: number;
-    name: string;
-    description: () => string;
+    nameKey: string;
+    descriptionKey: string;
     stages: Array<number>;
 }
 
 export interface StageDescription {
     id: number;
     chapterID: number;
-    name: string;
-    description: () => string;
+    nameKey: string;
+    descriptionKey: string;
     illustration: string;
 }

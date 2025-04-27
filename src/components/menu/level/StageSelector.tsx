@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { ChapterDataRecords, StageDataRecords } from '../../../game/utils/loader';
 import { useSaveManager } from '../../../context/save_ctx';
 import { publicUrl } from '../../../utils/browser';
+import { useLocaleMessages } from '../../../hooks/useLocaleMessages';
 
 interface StageSelectorProps {
     chapterId: number;
@@ -14,6 +15,7 @@ const StageSelector: React.FC<StageSelectorProps> = ({ chapterId, onSelect, onBa
     const [selectedStage, setSelectedStage] = useState<number | null>(null);
     const [stagesIds, setStagesIds] = useState<number[]>([]);
     const saveManager = useSaveManager();
+    const { translate } = useLocaleMessages();
 
     useEffect(() => {
         const chapterStages = ChapterDataRecords[chapterId]?.stages || [];
@@ -89,7 +91,7 @@ const StageSelector: React.FC<StageSelectorProps> = ({ chapterId, onSelect, onBa
                         }}
                         onClick={() => setSelectedStage(stageId)}
                     >
-                        {StageDataRecords[stageId].name}
+                        {translate(StageDataRecords[stageId].nameKey)}
                     </button>
                 ))}
             </div>
@@ -115,7 +117,7 @@ const StageSelector: React.FC<StageSelectorProps> = ({ chapterId, onSelect, onBa
                         marginBottom: '20px',
                     }}
                 /> : null}
-                {selectedStage ? StageDataRecords[selectedStage].description() : '请选择一个关卡'}
+                {selectedStage ? translate(StageDataRecords[selectedStage].descriptionKey) : '请选择一个关卡'}
                 {/* 下一步按钮 */}
                 <br />
                 <button

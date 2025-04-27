@@ -1,7 +1,7 @@
 import { Game } from "../../../scenes/Game";
 import { IPlant } from "../../../models/IPlant";
 import { IRecord } from "../../../models/IRecord";
-import i18n from "../../../../utils/i18n";
+
 import { item } from "../../../../components/shop/types";
 import { GetIncValue } from "../../../../utils/numbervalue";
 import { SECKILL } from "../../../../../public/constants";
@@ -65,12 +65,12 @@ function NewLily(scene: Game, col: number, row: number, level: number): IPlant {
 
 const Lily: IRecord = {
     pid: 6,
-    name: '睡莲',
+    nameKey: 'name_lily',
     cost: cost,
     cooldownTime: () => 4,
     NewFunction: NewLily,
     texture: 'plant/lily',
-    description: i18n.S('lily_description'),
+    descriptionKey: 'lily_description',
 
 };
 

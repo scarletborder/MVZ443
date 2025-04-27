@@ -1,7 +1,7 @@
 import { SECKILL } from "../../../../../public/constants";
 import { item } from "../../../../components/shop/types";
 import ProjectileDamage from "../../../../constants/damage";
-import i18n from "../../../../utils/i18n";
+
 import { GetIncValue } from "../../../../utils/numbervalue";
 import { IPlant } from "../../../models/IPlant";
 import { IRecord } from "../../../models/IRecord";
@@ -287,7 +287,7 @@ function shootArrow(scene: Game, shooter: IPlant, isStar: boolean = false) {
 
 const TripleDispenserRecord: IRecord = {
     pid: 13,
-    name: '三线发射器',
+    nameKey: 'name_triple_dispenser',
     cost: (level) => {
         if (level && level >= 9) return 350;
         return 325;
@@ -295,7 +295,7 @@ const TripleDispenserRecord: IRecord = {
     cooldownTime: () => 10,
     NewFunction: NewTripleDispenser,
     texture: 'plant/triple_dispenser',
-    description: i18n.S('triple_dispenser_description'),
+    descriptionKey: 'triple_dispenser_description',
 
 };
 

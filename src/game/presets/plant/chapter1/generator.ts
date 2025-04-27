@@ -1,6 +1,6 @@
 import { SECKILL } from "../../../../../public/constants";
 import { item } from "../../../../components/shop/types";
-import i18n from "../../../../utils/i18n";
+
 import { GetIncValue } from "../../../../utils/numbervalue";
 import { INightPlant, IPlant } from "../../../models/IPlant";
 import { IRecord } from "../../../models/IRecord";
@@ -79,12 +79,12 @@ function NewGenerator(scene: Game, col: number, row: number, level: number): IPl
 
 const GeneratorRecord: IRecord = {
     pid: 8,
-    name: '生物质发电机',
+    nameKey: 'name_generator',
     cost: () => 50,
     cooldownTime: () => 32,
     NewFunction: NewGenerator,
     texture: 'plant/generator',
-    description: i18n.S('generator_description'),
+    descriptionKey: 'generator_description',
 
 };
 

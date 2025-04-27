@@ -1,14 +1,17 @@
 import Stuff from "../../constants/stuffs";
+import { useLocaleMessages } from "../../hooks/useLocaleMessages";
 import { item } from "./types";
 
 type Props = {
     items: item[]
     currentItems: item[]
+    translate: (key: string, params?: Record<string, string>) => string
 }
 
-export default function StuffList({ items, currentItems }: Props) {
+export default function StuffList({ items, currentItems, translate }: Props) {
     // Convert currentItems into a map for efficient lookup
     const currentItemsMap = new Map(currentItems.map(item => [item.type, item.count]));
+
 
     const stuffItem = (type: number, requiredCount: number) => {
         const availableCount = currentItemsMap.get(type) || 0;
@@ -16,7 +19,7 @@ export default function StuffList({ items, currentItems }: Props) {
 
         return (
             <div style={{ color: isInsufficient ? 'red' : 'white' }}>
-                <span>{`${Stuff(type)}: ${availableCount}/${requiredCount}`}</span>
+                <span>{`${Stuff(type, translate)}: ${availableCount}/${requiredCount}`}</span>
                 {isInsufficient && <span> (缺少相关材料)</span>}
             </div>
         );
@@ -33,7 +36,8 @@ export default function StuffList({ items, currentItems }: Props) {
     );
 }
 
-export function CurrentStuffs(items: item[]) {
+export function CurrentStuffs(items: item[], translate: (key: string, params?: Record<string, string>) => string) {
+
     return (
         <div style={{
             backgroundColor: '#000000',
@@ -75,7 +79,7 @@ export function CurrentStuffs(items: item[]) {
                             <td style={{
                                 padding: '10px',
                                 borderBottom: '1px solid #333333'
-                            }}>{Stuff(item.type)}</td>
+                            }}>{Stuff(item.type, translate)}</td>
                             <td style={{
                                 padding: '10px',
                                 borderBottom: '1px solid #333333'

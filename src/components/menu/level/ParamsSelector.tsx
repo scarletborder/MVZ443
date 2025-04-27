@@ -6,8 +6,8 @@ import { useSaveManager } from '../../../context/save_ctx';
 import { StageDataRecords } from '../../../game/utils/loader';
 import PlantFactoryMap from '../../../game/presets/plant';
 import { publicUrl } from '../../../utils/browser';
-import i18n from '../../../utils/i18n';
 import { useSettings } from '../../../context/settings_ctx';
+import { useLocaleMessages } from '../../../hooks/useLocaleMessages';
 
 interface ParamsSelectorProps {
     chapterId: number;
@@ -33,6 +33,7 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({ stageId, setGameParams,
     const [selectUpperLimit, setSelectUpperLimit] = useState<number>(0);
     const saveManager = useSaveManager();
     const settings = useSettings();
+    const { translate } = useLocaleMessages();
 
     const handlePlantToggle = (pid: number) => {
         setSelectedPlants(prev => {
@@ -70,7 +71,7 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({ stageId, setGameParams,
             }
             const newPlant: PlantElem = {
                 pid: pid,
-                name: plantObj.name,
+                name: plantObj.nameKey,
                 imgUrl: `${publicUrl}/assets/card/${plantObj.texture}.png`,
                 level: plantProgress[i].level
             };
@@ -153,7 +154,7 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({ stageId, setGameParams,
                         color: '#ddd',
                         fontSize: '16px'
                     }}>
-                        {`stage ${stageId} - ${StageDataRecords[stageId].name}`}
+                        {`stage ${stageId} - ${StageDataRecords[stageId].nameKey}`}
                     </div>
                 </div>
                 <div style={{
@@ -287,7 +288,7 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({ stageId, setGameParams,
                     }}
                     onClick={handleStart}
                 >
-                    {`${i18n('start')}`}
+                    {translate('start')}
                 </button>
             </div>
         </div>
