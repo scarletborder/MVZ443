@@ -43,6 +43,7 @@ export class IExpolsion extends Phaser.Physics.Arcade.Sprite {
         // Calculate center y position
         const y = (row + 1 / 2) * scene.positionCalc.GRID_SIZEY + scene.positionCalc.gridOffsetY;
         super(scene, x, y, "");
+        this.setVisible(false); // Hide the sprite
         this.damage = params.damage;
         // Store center coordinates
         this.center_x = x;
@@ -79,7 +80,7 @@ export class IExpolsion extends Phaser.Physics.Arcade.Sprite {
         IExpolsion.Group.add(this, true);
 
         scene.frameTicker.delayedCall({
-            delay: 50,
+            delay: 110,
             callback: () => {
                 this.destroy();
                 if (onCompleteCallback) {

@@ -18,6 +18,8 @@ class _TntMines extends IPlant {
     head: Phaser.GameObjects.Sprite;
     random: seedrandom.PRNG;
 
+    hasExploded: boolean = false;
+
     colliderZombie: Phaser.Physics.Arcade.Collider | null = null;
 
     constructor(scene: Game, col: number, row: number, level: number, buriedTime: number) {
@@ -123,11 +125,6 @@ class _TntMines extends IPlant {
     public wakeup(): void {
         if (this.health > 0 && this.isBuried && this.game) {
             this.isBuried = false;
-            this.head.setVisible(false);
-            createDirtOut(this.game, this.col, this.row, () => {
-                this.setVisible(true);
-            });
-
             // 设置新的碰撞回调
             this.colliderZombie = this.scene.physics.add.overlap(
                 IZombie.Group,
@@ -137,9 +134,14 @@ class _TntMines extends IPlant {
                     if (this.isBuried || this.health <= 0) return;
                     this.explode();
                 },
-                null,
+                () => true,
                 this
-            )
+            );
+
+            this.head.setVisible(false);
+            createDirtOut(this.game, this.col, this.row, () => {
+                this.setVisible(true);
+            });
         }
     }
 
@@ -154,6 +156,8 @@ class _TntMines extends IPlant {
     }
 
     private explode() {
+        if (this.hasExploded) return;
+        this.hasExploded = true;
         // 爆炸
         const rightDistance = this.level >= 9 ? 1.5 : 1;
         new IExpolsion(this.game, this.x, this.row, {
