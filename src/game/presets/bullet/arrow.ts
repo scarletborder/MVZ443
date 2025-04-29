@@ -24,9 +24,11 @@ export class Arrow extends BounceableBullet {
         this.originalX = this.x;
 
         this.addVisible();
+    }
 
+    playSound(): void {
         // 音效
-        scene.musical.shootArrowPool.play();
+        this.scene.musical.shootArrowPool.play();
     }
 
     update(...args: any[]): void {

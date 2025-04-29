@@ -16,6 +16,7 @@ export default class Musical {
     plantAudio: ThrottledAudio; // 植物音效节流
 
     shootArrowPool: AudioPool; // 射箭音效池
+    shootFireballPool: AudioPool; // 火焰弹音效池
     shootFireworkPool: AudioPool; // 烟花音效池
     shootLaserPool: AudioPool; // 激光音效池
 
@@ -44,7 +45,8 @@ export default class Musical {
         this.plantAudio = new ThrottledAudio(this.game, 200, isMuted); // 植物音效节流
         this.shootArrowPool = new AudioPool(this.game, 'sfx', 'shootArrow', 4, isMuted);
         this.shootFireworkPool = new AudioPool(this.game, 'sfx', 'shootFirework', 4, isMuted);
-        this.shootLaserPool = new AudioPool(this.game, 'sfx', 'shootLaser', 4, isMuted);
+        this.shootLaserPool = new AudioPool(this.game, 'sfx', 'shootLaser', 2, isMuted);
+        this.shootFireballPool = new AudioPool(this.game, 'sfx', 'shootFireball', 3, isMuted);
 
 
         this.zombieSpawnAudio = new ThrottledAudio(this.game, 1500, isMuted);

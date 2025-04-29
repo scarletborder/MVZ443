@@ -48,7 +48,7 @@ class smallDispenser extends INightPlant {
 
         // 射出一个炸弹雪球
 
-        const snowball = new BombSnowBall(this.game, this.col, this.row, 'bullet/snowball',
+        const snowball = new BombSnowBall(this.game, this.col, this.row, 'bullet/fireball',
             GetIncValue(ProjectileDamage.bullet.bomb_fireBall, 1.2, this.level),
             this.game?.positionCalc.GRID_SIZEY * 12, 'zombie');
     }

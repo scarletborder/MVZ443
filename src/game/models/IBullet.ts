@@ -1,11 +1,12 @@
-import { _TypeArrowEnhancement, _Typedebuffs } from "../../constants/game";
+import { _Typedebuffs } from "../../constants/game";
 import DepthManager from "../../utils/depth";
 import IObstacle from "../presets/obstacle/IObstacle";
 import { Game } from "../scenes/Game";
 import { IPlant } from "./IPlant";
+import IProjectile from "./IProjectile";
 import { IMonster } from "./monster/IMonster";
 
-export class IBullet extends Phaser.Physics.Arcade.Sprite {
+export class IBullet extends Phaser.Physics.Arcade.Sprite implements IProjectile {
     scene: Game;
 
     public ScreenWidth: number = 1024;
@@ -80,6 +81,8 @@ export class IBullet extends Phaser.Physics.Arcade.Sprite {
 
         this.lastUpdateTime = scene.time.now;
         this.updateRealPosition();
+
+        this.playSound();
     }
 
     // 反向X速度,不能在collider中使用
@@ -229,4 +232,6 @@ export class IBullet extends Phaser.Physics.Arcade.Sprite {
 
         super.destroy(fromScene);
     }
+
+    playSound(): void { }
 }

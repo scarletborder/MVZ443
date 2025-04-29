@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useSaveManager } from '../../context/save_ctx';
 import PlantFactoryMap from '../../game/presets/plant';
 import { publicUrl } from '../../utils/browser';

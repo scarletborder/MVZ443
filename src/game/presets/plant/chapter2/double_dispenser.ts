@@ -238,8 +238,23 @@ function shootFrontArrow(scene: Game, shooter: IPlant, baseDamage: number = 30) 
     if (!scene || !shooter || shooter.health <= 0) {
         return;
     }
+    const level = shooter.level;
     const arrow1 = NewArrow(scene, shooter.col, shooter.row, scene.positionCalc.GRID_SIZEX * 32, baseDamage);
     arrow1.penetrate = 1;
+
+    if (level >= 5) {
+        scene.frameTicker.delayedCall({
+            delay: 100,
+            callback: () => {
+                if (!scene || !shooter || shooter.health <= 0) {
+                    return;
+                }
+                const arrow2 = NewArrow(scene, shooter.col, shooter.row, scene.positionCalc.GRID_SIZEX * 32, baseDamage);
+                arrow2.penetrate = 1;
+            }
+        })
+    }
+
 }
 
 function shootBackArrow(scene: Game, shooter: IPlant, baseDamage: number = 30) {
@@ -261,6 +276,20 @@ function shootBackArrow(scene: Game, shooter: IPlant, baseDamage: number = 30) {
             arrow3.penetrate = 1;
         }
     });
+
+    if (shooter.level >= 9) {
+        scene.frameTicker.delayedCall({
+            delay: 150,
+            callback: () => {
+                if (!scene || !shooter || shooter.health <= 0) {
+                    return;
+                }
+                const arrow4 = NewArrow(scene, shooter.col, shooter.row, scene.positionCalc.GRID_SIZEX * 32, baseDamage);
+                arrow4.reverseVelocityX();
+                arrow4.penetrate = 1;
+            }
+        });
+    }
 }
 
 function shootBackFirework(scene: Game, shooter: IPlant) {
