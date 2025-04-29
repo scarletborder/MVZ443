@@ -2,8 +2,6 @@
  *  双头发射器
  */
 
-import { SECKILL } from "../../../../../public/constants";
-import { item } from "../../../../components/shop/types";
 import ProjectileDamage from "../../../../constants/damage";
 
 import { GetIncValue } from "../../../../utils/numbervalue";
@@ -180,7 +178,7 @@ class double_dispenser extends IPlant {
 
         // 创建 Timer 事件：延迟 200ms 后开始暴力发射箭，每 50ms 一次
         const elapsed = Math.floor(front / back);
-        let count_ctx = { count: 0 };
+        const count_ctx = { count: 0 };
         const bruteTimer = scene.frameTicker.addEvent({
             startAt: 200,
             delay: frontInterval,

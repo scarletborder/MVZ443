@@ -314,11 +314,10 @@ export default function Pokedex({ width, height, onBack }: Props) {
                 top: 0,
                 padding: "20px",
                 color: "#ddd",
-                overflowY: "auto",
                 scrollbarWidth: "thin",
                 scrollbarColor: "#666 #333",
                 background: "rgba(30, 30, 30, 0.9)",
-                overflow: "hidden"
+                overflowY: "auto", // 添加这一行使内容可滚动
             }}>
                 <div className={animationClass} style={{
                     position: "relative",
