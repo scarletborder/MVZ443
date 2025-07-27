@@ -1,5 +1,3 @@
-import { SECKILL } from "../../../../../public/constants";
-
 import { IBullet } from "../../../models/IBullet";
 import { INightPlant, IPlant } from "../../../models/IPlant";
 import { IRecord } from "../../../models/IRecord";
@@ -10,6 +8,7 @@ import BounceableBullet from "../../bullet/bounceable";
 class ElasticPutin extends INightPlant {
     // 技能, 是否让穿过的bullet带上雷电爆炸属性
     isLightning: boolean = false;
+    duration: number = 5000; // 技能持续时间
 
     // 碰撞
     colliderBullet: Phaser.Physics.Arcade.Collider;
@@ -22,6 +21,9 @@ class ElasticPutin extends INightPlant {
         this.setFrame(0);
         this.setHealthFirstly(300);
         this.plant_height = 2;
+        if (level >= 7) {
+            this.duration = 8000;
+        }
 
         // 默认反弹回调
         this.colliderCallback = this.bounceBulletOffWall;
@@ -51,15 +53,15 @@ class ElasticPutin extends INightPlant {
         this.isLightning = true;
         // TODO: 设置动画
 
-        if (this.level)
-
+        if (this.level) {
             scene.frameTicker.delayedCall({
-                delay: 5000,
+                delay: this.duration,
                 callback: () => {
                     this.isLightning = false;
                     // TODO 取消动画
                 }
-            })
+            });
+        }
     }
 
     destroy(fromScene?: boolean): void {
@@ -127,10 +129,15 @@ function NewElasticPutin(scene: Game, col: number, row: number, level: number): 
     return elasticPutin;
 }
 
+function cost(level?: number) {
+    if ((level ?? 1) >= 3) return 75;
+    return 100;
+}
+
 const ElasticPutinRecord: IRecord = {
     pid: 15,
     nameKey: 'name_elastic_putin',
-    cost: () => 100,
+    cost: cost,
     cooldownTime: () => 8,
     NewFunction: NewElasticPutin,
     texture: 'plant/elastic_putin',

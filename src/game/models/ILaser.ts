@@ -5,6 +5,7 @@ import DepthManager from "../../utils/depth";
 import IObstacle from "../presets/obstacle/IObstacle";
 import { Game } from "../scenes/Game";
 import { IPlant } from "./IPlant";
+import IProjectile from "./IProjectile";
 import { IMonster } from "./monster/IMonster";
 
 type LaserParams = {
@@ -20,7 +21,8 @@ interface VisionParams {
     alphaTo: number;
 }
 
-export class ILaser extends Phaser.GameObjects.Rectangle {
+export class ILaser extends Phaser.GameObjects.Rectangle implements IProjectile {
+    scene: Game;
     public ScreenWidth: number = 1024;
     public ScreenHeight: number = 768;
 
@@ -64,6 +66,7 @@ export class ILaser extends Phaser.GameObjects.Rectangle {
         // 调用父类构造函数：宽度设为欧几里得距离，高度设为 gridSizeY，初始 alpha 为 0（全透明）
         super(scene, centerX, centerY, distance, scene.positionCalc.GRID_SIZEY * 0.6,
             visionParams.color, visionParams.alphaFrom);
+        this.scene = scene;
         this.setRotation(angle); // 设置激光旋转到正确角度
 
         this.ScreenWidth = scene.sys.canvas.width;
@@ -100,8 +103,7 @@ export class ILaser extends Phaser.GameObjects.Rectangle {
             }
         });
 
-        // 音效
-        scene.musical.shootLaserPool.play();
+        this.playSound();
     }
 
     CollideObject(object: IMonster | IPlant | IObstacle) {
@@ -131,6 +133,10 @@ export class ILaser extends Phaser.GameObjects.Rectangle {
 
             object.takeDamage(damage);
         }
+    }
+    playSound(): void {
+        // 音效
+        this.scene.musical.shootLaserPool.play();
     }
 }
 

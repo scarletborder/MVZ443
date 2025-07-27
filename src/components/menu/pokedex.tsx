@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useSaveManager } from '../../context/save_ctx';
 import PlantFactoryMap from '../../game/presets/plant';
 import { publicUrl } from '../../utils/browser';
@@ -314,11 +314,10 @@ export default function Pokedex({ width, height, onBack }: Props) {
                 top: 0,
                 padding: "20px",
                 color: "#ddd",
-                overflowY: "auto",
                 scrollbarWidth: "thin",
                 scrollbarColor: "#666 #333",
                 background: "rgba(30, 30, 30, 0.9)",
-                overflow: "hidden"
+                overflowY: "auto", // 添加这一行使内容可滚动
             }}>
                 <div className={animationClass} style={{
                     position: "relative",

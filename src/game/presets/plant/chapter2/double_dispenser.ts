@@ -2,8 +2,6 @@
  *  双头发射器
  */
 
-import { SECKILL } from "../../../../../public/constants";
-import { item } from "../../../../components/shop/types";
 import ProjectileDamage from "../../../../constants/damage";
 
 import { GetIncValue } from "../../../../utils/numbervalue";
@@ -180,7 +178,7 @@ class double_dispenser extends IPlant {
 
         // 创建 Timer 事件：延迟 200ms 后开始暴力发射箭，每 50ms 一次
         const elapsed = Math.floor(front / back);
-        let count_ctx = { count: 0 };
+        const count_ctx = { count: 0 };
         const bruteTimer = scene.frameTicker.addEvent({
             startAt: 200,
             delay: frontInterval,
@@ -240,8 +238,23 @@ function shootFrontArrow(scene: Game, shooter: IPlant, baseDamage: number = 30) 
     if (!scene || !shooter || shooter.health <= 0) {
         return;
     }
+    const level = shooter.level;
     const arrow1 = NewArrow(scene, shooter.col, shooter.row, scene.positionCalc.GRID_SIZEX * 32, baseDamage);
     arrow1.penetrate = 1;
+
+    if (level >= 5) {
+        scene.frameTicker.delayedCall({
+            delay: 100,
+            callback: () => {
+                if (!scene || !shooter || shooter.health <= 0) {
+                    return;
+                }
+                const arrow2 = NewArrow(scene, shooter.col, shooter.row, scene.positionCalc.GRID_SIZEX * 32, baseDamage);
+                arrow2.penetrate = 1;
+            }
+        })
+    }
+
 }
 
 function shootBackArrow(scene: Game, shooter: IPlant, baseDamage: number = 30) {
@@ -263,6 +276,20 @@ function shootBackArrow(scene: Game, shooter: IPlant, baseDamage: number = 30) {
             arrow3.penetrate = 1;
         }
     });
+
+    if (shooter.level >= 9) {
+        scene.frameTicker.delayedCall({
+            delay: 150,
+            callback: () => {
+                if (!scene || !shooter || shooter.health <= 0) {
+                    return;
+                }
+                const arrow4 = NewArrow(scene, shooter.col, shooter.row, scene.positionCalc.GRID_SIZEX * 32, baseDamage);
+                arrow4.reverseVelocityX();
+                arrow4.penetrate = 1;
+            }
+        });
+    }
 }
 
 function shootBackFirework(scene: Game, shooter: IPlant) {

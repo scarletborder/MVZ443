@@ -3,6 +3,7 @@ import { defaultRandom } from "../../utils/random";
 import IObstacle from "../presets/obstacle/IObstacle";
 import { Game } from "../scenes/Game";
 import { IPlant } from "./IPlant";
+import IProjectile from "./IProjectile";
 import { IMonster } from "./monster/IMonster";
 
 export type explosionParams = {
@@ -15,7 +16,8 @@ export type explosionParams = {
     disableAnime?: boolean // 是否禁用爆炸特效,默认不禁用
 }
 
-export class IExpolsion extends Phaser.Physics.Arcade.Sprite {
+export class IExpolsion extends Phaser.Physics.Arcade.Sprite implements IProjectile {
+    scene: Game;
     // 爆炸的属性
     public damage: number = 1500;
     public center_x: number;
@@ -43,6 +45,7 @@ export class IExpolsion extends Phaser.Physics.Arcade.Sprite {
         // Calculate center y position
         const y = (row + 1 / 2) * scene.positionCalc.GRID_SIZEY + scene.positionCalc.gridOffsetY;
         super(scene, x, y, "");
+        this.scene = scene;
         this.setVisible(false); // Hide the sprite
         this.damage = params.damage;
         // Store center coordinates
@@ -91,8 +94,7 @@ export class IExpolsion extends Phaser.Physics.Arcade.Sprite {
 
         if (_disableAnime === true) return;
         // 音效
-        const audio_name = `explode${Math.floor(Math.random() * 3) + 1}`;
-        scene.musical.explodeAudio.play(audio_name);
+        this.playSound();
 
         // Set up and play animation
         // 创建多个动画对象
@@ -165,6 +167,11 @@ export class IExpolsion extends Phaser.Physics.Arcade.Sprite {
                 });
             });
         });
+    }
+
+    playSound() {
+        const audio_name = `explode${Math.floor(Math.random() * 3) + 1}`;
+        this.scene.musical.explodeAudio.play(audio_name);
     }
 
     CollideObject(object: IMonster | IPlant | IObstacle) {

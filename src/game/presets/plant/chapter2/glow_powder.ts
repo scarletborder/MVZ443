@@ -1,7 +1,5 @@
 import { SECKILL } from "../../../../../public/constants";
-import { item } from "../../../../components/shop/types";
-
-import { GetDecValue, GetIncValue } from "../../../../utils/numbervalue";
+import { GetDecValue } from "../../../../utils/numbervalue";
 import { IPlant } from "../../../models/IPlant";
 import { IRecord } from "../../../models/IRecord";
 import { IMonster } from "../../../models/monster/IMonster";
@@ -53,11 +51,11 @@ class GlowPowder extends IPlant {
 
         for (let i = 0; i < rectCount; i++) {
             // 在范围内随机生成小矩形的中心坐标
-            let posX = Phaser.Math.Between(centerX - rangeWidth / 2, centerX + rangeWidth / 2);
-            let posY = Phaser.Math.Between(centerY - rangeHeight / 2, centerY + rangeHeight / 2);
+            const posX = Phaser.Math.Between(centerX - rangeWidth / 2, centerX + rangeWidth / 2);
+            const posY = Phaser.Math.Between(centerY - rangeHeight / 2, centerY + rangeHeight / 2);
 
             // 创建图形对象并绘制蓝色矩形
-            let graphics = this.game.add.graphics({ fillStyle: { color: 0xFFFF5A } }).setDepth(depth);
+            const graphics = this.game.add.graphics({ fillStyle: { color: 0xFFFF5A } }).setDepth(depth);
             graphics.fillRect(posX - rectWidth / 2, posY - rectHeight / 2, rectWidth, rectHeight);
 
             // 对每个矩形添加 Tween，使透明度在 400ms 内从 1 渐变到 0.2，然后销毁图形对象
@@ -81,11 +79,12 @@ function NewMagicPowder(scene: Game, col: number, row: number, level: number): I
 }
 
 function cost(level?: number): number {
+    if ((level ?? 5) >= 5) return 50;
     return 75;
 }
 
 function cooldownTime(level?: number): number {
-    return GetDecValue(8, 0.6, level || 1);
+    return GetDecValue(8, 0.6, level ?? 1);
 }
 
 

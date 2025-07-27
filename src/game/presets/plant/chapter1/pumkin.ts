@@ -1,5 +1,3 @@
-import { SECKILL } from "../../../../../public/constants";
-import { item } from "../../../../components/shop/types";
 import ProjectileDamage from "../../../../constants/damage";
 
 import { GetDecValue, GetIncValue } from "../../../../utils/numbervalue";
