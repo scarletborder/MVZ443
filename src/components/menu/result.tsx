@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
+import { useCreation, useMount, useUpdateEffect } from 'ahooks';
 import { useSaveManager } from '../../context/save_ctx';
 import { OnWin, ProgressReward } from '../../game/models/IRecord';
 import { ChapterDataRecords, StageDataRecords } from '../../game/utils/loader';
@@ -24,14 +25,33 @@ export default function GameResultView({ width, height, isWin, onWin, progressRe
     const hasSavedRef = useRef(false);
 
     // 状态存储计算好的字符串显示
-    const [unlockedLevelsStr, setUnlockedLevelsStr] = useState<string>("none");
-    const [unlockedPlantsStr, setUnlockedPlantsStr] = useState<string>("none");
+    const unlockedLevelsStr = useCreation(() => {
+        if (!onWin) return "无";
+        if (!onWin.unLock || onWin.unLock.length === 0) return "无";
+        
+        const computedLevels = onWin.unLock.map((cpid) => {
+            const stage = StageDataRecords[cpid];
+            const chapter = ChapterDataRecords[stage.chapterID];
+            return `${chapter.nameKey} - ${stage.nameKey}`;
+        }).filter(item => item !== "");
+        return computedLevels.length > 0 ? computedLevels.join(" ") : "无";
+    }, [onWin]);
+
+    const unlockedPlantsStr = useCreation(() => {
+        if (!onWin) return "无";
+        if (!onWin.unLockPlant || onWin.unLockPlant.length === 0) return "无";
+        
+        const computedPlants = onWin.unLockPlant.map((pid) => {
+            return PlantFactoryMap[pid].nameKey;
+        }).filter(item => item !== "");
+        return computedPlants.length > 0 ? computedPlants.join(" ") : "无";
+    }, [onWin]);
 
     const { translate } = useLocaleMessages();
 
-    useEffect(() => {
+    useMount(() => {
         if (!isPaused) setIsPaused(true);
-    }, [setIsPaused]);
+    });
 
     useEffect(() => {
         if (!hasSavedRef.current) {
@@ -39,49 +59,34 @@ export default function GameResultView({ width, height, isWin, onWin, progressRe
             console.log("保存进度奖励");
             hasSavedRef.current = true;
 
-            if (isWin) {
-                onWin?.unLockPlant.forEach(plant => {
-                    saveManager.recordPlantEncounter(plant);
-                });
-                onWin?.unLock.forEach(level => {
-                    saveManager.setCurrentLevel(level);
-                });
-            }
-
-            progressRewards.forEach(reward => {
-                if (myProgress >= reward.progress) {
-                    saveManager.updateItemCount(reward.reward.type, reward.reward.count);
+            const saveGameProgress = async () => {
+                if (isWin) {
+                    onWin?.unLockPlant.forEach(plant => {
+                        saveManager.recordPlantEncounter(plant);
+                    });
+                    onWin?.unLock.forEach(level => {
+                        saveManager.setCurrentLevel(level);
+                    });
                 }
-            });
-            saveManager.saveProgress();
+
+                progressRewards.forEach(reward => {
+                    if (myProgress >= reward.progress) {
+                        saveManager.updateItemCount(reward.reward.type, reward.reward.count);
+                    }
+                });
+                
+                try {
+                    await saveManager.saveProgress();
+                } catch (error) {
+                    console.error('保存失败:', error);
+                }
+            };
+
+            saveGameProgress();
         }
     }, [progressRewards, onWin, isWin]);
 
-    // 使用 useEffect 计算解锁关卡和解锁器械的字符串，避免在 JSX 中进行计算
-    useEffect(() => {
-        if (onWin) {
-            let levelsStr = "无";
-            let plantsStr = "无";
-
-            if (onWin.unLock && onWin.unLock.length > 0) {
-                const computedLevels = onWin.unLock.map((cpid) => {
-                    const stage = StageDataRecords[cpid];
-                    const chapter = ChapterDataRecords[stage.chapterID];
-                    return `${chapter.nameKey} - ${stage.nameKey}`;
-                }).filter(item => item !== "");
-                levelsStr = computedLevels.length > 0 ? computedLevels.join(" ") : "无";
-            }
-
-            if (onWin.unLockPlant && onWin.unLockPlant.length > 0) {
-                const computedPlants = onWin.unLockPlant.map((pid) => {
-                    return PlantFactoryMap[pid].nameKey;
-                }).filter(item => item !== "");
-                plantsStr = computedPlants.length > 0 ? computedPlants.join(" ") : "无";
-            }
-            setUnlockedLevelsStr(levelsStr);
-            setUnlockedPlantsStr(plantsStr);
-        }
-    }, [onWin, saveManager.currentProgress]);
+    // 移除这个 useEffect，因为我们已经使用 useCreation 来处理了
 
     return (
         <div style={{

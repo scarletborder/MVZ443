@@ -1,4 +1,5 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useRef } from 'react';
+import { useCreation, useMemoizedFn, useUpdateEffect, useSetState } from 'ahooks';
 import { useSaveManager } from '../../context/save_ctx';
 import PlantFactoryMap from '../../game/presets/plant';
 import { publicUrl } from '../../utils/browser';
@@ -26,14 +27,15 @@ export default function Pokedex({ width, height, onBack }: Props) {
         height = width * 3 / 4;
     }
 
-    const [pokedexItems, setPokedexItems] = useState<Map<number, PokedexItem>>(new Map());
-    const [selectedItemPid, setSelectedItemPid] = useState<number | null>(null);
-    const [animationClass, setAnimationClass] = useState<string>('');
-    const [upgradeMaterials, setUpgradeMaterials] = useState<MaterialRequirement[]>([]);
-    const [loadingMaterials, setLoadingMaterials] = useState<boolean>(false);
+    const [state, setState] = useSetState({
+        pokedexItems: new Map<number, PokedexItem>(),
+        selectedItemPid: null as number | null,
+        animationClass: '',
+        upgradeMaterials: [] as MaterialRequirement[],
+        loadingMaterials: false,
+        selectedItem: null as PokedexItem | null,
+    });
 
-    // 当前显示的项目
-    const [selectedItem, setSelectedItem] = useState<PokedexItem | null>(null);
     // 新增：下一个将要显示的项目（在动画完成后才会显示）
     const nextItemRef = useRef<PokedexItem | null>(null);
 
@@ -47,7 +49,8 @@ export default function Pokedex({ width, height, onBack }: Props) {
 
     const plants = saveManager.currentProgress.plants;
 
-    useEffect(() => {
+    // 使用 useCreation 来管理 pokedexItems
+    const pokedexItems = useCreation(() => {
         const tmpMap = new Map<number, PokedexItem>();
         plants.sort((a, b) => a.pid - b.pid)
             .map((plant) => {
@@ -60,12 +63,11 @@ export default function Pokedex({ width, height, onBack }: Props) {
                     level: plant.level,
                 });
             });
-
-        setPokedexItems(tmpMap);
+        return tmpMap;
     }, [plants]);
 
     // 清除所有动画定时器的辅助函数
-    const clearAnimationTimers = () => {
+    const clearAnimationTimers = useMemoizedFn(() => {
         if (animationTimersRef.current.main) {
             clearTimeout(animationTimersRef.current.main);
         }
@@ -76,37 +78,37 @@ export default function Pokedex({ width, height, onBack }: Props) {
             clearTimeout(animationTimersRef.current.finish);
         }
         animationTimersRef.current = {};
-    };
+    });
 
     // 修改：处理选中项目变化的逻辑
-    useEffect(() => {
-        if (selectedItemPid === null) return;
+    useUpdateEffect(() => {
+        if (state.selectedItemPid === null) return;
 
         // 清除任何正在进行的动画定时器
         clearAnimationTimers();
 
         // 查找将要显示的新项目，但先不设置到selectedItem
-        const nextItem = pokedexItems.get(selectedItemPid) || null;
+        const nextItem = pokedexItems.get(state.selectedItemPid) || null;
         nextItemRef.current = nextItem;
 
         // 如果当前没有选中项，说明是首次选择，直接设置
-        if (!selectedItem) {
-            setSelectedItem(nextItem);
+        if (!state.selectedItem) {
+            setState({ selectedItem: nextItem });
             return;
         }
 
         // 开始退出动画
         isAnimating.current = true;
-        setAnimationClass('slide-out');
+        setState({ animationClass: 'slide-out' });
 
         // 等待退出动画完成后，更新显示内容并开始进入动画
         animationTimersRef.current.main = window.setTimeout(() => {
             // 更新当前显示的项目为下一个项目
-            setSelectedItem(nextItemRef.current);
+            setState({ selectedItem: nextItemRef.current });
 
             // 延迟一小段时间后开始进入动画，确保DOM已更新
             animationTimersRef.current.enter = window.setTimeout(() => {
-                setAnimationClass('slide-in');
+                setState({ animationClass: 'slide-in' });
 
                 // 在进入动画完成后标记动画结束
                 animationTimersRef.current.finish = window.setTimeout(() => {
@@ -117,44 +119,44 @@ export default function Pokedex({ width, height, onBack }: Props) {
         }, 300); // 匹配slide-out动画持续时间
 
         return () => clearAnimationTimers();
-    }, [selectedItemPid, pokedexItems]);
+    }, [state.selectedItemPid, pokedexItems]);
 
     // 加载升级材料
-    useEffect(() => {
-        if (!selectedItem) {
-            setUpgradeMaterials([]);
+    useUpdateEffect(() => {
+        if (!state.selectedItem) {
+            setState({ upgradeMaterials: [] });
             return;
         }
 
-        setLoadingMaterials(true);
-        getUpgradeMaterials(selectedItem.pid, selectedItem.level)
-            .then(mats => setUpgradeMaterials(mats))
+        setState({ loadingMaterials: true });
+        getUpgradeMaterials(state.selectedItem.pid, state.selectedItem.level)
+            .then(mats => setState({ upgradeMaterials: mats }))
             .catch(err => {
                 console.error('加载升级材料失败', err);
-                setUpgradeMaterials([]);
+                setState({ upgradeMaterials: [] });
             })
-            .finally(() => setLoadingMaterials(false));
-    }, [selectedItem]);
+            .finally(() => setState({ loadingMaterials: false }));
+    }, [state.selectedItem]);
 
-    const getCurrentItems = (): item[] => {
+    const getCurrentItems = useMemoizedFn((): item[] => {
         return Array.from(saveManager.currentProgress.items.values());
-    };
+    });
 
-    const canUpgrade = (): boolean => {
-        if (loadingMaterials || !selectedItem) return false;
+    const canUpgrade = useMemoizedFn((): boolean => {
+        if (state.loadingMaterials || !state.selectedItem) return false;
         const currentItems = getCurrentItems();
         const currentMap = new Map(currentItems.map(i => [i.type, i.count]));
-        return upgradeMaterials.length > 0 && upgradeMaterials.every(mat => (currentMap.get(mat.type) || 0) >= mat.count);
-    };
+        return state.upgradeMaterials.length > 0 && state.upgradeMaterials.every(mat => (currentMap.get(mat.type) || 0) >= mat.count);
+    });
 
-    const handleUpgrade = () => {
+    const handleUpgrade = useMemoizedFn(async () => {
         // 防止动画过渡中点击或重复点击
-        if (isAnimating.current || !selectedItem || !canUpgrade()) return;
+        if (isAnimating.current || !state.selectedItem || !canUpgrade()) return;
 
         // 使用状态中保存的 selectedItem，而不是每次重新查找
-        const { pid, level } = selectedItem;
+        const { pid, level } = state.selectedItem;
 
-        upgradeMaterials.forEach(mat => {
+        state.upgradeMaterials.forEach(mat => {
             saveManager.updateItemCount(mat.type, -mat.count);
         });
 
@@ -162,38 +164,44 @@ export default function Pokedex({ width, height, onBack }: Props) {
         if (plantIndex !== -1) {
             // 更新植物等级
             plants[plantIndex].level += 1;
-            saveManager.saveProgress();
+            try {
+                await saveManager.saveProgress();
+            } catch (error) {
+                console.error('保存失败:', error);
+            }
 
             // 更新项目列表
             const newLevel = level + 1;
 
             // 更新pokedexItems集合中的对应项
-            setPokedexItems(prev => {
-                const newMap = new Map(prev);
+            setState(prev => {
+                const newMap = new Map(prev.pokedexItems);
                 if (newMap.has(pid)) {
                     const item = newMap.get(pid)!;
                     newMap.set(pid, { ...item, level: newLevel });
                 }
-                return newMap;
+                return { pokedexItems: newMap };
             });
 
             // 直接更新选中项，只更新level值
-            setSelectedItem({
-                ...selectedItem,
-                level: newLevel
-            });
+            setState(prev => ({
+                selectedItem: prev.selectedItem ? {
+                    ...prev.selectedItem,
+                    level: newLevel
+                } : null
+            }));
         }
-    };
+    });
 
     // 选择一个新的项目（已修改）
-    const selectItem = (pid: number) => {
+    const selectItem = useMemoizedFn((pid: number) => {
         // 如果点击的是当前已选中的项目，不做任何处理
-        if (pid === selectedItemPid) return;
+        if (pid === state.selectedItemPid) return;
 
         // 即使动画正在进行中，也允许选择新项目
         // 之前的动画会被新的动画取消
-        setSelectedItemPid(pid);
-    };
+        setState({ selectedItemPid: pid });
+    });
 
     return (
         <div style={{
@@ -256,7 +264,7 @@ export default function Pokedex({ width, height, onBack }: Props) {
                     fontWeight: "bold"
                 }}>图鉴</p>
 
-                {/* 项目网格（保持不变） */}
+                {/* 项目网格（恢复原来的样式） */}
                 {Array(Math.ceil(pokedexItems.size / 5)).fill(0).map((_, rowIndex) => (
                     <div key={rowIndex} style={{
                         display: "flex",
@@ -319,28 +327,27 @@ export default function Pokedex({ width, height, onBack }: Props) {
                 background: "rgba(30, 30, 30, 0.9)",
                 overflowY: "auto", // 添加这一行使内容可滚动
             }}>
-                <div className={animationClass} style={{
+                <div className={state.animationClass} style={{
                     position: "relative",
                     width: "103%"
                 }}>
                     <h2 style={{ marginBottom: '8px' }}>
-                        {selectedItem ? `${translate(selectedItem.nameKey)} LV.${selectedItem.level}` : '未选择'}
+                        {state.selectedItem ? `${translate(state.selectedItem.nameKey)} LV.${state.selectedItem.level}` : '未选择'}
                     </h2>
 
-
-                    {selectedItem ? (
+                    {state.selectedItem ? (
                         <>
                             <div style={{ whiteSpace: 'pre-wrap', marginBottom: '16px' }}>
-                                {translate(selectedItem.descriptionKey)}
+                                {translate(state.selectedItem.descriptionKey)}
                             </div>
                             <hr style={{ borderColor: '#666', margin: '16px 0' }} />
                             <div>
                                 <h3 style={{ margin: '0 0 12px 0' }}>
-                                    升级到 LV.{selectedItem.level + 1}
+                                    升级到 LV.{state.selectedItem.level + 1}
                                 </h3>
                                 {/* 材料列表 */}
                                 <StuffList
-                                    items={upgradeMaterials}
+                                    items={state.upgradeMaterials}
                                     currentItems={getCurrentItems()}
                                     translate={translate}
                                 />
@@ -357,10 +364,10 @@ export default function Pokedex({ width, height, onBack }: Props) {
                                         background: canUpgrade() ? '#007bff' : '#555',
                                         color: '#fff',
                                         cursor: canUpgrade() ? 'pointer' : 'not-allowed',
-                                        opacity: loadingMaterials ? 0.6 : 1,
+                                        opacity: state.loadingMaterials ? 0.6 : 1,
                                     }}
                                 >
-                                    {loadingMaterials ? '加载中...' : (canUpgrade() ? '升级' : '材料不足')}
+                                    {state.loadingMaterials ? '加载中...' : (canUpgrade() ? '升级' : '材料不足')}
                                 </button>
                             </div>
                         </>

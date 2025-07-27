@@ -65,9 +65,13 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
         return () => clearInterval(interval);
     }, []);
 
-    const onBack = () => {
+    const onBack = async () => {
         onBackOriginal();
-        saveManager.saveProgress();
+        try {
+            await saveManager.saveProgress();
+        } catch (error) {
+            console.error('保存失败:', error);
+        }
     };
 
     // 处理导入存档
@@ -79,10 +83,14 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
         const file = event.target.files?.[0];
         if (file && file.type === 'application/json') {
             const reader = new FileReader();
-            reader.onload = (e) => {
+            reader.onload = async (e) => {
                 const content = e.target?.result as string;
-                saveManager.importSave(content);
-                console.log('导入存档:', content);
+                try {
+                    await saveManager.importSave(content);
+                    console.log('导入存档:', content);
+                } catch (error) {
+                    console.error('导入失败:', error);
+                }
             };
             reader.readAsText(file);
         } else {
@@ -93,8 +101,9 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
     };
 
     // 处理导出存档
-    const handleExportSave = () => {
-        saveManager.exportSave((jsonString: string) => {
+    const handleExportSave = async () => {
+        try {
+            const jsonString = await saveManager.exportSave();
             const blob = new Blob([jsonString], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
@@ -104,7 +113,9 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
             link.click();
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
-        });
+        } catch (error) {
+            console.error('导出失败:', error);
+        }
     };
 
     // 设置类别和对应的面板数据
@@ -171,8 +182,12 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
                         descriptionKey: "menu_settings_general_save_progress_t",
                         controlType: "button",
                         controlProps: {
-                            onClick: () => {
-                                saveManager.saveProgress();
+                            onClick: async () => {
+                                try {
+                                    await saveManager.saveProgress();
+                                } catch (error) {
+                                    console.error('保存失败:', error);
+                                }
                             },
                             btnText: "menu_settings_save"
                         }

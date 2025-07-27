@@ -30,10 +30,14 @@ const ShopSelector: React.FC<ShopSelectorProps> = ({
     const isFirstRender = useRef(true);
     const gameManager = useSaveManager();
 
-    const handlePurchaseCallback = useMemoizedFn((id: number) => {
+    const handlePurchaseCallback = useMemoizedFn(async (id: number) => {
         console.log(`Item ${id} purchased`);
-        gameManager.saveProgress();
-        setState(s => ({ forceUpdate: s.forceUpdate + 1 }));
+        try {
+            await gameManager.saveProgress();
+            setState(s => ({ forceUpdate: s.forceUpdate + 1 }));
+        } catch (error) {
+            console.error('保存失败:', error);
+        }
     });
 
     const goodsList: IGoods[] = React.useMemo(() =>
@@ -124,8 +128,10 @@ const ShopSelector: React.FC<ShopSelectorProps> = ({
     }, [state.showPurchased]);
 
     useMount(() => {
-        gameManager.loadProgress(() => {
+        gameManager.loadProgress().then(() => {
             setState(s => ({ forceUpdate: s.forceUpdate + 1 }));
+        }).catch(error => {
+            console.error('加载失败:', error);
         });
     });
 

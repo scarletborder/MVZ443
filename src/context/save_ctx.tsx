@@ -1,5 +1,8 @@
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, useContext, ReactNode } from "react";
+import { useCreation } from "ahooks";
+import Dexie, { Table } from "dexie";
 
+// 定义数据模型
 interface Plant {
     pid: number;
     level: number;
@@ -15,262 +18,389 @@ interface Item {
 }
 
 export interface GameProgress {
+    id?: number; // Dexie 会自动管理主键
     level: Set<number>;
     plants: Plant[];
     zombies: Zombie[];
-    items: Map<number, Item>; // 物品id -> Item
-    slotNum: number // 卡槽数量
+    items: Map<number, Item>;
+    slotNum: number;
+    updatedAt: Date;
 }
 
-// 将 GameProgress 转换为可序列化的对象
-function serializeGameProgress(gameProgress: GameProgress): object {
+// 序列化 GameProgress 为可存储的格式
+function serializeGameProgress(gameProgress: GameProgress): any {
     return {
-        level: Array.from(gameProgress.level),  // Set 转换为数组
-        plants: gameProgress.plants,  // 数组本身可以直接序列化
-        zombies: gameProgress.zombies,  // 数组本身可以直接序列化
+        level: Array.from(gameProgress.level),
+        plants: gameProgress.plants,
+        zombies: gameProgress.zombies,
         items: Array.from(gameProgress.items.entries()).map(([key, value]) => ({
-            id: key,  // Map 的 key 转为 id 字段
-            ...value  // 保留原有的 Item 属性
+            id: key,
+            ...value
         })),
-        slotNum: gameProgress.slotNum,  // 直接序列化
+        slotNum: gameProgress.slotNum,
+        updatedAt: gameProgress.updatedAt
     };
 }
 
-// 将 JSON 字符串解析回 GameProgress 对象
-function deserializeGameProgress(jsonString: string): GameProgress {
-    const obj = JSON.parse(jsonString);
-
+// 反序列化存储的数据为 GameProgress
+function deserializeGameProgress(data: any): GameProgress {
     return {
-        level: new Set(obj.level),  // 将数组转换回 Set
-        plants: obj.plants,  // 保持原数组格式
-        zombies: obj.zombies,  // 保持原数组格式
-        items: new Map(obj.items.map((item: { id: number, type: number, count: number }) => [item.id, { type: item.type, count: item.count }])),  // Map 转换
-        slotNum: obj.slotNum,  // 直接赋值
+        id: data.id,
+        level: new Set(data.level),
+        plants: data.plants,
+        zombies: data.zombies,
+        items: new Map(data.items.map((item: { id: number, type: number, count: number }) => 
+            [item.id, { type: item.type, count: item.count }]
+        )),
+        slotNum: data.slotNum,
+        updatedAt: new Date(data.updatedAt)
     };
 }
 
-
-class SaveManager {
-    private dbName: string = "MVZ443";
-    private storeName: string = "game_progress";
+// 定义 Dexie 数据库
+class GameDatabase extends Dexie {
+    gameProgress!: Table<any>;
 
     constructor() {
-        this.init();
+        super("MVZ443");
+        this.version(1).stores({
+            gameProgress: "++id, updatedAt"
+        });
+    }
+}
+
+// 存档管理器类
+class SaveManager {
+    private db: GameDatabase;
+
+    constructor() {
+        this.db = new GameDatabase();
     }
 
-    private init(): void {
-        const request = indexedDB.open(this.dbName, 1);
-
-        request.onupgradeneeded = (event) => {
-            const db = (event.target as IDBRequest).result;
-            if (!db.objectStoreNames.contains(this.storeName)) {
-                db.createObjectStore(this.storeName, { keyPath: "id" }); // 移除 autoIncrement
-            }
-        };
-
-        request.onerror = (event) => {
-            console.error("数据库初始化失败: ", event);
-        };
-    }
-
-    saveGameProgress(gameProgress: GameProgress): void {
-        const request = indexedDB.open(this.dbName, 1);
-
-        request.onsuccess = (event) => {
-            const db = (event.target as IDBRequest).result;
-            const transaction = db.transaction(this.storeName, "readwrite");
-            const store = transaction.objectStore(this.storeName);
-            // 使用固定的 id: 0，确保覆盖更新同一记录
-            const dataToSave = { id: 0, ...gameProgress };
-            const putRequest = store.put(dataToSave);
-
-            putRequest.onsuccess = () => {
-                console.log("游戏进度保存成功");
-            };
-
-            putRequest.onerror = () => {
-                console.error("保存存档失败");
-            };
-        };
-
-        request.onerror = (event) => {
-            console.error("数据库打开失败: ", event);
-        };
-    }
-
-    loadGameProgress(callback: (gameProgress: GameProgress | undefined) => void): void {
-        const request = indexedDB.open(this.dbName, 1);
-
-        request.onsuccess = (event) => {
-            const db = (event.target as IDBRequest).result;
-            const transaction = db.transaction(this.storeName, "readonly");
-            const store = transaction.objectStore(this.storeName);
-            const getRequest = store.get(0); // 使用固定的 id: 0
-
-            getRequest.onsuccess = () => {
-                callback(getRequest.result ? getRequest.result : undefined);
-            };
-
-            getRequest.onerror = () => {
-                console.error("读取存档失败");
-                callback(undefined);
-            };
-        };
-
-        request.onerror = (event) => {
-            console.error("数据库打开失败: ", event);
-            callback(undefined);
-        };
-    }
-
-    importSaveFromJson(jsonString: string): GameProgress | undefined {
+    // 保存游戏进度
+    async saveGameProgress(gameProgress: GameProgress): Promise<void> {
         try {
-            const gameProgress = deserializeGameProgress(jsonString);
-            this.saveGameProgress(gameProgress);
-            return gameProgress
+            const serializedData = serializeGameProgress({
+                ...gameProgress,
+                updatedAt: new Date()
+            });
+
+            // 删除旧记录（如果存在）
+            await this.db.gameProgress.clear();
+            
+            // 插入新记录
+            await this.db.gameProgress.add(serializedData);
+            
+            console.log("游戏进度保存成功");
         } catch (error) {
-            console.error("导入存档失败: ", error);
+            console.error("保存存档失败:", error);
+            throw error;
+        }
+    }
+
+    // 加载游戏进度
+    async loadGameProgress(): Promise<GameProgress | undefined> {
+        try {
+            const data = await this.db.gameProgress.toArray();
+            
+            if (data.length === 0) {
+                console.log("没有找到存档");
+                return undefined;
+            }
+
+            // 获取最新的存档（按更新时间排序）
+            const latestData = data.sort((a, b) => 
+                new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+            )[0];
+
+            return deserializeGameProgress(latestData);
+        } catch (error) {
+            console.error("读取存档失败:", error);
+            throw error;
+        }
+    }
+
+    // 导入存档
+    async importSaveFromJson(jsonString: string): Promise<GameProgress | undefined> {
+        try {
+            const gameProgress = deserializeGameProgress(JSON.parse(jsonString));
+            await this.saveGameProgress(gameProgress);
+            return gameProgress;
+        } catch (error) {
+            console.error("导入存档失败:", error);
+            throw error;
+        }
+    }
+
+    // 导出存档
+    async exportSave(): Promise<string> {
+        try {
+            const gameProgress = await this.loadGameProgress();
+            if (!gameProgress) {
+                throw new Error("没有找到存档");
+            }
+            
+            const serializedData = serializeGameProgress(gameProgress);
+            return JSON.stringify(serializedData, null, 2);
+        } catch (error) {
+            console.error("导出存档失败:", error);
+            throw error;
+        }
+    }
+
+    // 删除存档
+    async deleteSave(): Promise<void> {
+        try {
+            await this.db.gameProgress.clear();
+            console.log("存档删除成功");
+        } catch (error) {
+            console.error("删除存档失败:", error);
+            throw error;
+        }
+    }
+
+    // 获取存档信息
+    async getSaveInfo(): Promise<{ count: number; lastUpdated?: Date }> {
+        try {
+            const data = await this.db.gameProgress.toArray();
+            const lastUpdated = data.length > 0 
+                ? new Date(Math.max(...data.map(d => new Date(d.updatedAt).getTime())))
+                : undefined;
+            
+            return {
+                count: data.length,
+                lastUpdated
+            };
+        } catch (error) {
+            console.error("获取存档信息失败:", error);
+            throw error;
         }
     }
 }
 
-
+// 游戏管理器类
 export class GameManager {
-    saveManager: SaveManager;
-    currentProgress: GameProgress;
+    private saveManager: SaveManager;
+    private _currentProgress: GameProgress;
+    private _isInitialized: boolean = false;
 
     constructor() {
         this.saveManager = new SaveManager();
-        this.currentProgress = {
+        this._currentProgress = this.getDefaultProgress();
+        this.initializeProgress();
+    }
+
+    // 获取默认进度
+    private getDefaultProgress(): GameProgress {
+        return {
             level: new Set([1]),
-            plants: [{ pid: 1, level: 1 }, { pid: 2, level: 1 }, { pid: 3, level: 1 }, { pid: 4, level: 1 }],
+            plants: [
+                { pid: 1, level: 1 }, 
+                { pid: 2, level: 1 }, 
+                { pid: 3, level: 1 }, 
+                { pid: 4, level: 1 }
+            ],
             zombies: [],
             items: new Map<number, Item>(),
             slotNum: 6,
+            updatedAt: new Date()
         };
-        this.loadProgress();
+    }
+
+    // 初始化进度（异步）
+    private async initializeProgress(): Promise<void> {
+        try {
+            const savedProgress = await this.saveManager.loadGameProgress();
+            if (savedProgress) {
+                this._currentProgress = savedProgress;
+                console.log("成功加载存档");
+            } else {
+                // 如果没有存档，保存默认进度
+                console.log("没有找到存档，创建默认存档");
+                await this.saveManager.saveGameProgress(this._currentProgress);
+            }
+            this._isInitialized = true;
+        } catch (error) {
+            console.error('初始化失败:', error);
+            // 即使失败也要标记为已初始化，避免无限重试
+            this._isInitialized = true;
+        }
+    }
+
+    // 等待初始化完成
+    private async waitForInitialization(): Promise<void> {
+        if (!this._isInitialized) {
+            await new Promise<void>((resolve) => {
+                const checkInit = () => {
+                    if (this._isInitialized) {
+                        resolve();
+                    } else {
+                        setTimeout(checkInit, 10);
+                    }
+                };
+                checkInit();
+            });
+        }
+    }
+
+    // 获取当前进度
+    get currentProgress(): GameProgress {
+        return this._currentProgress;
     }
 
     // 记录遇到的植物
     recordPlantEncounter(pid: number): void {
-        const existingPlant = this.currentProgress.plants.find((p) => p.pid === pid);
+        const existingPlant = this._currentProgress.plants.find((p) => p.pid === pid);
         if (!existingPlant) {
-            this.currentProgress.plants.push({ pid, level: 1 });
+            this._currentProgress.plants.push({ pid, level: 1 });
         }
     }
 
     // 记录遇到的僵尸
     recordZombieEncounter(mid: number): void {
-        const existingZombie = this.currentProgress.zombies.find((z) => z.mid === mid);
+        const existingZombie = this._currentProgress.zombies.find((z) => z.mid === mid);
         if (!existingZombie) {
-            this.currentProgress.zombies.push({ mid });
+            this._currentProgress.zombies.push({ mid });
         }
     }
 
     // 设置植物的等级
     setPlantLevel(pid: number, level: number): void {
-        const plant = this.currentProgress.plants.find((p) => p.pid === pid);
+        const plant = this._currentProgress.plants.find((p) => p.pid === pid);
         if (plant && level > plant.level) {
             plant.level = level;
         }
     }
 
-    /**
-     * 更新物品数量,  add or decrease
-     * @param type 
-     * @param count 
-     */
+    // 更新物品数量
     updateItemCount(type: number, count: number): void {
-        // 原有数量
-        let oldItem = this.currentProgress.items.get(type);
-        if (!oldItem) {
-            oldItem = { type, count: 0 };
-        }
-
-        // 设置新的数量
-        this.currentProgress.items.set(type, {
-            type, count: oldItem.count + count
+        const oldItem = this._currentProgress.items.get(type) || { type, count: 0 };
+        this._currentProgress.items.set(type, {
+            type,
+            count: oldItem.count + count
         });
     }
 
-    // 记录当前关卡进度
-    // 调用时需要循环对所有要解锁的关卡调用
+    // 设置当前关卡进度
     setCurrentLevel(level: number): void {
-        this.currentProgress.level.add(level);
+        this._currentProgress.level.add(level);
     }
 
     // 更新卡槽数量
     updateSlotNum(num: number): void {
-        if (num > this.currentProgress.slotNum) this.currentProgress.slotNum = num;
+        if (num > this._currentProgress.slotNum) {
+            this._currentProgress.slotNum = num;
+        }
     }
 
     // 保存当前游戏进度
-    saveProgress(): void {
-        this.saveManager.saveGameProgress(this.currentProgress);
+    async saveProgress(): Promise<void> {
+        try {
+            await this.waitForInitialization();
+            await this.saveManager.saveGameProgress(this._currentProgress);
+        } catch (error) {
+            console.error("保存进度失败:", error);
+            throw error;
+        }
     }
 
-    // 加载当前游戏进度 (确保更更新的记录覆盖现有记录)
-    loadProgress(callback?: () => void): void {
-        this.saveManager.loadGameProgress((gameProgress) => {
+    // 加载游戏进度
+    async loadProgress(): Promise<void> {
+        try {
+            await this.waitForInitialization();
+            const gameProgress = await this.saveManager.loadGameProgress();
             if (gameProgress) {
-                this.currentProgress.level = gameProgress.level;
-                this.currentProgress.plants = gameProgress.plants;
-                this.currentProgress.zombies = gameProgress.zombies;
-                this.currentProgress.items = gameProgress.items;
-                this.currentProgress.slotNum = gameProgress.slotNum;
-
-                if (callback) {
-                    callback();
-                }
+                this._currentProgress = gameProgress;
+                console.log("进度加载成功");
             } else {
-                console.log("没有找到存档，初始化默认进度");
+                console.log("没有找到存档，使用默认进度");
+                this._currentProgress = this.getDefaultProgress();
             }
-        });
+        } catch (error) {
+            console.error("加载进度失败:", error);
+            this._currentProgress = this.getDefaultProgress();
+        }
     }
 
     // 导入游戏存档
-    importSave(jsonString: string): void {
-        let progress = this.saveManager.importSaveFromJson(jsonString);
-        if (progress === undefined) {
-            console.log("导入存档失败");
-        } else {
-            this.currentProgress = progress;
+    async importSave(jsonString: string): Promise<void> {
+        try {
+            await this.waitForInitialization();
+            const progress = await this.saveManager.importSaveFromJson(jsonString);
+            if (progress) {
+                this._currentProgress = progress;
+            }
+        } catch (error) {
+            console.error("导入存档失败:", error);
+            throw error;
         }
     }
 
     // 导出游戏存档
-    exportSave(callback: (jsonString: string) => void): void {
-        // 将所有set做成 []
-        // 将所有map做成 []
-        const obj = serializeGameProgress(this.currentProgress);
-        let jsonStr = JSON.stringify(obj);
-        callback(jsonStr);
+    async exportSave(): Promise<string> {
+        try {
+            await this.waitForInitialization();
+            return await this.saveManager.exportSave();
+        } catch (error) {
+            console.error("导出存档失败:", error);
+            throw error;
+        }
+    }
+
+    // 删除存档
+    async deleteSave(): Promise<void> {
+        try {
+            await this.waitForInitialization();
+            await this.saveManager.deleteSave();
+            this._currentProgress = this.getDefaultProgress();
+        } catch (error) {
+            console.error("删除存档失败:", error);
+            throw error;
+        }
+    }
+
+    // 获取存档信息
+    async getSaveInfo(): Promise<{ count: number; lastUpdated?: Date }> {
+        try {
+            await this.waitForInitialization();
+            return await this.saveManager.getSaveInfo();
+        } catch (error) {
+            console.error("获取存档信息失败:", error);
+            throw error;
+        }
+    }
+
+    // 重置为默认进度
+    resetToDefault(): void {
+        this._currentProgress = this.getDefaultProgress();
     }
 }
 
-// 创建一个 React Context 用于提供 GameManager
+// React Context
 const GameContext = createContext<GameManager | undefined>(undefined);
 
 interface Props {
-    children: ReactNode
+    children: ReactNode;
 }
 
 export function SaveProvider(props: Props) {
     const { children } = props;
-    const [gameManager] = useState(() => new GameManager());
+    
+    // 使用 ahooks 的 useCreation 替代 useState
+    const gameManager = useCreation(() => new GameManager(), []);
 
     return (
         <GameContext.Provider value={gameManager}>
             {children}
         </GameContext.Provider>
     );
-};
+}
 
-// 自定义 hook 用于访问 GameContext
+// 自定义 hook
 export const useSaveManager = (): GameManager => {
     const context = useContext(GameContext);
     if (!context) {
-        throw new Error("useGameManager must be used within a GameProvider");
+        throw new Error("useSaveManager must be used within a SaveProvider");
     }
     return context;
 };
