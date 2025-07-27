@@ -33,6 +33,7 @@
         "@react-spring/web": "^9.7.5",
         "@types/sqlite3": "^3.1.11",
         "@use-gesture/react": "^10.3.1",
+        "ahooks": "^3.9.0",
         "denque": "^2.1.0",
         "gh-pages": "^6.3.0",
         "idb": "^8.0.2",
