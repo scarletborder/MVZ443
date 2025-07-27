@@ -1,5 +1,5 @@
 // src/components/ParamsSelector.tsx
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { GameParams } from '../../../game/models/GameParams';
 import { useGameContext } from '../../../context/garden_ctx';
 import { useSaveManager } from '../../../context/save_ctx';
@@ -8,6 +8,7 @@ import PlantFactoryMap from '../../../game/presets/plant';
 import { publicUrl } from '../../../utils/browser';
 import { useSettings } from '../../../context/settings_ctx';
 import { useLocaleMessages } from '../../../hooks/useLocaleMessages';
+import { useSetState, useLocalStorageState, useMount, useMemoizedFn } from 'ahooks';
 
 interface ParamsSelectorProps {
     chapterId: number;
@@ -15,6 +16,7 @@ interface ParamsSelectorProps {
     setGameParams: (params: GameParams) => void;
     startGame: () => void;
     onBack: () => void;
+    clearLevelSelection: () => void;
 }
 
 interface PlantElem {
@@ -24,41 +26,39 @@ interface PlantElem {
     level: number;
 }
 
+const ParamsSelector: React.FC<ParamsSelectorProps> = ({ 
+    stageId, 
+    setGameParams, 
+    startGame, 
+    onBack, 
+    clearLevelSelection 
+}) => {
+    const [state, setState] = useSetState({
+        selectedPlants: [] as number[],
+        availablePlants: [] as PlantElem[],
+        isOverLimit: false,
+        selectUpperLimit: 0,
+    });
 
-const ParamsSelector: React.FC<ParamsSelectorProps> = ({ stageId, setGameParams, startGame, onBack }) => {
-    const [selectedPlants, setSelectedPlants] = useState<number[]>([]);
-    const [availablePlants, setAvailablePlants] = useState<PlantElem[]>([]);
-    const [isOverLimit, setIsOverLimit] = useState(false);
+    // 使用 useLocalStorageState 保存用户选择的植物配置
+    const [plantSelection, setPlantSelection] = useLocalStorageState('plantSelection', {
+        defaultValue: {
+            lastSelectedPlants: [] as number[],
+            lastStageId: null as number | null,
+        }
+    });
+
     const garden_ctx = useGameContext();
-    const [selectUpperLimit, setSelectUpperLimit] = useState<number>(0);
     const saveManager = useSaveManager();
     const settings = useSettings();
     const { translate } = useLocaleMessages();
 
-    const handlePlantToggle = (pid: number) => {
-        setSelectedPlants(prev => {
-            if (prev.includes(pid)) {
-                // Deselecting a plant
-                setIsOverLimit(false);
-                return prev.filter(p => p !== pid);
-            } else {
-                // Selecting a plant
-                if (prev.length >= selectUpperLimit) {
-                    setIsOverLimit(true);
-                    setTimeout(() => setIsOverLimit(false), 400);
-                    return prev;
-                }
-                return [...prev, pid];
-            }
-        });
-    };
-
-    useEffect(() => {
+    // 计算可用植物
+    const calculateAvailablePlants = useMemoizedFn(() => {
         const plantProgress = saveManager.currentProgress.plants;
         if (!plantProgress || plantProgress.length < 1) {
             console.log("No plant progress available:", saveManager.currentProgress);
-            setAvailablePlants([]);
-            return;
+            return [];
         }
 
         let newAvailablePlants: PlantElem[] = [];
@@ -77,18 +77,68 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({ stageId, setGameParams,
             };
             newAvailablePlants.push(newPlant);
         }
-        newAvailablePlants = newAvailablePlants.sort((a, b) => a.pid - b.pid);
-        setAvailablePlants(newAvailablePlants);
+        return newAvailablePlants.sort((a, b) => a.pid - b.pid);
+    });
 
-        setSelectUpperLimit(saveManager.currentProgress.slotNum);
-    }, [saveManager.currentProgress]);
+    // 初始化植物选择（不立即加载 localStorage）
+    useMount(() => {
+        const plants = calculateAvailablePlants();
+        const upperLimit = saveManager.currentProgress.slotNum;
+        
+        setState({ 
+            availablePlants: plants, 
+            selectUpperLimit: upperLimit 
+        });
+        
+        // 不立即恢复上次选择的植物，让用户手动选择
+    });
 
-    const handleStart = () => {
+    // 重选上次的植物配置
+    const handleReloadLastSelection = useMemoizedFn(() => {
+        if (plantSelection.lastStageId === stageId && plantSelection.lastSelectedPlants.length > 0) {
+            const plants = state.availablePlants;
+            const upperLimit = state.selectUpperLimit;
+            const validPlants = plantSelection.lastSelectedPlants.filter(pid => 
+                plants.some(p => p.pid === pid)
+            );
+            if (validPlants.length <= upperLimit) {
+                setState({ selectedPlants: validPlants });
+            }
+        }
+    });
+
+    const handlePlantToggle = useMemoizedFn((pid: number) => {
+        setState(prevState => {
+            if (prevState.selectedPlants.includes(pid)) {
+                // 取消选择植物
+                const newSelectedPlants = prevState.selectedPlants.filter(p => p !== pid);
+                return { 
+                    ...prevState,
+                    selectedPlants: newSelectedPlants,
+                    isOverLimit: false 
+                };
+            } else {
+                // 选择植物
+                if (prevState.selectedPlants.length >= prevState.selectUpperLimit) {
+                    setState({ isOverLimit: true });
+                    setTimeout(() => setState({ isOverLimit: false }), 400);
+                    return prevState;
+                }
+                const newSelectedPlants = [...prevState.selectedPlants, pid];
+                return { 
+                    ...prevState,
+                    selectedPlants: newSelectedPlants 
+                };
+            }
+        });
+    });
+
+    const handleStart = useMemoizedFn(() => {
         const _ = () => { console.log('no gameexit Implemented') };
 
         const params: GameParams = {
             level: stageId,
-            plants: selectedPlants,
+            plants: state.selectedPlants,
             gameExit: _,
             setInitialEnergy: garden_ctx.setEnergy,
             gameSettings: {
@@ -98,9 +148,19 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({ stageId, setGameParams,
                 isSoundAudio: settings.isSoundAudio,
             }
         };
+        
+        // 游戏开始时保存植物选择到 localStorage
+        setPlantSelection({
+            lastSelectedPlants: state.selectedPlants,
+            lastStageId: stageId
+        });
+        
+        // 清除选关相关的 localStorage
+        clearLevelSelection();
+        
         setGameParams(params);
         startGame();
-    };
+    });
 
     return (
         <div style={{
@@ -163,13 +223,13 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({ stageId, setGameParams,
                     gap: '10px',
                     justifyContent: 'flex-start'
                 }}>
-                    {availablePlants.map((plant) => (
+                    {state.availablePlants.map((plant) => (
                         <div
                             key={plant.pid}
                             style={{
                                 width: '11.5%',
                                 aspectRatio: '1 / 1.5',
-                                border: selectedPlants.includes(plant.pid)
+                                border: state.selectedPlants.includes(plant.pid)
                                     ? '2px solid #00ccff'
                                     : '2px solid rgba(100, 100, 100, 0.5)',
                                 cursor: 'pointer',
@@ -182,11 +242,11 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({ stageId, setGameParams,
                             }}
                             onClick={() => handlePlantToggle(plant.pid)}
                             onMouseOver={(e) => {
-                                if (!selectedPlants.includes(plant.pid))
+                                if (!state.selectedPlants.includes(plant.pid))
                                     e.currentTarget.style.borderColor = '#00ccff';
                             }}
                             onMouseOut={(e) => {
-                                if (!selectedPlants.includes(plant.pid))
+                                if (!state.selectedPlants.includes(plant.pid))
                                     e.currentTarget.style.borderColor = 'rgba(100, 100, 100, 0.5)';
                             }}
                         >
@@ -221,23 +281,53 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({ stageId, setGameParams,
                 display: 'flex',
                 flexDirection: 'column'
             }}>
-                <h3>
-                    {`${translate('menu_level_chosen_plants')} `}
-                    <span style={{
-                        color: isOverLimit ? 'red' : '#ddd',
-                        transition: 'color 0.3s ease'
-                    }}>
-                        {`${selectedPlants.length}/${selectUpperLimit}`}
-                    </span>
-                </h3>
+                <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: '10px'
+                }}>
+                    <h3>
+                        {`${translate('menu_level_chosen_plants')} `}
+                        <span style={{
+                            color: state.isOverLimit ? 'red' : '#ddd',
+                            transition: 'color 0.3s ease'
+                        }}>
+                            {`${state.selectedPlants.length}/${state.selectUpperLimit}`}
+                        </span>
+                    </h3>
+                    {plantSelection.lastStageId === stageId && plantSelection.lastSelectedPlants.length > 0 && (
+                        <button
+                            style={{
+                                padding: '4px 8px',
+                                background: '#4CAF50',
+                                border: 'none',
+                                color: '#fff',
+                                cursor: 'pointer',
+                                fontSize: '12px',
+                                borderRadius: '4px',
+                                transition: 'all 0.3s ease',
+                            }}
+                            onMouseOver={(e) => {
+                                e.currentTarget.style.background = '#45a049';
+                            }}
+                            onMouseOut={(e) => {
+                                e.currentTarget.style.background = '#4CAF50';
+                            }}
+                            onClick={handleReloadLastSelection}
+                        >
+                            重选上次
+                        </button>
+                    )}
+                </div>
                 <div style={{
                     flex: 1,
                     overflowY: 'auto',
                     maxHeight: '80%',
                     scrollbarColor: '#888 #333',
                 }}>
-                    {selectedPlants.map(pid => {
-                        const plant = availablePlants.find(p => p.pid === pid);
+                    {state.selectedPlants.map(pid => {
+                        const plant = state.availablePlants.find(p => p.pid === pid);
                         if (!plant) return null;
                         return (
                             <div
@@ -294,6 +384,5 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({ stageId, setGameParams,
         </div>
     );
 };
-
 
 export default ParamsSelector;

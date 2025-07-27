@@ -1,10 +1,9 @@
 // src/components/ChapterSelector.tsx
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { ChapterDataRecords, StageDataRecords } from '../../../game/utils/loader';
 import { useSaveManager } from '../../../context/save_ctx';
 import { useLocaleMessages } from '../../../hooks/useLocaleMessages';
-
-
+import { useSetState, useLocalStorageState, useMount, useMemoizedFn } from 'ahooks';
 
 interface ChapterSelectorProps {
     onSelect: (chapterId: number) => void;
@@ -12,24 +11,54 @@ interface ChapterSelectorProps {
 }
 
 const ChapterSelector: React.FC<ChapterSelectorProps> = ({ onSelect, onBack }) => {
-    const [selectedChapter, setSelectedChapter] = useState<number | null>(null);
-    const [availableChapters, setAvailableChapters] = useState<number[]>([]);
+    const [state, setState] = useSetState({
+        selectedChapter: null as number | null,
+        availableChapters: [] as number[],
+    });
+
+    // 使用 useLocalStorageState 保存用户选择的章节
+    const [chapterSelection, setChapterSelection] = useLocalStorageState('chapterSelection', {
+        defaultValue: {
+            lastSelectedChapter: null as number | null,
+        }
+    });
+
     const saveManager = useSaveManager();
     const { translate } = useLocaleMessages();
 
-
-    useEffect(() => {
+    // 计算可用章节
+    const calculateAvailableChapters = useMemoizedFn(() => {
         let tmpChapters: number[] = [];
         saveManager.currentProgress.level.forEach((level) => {
-            // 这里level是关卡数,我们通过其找到chapterId,注意排序
             const chapterId = StageDataRecords[level].chapterID;
-            if (!tmpChapters.includes(chapterId))
+            if (!tmpChapters.includes(chapterId)) {
                 tmpChapters.push(chapterId);
+            }
         });
-        // 排序
-        tmpChapters = tmpChapters.sort((a, b) => a - b);
-        setAvailableChapters(tmpChapters);
-    }, []);
+        return tmpChapters.sort((a, b) => a - b);
+    });
+
+    // 初始化可用章节
+    useMount(() => {
+        const chapters = calculateAvailableChapters();
+        setState({ availableChapters: chapters });
+        
+        // 恢复上次选择的章节
+        if (chapterSelection.lastSelectedChapter && chapters.includes(chapterSelection.lastSelectedChapter)) {
+            setState({ selectedChapter: chapterSelection.lastSelectedChapter });
+        }
+    });
+
+    const handleChapterSelect = useMemoizedFn((chapter: number) => {
+        setState({ selectedChapter: chapter });
+        setChapterSelection({ lastSelectedChapter: chapter });
+    });
+
+    const handleNext = useMemoizedFn(() => {
+        if (state.selectedChapter) {
+            onSelect(state.selectedChapter);
+        }
+    });
 
     return (
         <div style={{
@@ -60,29 +89,29 @@ const ChapterSelector: React.FC<ChapterSelectorProps> = ({ onSelect, onBack }) =
                     {translate('menu_back')}
                 </button>
 
-                {Object.values(availableChapters).map((chapter) => (
+                {state.availableChapters.map((chapter) => (
                     <button
                         key={chapter}
                         className='menubutton'
                         style={{
-                            background: selectedChapter === chapter ? 'rgba(255, 255, 255, 0.1)' : 'none',
-                            boxShadow: selectedChapter === chapter
+                            background: state.selectedChapter === chapter ? 'rgba(255, 255, 255, 0.1)' : 'none',
+                            boxShadow: state.selectedChapter === chapter
                                 ? 'inset 0 0 0 2px #00ccff'
                                 : 'inset 0 0 0 2px rgba(100, 100, 100, 0.3)',
                         }}
                         onMouseOver={(e) => {
-                            if (selectedChapter !== chapter) {
+                            if (state.selectedChapter !== chapter) {
                                 e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
                                 e.currentTarget.style.boxShadow = 'inset 0 0 0 2px #00ccff';
                             }
                         }}
                         onMouseOut={(e) => {
-                            if (selectedChapter !== chapter) {
+                            if (state.selectedChapter !== chapter) {
                                 e.currentTarget.style.background = 'none';
                                 e.currentTarget.style.boxShadow = 'inset 0 0 0 2px rgba(100, 100, 100, 0.3)';
                             }
                         }}
-                        onClick={() => setSelectedChapter(chapter)}
+                        onClick={() => handleChapterSelect(chapter)}
                     >
                         {translate(ChapterDataRecords[chapter].nameKey)}
                     </button>
@@ -102,7 +131,7 @@ const ChapterSelector: React.FC<ChapterSelectorProps> = ({ onSelect, onBack }) =
                 background: 'rgba(30, 30, 30, 0.9)',
                 scrollbarColor: '#666 #333',
             }}>
-                {selectedChapter ? translate(ChapterDataRecords[selectedChapter].descriptionKey) : translate('menu_level_choose_chapter_tip')}
+                {state.selectedChapter ? translate(ChapterDataRecords[state.selectedChapter].descriptionKey) : translate('menu_level_choose_chapter_tip')}
                 {/* 下一步按钮 */}
                 <button
                     style={{
@@ -111,20 +140,18 @@ const ChapterSelector: React.FC<ChapterSelectorProps> = ({ onSelect, onBack }) =
                         left: '50%',
                         transform: 'translateX(-50%)',
                         padding: '10px 20px',
-                        background: selectedChapter ? '#00ccff' : '#666',
+                        background: state.selectedChapter ? '#00ccff' : '#666',
                         border: 'none',
                         color: '#fff',
-                        cursor: selectedChapter ? 'pointer' : 'not-allowed',
+                        cursor: state.selectedChapter ? 'pointer' : 'not-allowed',
                         transition: 'all 0.3s ease',
                     }}
-                    disabled={!selectedChapter}
-                    onClick={() => selectedChapter && onSelect(selectedChapter)}
+                    disabled={!state.selectedChapter}
+                    onClick={handleNext}
                 >
                     {translate('menu_next')}
                 </button>
             </div>
-
-
         </div>
     );
 };

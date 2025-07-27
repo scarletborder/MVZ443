@@ -1,9 +1,10 @@
 // src/components/StageSelector.tsx
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { ChapterDataRecords, StageDataRecords } from '../../../game/utils/loader';
 import { useSaveManager } from '../../../context/save_ctx';
 import { publicUrl } from '../../../utils/browser';
 import { useLocaleMessages } from '../../../hooks/useLocaleMessages';
+import { useSetState, useLocalStorageState, useMount, useMemoizedFn } from 'ahooks';
 
 interface StageSelectorProps {
     chapterId: number;
@@ -12,12 +13,24 @@ interface StageSelectorProps {
 }
 
 const StageSelector: React.FC<StageSelectorProps> = ({ chapterId, onSelect, onBack }) => {
-    const [selectedStage, setSelectedStage] = useState<number | null>(null);
-    const [stagesIds, setStagesIds] = useState<number[]>([]);
+    const [state, setState] = useSetState({
+        selectedStage: null as number | null,
+        stagesIds: [] as number[],
+    });
+
+    // 使用 useLocalStorageState 保存用户选择的关卡
+    const [stageSelection, setStageSelection] = useLocalStorageState('stageSelection', {
+        defaultValue: {
+            lastSelectedStage: null as number | null,
+            lastChapterId: null as number | null,
+        }
+    });
+
     const saveManager = useSaveManager();
     const { translate } = useLocaleMessages();
 
-    useEffect(() => {
+    // 计算可用关卡
+    const calculateAvailableStages = useMemoizedFn(() => {
         const chapterStages = ChapterDataRecords[chapterId]?.stages || [];
         const tmpStagesIds: number[] = [];
         for (const stageId of chapterStages) {
@@ -25,9 +38,35 @@ const StageSelector: React.FC<StageSelectorProps> = ({ chapterId, onSelect, onBa
                 tmpStagesIds.push(stageId);
             }
         }
-        tmpStagesIds.sort((a, b) => a - b);
-        setStagesIds(tmpStagesIds);
-    }, []);
+        return tmpStagesIds.sort((a, b) => a - b);
+    });
+
+    // 初始化可用关卡
+    useMount(() => {
+        const stages = calculateAvailableStages();
+        setState({ stagesIds: stages });
+        
+        // 恢复上次选择的关卡（如果是在同一章节）
+        if (stageSelection.lastChapterId === chapterId && 
+            stageSelection.lastSelectedStage && 
+            stages.includes(stageSelection.lastSelectedStage)) {
+            setState({ selectedStage: stageSelection.lastSelectedStage });
+        }
+    });
+
+    const handleStageSelect = useMemoizedFn((stageId: number) => {
+        setState({ selectedStage: stageId });
+        setStageSelection({ 
+            lastSelectedStage: stageId,
+            lastChapterId: chapterId 
+        });
+    });
+
+    const handleNext = useMemoizedFn(() => {
+        if (state.selectedStage) {
+            onSelect(state.selectedStage);
+        }
+    });
 
     return (
         <div style={{
@@ -65,31 +104,29 @@ const StageSelector: React.FC<StageSelectorProps> = ({ chapterId, onSelect, onBa
                 >
                     {translate('menu_back')}
                 </button>
-                {stagesIds.map((stageId) => (
+                {state.stagesIds.map((stageId) => (
                     <button
                         key={stageId}
                         className='menubutton'
                         style={{
-
-                            background: selectedStage === stageId ? 'rgba(255, 255, 255, 0.1)' : 'none',
-
-                            boxShadow: selectedStage === stageId
+                            background: state.selectedStage === stageId ? 'rgba(255, 255, 255, 0.1)' : 'none',
+                            boxShadow: state.selectedStage === stageId
                                 ? 'inset 0 0 0 2px #00ccff'
                                 : 'inset 0 0 0 2px rgba(100, 100, 100, 0.3)',
                         }}
                         onMouseOver={(e) => {
-                            if (selectedStage !== stageId) {
+                            if (state.selectedStage !== stageId) {
                                 e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
                                 e.currentTarget.style.boxShadow = 'inset 0 0 0 2px #00ccff';
                             }
                         }}
                         onMouseOut={(e) => {
-                            if (selectedStage !== stageId) {
+                            if (state.selectedStage !== stageId) {
                                 e.currentTarget.style.background = 'none';
                                 e.currentTarget.style.boxShadow = 'inset 0 0 0 2px rgba(100, 100, 100, 0.3)';
                             }
                         }}
-                        onClick={() => setSelectedStage(stageId)}
+                        onClick={() => handleStageSelect(stageId)}
                     >
                         {translate(StageDataRecords[stageId].nameKey)}
                     </button>
@@ -109,15 +146,15 @@ const StageSelector: React.FC<StageSelectorProps> = ({ chapterId, onSelect, onBa
                 background: 'rgba(30, 30, 30, 0.9)',
                 scrollbarColor: '#666 #333',
             }}>
-                {selectedStage ? <img
-                    src={`${publicUrl}/assets/dramas/${StageDataRecords[selectedStage].illustration}`}
+                {state.selectedStage ? <img
+                    src={`${publicUrl}/assets/dramas/${StageDataRecords[state.selectedStage].illustration}`}
                     style={{
                         width: '100%',
                         height: 'auto',
                         marginBottom: '20px',
                     }}
                 /> : null}
-                {selectedStage ? translate(StageDataRecords[selectedStage].descriptionKey) : translate('menu_level_choose_level_tip')}
+                {state.selectedStage ? translate(StageDataRecords[state.selectedStage].descriptionKey) : translate('menu_level_choose_level_tip')}
                 {/* 下一步按钮 */}
                 <br />
                 <button
@@ -125,20 +162,18 @@ const StageSelector: React.FC<StageSelectorProps> = ({ chapterId, onSelect, onBa
                         marginTop: 'auto',
                         width: '95%',
                         padding: '10px 20px',
-                        background: selectedStage ? '#00ccff' : '#666',
+                        background: state.selectedStage ? '#00ccff' : '#666',
                         border: 'none',
                         color: '#fff',
-                        cursor: selectedStage ? 'pointer' : 'not-allowed',
+                        cursor: state.selectedStage ? 'pointer' : 'not-allowed',
                         transition: 'all 0.3s ease',
                     }}
-                    disabled={!selectedStage}
-                    onClick={() => selectedStage && onSelect(selectedStage)}
+                    disabled={!state.selectedStage}
+                    onClick={handleNext}
                 >
                     {translate('menu_next')}
                 </button>
             </div>
-
-
         </div>
     );
 };
