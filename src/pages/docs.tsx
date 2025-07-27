@@ -10,8 +10,11 @@ import { boyerMooreSearch } from '../utils/algo';
 
 type docType = {
     name: string;
+    file: string;
     mod_time: string;
 }
+
+
 
 async function getDocsList(): Promise<docType[]> {
     const response = await fetch(`${publicUrl}/docs/stat.json`);
@@ -29,19 +32,26 @@ const Docs: React.FC = () => {
     const devicetype = useDeviceType();
     const navigate = useNavigate();
 
-    const boyerMooreSearchAlgo = window.boyerMooreSearch ?? boyerMooreSearch;
+    const boyerMooreSearchAlgo = boyerMooreSearch;
 
     const refreshFiltered = useCallback(async () => {
         const processedDocs = await Promise.all(docsList.map(async (doc) => {
-            const fileName = doc.name.replace('.md', '');
+            const fileName = doc.file.replace('.md', '');
             let content = await getDocsListFromIndexedDB(fileName);
             // 如果内容不存在，尝试从服务器获取并缓存
             if (!content) {
                 try {
-                    const response = await fetch(`${publicUrl}/docs/${fileName}.md`);
+                    const response = await fetch(`${publicUrl}/docs/${doc.file}`);
                     if (response.ok) {
-                        content = await response.text();
-                        await cacheDocContent(fileName, content);
+                        const text = await response.text();
+                        // 检查是否获取到的是HTML页面而不是Markdown文件
+                        if (text.includes('<!doctype html>') || text.includes('<html')) {
+                            console.error(`获取到HTML页面而不是Markdown文件: ${fileName}`);
+                            content = null;
+                        } else {
+                            content = text;
+                            await cacheDocContent(fileName, content);
+                        }
                     } else {
                         content = null;
                     }
@@ -71,12 +81,21 @@ const Docs: React.FC = () => {
             setDocsList(list);
 
             for (const doc of list) {
-                const fileName = doc.name.replace('.md', '');
+                const fileName = doc.file.replace('.md', '');
                 const content = await getDocContent(fileName);
                 if (!content) {
-                    const response = await fetch(`${publicUrl}/docs/${fileName}.md`);
-                    const text = await response.text();
-                    await cacheDocContent(fileName, text);
+                    try {
+                        const response = await fetch(`${publicUrl}/docs/${doc.file}`);
+                        if (response.ok) {
+                            const text = await response.text();
+                            // 检查是否获取到的是HTML页面而不是Markdown文件
+                            if (!text.includes('<!doctype html>') && !text.includes('<html')) {
+                                await cacheDocContent(fileName, text);
+                            }
+                        }
+                    } catch (error) {
+                        console.error(`Failed to fetch ${fileName}:`, error);
+                    }
                 }
             }
         };
@@ -93,9 +112,18 @@ const Docs: React.FC = () => {
     const handleDocClick = async (name: string) => {
         let content = await getDocContent(name);
         if (!content) {
-            const response = await fetch(`${publicUrl}/docs/${name}.md`);
-            const text = await response.text();
-            await cacheDocContent(name, text);
+            try {
+                const response = await fetch(`${publicUrl}/docs/${name}`);
+                if (response.ok) {
+                    const text = await response.text();
+                    // 检查是否获取到的是HTML页面而不是Markdown文件
+                    if (!text.includes('<!doctype html>') && !text.includes('<html')) {
+                        await cacheDocContent(name, text);
+                    }
+                }
+            } catch (error) {
+                console.error(`Failed to fetch ${name}:`, error);
+            }
         }
     };
 
@@ -120,8 +148,8 @@ const Docs: React.FC = () => {
                 {filteredDocs.map(({ file, preview }, index) => (
                     <DocCard key={index}>
                         <Link
-                            to={`${publicUrl}/docs/${file.name.replace('.md', '')}`}
-                            onClick={() => handleDocClick(file.name.replace('.md', ''))}
+                            to={`${publicUrl}/docs/${file.file.replace('.md', '')}`}
+                            onClick={() => handleDocClick(file.file.replace('.md', ''))}
                         >
                             <CardTitle>{file.name.replace('.md', '')}</CardTitle>
                             <CardModTime>Last modified: {new Date(file.mod_time).toLocaleString()}</CardModTime>

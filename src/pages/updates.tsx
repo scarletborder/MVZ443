@@ -32,10 +32,12 @@ const UpdatesPage = () => {
 
     return (
         <PageContainer>
-            <BackButton onClick={() => navigate(-1)}>
-                <ArrowLeft size={24} />
-            </BackButton>
-            <Title>Update Logs</Title>
+            <HeaderContainer>
+                <BackButton onClick={() => navigate(-1)}>
+                    <ArrowLeft size={24} />
+                </BackButton>
+                <Title>Update Logs</Title>
+            </HeaderContainer>
             <ContentCard>
                 <ReactMarkdown
                     remarkPlugins={[remarkGfm]}
@@ -71,30 +73,41 @@ const PageContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 2rem;
+  padding: 1rem;
   box-sizing: border-box;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+`;
+
+const HeaderContainer = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 900px;
+  margin-bottom: 2rem;
+  position: relative;
 `;
 
 const BackButton = styled.button`
-  position: absolute;
-  top: 1rem;
-  left: 1rem;
   background: none;
   border: none;
   color: #ffffff;
   cursor: pointer;
-  padding: 1rem; /* 增大内边距，扩展点击区域 */
+  padding: 0.75rem;
   border-radius: 50%;
-  width: 60px; /* 固定宽度 */
-  height: 60px; /* 固定高度 */
+  width: 50px;
+  height: 50px;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: background-color 0.3s ease, transform 0.2s ease;
+  margin-right: 1rem;
 
   &:hover {
     background-color: rgba(255, 255, 255, 0.1);
-    transform: scale(1.1); /* 悬停时略微放大 */
+    transform: scale(1.1);
   }
 
   &:focus {
@@ -103,18 +116,19 @@ const BackButton = styled.button`
   }
 
   & svg {
-    width: 30px; /* 增大图标尺寸 */
-    height: 30px;
+    width: 24px;
+    height: 24px;
   }
 `;
 
 const Title = styled.h1`
   font-size: 2.5rem;
   font-weight: 700;
-  margin: 1rem 0 2rem;
-  text-align: center;
+  margin: 0;
   letter-spacing: 0.05em;
   text-transform: uppercase;
+  flex: 1;
+  text-align: left;
 `;
 
 const ContentCard = styled.div`
