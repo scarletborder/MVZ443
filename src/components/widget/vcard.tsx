@@ -6,6 +6,7 @@ import { useGameContext } from '../../context/garden_ctx';
 import { useSettings } from '../../context/settings_ctx';
 import { publicUrl } from '../../utils/browser';
 import PlantFactoryMap from '../../game/presets/plant';
+import { useLocaleMessages } from '../../hooks/useLocaleMessages';
 
 interface CardProps {
     pid: number;
@@ -24,6 +25,7 @@ export default function VCard({ pid, texture, plantName, cooldownTime, sceneRef,
     const [isChosen, setIsChosen] = useState(false);
     const { energy, isPaused } = useGameContext();
     const settings = useSettings();
+    const { translate } = useLocaleMessages();
 
     useEffect(() => {
         const handleSetTimeFlow = (data: { delta: number }) => {
@@ -125,7 +127,7 @@ export default function VCard({ pid, texture, plantName, cooldownTime, sceneRef,
                     {texture && texture !== "" && (
                         <img
                             src={`${publicUrl}/assets/card/${texture}.png`}
-                            alt={plantName}
+                            alt={translate(plantName)}
                             style={{
                                 width: "100%",
                                 height: "100%",

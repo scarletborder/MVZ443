@@ -24,6 +24,8 @@ export default function GameResultView({ width, height, isWin, onWin, progressRe
     const { setIsPaused, isPaused } = useGameContext();
     const hasSavedRef = useRef(false);
 
+    const { translate } = useLocaleMessages();
+
     // 状态存储计算好的字符串显示
     const unlockedLevelsStr = useCreation(() => {
         if (!onWin) return "无";
@@ -32,22 +34,20 @@ export default function GameResultView({ width, height, isWin, onWin, progressRe
         const computedLevels = onWin.unLock.map((cpid) => {
             const stage = StageDataRecords[cpid];
             const chapter = ChapterDataRecords[stage.chapterID];
-            return `${chapter.nameKey} - ${stage.nameKey}`;
+            return `${translate(chapter.nameKey)} - ${translate(stage.nameKey)}`;
         }).filter(item => item !== "");
         return computedLevels.length > 0 ? computedLevels.join(" ") : "无";
-    }, [onWin]);
+    }, [onWin, translate]);
 
     const unlockedPlantsStr = useCreation(() => {
         if (!onWin) return "无";
         if (!onWin.unLockPlant || onWin.unLockPlant.length === 0) return "无";
         
         const computedPlants = onWin.unLockPlant.map((pid) => {
-            return PlantFactoryMap[pid].nameKey;
+            return translate(PlantFactoryMap[pid].nameKey);
         }).filter(item => item !== "");
         return computedPlants.length > 0 ? computedPlants.join(" ") : "无";
-    }, [onWin]);
-
-    const { translate } = useLocaleMessages();
+    }, [onWin, translate]);
 
     useMount(() => {
         if (!isPaused) setIsPaused(true);

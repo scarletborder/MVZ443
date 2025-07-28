@@ -71,7 +71,7 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({
             }
             const newPlant: PlantElem = {
                 pid: pid,
-                name: plantObj.nameKey,
+                name: translate(plantObj.nameKey),
                 imgUrl: `${publicUrl}/assets/card/${plantObj.texture}.png`,
                 level: plantProgress[i].level
             };
