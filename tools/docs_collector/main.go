@@ -10,8 +10,17 @@ import (
 	"time"
 )
 
+// 文件名映射：英文文件名 -> 中文文件名
+var fileNameMapping = map[string]string{
+	"online_turtorial.md":  "联机教程.md",
+	"0.0.4bupdate.md":      "0.0.4b更新说明.md",
+	"chapter1edx.md":       "第一章怪物情报.md",
+	"save_system_guide.md": "存档系统指南.md",
+}
+
 type FileStat struct {
 	Name    string    `json:"name"`
+	File    string    `json:"file"`
 	ModTime time.Time `json:"mod_time"`
 }
 
@@ -55,8 +64,16 @@ func main() {
 			continue
 		}
 
+		fileName := entry.Name()
+		chineseName, exists := fileNameMapping[fileName]
+		if !exists {
+			// 如果没有映射，使用原文件名作为中文名
+			chineseName = fileName
+		}
+
 		fileStats = append(fileStats, FileStat{
-			Name:    entry.Name(),
+			Name:    chineseName,
+			File:    fileName,
 			ModTime: info.ModTime().UTC(),
 		})
 	}
