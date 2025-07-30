@@ -12,22 +12,22 @@ import (
 
 type ClientCtx = clients.ClientCtx
 
-// ctxManager 使用 sync.Map 保证并发安全
-type ctxManager struct {
+// RoomCtx 使用 sync.Map 保证并发安全
+type RoomCtx struct {
 	FirstUser     int
 	Clients       sync.Map // key: int, value: *ClientCtx
 	PlayerFrameID sync.Map // key: int, value: uint16
 	nextId        int32    // 用于生成用户ID，初始值设置为100
 }
 
-func newCtxManager() *ctxManager {
-	return &ctxManager{
+func NewRoomCtx() *RoomCtx {
+	return &RoomCtx{
 		nextId: 100,
 	}
 }
 
 // AddUser 添加一个用户，并生成一个唯一的ID
-func (m *ctxManager) AddUser(conn *websocket.Conn) *ClientCtx {
+func (m *RoomCtx) AddUser(conn *websocket.Conn) *ClientCtx {
 	newId := int(atomic.AddInt32(&m.nextId, 1))
 	uc := clients.NewClientCtx(conn, newId)
 	// 如果 FirstUser 还没设置，则设置为第一个加入的用户
@@ -39,12 +39,12 @@ func (m *ctxManager) AddUser(conn *websocket.Conn) *ClientCtx {
 }
 
 // DelUser 删除指定用户
-func (m *ctxManager) DelUser(id int) {
+func (m *RoomCtx) DelUser(id int) {
 	m.Clients.Delete(id)
 }
 
 // CloseAll 关闭所有用户连接
-func (m *ctxManager) CloseAll() {
+func (m *RoomCtx) CloseAll() {
 	m.Clients.Range(func(key, value interface{}) bool {
 		if uc, ok := value.(*ClientCtx); ok {
 			uc.Close()
@@ -54,7 +54,7 @@ func (m *ctxManager) CloseAll() {
 }
 
 // GetPeerAddr 返回所有连接的远程地址
-func (m *ctxManager) GetPeerAddr() []string {
+func (m *RoomCtx) GetPeerAddr() []string {
 	var addrs []string
 	m.Clients.Range(func(key, value interface{}) bool {
 		if uc, ok := value.(*ClientCtx); ok {
@@ -66,7 +66,7 @@ func (m *ctxManager) GetPeerAddr() []string {
 }
 
 // BroadcastRoomInfo 广播房间信息
-func (m *ctxManager) BroadcastRoomInfo(chapterID int32, roomid int) {
+func (m *RoomCtx) BroadcastRoomInfo(chapterID int32, roomid int) {
 	peerAddrs := m.GetPeerAddr()
 	m.Clients.Range(func(key, value interface{}) bool {
 		if uc, ok := value.(*ClientCtx); ok {
@@ -84,7 +84,7 @@ func (m *ctxManager) BroadcastRoomInfo(chapterID int32, roomid int) {
 }
 
 // BroadcastGameStart 广播游戏开始消息
-func (m *ctxManager) BroadcastGameStart() {
+func (m *RoomCtx) BroadcastGameStart() {
 	// 初始化所有玩家的 frameID 为 0
 	m.Clients.Range(func(key, value interface{}) bool {
 		if id, ok := key.(int); ok {
@@ -107,7 +107,7 @@ func (m *ctxManager) BroadcastGameStart() {
 }
 
 // GetPlayerCount 返回当前玩家数量
-func (m *ctxManager) GetPlayerCount() int {
+func (m *RoomCtx) GetPlayerCount() int {
 	count := 0
 	m.Clients.Range(func(key, value interface{}) bool {
 		count++

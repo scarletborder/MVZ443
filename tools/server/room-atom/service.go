@@ -4,18 +4,15 @@ package roomatom
 
 import (
 	"math/rand"
-	"mvzserver/constants"
-	"mvzserver/messages"
 	gamelogic "mvzserver/room-atom/game-logic" // 只能这里导入,TODO 删除 logic导入room
-	"sync/atomic"
 	"time"
 )
 
 type Room struct {
 	// 基础属性
-	ID         int
-	CtxManager *ctxManager
-	Logic      *gamelogic.GameLogic
+	ID      int
+	RoomCtx *RoomCtx
+	Logic   *gamelogic.GameLogic
 
 	// 安全
 	key string // 房间密钥
@@ -40,7 +37,7 @@ type Room struct {
 func NewRoom(id int) *Room {
 	return &Room{
 		ID:                id,
-		CtxManager:        newCtxManager(),
+		RoomCtx:           NewRoomCtx(),
 		Logic:             gamelogic.NewGameLogic(),
 		ChapterID:         0,
 		ReadyCount:        0,
@@ -54,7 +51,7 @@ func NewRoom(id int) *Room {
 }
 
 func (r *Room) Destroy() {
-	r.CtxManager.CloseAll()
+	r.RoomCtx.CloseAll()
 	// 通知房间关闭
 	r.GameDeadChan <- struct{}{}
 
@@ -62,8 +59,8 @@ func (r *Room) Destroy() {
 	r.gameStarted = false
 }
 
-
 func (r *Room) Start() {
+	// TODO: 使用状态机驱动
 	// 等待游戏开始
 	r.waitGameStart()
 
@@ -74,5 +71,5 @@ func (r *Room) Start() {
 
 func (r *Room) GetPlayerCount() int {
 	// 已在 ctxManager 内部使用 Range 进行计数
-	return r.CtxManager.GetPlayerCount()
+	return r.RoomCtx.GetPlayerCount()
 }

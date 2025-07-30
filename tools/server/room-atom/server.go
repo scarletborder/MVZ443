@@ -25,7 +25,7 @@ waitLoop:
 		if r.ReadyCount > 0 && atomic.LoadInt32(&r.ReadyCount) == int32(r.GetPlayerCount()) {
 			// 遍历所有客户端，通知玩家游戏开始
 			// TODO: 封装一个单独的开始游戏方法
-			r.CtxManager.Clients.Range(func(key, value interface{}) bool {
+			r.RoomCtx.Clients.Range(func(key, value interface{}) bool {
 				if uc, ok := value.(*ClientCtx); ok {
 					uc.StartChan <- struct{}{}
 				}
@@ -47,7 +47,7 @@ waitLoop:
 
 func (r *Room) gameLoop() {
 	r.gameStarted = true
-	r.CtxManager.BroadcastGameStart()
+	r.RoomCtx.BroadcastGameStart()
 	timer := time.NewTicker(constants.FrameTick * time.Millisecond)
 
 	for {
@@ -83,7 +83,7 @@ func (r *Room) broadcastGameState() {
 	}
 
 	// 广播消息给每个客户端，通过 sync.Map.Range 遍历所有连接
-	r.CtxManager.Clients.Range(func(key, value interface{}) bool {
+	r.RoomCtx.Clients.Range(func(key, value interface{}) bool {
 		if uc, ok := value.(*userCtx); ok {
 			// 忽略错误处理，可根据实际需要添加
 			uc.WriteJSON(r.Logic.msgs)
@@ -105,7 +105,7 @@ func (r *Room) HasAllPlayerSync() bool {
 
 	synced := true
 	// 遍历每个玩家的 frameID，若有任意玩家低于阈值，则返回 false
-	r.CtxManager.PlayerFrameID.Range(func(key, value interface{}) bool {
+	r.RoomCtx.PlayerFrameID.Range(func(key, value interface{}) bool {
 		if frameID, ok := value.(uint16); ok {
 			if frameID < minFrameID {
 				synced = false
@@ -119,14 +119,14 @@ func (r *Room) HasAllPlayerSync() bool {
 
 func (r *Room) UpdatePlayerFrameID(uid int, frameID uint16) {
 	// 使用 Load 获取当前记录的 frameID
-	if value, ok := r.CtxManager.PlayerFrameID.Load(uid); ok {
+	if value, ok := r.RoomCtx.PlayerFrameID.Load(uid); ok {
 		if cur, ok := value.(uint16); ok {
 			if frameID > cur {
-				r.CtxManager.PlayerFrameID.Store(uid, frameID)
+				r.RoomCtx.PlayerFrameID.Store(uid, frameID)
 			}
 		}
 	} else {
 		// 若不存在则直接存储
-		r.CtxManager.PlayerFrameID.Store(uid, frameID)
+		r.RoomCtx.PlayerFrameID.Store(uid, frameID)
 	}
 }
