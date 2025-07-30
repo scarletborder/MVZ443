@@ -1,11 +1,15 @@
 package roomatom
 
+// RoomCtx、ClientCtx、AddUser、DelUser
+// 消息发送 []byte 接口
+
 import (
 	"math/rand"
 	"mvzserver/clients"
 	"mvzserver/messages"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/gofiber/websocket/v2"
 )
@@ -18,11 +22,16 @@ type RoomCtx struct {
 	Clients       sync.Map // key: int, value: *ClientCtx
 	PlayerFrameID sync.Map // key: int, value: uint16
 	nextId        int32    // 用于生成用户ID，初始值设置为100
+
+	// game logic ticker
+	// 一直是nil 直到 InGame 状态切换前赋值
+	GameTicker *time.Ticker
 }
 
 func NewRoomCtx() *RoomCtx {
 	return &RoomCtx{
-		nextId: 100,
+		nextId:     100,
+		GameTicker: nil, // 初始没有， 只有开始游戏后才会NewTimer
 	}
 }
 
@@ -64,6 +73,9 @@ func (m *RoomCtx) GetPeerAddr() []string {
 	})
 	return addrs
 }
+
+// 广播用户加入信息
+func (m *RoomCtx) BroadcastUserJoin(userId int) {}
 
 // BroadcastRoomInfo 广播房间信息
 func (m *RoomCtx) BroadcastRoomInfo(chapterID int32, roomid int) {

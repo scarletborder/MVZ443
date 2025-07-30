@@ -1,4 +1,5 @@
-package messages
+// api 信息定义
+package types
 
 type RoomsInfo struct {
 	RoomID      int  `json:"room_id"`

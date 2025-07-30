@@ -1,8 +1,8 @@
 package roommanager
 
 import (
-	"mvzserver/messages"
 	roomatom "mvzserver/room-atom"
+	"mvzserver/types"
 	"sync"
 	"time"
 )
@@ -11,7 +11,7 @@ type Room = roomatom.Room
 
 // RoomManager 管理所有房间
 type RoomManager struct {
-	rooms sync.Map // key 为 int 类型，value 为 *Room
+	rooms sync.Map // key 为 int 类型表示房间ID，value 为 *Room
 }
 
 func NewRoomManager() *RoomManager {
@@ -30,15 +30,15 @@ func (rm *RoomManager) GetRoom(id int) *Room {
 	return nil
 }
 
-func (rm *RoomManager) GetRooms() []messages.RoomsInfo {
+func (rm *RoomManager) GetRooms() []types.RoomsInfo {
 	// 获得所有的房间,用户数量,是否开始游戏,和是否需要密码
-	var rooms []messages.RoomsInfo
+	var rooms []types.RoomsInfo
 	rm.rooms.Range(func(key, value interface{}) bool {
 		if id, ok := key.(int); ok {
 			if room, ok := value.(*Room); ok {
-				rooms = append(rooms, messages.RoomsInfo{
+				rooms = append(rooms, types.RoomsInfo{
 					RoomID:      id,
-					NeedKey:     room.key != "",
+					NeedKey:     room.HasKey(),
 					PlayerCount: room.GetPlayerCount(),
 					GameStarted: room.gameStarted,
 				})
@@ -64,7 +64,7 @@ func (rm *RoomManager) GetNewRoomId() int {
 // AddRoom 创建一个新的房间并添加到管理器中
 func (rm *RoomManager) AddRoom(id int, key string) *Room {
 	room := roomatom.NewRoom(id)
-	room.key = key
+	room.SetKey(key)
 	rm.rooms.Store(id, room)
 	return room
 }
@@ -95,23 +95,30 @@ func (rm *RoomManager) Clean() {
 		if id, ok := key.(int); ok {
 			if room, ok := value.(*Room); ok {
 				if room.GetPlayerCount() == 0 {
-					room.Destroy()
-					rm.rooms.Delete(id)
+					rm.DestroyRoom(id)
 				}
 
 				// 检查是否超过最大空闲时间
 				if time.Since(room.LastActiveTime) > 5*time.Minute {
-					room.Destroy()
-					rm.rooms.Delete(id)
+					rm.DestroyRoom(id)
 				}
 
 				if !room.gameStarted && room.IsRunning {
 					room.IsRunning = false
-					room.Destroy()
-					rm.rooms.Delete(id)
+					rm.DestroyRoom(id)
 				}
 			}
 		}
 		return true
 	})
+}
+
+// DestroyRoom 关闭指定id房间
+func (rm *RoomManager) DestroyRoom(id int) {
+	if room, ok := rm.rooms.Load(id); ok {
+		if r, ok := room.(*Room); ok {
+			r.Destroy()
+			rm.rooms.Delete(id)
+		}
+	}
 }

@@ -1,13 +1,13 @@
 package roomatom
 
+// 游戏开始后的视角
+// GameLogic 结构体、ProcessFrame、EnqueueAction、游戏相关方法
+
 import (
 	"mvzserver/constants"
 	"mvzserver/messages"
-	"sync/atomic"
 	"time"
 )
-
-// 服务房间内部玩家与房间的交互
 
 /**
  * 获得下一帧(下一次发送的时候)ID
@@ -16,35 +16,7 @@ func (r *Room) GetNextFrameID() uint16 {
 	return r.FrameID + 1
 }
 
-func (r *Room) waitGameStart() {
-waitLoop:
-	for {
-		// TODO: 修改逻辑,由玩家事件触发游戏开始, 而非定期检测
-
-		// 当 ReadyCount 大于 0 且所有加入的玩家均准备完毕时，通知所有玩家游戏开始
-		if r.ReadyCount > 0 && atomic.LoadInt32(&r.ReadyCount) == int32(r.GetPlayerCount()) {
-			// 遍历所有客户端，通知玩家游戏开始
-			// TODO: 封装一个单独的开始游戏方法
-			r.RoomCtx.Clients.Range(func(key, value interface{}) bool {
-				if uc, ok := value.(*ClientCtx); ok {
-					uc.StartChan <- struct{}{}
-				}
-				return true
-			})
-			atomic.StoreInt32(&r.ReadyCount, 0)
-			r.GameLoopStartChan <- struct{}{}
-			break waitLoop
-		}
-
-		select {
-		case <-r.GameDeadChan:
-			return
-		default:
-			time.Sleep(1 * time.Second)
-		}
-	}
-}
-
+// 游戏时逻辑的循环
 func (r *Room) gameLoop() {
 	r.gameStarted = true
 	r.RoomCtx.BroadcastGameStart()
