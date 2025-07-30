@@ -1,9 +1,10 @@
-package main
+package roomatom
 
 import (
 	"math/rand"
 	"mvzserver/constants"
 	"mvzserver/messages"
+	gamelogic "mvzserver/room-atom/game-logic" // 只能这里导入,TODO 删除 logic导入room
 	"sync/atomic"
 	"time"
 )
@@ -12,7 +13,7 @@ type Room struct {
 	// 基础属性
 	ID         int
 	CtxManager *ctxManager
-	Logic      *GameLogic
+	Logic      *gamelogic.GameLogic
 
 	// 安全
 	key string // 房间密钥
@@ -38,7 +39,7 @@ func NewRoom(id int) *Room {
 	return &Room{
 		ID:                id,
 		CtxManager:        newCtxManager(),
-		Logic:             NewGameLogic(),
+		Logic:             gamelogic.NewGameLogic(),
 		ChapterID:         0,
 		ReadyCount:        0,
 		Seed:              rand.Int31n(40960000),
@@ -73,8 +74,8 @@ waitLoop:
 		if r.ReadyCount > 0 && atomic.LoadInt32(&r.ReadyCount) == int32(r.GetPlayerCount()) {
 			// 遍历所有客户端，通知玩家游戏开始
 			r.CtxManager.Clients.Range(func(key, value interface{}) bool {
-				if uc, ok := value.(*userCtx); ok {
-					uc.startChan <- struct{}{}
+				if uc, ok := value.(*ClientCtx); ok {
+					uc.StartChan <- struct{}{}
 				}
 				return true
 			})

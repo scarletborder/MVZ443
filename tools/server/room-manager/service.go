@@ -2,9 +2,12 @@ package roommanager
 
 import (
 	"mvzserver/messages"
+	roomatom "mvzserver/room-atom"
 	"sync"
 	"time"
 )
+
+type Room = roomatom.Room
 
 // RoomManager 管理所有房间
 type RoomManager struct {
@@ -60,7 +63,7 @@ func (rm *RoomManager) GetNewRoomId() int {
 
 // AddRoom 创建一个新的房间并添加到管理器中
 func (rm *RoomManager) AddRoom(id int, key string) *Room {
-	room := NewRoom(id)
+	room := roomatom.NewRoom(id)
 	room.key = key
 	rm.rooms.Store(id, room)
 	return room
