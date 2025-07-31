@@ -1,6 +1,10 @@
 package clients
 
-import "github.com/gofiber/websocket/v2"
+import (
+	"mvzserver/constants"
+
+	"github.com/gofiber/websocket/v2"
+)
 
 // client player context
 // 封装如长连接等信息
@@ -12,10 +16,17 @@ type ClientCtx struct {
 	// 信息
 	Id int // 用户id
 
-	// 其他信息
+	// 帧同步信息
 
-	// Deprecated: 不再需要,由状态机来驱动开始游戏
-	StartChan chan struct{}
+	// 最近服务器获知的该用户的所在帧
+	LatestFrameID uint16
+
+	// 最近该用户ACK的帧
+	LatestAckFrameID uint16
+
+	// 其他信息
+	ReconnectionToken string                // 重连令牌， 用服务器对称加密得到的包含有用户id,房间信息的token           // 用于重连验证的票据
+	State             constants.PlayerState // 当前状态（在线/断线）
 }
 
 func NewClientCtx(conn *websocket.Conn, id int) *ClientCtx {

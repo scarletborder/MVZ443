@@ -18,7 +18,8 @@ func (r *Room) GetNextFrameID() uint16 {
 
 // 游戏时逻辑的循环
 func (r *Room) gameLoop() {
-	r.gameStarted = true
+	// 广播游戏正式开始
+
 	r.RoomCtx.BroadcastGameStart()
 	timer := time.NewTicker(constants.FrameTick * time.Millisecond)
 
@@ -55,7 +56,7 @@ func (r *Room) broadcastGameState() {
 	}
 
 	// 广播消息给每个客户端，通过 sync.Map.Range 遍历所有连接
-	r.RoomCtx.Clients.Range(func(key, value interface{}) bool {
+	r.RoomCtx.Players.Range(func(key, value interface{}) bool {
 		if uc, ok := value.(*userCtx); ok {
 			// 忽略错误处理，可根据实际需要添加
 			uc.WriteJSON(r.Logic.msgs)

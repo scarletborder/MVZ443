@@ -4,6 +4,7 @@ package roomatom
 
 import (
 	"log"
+	"mvzserver/constants"
 	"mvzserver/messages"
 	"sync/atomic"
 	"time"
@@ -11,9 +12,48 @@ import (
 	"github.com/gofiber/websocket/v2"
 )
 
-/* 状态机主循环
-根据用户输入和房间的当前状态来进行分支
-*/
+// 房间开始
+func (r *Room) Run() {
+	defer func() {
+		// 摧毁本房间
+		r.Destroy()
+	}()
+
+	// 初始房间状态, 大厅中等待玩家
+	r.GameStage = constants.STAGE_InLobby
+
+	/* 状态机主循环
+	根据用户输入和房间的当前状态来进行分支
+	*/
+	for {
+		// 根据当前状态，决定是否需要 ticker
+		var tickerChan (<-chan time.Time)
+
+		// 如果不是 InGame状态，则不需要游戏逻辑定时器
+		if r.GameStage == constants.STAGE_InGame && r.RoomCtx.GameTicker != nil {
+			tickerChan = r.RoomCtx.GameTicker.C
+		}
+
+		select {
+		// 1. 处理通用的客户端管理事件
+		case player := <-r.register:
+			r.handleRegister(player)
+
+		case player := <-r.unregister:
+			r.handleUnregister(player)
+
+		// 2. 处理玩家发来的具体业务消息
+		case message := <-r.incomingMessages: // 假设有一个 channel 接收所有玩家消息
+			r.handlePlayerMessage(message)
+
+		// 3. 处理定时器事件，仅在 InGame 状态下有效
+		case <-tickerChan:
+			r.runGameTick()
+
+			// ... 其他 channel ...
+		}
+	}
+}
 
 // 开始服务用户
 func (room *Room) StartServeClient(ctx *ClientCtx) {
@@ -47,7 +87,7 @@ beforeGame:
 				log.Println("decode error: invalid message type")
 				continue
 			}
-			if clientCtx.Id == room.RoomCtx.FirstUser {
+			if clientCtx.Id == room.RoomCtx.OwnerUserID {
 				atomic.StoreInt32(&room.ChapterID, int32(msg.ChapterId))
 				room.RoomCtx.BroadcastRoomInfo(room.ChapterID, room.ID)
 			}

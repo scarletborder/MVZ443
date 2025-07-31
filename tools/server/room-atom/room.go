@@ -5,11 +5,12 @@ package roomatom
 
 import (
 	"crypto/subtle"
+	"math/rand"
+	"mvzserver/clients"
 	"mvzserver/constants"
 	gamelogic "mvzserver/room-atom/game-logic" // 只能这里导入,TODO 删除 logic导入room
+	"sync"
 	"time"
-
-	"github.com/gofiber/websocket/v2"
 )
 
 type Room struct {
@@ -17,6 +18,12 @@ type Room struct {
 	ID      int
 	RoomCtx *RoomCtx
 	Logic   *gamelogic.GameLogic
+
+	// 网络
+	register         chan *clients.Player
+	unregister       chan *clients.Player
+	reconnect        chan clients.ReconnectRequest
+	incomingMessages chan PlayerMessage
 
 	// 安全
 	key string // 房间密钥
@@ -27,29 +34,60 @@ type Room struct {
 	ReadyCount int32
 	Seed       int32
 
-	LastActiveTime time.Time // 上次活动时间
-
-	// 网络
-	FrameID uint16 // 当前帧ID
+	// manager
+	destroyOnce    sync.Once
+	LastActiveTime time.Time  // 上次活动时间
+	StopChan       chan<- int // 通知房间管理器的停止信号通道
 }
 
-func (r *Room) HandleClientJoin(c *websocket.Conn) {
+func NewRoom(id int, stopChan chan int) *Room {
+	return &Room{
+		ID:             id,
+		RoomCtx:        NewRoomCtx(),
+		Logic:          gamelogic.NewGameLogic(),
+		ChapterID:      0,
+		ReadyCount:     0,
+		Seed:           rand.Int31n(40960000),
+		LastActiveTime: time.Now(),
+		key:            "",
+		GameStage:      constants.STAGE_InLobby,
+		StopChan:       stopChan,
+		destroyOnce:    sync.Once{},
 
-	// TODO: 重置加入的逻辑， 应该是 r.register <-
-	// TODO： 加入短线重连机制,.具体见我和gemini对话
+		// 网络
+		register:         make(chan *clients.Player),
+		unregister:       make(chan *clients.Player),
+		reconnect:        make(chan clients.ReconnectRequest),
+		incomingMessages: make(chan PlayerMessage, 128),
+	}
+}
 
-	// 添加并新建一个client context
-	clientCtx := r.RoomCtx.AddUser(c)
+// 摧毁房间(直接入口)
+// 不应该在这里调用房间的游戏逻辑
+// 而应该是游戏逻辑接受后调用摧毁房间
+func (r *Room) Destroy() {
+	r.destroyOnce.Do(func() {
+		// 通知房间关闭, 通过游戏状态来做
+		r.GameStage = constants.STAGE_CLOSED
 
-	// 关闭连接时清理用户
-	defer r.RoomCtx.DelUser(clientCtx.Id)
-	defer c.Close()
+		// 清空各个存储
 
-	// 广播信息： 用户加入
-	r.RoomCtx.BroadcastUserJoin(clientCtx.Id)
+		// 房间
 
-	// 开始服务
-	r.StartServeClient(c)
+		// context
+		// 用户
+
+		// 定时器
+		if r.RoomCtx.GameTicker != nil {
+			r.RoomCtx.GameTicker.Stop()
+			r.RoomCtx.GameTicker = nil
+		}
+
+		r.RoomCtx.CloseAll()
+
+		// 最后通知房间管理器， 移除我的引用
+		r.StopChan <- r.ID
+	})
 }
 
 /* 属性操作 */
