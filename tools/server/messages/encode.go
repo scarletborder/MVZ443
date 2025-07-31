@@ -8,7 +8,7 @@ import (
 )
 
 // EncodeMessage 接收 MessageSend 接口的消息，返回二进制数据
-func EncodeMessage(msg MessageSend) ([]byte, error) {
+func EncodeMessage(msg ResponseMessage) ([]byte, error) {
 	buf := new(bytes.Buffer)
 	// 写入消息类型
 	if err := binary.Write(buf, binary.BigEndian, uint8(msg.GetType())); err != nil {

@@ -13,8 +13,8 @@ const (
 	MsgTypeRequestStarShards  = 0x08 // 请求使用星尘
 )
 
-// Message 接口用于通用处理，每个消息都需要实现 GetType 方法
-type Message interface {
+// RequestMessage 接口用于通用处理，每个消息都需要实现 GetType 方法
+type RequestMessage interface {
 	GetType() int
 }
 

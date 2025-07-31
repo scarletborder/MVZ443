@@ -14,8 +14,8 @@ const (
 	MsgTypeUseStarShards = 0x08 // 使用星尘
 )
 
-// MessageSend 接口用于服务器发送的消息
-type MessageSend interface {
+// ResponseMessage 接口用于服务器发送的消息
+type ResponseMessage interface {
 	GetType() int
 }
 
