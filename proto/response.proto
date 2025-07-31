@@ -1,0 +1,76 @@
+syntax = "proto3";
+
+package messages;
+
+option go_package = "./;messages";
+
+// 包装消息，包含所有可能的响应类型
+message Response {
+  oneof payload {
+    RoomInfo room_info = 1;
+    GameStart game_start = 2;
+    CardPlant card_plant = 3;
+    RemovePlant remove_plant = 4;
+    UseStarShards use_star_shards = 5;
+    BlankMsg blank = 6;
+    ChooseMap choose_map = 7;
+    GameEnd game_end = 8;
+    ErrorMessage error = 9;
+  }
+}
+
+// --- 具体消息定义 ---
+
+message RoomInfo {
+  uint32 room_id = 1;
+  uint32 lord_id = 2;
+  uint32 my_id = 3;
+  uint32 chapter_id = 4;
+  repeated string peer = 5; // repeated 关键字表示这是一个数组
+}
+
+message GameStart {
+  int32 seed = 1; // seed 可以是负数，所以用 int32
+  uint32 my_id = 2;
+}
+
+message CardPlant {
+  uint32 frame_id = 1;
+  uint32 pid = 2;
+  uint32 level = 3;
+  uint32 col = 4;
+  uint32 row = 5;
+  uint32 uid = 6;
+}
+
+message RemovePlant {
+  uint32 frame_id = 1;
+  uint32 pid = 2;
+  uint32 col = 3;
+  uint32 row = 4;
+  uint32 uid = 5;
+}
+
+message UseStarShards {
+  uint32 frame_id = 1;
+  uint32 pid = 2;
+  uint32 col = 3;
+  uint32 row = 4;
+  uint32 uid = 5;
+}
+
+message BlankMsg {
+  uint32 frame_id = 1;
+}
+
+message ChooseMap {
+  uint32 chapter_id = 1;
+}
+
+message GameEnd {
+  uint32 game_result = 1;
+}
+
+message ErrorMessage {
+  string message = 1;
+}

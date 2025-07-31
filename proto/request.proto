@@ -1,0 +1,66 @@
+// 使用 proto3 语法
+syntax = "proto3";
+
+// 定义包名，这会影响 Go 和其他语言的命名空间
+package messages;
+
+// 告诉 Go 生成器将文件放在当前目录(./)，并且包名是 messages
+option go_package = "./;messages";
+
+// 包装消息，包含所有可能的请求类型
+message Request {
+  // oneof 确保一个 Request 消息实例中，只有一个字段能被设置
+  oneof payload {
+    RequestBlank blank = 1;
+    RequestCardPlant plant = 2;
+    RequestRemovePlant remove_plant = 3;
+    RequestStarShards star_shards = 4;
+    Ready ready = 5;
+    RequestChooseMap choose_map = 6;
+    RequestEndGame end_game = 7;
+  }
+}
+
+// --- 以下是具体的消息定义，从你的 Go 代码翻译而来 ---
+
+message RequestBlank {
+  uint32 uid = 1; // Protobuf 中没有 uint16，通常用 uint32 代替
+  uint32 frame_id = 2;
+}
+
+message RequestCardPlant {
+  uint32 uid = 1;
+  uint32 pid = 2;
+  uint32 level = 3;
+  uint32 col = 4;
+  uint32 row = 5;
+  uint32 frame_id = 6;
+}
+
+message RequestRemovePlant {
+  uint32 uid = 1;
+  uint32 pid = 2;
+  uint32 col = 3;
+  uint32 row = 4;
+  uint32 frame_id = 5;
+}
+
+message RequestStarShards {
+  uint32 uid = 1;
+  uint32 pid = 2;
+  uint32 col = 3;
+  uint32 row = 4;
+  uint32 frame_id = 5;
+}
+
+message Ready {
+  uint32 uid = 1;
+}
+
+message RequestChooseMap {
+  uint32 chapter_id = 1;
+}
+
+message RequestEndGame {
+  uint32 game_result = 1; // 0: 失败, 1: 胜利
+}
