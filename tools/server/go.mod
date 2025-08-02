@@ -5,6 +5,7 @@ go 1.23.2
 require (
 	github.com/deckarep/golang-set/v2 v2.8.0
 	github.com/gofiber/websocket/v2 v2.2.1
+	github.com/joho/godotenv v1.5.1
 	google.golang.org/protobuf v1.36.6
 )
 
@@ -14,6 +15,7 @@ require (
 )
 
 require (
+	github.com/adrg/xdg v0.5.3
 	github.com/andybalholm/brotli v1.1.0 // indirect
 	github.com/fasthttp/websocket v1.5.3 // indirect
 	github.com/gofiber/fiber/v2 v2.52.6

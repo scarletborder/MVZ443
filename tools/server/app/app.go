@@ -4,10 +4,12 @@ import (
 	"crypto/tls"
 	"fmt"
 	"log"
+	"mvzserver/config"
 	"mvzserver/handlers"
 	roommanager "mvzserver/room-manager"
 	"net"
 	"net/http"
+	"path/filepath"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -63,11 +65,15 @@ func CreateFiberApp(cfg AppConfig, serverHandler *handlers.ServerHandler) (fapp 
 
 	if cfg.UseCert {
 		// 使用 Let's Encrypt 自动管理证书模式
+		// 从环境变量获取允许的域名和证书缓存目录
+		allowedHosts := config.GetAllowedHosts()
+		certsDir := config.GetEnvOrDefault(config.EnvCerts, "certs")
+
 		// 配置 autocert.Manager 自动管理 Let's Encrypt 证书
 		m := autocert.Manager{
 			Prompt:     autocert.AcceptTOS,
-			HostPolicy: autocert.HostWhitelist("scarletborder.cn"), // 允许的域名
-			Cache:      autocert.DirCache("certs"),                 // 证书缓存目录
+			HostPolicy: autocert.HostWhitelist(allowedHosts...), // 使用环境变量中的域名
+			Cache:      autocert.DirCache(certsDir),             // 使用环境变量中的证书缓存目录
 		}
 
 		// 构造 TLS 配置，自动获取证书
@@ -90,7 +96,7 @@ func CreateFiberApp(cfg AppConfig, serverHandler *handlers.ServerHandler) (fapp 
 			log.Fatal(httpServer.ListenAndServe())
 		}()
 
-		log.Println("启用 HTTPS 模式，监听 443 端口")
+		log.Printf("启用 HTTPS 模式，监听 443 端口，允许域名: %v", allowedHosts)
 		return fapp, ln
 	} else {
 		// 监听指定端口
@@ -114,10 +120,15 @@ func CreateFiberApp(cfg AppConfig, serverHandler *handlers.ServerHandler) (fapp 
 
 			return fapp, ln
 		} else {
-			// 使用默认模式，通过 28080 端口启动服务
-			log.Println("启用普通模式，监听 28080 端口")
+			// 使用默认模式，从环境变量获取证书路径或使用默认路径
+			certsDir := config.GetEnvOrDefault(config.EnvCerts, "certs")
+			certPath := filepath.Join(certsDir, "ssl.cert")
+			keyPath := filepath.Join(certsDir, "ssl.key")
+
+			log.Printf("启用普通模式，监听 %s 端口，使用证书: %s", portText, certPath)
+
 			// Create tls certificate
-			cer, err := tls.LoadX509KeyPair("certs/ssl.cert", "certs/ssl.key")
+			cer, err := tls.LoadX509KeyPair(certPath, keyPath)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -130,7 +141,7 @@ func CreateFiberApp(cfg AppConfig, serverHandler *handlers.ServerHandler) (fapp 
 				panic(err)
 			}
 
-			// Start server with https/ssl enabled on http://localhost:443
+			// Start server with https/ssl enabled
 			return fapp, ln
 		}
 	}
