@@ -7,7 +7,6 @@ import { EventBus } from "../EventBus";
 // 单人游戏
 interface SingleParams {
     mode: 'single';
-
 }
 
 // 多人联机

@@ -1,7 +1,8 @@
 // game中掌管时间的神
 import { FrameTick } from "../../../public/constants";
 
-// 定时器基础类，可用作对外接口
+// 为帧同步设计的帧驱动定时器，可用作对外接口
+// 用 frame 代替 ms 作为时间单位
 export class FrameTimer {
     ticker: FrameTicker; // 定时器所属的 FrameTicker 实例
     public id: number = 0;        // 定时器唯一ID

@@ -1,4 +1,4 @@
-// 使用 proto3 语法
+// request.proto
 syntax = "proto3";
 
 // 定义包名，这会影响 Go 和其他语言的命名空间
@@ -8,59 +8,128 @@ package messages;
 option go_package = "./;messages";
 
 // 包装消息，包含所有可能的请求类型
+// 因为客户端发送的消息会被统一的后端ws handler解析
+// 再根据后端room的状态进行分支处理
 message Request {
   // oneof 确保一个 Request 消息实例中，只有一个字段能被设置
   oneof payload {
+    RequestChooseMap choose_map = 6;
+    RequestReady ready = 5;
+    RequestLoaded loaded = 8;
+
     RequestBlank blank = 1;
     RequestCardPlant plant = 2;
     RequestRemovePlant remove_plant = 3;
     RequestStarShards star_shards = 4;
-    Ready ready = 5;
-    RequestChooseMap choose_map = 6;
+
     RequestEndGame end_game = 7;
   }
 }
 
 // --- 以下是具体的消息定义，从你的 Go 代码翻译而来 ---
 
+
+// Ready 表示某个客户端在选卡界面切换准备就绪
+message RequestReady {
+  bool isReady = 1;
+}
+
+// Loaded 表示某个客户端加载完毕
+message RequestLoaded {
+  bool isLoaded = 1;
+}
+
+// RequestChooseMap 请求选择地图
+// 房主客户端在选择地图时发送此请求
+message RequestChooseMap {
+  uint32 chapter_id = 1;
+  uint32 stage_id = 2;
+}
+
+
+// ----------
+// InGame 游戏中
+
+
+// RequestBlank 用于心跳的空请求
+// 每一个“不发送具体请求”的逻辑帧都应该发此请求
 message RequestBlank {
-  uint32 uid = 1; // Protobuf 中没有 uint16，通常用 uint32 代替
-  uint32 frame_id = 2;
+  // 客户端需要把此帧插入的位置
+  uint32 frame_id = 1; 
+  // 客户端上一次确认的帧
+  uint32 ack_frame_id = 2; 
 }
 
+// RequestGridOperation 格子操作请求
+// 应该作为基类被其他请求继承
+message RequestGridOperation {
+  // 使用 RequestBlank 作为基础消息
+  // 这表示这是一个心跳请求，包含了必要的帧信息
+  RequestBlank base = 1;
+  // 操作的格子列
+  uint32 col = 2;
+  // 操作的格子行
+  uint32 row = 3;
+
+  // 此操作应该在哪一帧时进行
+  uint32 process_frame_id = 4;
+}
+
+// RequestCardPlant 卡片种植请求
 message RequestCardPlant {
-  uint32 uid = 1;
+  // 使用 RequestGridOperation 作为基础消息
+  RequestGridOperation base = 1;
+
+  // 卡片 ID
   uint32 pid = 2;
+
+  // 卡片等级
   uint32 level = 3;
-  uint32 col = 4;
-  uint32 row = 5;
-  uint32 frame_id = 6;
+
+  // 此次操作带来的消耗
+  // 消耗性将在得到响应前直接扣除
+  // 只有在得到服务器说，此次操作失败才会返还
+  int32 cost = 4;
+
+  // 本次用户的阳光总数
+  int32 EnergySum = 5;
+  // 本次用户的星之碎片总数
+  int32 StarShardsSum = 6;
 }
 
+// RequestRemovePlant 铲除植物请求
 message RequestRemovePlant {
-  uint32 uid = 1;
+  // 使用 RequestGridOperation 作为基础消息
+  RequestGridOperation base = 1;
+
+  // 要铲除的植物 ID
+  // 一个grid上有多个植物， 用植物的卡片id（非战局内实体id）
   uint32 pid = 2;
-  uint32 col = 3;
-  uint32 row = 4;
-  uint32 frame_id = 5;
+
+  // 铲除植物部分特性会有奖励
+  // 因此只有在得知ResponseRemovePlant时才会让客户端产生奖励
 }
 
 message RequestStarShards {
-  uint32 uid = 1;
+  // 使用 RequestGridOperation 作为基础消息
+  RequestGridOperation base = 1;
+
+  // 施加星之能力卡片 ID
+  // 一个grid上有多个植物， 用植物的卡片id（非战局内实体id）
   uint32 pid = 2;
-  uint32 col = 3;
-  uint32 row = 4;
-  uint32 frame_id = 5;
+
+  // 此次操作带来的消耗
+  // 消耗性将在得到响应前直接扣除
+  // 只有在得到服务器说，此次操作失败才会返还
+  int32 cost = 3;
+
+  // 本次用户的阳光总数
+  int32 EnergySum = 4;
+  // 本次用户的星之碎片总数
+  int32 StarShardsSum = 5;
 }
 
-message Ready {
-  uint32 uid = 1;
-}
-
-message RequestChooseMap {
-  uint32 chapter_id = 1;
-}
-
+// 客户端本地游戏结束时告诉服务端
 message RequestEndGame {
   uint32 game_result = 1; // 0: 失败, 1: 胜利
 }

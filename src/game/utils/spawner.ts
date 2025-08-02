@@ -522,5 +522,3 @@ export default class MonsterSpawner {
 
 
 }
-
-// TODO: 光源使用彭装箱,新的lightGroup

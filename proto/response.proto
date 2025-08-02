@@ -1,76 +1,162 @@
+// response.proto
 syntax = "proto3";
 
 package messages;
 
 option go_package = "./;messages";
 
-// 包装消息，包含所有可能的响应类型
-message Response {
+
+// general
+message ResponseErrorMessage {
+  string message = 1;
+}
+
+// ----------
+
+// 大厅（游戏外），包含所有可能的响应类型
+message LobbyResponse {
   oneof payload {
-    RoomInfo room_info = 1;
-    GameStart game_start = 2;
-    CardPlant card_plant = 3;
-    RemovePlant remove_plant = 4;
-    UseStarShards use_star_shards = 5;
-    BlankMsg blank = 6;
-    ChooseMap choose_map = 7;
-    GameEnd game_end = 8;
-    ErrorMessage error = 9;
+    ResponseRoomInfo room_info = 1;
+    ResponseChooseMap choose_map = 2;
+    ResponseRoomClosed room_closed = 3;
+    ResponseGameEnd game_end = 8; // 游戏结束响应
+    ResponseErrorMessage error = 4;
+
+    ResponseUpdateReadyCount update_ready_count = 5;
+    ResponseAllReady all_ready = 6; // 所有玩家准备完毕
+    ResponseAllLoaded all_loaded = 7;
   }
 }
 
-// --- 具体消息定义 ---
-
-message RoomInfo {
+// 客户端加入时通知的信息， 或者广播给所有客户端的信息
+message ResponseRoomInfo {
+  // 房间 ID
   uint32 room_id = 1;
+
+  // 房主 ID
   uint32 lord_id = 2;
+
+  // 告诉客户端，你的id是什么
   uint32 my_id = 3;
-  uint32 chapter_id = 4;
-  repeated string peer = 5; // repeated 关键字表示这是一个数组
+
+  // 房间内玩家情况
+  repeated string peer = 4; // repeated 关键字表示这是一个数组
 }
 
-message GameStart {
-  int32 seed = 1; // seed 可以是负数，所以用 int32
-  uint32 my_id = 2;
-}
-
-message CardPlant {
-  uint32 frame_id = 1;
-  uint32 pid = 2;
-  uint32 level = 3;
-  uint32 col = 4;
-  uint32 row = 5;
-  uint32 uid = 6;
-}
-
-message RemovePlant {
-  uint32 frame_id = 1;
-  uint32 pid = 2;
-  uint32 col = 3;
-  uint32 row = 4;
-  uint32 uid = 5;
-}
-
-message UseStarShards {
-  uint32 frame_id = 1;
-  uint32 pid = 2;
-  uint32 col = 3;
-  uint32 row = 4;
-  uint32 uid = 5;
-}
-
-message BlankMsg {
-  uint32 frame_id = 1;
-}
-
-message ChooseMap {
+// 已经选择了地图
+// 通知客户端进入选卡阶段
+message ResponseChooseMap {
   uint32 chapter_id = 1;
+  uint32 stage_id = 2; 
 }
 
-message GameEnd {
+// 更新已经准备的人数
+message ResponseUpdateReadyCount {
+  uint32 count = 1; // 已经准备的人数
+  uint32 all_player_count = 2; // 房间内总人数
+}
+
+// 告知所有玩家， 所有玩家已经全部准备， 可以开始Load游戏
+message ResponseAllReady {
+  // 房间内总人数
+  uint32 all_player_count = 1; 
+}
+
+// 告知所有玩家， 所有玩家已经loaded， 可以开始InGame游戏
+// 客户端接受后
+// 1. 做地图的特殊操作（比如预制植物）
+// 2. 置客户端的当前帧号为1
+// 3. 他们的下一次ack_id会是0
+// 服务端
+// 初始默认所有客户端都ack了0
+// 置 “发送给客户端的下一帧” 为1
+message ResponseAllLoaded {
+   // seed 不可以是负数，用 int32
+  int32 seed = 1; 
+}
+
+// 本局游戏结束（客户端要判断在InGame才会结算）
+message ResponseGameEnd {
   uint32 game_result = 1;
 }
 
-message ErrorMessage {
+// 房间关闭响应
+message ResponseRoomClosed {
   string message = 1;
 }
+
+// ----------
+// 游戏开始后操作
+// ----------
+
+// 游戏内，包含所有可能的响应类型
+// 客户端在接收到服务器帧后会解析list
+// 如果list中有operation， 并且uid是自己
+// 那么会根据此次响应的frame_id和客户端当前本地帧序号计算偏差
+// 未来会根据偏差来调整process_frame_id
+message InGameResponse {
+  // 此帧序号， 从0起
+  uint32 frame_id = 1;
+  // 本帧所有操作
+  repeated InGameOperation operations = 2;
+}
+
+// 游戏内单个操作的封装
+message InGameOperation {
+  oneof payload {
+    ResponseCardPlant card_plant = 2;
+    ResponseRemovePlant remove_plant = 3;
+    ResponseUseStarShards use_star_shards = 4;
+    ResponseGameEvent game_event = 5;
+    ResponseErrorMessage error = 7;
+  }
+}
+
+// 格子操作
+message ResponseGridOperation {
+  // 操作者
+  uint32 uid = 1;
+  // 操作的格子列
+  uint32 col = 2;
+  // 操作的格子行
+  uint32 row = 3;
+  // 此操作应该在哪一帧时进行
+  // 服务端不会因为这个字段的原因而推迟此operation的转发
+  // 而是尽职的立刻转发， 从而便于客户端计算自己的偏差
+  uint32 process_frame_id = 4;
+}
+
+// 广播卡牌种植
+message ResponseCardPlant {
+  uint32 pid = 1;
+  uint32 level = 2;
+  // 消耗
+  int32 cost = 3;
+  // 成功与否， 如果失败，会让客户端补偿
+  bool success = 4;
+  ResponseGridOperation base = 5;
+}
+
+message ResponseRemovePlant {
+  // 使用 ResponseGridOperation 作为基础消息
+  ResponseGridOperation base = 1;
+  uint32 pid = 2;
+
+  // 铲除植物失败， 直接不返回消息， 因此绝对不会有奖励
+}
+
+message ResponseUseStarShards {
+  uint32 pid = 1;
+  // 消耗
+  int32 cost = 2;
+  // 成功与否， 如果失败，会让客户端补偿
+  bool success = 3;
+  ResponseGridOperation base = 4;
+}
+
+message ResponseGameEvent {
+  uint32 event_type = 1; // 事件类型
+  string message = 2; // 事件base64,自行解析
+}
+
+
