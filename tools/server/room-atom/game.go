@@ -5,101 +5,61 @@ package roomatom
 
 import (
 	"mvzserver/constants"
-	"mvzserver/messages"
+	messages "mvzserver/messages/pb"
 	"time"
 )
 
-/**
- * 获得下一帧(下一次发送的时候)ID
- */
-func (r *Room) GetNextFrameID() uint16 {
-	return r.FrameID + 1
-}
+// 定时器触发的广播转发游戏操作帧
+func (room *Room) runGameTick() {
+	room.LastActiveTime = time.Now() // 更新最后活动时间
 
-// 游戏时逻辑的循环
-func (r *Room) gameLoop() {
-	// 广播游戏正式开始
+	// 本次要发送的
+	var Operations []*messages.InGameOperation
 
-	r.RoomCtx.BroadcastGameStart()
-	timer := time.NewTicker(constants.FrameTick * time.Millisecond)
-
+	// 读取operation chan
+ReadChan:
 	for {
 		select {
-		case <-timer.C:
-			// 判断是否所有的玩家的 frameID 都已经同步
-			if !r.HasAllPlayerSync() {
-				continue
+		case op := <-room.ingameOperations:
+			if !room.HasAllPlayerSync() {
+				// 如果没有所有玩家同步，则不处理操作
+				return
 			}
-			// 更新最后活动时间
-			r.LastActiveTime = time.Now()
-			// 广播游戏状态
-			r.broadcastGameState()
-		case <-r.GameDeadChan:
-			return
+			// 忠实加入
+			// 即使是以后游戏逻辑才会process的帧，也会因为帧同步游戏的性质加入
+			Operations = append(Operations, op)
+		default:
+			break ReadChan // 没有更多操作了
 		}
 	}
-}
 
-func (r *Room) broadcastGameState() {
-	r.FrameID++ // 更新当前帧ID
-
-	// 如果没有消息，则构建一个空消息
-	if len(r.Logic.msgs) == 0 {
-		data, err := messages.EncodeMessage(messages.BlankMsg{
-			Type:    messages.MsgTypeBlank,
-			FrameID: r.FrameID,
-		})
-		if err != nil {
-			return
-		}
-		r.Logic.msgs = append(r.Logic.msgs, data)
+	// 广播
+	resp := messages.InGameResponse{
+		FrameId:    uint32(room.RoomCtx.FrameID),
+		Operations: Operations,
 	}
-
-	// 广播消息给每个客户端，通过 sync.Map.Range 遍历所有连接
-	r.RoomCtx.Players.Range(func(key, value interface{}) bool {
-		if uc, ok := value.(*userCtx); ok {
-			// 忽略错误处理，可根据实际需要添加
-			uc.WriteJSON(r.Logic.msgs)
-		}
-		return true
-	})
-
-	r.Logic.Reset()
+	room.RoomCtx.BroadcastMessage(&resp, nil)
 }
 
-func (r *Room) HasAllPlayerSync() bool {
+func (room *Room) HasAllPlayerSync() bool {
 	// 延迟等待，最多容忍 maxDelayFrames 帧的延迟
-	var minFrameID uint16
-	if r.FrameID < constants.MaxDelayFrames {
+	var minFrameID uint32
+	if room.RoomCtx.FrameID < constants.MaxDelayFrames {
 		minFrameID = 0
 	} else {
-		minFrameID = r.FrameID - constants.MaxDelayFrames
+		minFrameID = room.RoomCtx.FrameID - constants.MaxDelayFrames
 	}
 
 	synced := true
 	// 遍历每个玩家的 frameID，若有任意玩家低于阈值，则返回 false
-	r.RoomCtx.PlayerFrameID.Range(func(key, value interface{}) bool {
-		if frameID, ok := value.(uint16); ok {
-			if frameID < minFrameID {
-				synced = false
-				return false
-			}
+	room.RoomCtx.Players.Range(func(key int, value *Player) bool {
+		// 当前玩家认为自己位于的帧号
+		player_current_frame := value.Ctx.LatestFrameID.Load()
+		if player_current_frame < minFrameID {
+			synced = false
+			return false
 		}
 		return true
 	})
 	return synced
-}
-
-func (r *Room) UpdatePlayerFrameID(uid int, frameID uint16) {
-	// 使用 Load 获取当前记录的 frameID
-	if value, ok := r.RoomCtx.PlayerFrameID.Load(uid); ok {
-		if cur, ok := value.(uint16); ok {
-			if frameID > cur {
-				r.RoomCtx.PlayerFrameID.Store(uid, frameID)
-			}
-		}
-	} else {
-		// 若不存在则直接存储
-		r.RoomCtx.PlayerFrameID.Store(uid, frameID)
-	}
 }

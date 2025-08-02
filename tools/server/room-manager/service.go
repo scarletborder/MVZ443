@@ -39,8 +39,8 @@ func (rm *RoomManager) GetRooms() []types.RoomsInfo {
 		rooms = append(rooms, types.RoomsInfo{
 			RoomID:      id,
 			NeedKey:     room.HasKey(),
-			PlayerCount: room.GetPlayerCount(),
-			GameState:   room.GameStage,
+			PlayerCount: int(room.GetPlayerCount()),
+			GameState:   room.GameStage.Load(),
 		})
 		return true
 	})

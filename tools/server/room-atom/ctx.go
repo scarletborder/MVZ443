@@ -4,13 +4,16 @@ package roomatom
 // 消息发送 []byte 接口
 
 import (
-	"math/rand"
 	"mvzserver/clients"
-	"mvzserver/messages"
+	"mvzserver/constants"
+
 	"sync/atomic"
 	"time"
 
+	mapset "github.com/deckarep/golang-set/v2"
 	"github.com/gofiber/websocket/v2"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
 )
 
 type ClientCtx = clients.ClientCtx
@@ -23,7 +26,8 @@ type RoomCtx struct {
 	nextId      int32     // 用于生成用户ID，初始值设置为100
 
 	// 网络
-	FrameID uint16 // 当前帧ID
+	// 发送给客户端的下一帧ID
+	FrameID uint32
 
 	// game logic ticker
 	// 一直是nil 直到 InGame 状态切换前赋值
@@ -39,6 +43,36 @@ func NewRoomCtx() *RoomCtx {
 		GameTicker: nil, // 初始没有， 只有开始游戏后才会NewTimer
 	}
 }
+
+// 重置状态以允许下场游戏
+func (m *RoomCtx) Reset() {
+	m.FrameID = 0
+	if m.GameTicker != nil {
+		m.GameTicker.Stop()
+	}
+	m.GameTicker = nil // 重置为nil
+	// players 的数据
+	m.Players.Range(func(key int, player *clients.Player) bool {
+		if player != nil {
+			player.ResetData()
+		}
+		return true
+	})
+}
+
+// -----------------
+// tick
+
+// 设置游戏逻辑定时器
+func (m *RoomCtx) StartGameTicker() {
+	if m.GameTicker != nil {
+		m.GameTicker.Stop() // 停止之前的 ticker
+	}
+	m.GameTicker = time.NewTicker(constants.FrameIntervalMs * time.Millisecond)
+}
+
+// --------
+// user
 
 func (m *RoomCtx) CreateClientCtxFromConn(conn *websocket.Conn) *ClientCtx {
 	newId := int(atomic.AddInt32(&m.nextId, 1))
@@ -81,53 +115,56 @@ func (m *RoomCtx) GetPeerAddr() []string {
 	return addrs
 }
 
-// 广播用户加入信息
-// Deprecated: 移动到 room
-func (m *RoomCtx) BroadcastUserJoin(userId int) {}
+// -------------------
+// 发送信息
+// -------------------
 
-// BroadcastRoomInfo 广播房间信息
-// Deprecated: 移动到 room
-func (m *RoomCtx) BroadcastRoomInfo(chapterID int32, roomid int) {
-	peerAddrs := m.GetPeerAddr()
+// 广播
+func (m *RoomCtx) BroadcastMessage(msg protoreflect.ProtoMessage, exclude_ids []int) {
+	data, err := proto.Marshal(msg)
+	if err != nil {
+		panic(err) // 处理错误
+	}
+	// 先制作mapset
+	excludeSet := mapset.NewSet[int]()
+	if exclude_ids != nil {
+		for _, id := range exclude_ids {
+			excludeSet.Add(id)
+		}
+	}
 	m.Players.Range(func(key int, player *clients.Player) bool {
 		if player != nil && player.Ctx != nil && player.Ctx.Conn != nil {
-			player.Ctx.Conn.WriteJSON(messages.RoomInfo{
-				Type:      messages.MsgTypeRoomInfo,
-				RoomID:    roomid,
-				LordID:    m.OwnerUserID,
-				MyID:      player.Ctx.Id,
-				ChapterId: int(chapterID),
-				Peer:      peerAddrs,
-			})
+			return true // 继续遍历
 		}
+		// 检查是否在排除列表中
+		if excludeSet.Contains(player.Ctx.Id) {
+			return true // 在排除列表中，继续遍历
+		}
+
+		player.Write(data) // 发送消息
 		return true
 	})
 }
 
-// BroadcastGameStart 广播游戏开始消息
-// Deprecated: 移动到 room
-func (m *RoomCtx) BroadcastGameStart() {
-	// 初始化所有玩家的 frameID 为 0
-	m.Players.Range(func(id int, player *clients.Player) bool {
-		// 假设有 PlayerFrameID 字段，未在原代码中声明
-		player.Ctx.LatestFrameID = 0
-		return true
-	})
+// 单播
+func (m *RoomCtx) SendMessageToUser(msg protoreflect.ProtoMessage, userId int) {
+	// 通过id 找到player
+	if value, ok := m.Players.Load(userId); ok {
+		m.SendMessageToUserByPlayer(msg, value)
+	}
+}
 
-	seed := rand.Int()
-	m.Players.Range(func(key int, player *clients.Player) bool {
-		if player != nil && player.Ctx != nil {
-			player.Ctx.WriteJSON(map[string]interface{}{
-				"type": 0x01,
-				"seed": seed,
-				"myID": player.Ctx.Id,
-			})
-		}
-		return true
-	})
+func (m *RoomCtx) SendMessageToUserByPlayer(msg protoreflect.ProtoMessage, player *Player) {
+	data, err := proto.Marshal(msg)
+	if err != nil {
+		panic(err) // 处理错误
+	}
+	if player != nil && player.Ctx != nil && player.Ctx.Conn != nil {
+		player.Write(data) // 发送消息
+	}
 }
 
 // GetPlayerCount 返回当前玩家数量
-func (m *RoomCtx) GetPlayerCount() int {
-	return m.Players.Len()
+func (m *RoomCtx) GetPlayerCount() uint32 {
+	return uint32(m.Players.Len())
 }

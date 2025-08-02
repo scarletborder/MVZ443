@@ -4,23 +4,34 @@ package roomatom
 
 import (
 	"log"
+	"mvzserver/clients"
 	"mvzserver/constants"
-	"mvzserver/messages"
-	"sync/atomic"
+	"runtime/debug"
 	"time"
 
 	"github.com/gofiber/websocket/v2"
 )
 
 // 房间开始
-func (r *Room) Run() {
+func (room *Room) Run() {
 	defer func() {
+		if r := recover(); r != nil {
+			// 发生了 panic，r 是 panic 的值
+			log.Printf("运行房间 %d 捕获到 Panic: %v\n", room.ID, r)
+
+			// 打印详细的堆栈信息，对于调试非常重要
+			// debug.Stack() 返回格式化好的当前 goroutine 的堆栈跟踪
+			log.Printf("堆栈信息:\n%s", string(debug.Stack()))
+
+			// 在这里，你可以执行一些额外的清理工作，或者上报错误到监控系统
+			log.Println("程序已从 panic 中恢复，将继续运行。")
+		}
 		// 摧毁本房间
-		r.Destroy()
+		room.Destroy()
 	}()
 
 	// 初始房间状态, 大厅中等待玩家
-	r.GameStage = constants.STAGE_InLobby
+	room.GameStage.Store(constants.STAGE_InLobby)
 
 	/* 状态机主循环
 	根据用户输入和房间的当前状态来进行分支
@@ -30,25 +41,27 @@ func (r *Room) Run() {
 		var tickerChan (<-chan time.Time)
 
 		// 如果不是 InGame状态，则不需要游戏逻辑定时器
-		if r.GameStage == constants.STAGE_InGame && r.RoomCtx.GameTicker != nil {
-			tickerChan = r.RoomCtx.GameTicker.C
+		if room.GameStage.EqualTo(constants.STAGE_InGame) && room.RoomCtx.GameTicker != nil {
+			// 只有在 InGame 状态下才有 GameTicker
+			tickerChan = room.RoomCtx.GameTicker.C
 		}
 
 		select {
 		// 1. 处理通用的客户端管理事件
-		case player := <-r.register:
-			r.handleRegister(player)
+		case player := <-room.register:
+			room.handleRegister(player)
 
-		case player := <-r.unregister:
-			r.handleUnregister(player)
+		case player := <-room.unregister:
+			room.handleUnregister(player)
 
 		// 2. 处理玩家发来的具体业务消息
-		case message := <-r.incomingMessages: // 假设有一个 channel 接收所有玩家消息
-			r.handlePlayerMessage(message)
+		// channel 接收所有玩家消息
+		case message := <-room.incomingMessages: // channel 接收所有玩家消息
+			room.handlePlayerMessage(message)
 
 		// 3. 处理定时器事件，仅在 InGame 状态下有效
 		case <-tickerChan:
-			r.runGameTick()
+			room.runGameTick()
 
 			// ... 其他 channel ...
 		}
@@ -56,16 +69,38 @@ func (r *Room) Run() {
 }
 
 // 开始服务用户
-func (room *Room) StartServeClient(ctx *ClientCtx) {
+func (room *Room) StartServeClient(player *clients.Player) {
 	// 基础信息
+	ctx := player.Ctx
 	conn := ctx.Conn
 
+	defer func() {
+		// TODO: 发送掉线消息
+		// ...
+
+		if r := recover(); r != nil {
+			// 发生了 panic，r 是 panic 的值
+			log.Printf("服务用户 %d 时捕获到 Panic: %v\n", player.GetID(), r)
+
+			// 打印详细的堆栈信息，对于调试非常重要
+			// debug.Stack() 返回格式化好的当前 goroutine 的堆栈跟踪
+			log.Printf("堆栈信息:\n%s", string(debug.Stack()))
+
+			// 在这里，你可以执行一些额外的清理工作，或者上报错误到监控系统
+			log.Println("程序已从 panic 中恢复，将继续运行。")
+		}
+	}()
+
 	// 只接受信息， 并把信息发送到管道中
-beforeGame:
 	for {
 		messageType, data, err := conn.ReadMessage()
 		if err != nil {
-			log.Println("read error:", err)
+			// 判断各种错误
+
+			// 读取错误，可能是连接关闭
+			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+				log.Println("read error:", err)
+			}
 			return
 		}
 
@@ -74,13 +109,15 @@ beforeGame:
 			continue
 		}
 
-		msgType, decoded, err := messages.DecodeBinaryMessage(data)
-		if err != nil {
-			log.Println("decode error:", err)
-			continue
-		}
+		// 发送到管道中
+		msg := clients.GetPlayerMessage(player, data)
+		room.incomingMessages <- msg
+	}
+}
 
-		switch msgType {
+/*
+
+switch msgType {
 		case messages.MsgTypeRequestChooseMap:
 			msg, ok := decoded.(messages.RequestChooseMap)
 			if !ok {
@@ -95,8 +132,6 @@ beforeGame:
 			atomic.AddInt32(&room.ReadyCount, 1)
 			break beforeGame
 		}
-	}
-
 	// 等待游戏开始
 	<-clientCtx.startChan
 
@@ -187,4 +222,4 @@ beforeGame:
 			return
 		}
 	}
-}
+*/
