@@ -36,14 +36,14 @@ func main() {
 		if err != nil {
 			log.Fatalf("Failed to get data directory: %v", err)
 		}
-		
+
 		certsDir := filepath.Join(dataDir, "certs")
 		fmt.Printf("正在生成新的本地证书到: %s\n", certsDir)
-		
+
 		if err := utils.GenerateNewCerts(certsDir); err != nil {
 			log.Fatalf("Failed to generate new certificates: %v", err)
 		}
-		
+
 		fmt.Println("新证书生成完成！")
 		os.Exit(0)
 	}
@@ -67,7 +67,7 @@ func main() {
 	// 从环境变量获取配置，但命令行参数优先级更高
 	var finalPort int
 	defaultPort := 28080 // 默认端口
-	
+
 	// 如果命令行参数不是默认值，则使用命令行参数
 	if *usePort != defaultPort {
 		finalPort = *usePort

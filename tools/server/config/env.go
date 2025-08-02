@@ -43,14 +43,33 @@ func InitializeEnv(appName string) error {
 
 	// 检查 .env 文件是否存在，如果不存在则创建
 	if _, err := os.Stat(envPath); os.IsNotExist(err) {
-		// 创建 certs 目录
-		if err := os.MkdirAll(certsDir, 0755); err != nil {
-			return fmt.Errorf("failed to create certs directory: %w", err)
+		// 只有当 certs 目录不存在或为空时，才创建并提取嵌入的证书
+		needExtractCerts := false
+		if _, err := os.Stat(certsDir); os.IsNotExist(err) {
+			// certs 目录不存在，需要创建并提取证书
+			if err := os.MkdirAll(certsDir, 0755); err != nil {
+				return fmt.Errorf("failed to create certs directory: %w", err)
+			}
+			needExtractCerts = true
+		} else {
+			// certs 目录存在，检查是否为空
+			entries, err := os.ReadDir(certsDir)
+			if err != nil {
+				return fmt.Errorf("failed to read certs directory: %w", err)
+			}
+			if len(entries) == 0 {
+				needExtractCerts = true
+			}
 		}
 
-		// 复制嵌入的证书文件到数据目录
-		if err := utils.ExtractEmbeddedCerts(certsDir); err != nil {
-			return fmt.Errorf("failed to extract certs: %w", err)
+		// 只有在需要时才提取证书
+		if needExtractCerts {
+			if err := utils.ExtractEmbeddedCerts(certsDir); err != nil {
+				return fmt.Errorf("failed to extract certs: %w", err)
+			}
+			fmt.Printf("已从嵌入文件提取证书到: %s\n", certsDir)
+		} else {
+			fmt.Printf("检测到已存在证书文件，跳过证书提取: %s\n", certsDir)
 		}
 
 		// 创建 .env 文件
