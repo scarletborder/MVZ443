@@ -25,7 +25,7 @@ import { FrameTick } from '../../../public/constants';
 import FrameTicker from '../sync/ticker';
 import Musical from '../utils/musical';
 import { gameStateManager } from '../utils/GameStateManager';
-import { SendLoaded } from '../../utils/net/room';
+import { SendEndGame, SendLoaded } from '../../utils/net/room';
 
 
 
@@ -33,7 +33,6 @@ export class Game extends Scene {
   private myID: number = 0;
 
   private scaleFactor: number = 1;
-  private grid: Phaser.GameObjects.Sprite[][];
   public GRID_ROWS = 4;
   public GRID_COLS = 9;
 
@@ -80,6 +79,7 @@ export class Game extends Scene {
 
 
   constructor() {
+    console.log('Game constructor');
     super('Game');
   }
 
@@ -212,7 +212,6 @@ export class Game extends Scene {
     });
 
     EventBus.on('setIsPaused', this.handlePause, this);
-    EventBus.on('game-fail', this.handleExit, this);
     EventBus.on('room-game-start', this.handleRoomGameStart, this);
     EventBus.on('room-game-end', this.handleRoomGameEnd, this);
 
@@ -222,6 +221,7 @@ export class Game extends Scene {
       // 发送blank帧
       this.sendQueue.sendBlankFrame(BackendWS.GetFrameID());
     }
+    console.log('load finish');
     SendLoaded(); // 加载完毕
   }
 
@@ -448,7 +448,11 @@ export class Game extends Scene {
   handleExit(isWin: boolean = false) {
     // 向发送队列发送消息,准备退出游戏
     if (this.isGameEnd) return; // 如果游戏已经结束，则不执行任何操作
-    this.sendQueue.sendGameEnd(isWin ? 1 : 0); // 发送游戏结束消息
+    if (!BackendWS.isOnlineMode) {
+      this.ExitEntry(isWin);
+    } else {
+      SendEndGame(isWin);
+    }
   }
 
   // 游戏退出真实入口, 由消息队列调用
@@ -462,6 +466,14 @@ export class Game extends Scene {
 
     this.isGameEnd = true;
     EventBus.emit('okIsPaused', { paused: false });
+    this.isDestroyed = true;
+    EventBus.off('setIsPaused', this.handlePause, this); // Clean up listener
+    EventBus.off('room-game-start', this.handleRoomGameStart, this);
+    EventBus.off('room-game-end', this.handleRoomGameEnd, this);
+    this.input.keyboard?.removeAllKeys(); // Clean up keyboard listeners
+    this.input.off('pointerup'); // Remove pointer listeners
+    this.input.off('pointermove');
+    this.scene.start('GameOver');
     this.params.gameExit({
       isWin,
       onWin: this.stageData.onWin,
@@ -480,16 +492,6 @@ export class Game extends Scene {
     // const newPhysicsTimeFlow = this.physics.world.timeScale === 1 ? 0.5 : 1; // 切换物理速率
     // this.physics.world.timeScale = newPhysicsTimeFlow; // 设置新的物理速率
     this.speedText.setText(newTimeFlow + '速');
-  }
-
-  destroy() { // Override Phaser's destroy method
-    this.isDestroyed = true;
-    EventBus.off('setIsPaused', this.handlePause, this); // Clean up listener
-    EventBus.off('room-game-start', this.handleRoomGameStart, this);
-    EventBus.off('room-game-end', this.handleRoomGameEnd, this);
-    this.input.keyboard?.removeAllKeys(); // Clean up keyboard listeners
-    this.input.off('pointerup'); // Remove pointer listeners
-    this.input.off('pointermove');
   }
 }
 

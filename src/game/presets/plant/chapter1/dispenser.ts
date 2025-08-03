@@ -5,7 +5,7 @@ import { IPlant } from "../../../models/IPlant";
 import { IRecord } from "../../../models/IRecord";
 import { Game } from "../../../scenes/Game";
 import createShootBurst from "../../../sprite/shoot_anim";
-import { AddEventConfig, FrameTimer } from "../../../sync/ticker";
+import { FrameTimer } from "../../../sync/ticker";
 import NewArrow from "../../bullet/arrow";
 
 class dispenser extends IPlant {

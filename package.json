@@ -42,7 +42,7 @@
         "idb": "^8.0.2",
         "lodash": "^4.17.21",
         "lucide-react": "^0.487.0",
-        "phaser": "^3.88.2",
+        "phaser": "^3.90.0",
         "react": "^18.2.0",
         "react-dom": "^18.2.0",
         "react-markdown": "^10.1.0",

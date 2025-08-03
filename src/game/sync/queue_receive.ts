@@ -221,6 +221,11 @@ export default class QueueReceive {
         } else {
           // 如果游戏暂停了,那么不需要模拟发送blank
           // 也不能让自己frameID自增,因为有私密图纸
+
+          // 如果有私密图纸，那么这里允许所有的操作
+          if (this.game.innerSettings.isBluePrint === true) {
+            executedList.forEach((func) => { func(); });
+          }
           return;
         }
       }
