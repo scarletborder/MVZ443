@@ -24,7 +24,7 @@ import { IMonster } from '../models/monster/IMonster';
 import { FrameTick } from '../../../public/constants';
 import FrameTicker from '../sync/ticker';
 import Musical from '../utils/musical';
-import { gameStateManager } from '../utils/GameStateManager';
+import { gameStateManager } from '../../store/GameStateManager';
 import { SendEndGame, SendLoaded } from '../../utils/net/room';
 
 

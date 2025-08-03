@@ -2,7 +2,7 @@
 // 例如定期增加energy,定期减少energy
 import { Game } from "../scenes/Game";
 import { StageDataRecords } from "../utils/loader";
-import { gameStateManager } from "../utils/GameStateManager";
+import { gameStateManager } from "../../store/GameStateManager";
 
 /**
  * 为关卡加入特殊的地图设定

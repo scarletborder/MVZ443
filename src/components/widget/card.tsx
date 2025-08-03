@@ -8,7 +8,7 @@ import { useSettings } from '../../context/settings_ctx';
 import { publicUrl } from '../../utils/browser';
 import PlantFactoryMap from '../../game/presets/plant';
 import { useLocaleMessages } from '../../hooks/useLocaleMessages';
-import { gameStateManager } from '../../game/utils/GameStateManager';
+import { gameStateManager } from '../../store/GameStateManager';
 
 
 interface CardProps {

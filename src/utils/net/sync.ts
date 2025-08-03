@@ -5,6 +5,7 @@ import { Request } from "../../pb/request";
 import EnumGameStage from "./game_state";
 import WSClientHandlers from "./handlers";
 import { FrameDeltaEstimator } from "./frame_delta";
+import { onlineStateManager } from "../../store/OnlineStateManager";
 
 class WebSocketClient {
     private ws: WebSocket | null = null;
@@ -15,19 +16,6 @@ class WebSocketClient {
     public url: string = "";
 
     private additionalListeners: ((event: MessageEvent) => void)[] = [];
-
-    // 状态
-    public isOnlineMode: boolean = false; // 是否是在线游戏(已经在房间内部)
-    public gameStage: number = 0; // 游戏状态
-
-    public key: string = "";// 连接密钥, 全局设置用于创建房间和加入房间, TODO： 后续有更好看的ui
-    public room_id: number = -1;// 房间号
-
-    public my_id: number = 51;// 玩家ID
-    public lord_id: number = 50;// 房主ID
-
-    public FrameID: number = 0; // 当前帧ID
-    public AckFrameID: number = 0; // 确认的上次服务器权威帧ID
 
     // 帧时间差值估算器
     private frameDeltaEstimator: FrameDeltaEstimator = new FrameDeltaEstimator();
@@ -57,19 +45,19 @@ class WebSocketClient {
     }
 
     isLord() {
-        return this.my_id === this.lord_id;
+        return onlineStateManager.isLord();
     }
 
     public GetFrameID() {
-        return this.FrameID;
+        return onlineStateManager.getFrameId();
     }
 
     public GetNextFrameID() {
-        return this.FrameID + 1;
+        return onlineStateManager.getNextFrameId();
     }
 
-    public GoToFrameID(target: number = this.FrameID + 1) {
-        this.FrameID = target;
+    public GoToFrameID(target: number = onlineStateManager.getFrameId() + 1) {
+        onlineStateManager.goToFrameId(target);
     }
 
     // 更新帧接收时间
@@ -92,9 +80,7 @@ class WebSocketClient {
     // 在某轮游戏结束后/刚加入房间时调用/退出房间时调用
     // 不会清理onlieMode
     public ResetGameData() {
-        this.FrameID = 0;
-        this.AckFrameID = 0;
-        this.gameStage = EnumGameStage.InLobby;
+        onlineStateManager.resetGameData();
         this.frameDeltaEstimator.reset();
     }
 
@@ -106,9 +92,9 @@ class WebSocketClient {
     // Method to establish a WebSocket connection
     startConnection() {
         console.log('try to link');
-        this.lord_id = 50; // reset
-        this.my_id = 51; // reset
-        if (this.isOnlineMode) {
+        this.ResetGameData();
+        onlineStateManager.updateRoomInfo(-1, 51, 50); // reset
+        if (onlineStateManager.getIsOnlineMode()) {
             console.error("WebSocket connection already established.");
             return;
         }
@@ -133,12 +119,12 @@ class WebSocketClient {
             const data = new Uint8Array(event.data);
 
             try {
-                if (!this.isOnlineMode) {
+                if (!onlineStateManager.getIsOnlineMode()) {
                     // 尚未确定与房间建立联系
                     this.handlers.handleLobbyResponse(data);
                 } else {
                     // 已经在房间内部
-                    switch (this.gameStage) {
+                    switch (onlineStateManager.getCurrentGameStage()) {
                         case EnumGameStage.InLobby:
                             this.handlers.handleRoomResponse(data);
                             break;
@@ -155,7 +141,7 @@ class WebSocketClient {
                         case EnumGameStage.PostGame:
                             break;
                         default:
-                            console.error("Unknown game stage:", this.gameStage);
+                            console.error("Unknown game stage:", onlineStateManager.getCurrentGameStage());
                             break;
                     }
                 }
@@ -175,7 +161,7 @@ class WebSocketClient {
 
         this.ws.onclose = () => {
             console.log("WebSocket connection closed.");
-            this.isOnlineMode = false;
+            onlineStateManager.updateOnlineMode(false);
         };
     }
 
@@ -253,8 +239,7 @@ class WebSocketClient {
             this.ws.close();
             this.ws = null;
             console.log("WebSocket connection closed.");
-            this.isOnlineMode = false;
-            this.room_id = -1;
+            onlineStateManager.resetAllState();
             this.ResetGameData();
         } else {
             console.error("WebSocket is not open. Cannot close connection.");
@@ -270,7 +255,44 @@ class WebSocketClient {
 
     // Check if the WebSocket is connected
     hasConnected() {
-        return this.isOnlineMode;
+        return onlineStateManager.getIsOnlineMode();
+    }
+
+    // 公开属性访问器，为了保持向后兼容性
+    get key(): string {
+        return onlineStateManager.getConnectionKey();
+    }
+
+    set key(value: string) {
+        onlineStateManager.updateConnectionKey(value);
+    }
+
+    get room_id(): number {
+        return onlineStateManager.getRoomInfo().roomId;
+    }
+
+    get my_id(): number {
+        return onlineStateManager.getRoomInfo().myId;
+    }
+
+    get lord_id(): number {
+        return onlineStateManager.getRoomInfo().lordId;
+    }
+
+    get FrameID(): number {
+        return onlineStateManager.getFrameId();
+    }
+
+    set FrameID(value: number) {
+        onlineStateManager.updateFrameId(value);
+    }
+
+    get AckFrameID(): number {
+        return onlineStateManager.getAckFrameId();
+    }
+
+    set AckFrameID(value: number) {
+        onlineStateManager.updateAckFrameId(value);
     }
 }
 

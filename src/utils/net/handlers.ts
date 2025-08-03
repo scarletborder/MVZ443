@@ -6,6 +6,7 @@ import {
 } from "../../pb/response";
 import EnumGameStage from "./game_state";
 import { EventBus } from "../../game/EventBus";
+import { onlineStateManager } from "../../store/OnlineStateManager";
 
 export default class WSClientHandlers {
     private ws: WebSocketClient;
@@ -16,20 +17,20 @@ export default class WSClientHandlers {
 
     public handleLobbyResponse(response: Uint8Array) {
         const lobbyResponse = LobbyResponse.fromBinary(response);
-        this.ws.gameStage = EnumGameStage.InLobby;
+        onlineStateManager.updateGameStage(EnumGameStage.InLobby);
 
         switch (lobbyResponse.payload.oneofKind) {
             case 'joinRoomFailed':
-                this.ws.isOnlineMode = false;
-                this.ws.room_id = -1;
+                onlineStateManager.updateOnlineMode(false);
+                onlineStateManager.updateRoomInfo(-1, 51, 50);
                 this.ws.closeConnection();
                 alert(lobbyResponse.payload.joinRoomFailed.message);
                 break;
             case 'joinRoomSuccess':
                 const joinRoomSuccess = lobbyResponse.payload.joinRoomSuccess;
-                this.ws.isOnlineMode = true;
-                this.ws.room_id = joinRoomSuccess.roomId;
-                this.ws.my_id = joinRoomSuccess.myId;
+                onlineStateManager.updateOnlineMode(true);
+                onlineStateManager.updateRoomInfo(joinRoomSuccess.roomId, joinRoomSuccess.myId, 50);
+                onlineStateManager.updateConnectionKey(joinRoomSuccess.key);
                 const keyText = joinRoomSuccess.key === "" ? "公开" : `密钥=${joinRoomSuccess.key}`;
                 alert(`连接成功, 房间号=${joinRoomSuccess.roomId} ${keyText}`);
                 break;
@@ -49,16 +50,14 @@ export default class WSClientHandlers {
         switch (roomResponse.payload.oneofKind) {
             case 'roomInfo':
                 const roomInfo = roomResponse.payload.roomInfo;
-                this.ws.my_id = roomInfo.myId;
-                this.ws.lord_id = roomInfo.lordId;
-                this.ws.room_id = roomInfo.roomId;
+                onlineStateManager.updateRoomInfo(roomInfo.roomId, roomInfo.myId, roomInfo.lordId);
                 console.log('Room info received:', roomInfo);
                 // 通过EventBus发送给React层
                 EventBus.emit('room-info', roomInfo);
                 break;
             case 'chooseMap':
                 const chooseMap = roomResponse.payload.chooseMap;
-                this.ws.gameStage = EnumGameStage.Preparing;
+                onlineStateManager.updateGameStage(EnumGameStage.Preparing);
                 console.log('Map chosen:', chooseMap);
                 // 通过EventBus发送给React层
                 EventBus.emit('room-choose-map', chooseMap);
@@ -71,13 +70,15 @@ export default class WSClientHandlers {
                 break;
             case 'allLoaded':
                 const allLoaded = roomResponse.payload.allLoaded;
-                this.ws.gameStage = EnumGameStage.InGame;
+                onlineStateManager.updateGameStage(EnumGameStage.InGame);
                 console.log('All players loaded, seed:', allLoaded.seed);
                 // 通过EventBus发送给Game层处理游戏开始
-                EventBus.emit('room-game-start', { seed: allLoaded.seed, myID: this.ws.my_id });
+                const roomInfo2 = onlineStateManager.getRoomInfo();
+                EventBus.emit('room-game-start', { seed: allLoaded.seed, myID: roomInfo2.myId });
                 break;
             case 'gameEnd':
                 const gameEnd = roomResponse.payload.gameEnd;
+                onlineStateManager.updateGameStage(EnumGameStage.PostGame);
                 console.log('Game ended:', gameEnd);
                 // 通过EventBus发送给Game层处理游戏结束
                 EventBus.emit('room-game-end', { isWin: gameEnd.gameResult === 1 });
@@ -85,6 +86,7 @@ export default class WSClientHandlers {
             case 'roomClosed':
                 const roomClosed = roomResponse.payload.roomClosed;
                 console.log('Room closed:', roomClosed.message);
+                onlineStateManager.resetAllState();
                 this.ws.closeConnection();
                 // 通过EventBus通知React层
                 EventBus.emit('room-closed', { message: roomClosed.message });

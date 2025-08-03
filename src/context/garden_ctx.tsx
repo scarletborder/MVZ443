@@ -1,7 +1,7 @@
 // 提供energy, money, 怪物波数, boss血条的数据记录
 // GameContext.tsx
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { gameStateManager } from '../game/utils/GameStateManager';
+import { gameStateManager } from '../store/GameStateManager';
 
 // 定义游戏状态的类型（不再包含energy和starShards）
 interface GameState {

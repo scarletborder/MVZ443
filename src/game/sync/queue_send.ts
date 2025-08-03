@@ -1,6 +1,6 @@
 import Denque from "denque";
 import BackendWS from "../../utils/net/sync";
-import { gameStateManager } from "../utils/GameStateManager";
+import { gameStateManager } from "../../store/GameStateManager";
 import PlantFactoryMap from "../presets/plant";
 import {
   RequestBlank,

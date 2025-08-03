@@ -4,7 +4,7 @@ import { useGameContext } from '../../context/garden_ctx';
 import { EventBus } from '../../game/EventBus';
 import { publicUrl } from '../../utils/browser';
 import useDarkMode from '../../hooks/useDarkMode';
-import { gameStateManager } from '../../game/utils/GameStateManager';
+import { gameStateManager } from '../../store/GameStateManager';
 import CircularProgress from './CircularProgress';
 
 interface EnergyDisplayProps {

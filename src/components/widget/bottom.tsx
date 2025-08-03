@@ -7,7 +7,7 @@ import { publicUrl } from "../../utils/browser";
 import { useSaveManager } from "../../context/save_ctx";
 import BackendWS from "../../utils/net/sync";
 import { useLocaleMessages } from "../../hooks/useLocaleMessages";
-import { gameStateManager } from "../../game/utils/GameStateManager";
+import { gameStateManager } from "../../store/GameStateManager";
 import { useMemoizedFn, useLatest } from "ahooks";
 
 type Props = {
