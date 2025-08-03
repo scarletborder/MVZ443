@@ -2,9 +2,15 @@ import { debounce } from "../../utils/debounce";
 import DepthManager from "../../utils/depth";
 import { HasConnected } from "../../utils/net/sync";
 import { Game } from "../scenes/Game";
+import { PauseMenu } from "./PauseMenu";
 
 export default function CreateInnerMenu(game: Game) {
-    // 屏幕中央显示 "已停止" 的文本，默认隐藏
+    // 创建暂停菜单实例
+    const pauseMenu = new PauseMenu(game);
+    // 将暂停菜单实例添加到game对象中，以便其他地方可以访问
+    (game as any).pauseMenu = pauseMenu;
+
+    // 屏幕右下角的暂停按钮
     game.pauseBtn = game.add.text(
         game.cameras.main.width,
         game.cameras.main.height,
@@ -25,31 +31,6 @@ export default function CreateInnerMenu(game: Game) {
             game.handlePause({ paused: !currently });
         }, 100)();
     }, game);
-
-    game.pauseText = game.add.text(
-        game.cameras.main.width / 2,
-        game.cameras.main.height / 3,
-        '已停止',
-        {
-            fontSize: game.scale.displaySize.width / 20,
-            color: '#ffffff',
-            backgroundColor: 'rgba(0, 0, 0, 0.35)',
-            padding: { x: 10, y: 5 },
-        }
-    ).setOrigin(0.5).setVisible(false).setDepth(DepthManager.getMenuDepth());
-
-    game.exitText = game.add.text(
-        game.cameras.main.width / 2,
-        game.cameras.main.height,
-        '退出游戏',
-        {
-            fontSize: game.scale.displaySize.width / 20,
-            color: 'rgb(187, 21, 21)',
-            backgroundColor: 'rgba(0, 0, 0, 0.35)',
-            padding: { x: 10, y: 5 },
-        }
-    ).setOrigin(0.5, 1).setVisible(false).disableInteractive().setDepth(DepthManager.getMenuDepth());
-    game.exitText.on('pointerup', () => { game.handleExit(false) }, game);
 
     game.speedText = game.add.text(
         game.cameras.main.width,

@@ -94,6 +94,14 @@ export default class DepthManager {
     }
 
     /**
+     * 获取暂停菜单的超高深度
+     * @returns 暂停菜单深度，确保在所有元素之上 5,000,000
+     */
+    public static getPauseMenuDepth(): number {
+        return 5000000;
+    }
+
+    /**
      * 获取游戏内重要 UI 元素的深度
      * @param order 顺序索引（从 0 开始），例如 order=0 对应 1,900,000；order=9 对应 1,990,000
      * @returns 对应的 UI 元素深度

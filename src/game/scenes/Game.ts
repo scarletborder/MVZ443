@@ -52,8 +52,6 @@ export class Game extends Scene {
   gameText: Phaser.GameObjects.Text;
 
   pauseBtn: Phaser.GameObjects.Text;
-  pauseText: Phaser.GameObjects.Text;
-  exitText: Phaser.GameObjects.Text;
   waitText: Phaser.GameObjects.Text;
   speedText: Phaser.GameObjects.Text;
 
@@ -225,7 +223,7 @@ export class Game extends Scene {
     SendLoaded(); // 加载完毕
   }
 
-  update(time: number, delta: number): void {
+  update(_time: number, delta: number): void {
     this.frameTick += delta; // 服务器帧
     this.elapsed500 += delta;
     const realFrameTick = FrameTick / this.time.timeScale; // 真实的帧间隔 
@@ -403,22 +401,25 @@ export class Game extends Scene {
   // 处理暂停
   handlePause({ paused }: { paused: boolean }) {
     // 联机模式下不允许手动handle暂停
-    if (BackendWS.isOnlineMode) return;
+    if (BackendWS.isOnlineMode) {
+      return;
+    }
 
-    if (this.isDestroyed) return; // Skip if scene is destroyed
-    if (!this.exitText || !this.pauseText) {
-      console.warn('Text objects not initialized yet');
+    if (this.isDestroyed) {
+      return; // Skip if scene is destroyed
+    }
+
+    const pauseMenu = (this as any).pauseMenu;
+    if (!pauseMenu) {
       return;
     }
 
     if (paused) {
       this.doHalt();
-      this.pauseText.setVisible(true);
-      this.exitText.setVisible(true);
+      pauseMenu.show();
     } else {
       this.doResume();
-      this.pauseText.setVisible(false);
-      this.exitText.setVisible(false);
+      pauseMenu.hide();
     }
   }
 
@@ -428,7 +429,7 @@ export class Game extends Scene {
     this.anims?.pauseAll();
     this.tweens?.pauseAll();
     this.time.paused = true;
-    try { this.exitText.setInteractive(); } finally { EventBus.emit('okIsPaused', { paused: true }); }
+    EventBus.emit('okIsPaused', { paused: true });
     this.isPaused = true;
     this.musical.pause();
   }
@@ -439,7 +440,7 @@ export class Game extends Scene {
     this.anims?.resumeAll();
     this.tweens?.resumeAll();
     this.time.paused = false;
-    try { this.exitText.disableInteractive(); } finally { EventBus.emit('okIsPaused', { paused: false }); }
+    EventBus.emit('okIsPaused', { paused: false });
     this.isPaused = false;
     this.musical.resume();
   }
@@ -458,6 +459,13 @@ export class Game extends Scene {
   // 游戏退出真实入口, 由消息队列调用
   ExitEntry(isWin: boolean = false) {
     this.musical.destroy();
+
+    // 销毁暂停菜单
+    const pauseMenu = (this as any).pauseMenu;
+    if (pauseMenu) {
+      pauseMenu.destroy();
+    }
+
     // 移除所有game的事件监听
     this.sound.stopAll();
     this.input.keyboard?.removeAllKeys(true, true);
