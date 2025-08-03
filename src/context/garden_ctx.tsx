@@ -3,25 +3,30 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { gameStateManager } from '../game/utils/GameStateManager';
 
-// 定义游戏状态的类型
+// 定义游戏状态的类型（不再包含energy和starShards）
 interface GameState {
-  energy: number;
   money: number;
   wave: number; // progress,进度
   bossHealth: number; // progress, boss 血条
-  starShareds: number;
   isPaused: boolean;
   // 关卡
 }
 
 // 定义 Context 值的类型
 interface GameContextValue extends GameState {
+  // energy 相关方法 - 直接操作 GameStateManager
+  getCurrentEnergy: () => number;
   updateEnergy: (amount: number, special?: (prev: number) => number) => void;
   setEnergy: (amount: number) => void;
+
+  // starShards 相关方法 - 直接操作 GameStateManager
+  getCurrentStarShards: () => number;
+  updateStarShards: (amount: number) => void;
+
+  // 其他状态方法
   updateMoney: (amount: number) => void;
   updateWave: (percent: number) => void;
   updateBossHealth: (amount: number) => void;
-  updateStarShards: (amouunt: number) => void;
   setIsPaused: (isPaused: boolean) => void;
 }
 
@@ -37,50 +42,51 @@ interface GameProviderProps {
 export function GameProvider(props: GameProviderProps) {
   const { children } = props;
   const [gameState, setGameState] = useState<GameState>({
-    energy: 100,
     money: 0,
     wave: 0,
     bossHealth: -1,
-    starShareds: 0,
     isPaused: true
   });
 
-  // 初始化游戏状态管理器
+  // 初始化游戏状态管理器（设置默认值）
   React.useEffect(() => {
-    gameStateManager.updateEnergy(gameState.energy);
-    gameStateManager.updateStarShards(gameState.starShareds);
+    gameStateManager.updateEnergy(100);
+    gameStateManager.updateStarShards(0);
   }, []);
+
+  // Energy 相关方法 - 直接操作 GameStateManager
+  function getCurrentEnergy(): number {
+    return gameStateManager.getCurrentEnergy();
+  }
 
   function updateEnergy(amount: number, special?: (prev: number) => number) {
     if (special) {
-      const newEnergy = Math.max(0, special(gameState.energy));
-      setGameState(prev => ({
-        ...prev,
-        energy: newEnergy
-      }));
-      // 同步更新游戏状态管理器
+      const currentEnergy = gameStateManager.getCurrentEnergy();
+      const newEnergy = Math.max(0, special(currentEnergy));
       gameStateManager.updateEnergy(newEnergy);
-      return;
     } else {
-      const newEnergy = Math.max(0, gameState.energy + amount);
-      setGameState(prev => ({
-        ...prev,
-        energy: newEnergy
-      }));
-      // 同步更新游戏状态管理器
+      const currentEnergy = gameStateManager.getCurrentEnergy();
+      const newEnergy = Math.max(0, currentEnergy + amount);
       gameStateManager.updateEnergy(newEnergy);
     }
   }
 
   function setEnergy(amount: number) {
-    setGameState(prev => ({
-      ...prev,
-      energy: amount
-    }));
-    // 同步更新游戏状态管理器
     gameStateManager.updateEnergy(amount);
   }
 
+  // StarShards 相关方法 - 直接操作 GameStateManager
+  function getCurrentStarShards(): number {
+    return gameStateManager.getCurrentStarShards();
+  }
+
+  function updateStarShards(amount: number) {
+    const currentStarShards = gameStateManager.getCurrentStarShards();
+    const newStarShards = Math.min(5, Math.max(0, currentStarShards + amount));
+    gameStateManager.updateStarShards(newStarShards);
+  }
+
+  // 其他状态方法
   function updateMoney(amount: number) {
     setGameState(prev => ({
       ...prev,
@@ -103,16 +109,6 @@ export function GameProvider(props: GameProviderProps) {
     }));
   }
 
-  function updateStarShards(amount: number) {
-    const newStarShards = Math.min(5, Math.max(0, gameState.starShareds + amount));
-    setGameState(prev => ({
-      ...prev,
-      starShareds: newStarShards
-    }));
-    // 同步更新游戏状态管理器
-    gameStateManager.updateStarShards(newStarShards);
-  }
-
   function setIsPaused(isPaused: boolean) {
     setGameState(prev => ({
       ...prev,
@@ -122,12 +118,14 @@ export function GameProvider(props: GameProviderProps) {
 
   const contextValue: GameContextValue = {
     ...gameState,
+    getCurrentEnergy,
     updateEnergy,
     setEnergy,
+    getCurrentStarShards,
+    updateStarShards,
     updateMoney,
     updateWave: updateWave,
     updateBossHealth,
-    updateStarShards,
     setIsPaused
   };
 

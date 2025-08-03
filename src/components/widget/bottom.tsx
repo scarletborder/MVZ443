@@ -8,6 +8,7 @@ import { publicUrl } from "../../utils/browser";
 import { useSaveManager } from "../../context/save_ctx";
 import BackendWS from "../../utils/net/sync";
 import { useLocaleMessages } from "../../hooks/useLocaleMessages";
+import { gameStateManager } from "../../game/utils/GameStateManager";
 
 type Props = {
     width: number
@@ -22,6 +23,23 @@ export default function BottomTools({ width, chapterID }: Props) {
     const starUri = `${publicUrl}/assets/sprite/star.png`;
 
     const [bossHealth, setBossHealth] = useState<number>(-1);
+    const [starShards, setStarShards] = useState(gameStateManager.getCurrentStarShards()); // 从 GameStateManager 获取星之碎片
+
+    // 监听星之碎片变化
+    useEffect(() => {
+        const handleStarShardsUpdate = (newStarShards: number) => {
+            setStarShards(newStarShards);
+        };
+
+        gameStateManager.onStarShardsUpdate(handleStarShardsUpdate);
+
+        // 设置初始值
+        setStarShards(gameStateManager.getCurrentStarShards());
+
+        return () => {
+            gameStateManager.removeStarShardsUpdateListener(handleStarShardsUpdate);
+        };
+    }, []);
 
     useEffect(() => {
         const handleProgress = (data: { progress: number }) => {
@@ -77,7 +95,7 @@ export default function BottomTools({ width, chapterID }: Props) {
     const handleStarClick = () => {
         EventBus.emit('card-deselected', { pid: null }); // 通知卡片取消选中
         if (gamectx.isPaused) return;
-        if (gamectx.starShareds <= 0) return;
+        if (starShards <= 0) return;
         EventBus.emit('starshards-click');
     };
 
@@ -125,7 +143,7 @@ export default function BottomTools({ width, chapterID }: Props) {
         }}>
             <div className="money">{savectx.currentProgress.items.get(1) ? savectx.currentProgress.items.get(1)?.count : '0'} $</div>
             <div className={`stars ${gamectx.isPaused ? 'paused' : ''}`} onClick={handleStarClick}>
-                {Array.from({ length: gamectx.starShareds }).map((_, index) => (
+                {Array.from({ length: starShards }).map((_, index) => (
                     <img
                         draggable={false}
                         key={index}

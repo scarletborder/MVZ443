@@ -6,7 +6,6 @@ import StageSelector from './level/StageSelector';
 import ParamsSelector from './level/ParamsSelector';
 import { StageDataRecords } from '../../game/utils/loader';
 import BackendWS from '../../utils/net/sync';
-import encodeMessageToBinary from '../../utils/net/encode';
 import { useSetState, useLocalStorageState, useMount, useUpdateEffect } from 'ahooks';
 
 interface LevelSelectorProps {

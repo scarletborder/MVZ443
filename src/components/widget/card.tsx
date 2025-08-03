@@ -7,6 +7,8 @@ import { useSettings } from '../../context/settings_ctx';
 import { publicUrl } from '../../utils/browser';
 import PlantFactoryMap from '../../game/presets/plant';
 import { useLocaleMessages } from '../../hooks/useLocaleMessages';
+import { gameStateManager } from '../../game/utils/GameStateManager';
+
 
 interface CardProps {
     pid: number;
@@ -23,9 +25,26 @@ export default function Card({ pid, texture, plantName, cooldownTime, sceneRef, 
     const [isCoolingDown, setIsCoolingDown] = useState(needFirstCoolDown);
     const [remainingTime, setRemainingTime] = useState(needFirstCoolDown ? cooldownTime : 0);
     const [isChosen, setIsChosen] = useState(false);
-    const { energy, isPaused } = useGameContext();
+    const [energy, setEnergy] = useState(gameStateManager.getCurrentEnergy()); // 从 GameStateManager 获取能量
+    const { isPaused } = useGameContext();
     const settings = useSettings();
     const { translate } = useLocaleMessages();
+
+    // 监听能量变化
+    useEffect(() => {
+        const handleEnergyUpdate = (newEnergy: number) => {
+            setEnergy(newEnergy);
+        };
+
+        gameStateManager.onEnergyUpdate(handleEnergyUpdate);
+
+        // 设置初始值
+        setEnergy(gameStateManager.getCurrentEnergy());
+
+        return () => {
+            gameStateManager.removeEnergyUpdateListener(handleEnergyUpdate);
+        };
+    }, []);
 
     useEffect(() => {
         const handleSetTimeFlow = (data: { delta: number }) => {

@@ -12,6 +12,7 @@ import { publicUrl } from '../../utils/browser';
 import { useDeviceType } from '../../hooks/useDeviceType';
 import Pickaxe from './pickaxe';
 import useDarkMode from '../../hooks/useDarkMode';
+import { gameStateManager } from '../../game/utils/GameStateManager';
 
 interface slotProps {
     sceneRef: React.MutableRefObject<IRefPhaserGame | null>;
@@ -20,7 +21,24 @@ interface slotProps {
 
 export function EnergySlot() {
     const isDarkMode = useDarkMode();
-    const { energy, updateEnergy } = useGameContext();
+    const { updateEnergy } = useGameContext();
+    const [energy, setEnergy] = useState(gameStateManager.getCurrentEnergy()); // 从 GameStateManager 获取能量
+
+    // 监听能量变化
+    useEffect(() => {
+        const handleEnergyUpdate = (newEnergy: number) => {
+            setEnergy(newEnergy);
+        };
+
+        gameStateManager.onEnergyUpdate(handleEnergyUpdate);
+
+        // 设置初始值
+        setEnergy(gameStateManager.getCurrentEnergy());
+
+        return () => {
+            gameStateManager.removeEnergyUpdateListener(handleEnergyUpdate);
+        };
+    }, []);
 
     useEffect(() => {
         // 处理种植消耗
@@ -72,7 +90,24 @@ export function EnergySlot() {
 
 export function VerticalEnergySlot() {
     const isDarkMode = useDarkMode();
-    const { energy, updateEnergy } = useGameContext();
+    const { updateEnergy } = useGameContext();
+    const [energy, setEnergy] = useState(gameStateManager.getCurrentEnergy()); // 从 GameStateManager 获取能量
+
+    // 监听能量变化
+    useEffect(() => {
+        const handleEnergyUpdate = (newEnergy: number) => {
+            setEnergy(newEnergy);
+        };
+
+        gameStateManager.onEnergyUpdate(handleEnergyUpdate);
+
+        // 设置初始值
+        setEnergy(gameStateManager.getCurrentEnergy());
+
+        return () => {
+            gameStateManager.removeEnergyUpdateListener(handleEnergyUpdate);
+        };
+    }, []);
 
     useEffect(() => {
         // 处理种植消耗

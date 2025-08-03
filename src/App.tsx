@@ -9,7 +9,6 @@ import { StageResult } from './game/models/IRecord';
 import GameResultView from './components/menu/result';
 import { useDeviceType } from './hooks/useDeviceType';
 import BackendWS from './utils/net/sync';
-import encodeMessageToBinary from './utils/net/encode';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import UpdatesPage from './pages/updates';
 import SettingsPage from './pages/settings';
