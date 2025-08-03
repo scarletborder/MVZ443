@@ -12,31 +12,20 @@ func (g *GameLogic) PlantCard(player *clients.Player, request *messages.RequestC
 		Row: request.Base.Row,
 	}
 	plantOp := &messages.ResponseCardPlant{
-		Pid:     request.Pid,
-		Level:   request.Level,
-		Cost:    request.Cost,
-		Base:    gridOp,
+		Pid:   request.Pid,
+		Level: request.Level,
+		Cost:  request.Cost,
+		Base:  gridOp,
 	}
 
 	if request.Base.Col < 0 || request.Base.Col >= MAXCOLS ||
 		request.Base.Row < 0 || request.Base.Row >= MAXROWS {
 		// 无效的grid
-		g.operationChan <- &messages.InGameOperation{
-			Payload: &messages.InGameOperation_CardPlant{
-				CardPlant: plantOp,
-			},
-			ProcessFrameId: request.Base.ProcessFrameId,
-		}
 		return
 	}
 	// 判断这个grid有没有做过操作
 	if g.cards[request.Base.Row][request.Base.Col] {
 		// true=> 有操作
-		g.operationChan <- &messages.InGameOperation{
-			Payload: &messages.InGameOperation_CardPlant{
-				CardPlant: plantOp,
-			},
-		}
 		return
 	}
 
@@ -47,6 +36,7 @@ func (g *GameLogic) PlantCard(player *clients.Player, request *messages.RequestC
 		Payload: &messages.InGameOperation_CardPlant{
 			CardPlant: plantOp,
 		},
+		ProcessFrameId: request.Base.ProcessFrameId,
 	}
 }
 
@@ -90,30 +80,19 @@ func (g *GameLogic) UseStarShards(player *clients.Player, request *messages.Requ
 		Row: request.Base.Row,
 	}
 	starshardsOp := &messages.ResponseUseStarShards{
-		Pid:     request.Pid,
-		Cost:    request.Cost,
-		Base:    gridOp,
+		Pid:  request.Pid,
+		Cost: request.Cost,
+		Base: gridOp,
 	}
 
 	if request.Base.Col < 0 || request.Base.Col >= MAXCOLS ||
 		request.Base.Row < 0 || request.Base.Row >= MAXROWS {
-		g.operationChan <- &messages.InGameOperation{
-			Payload: &messages.InGameOperation_UseStarShards{
-				UseStarShards: starshardsOp,
-			},
-			ProcessFrameId: request.Base.ProcessFrameId,
-		}
 		return
 	}
 
 	// 判断这个grid有没有做过操作
 	if g.cards[request.Base.Row][request.Base.Col] {
 		// true=> 有操作
-		g.operationChan <- &messages.InGameOperation{
-			Payload: &messages.InGameOperation_UseStarShards{
-				UseStarShards: starshardsOp,
-			},
-		}
 		return
 	}
 	// 成功
@@ -123,5 +102,6 @@ func (g *GameLogic) UseStarShards(player *clients.Player, request *messages.Requ
 		Payload: &messages.InGameOperation_UseStarShards{
 			UseStarShards: starshardsOp,
 		},
+		ProcessFrameId: request.Base.ProcessFrameId,
 	}
 }

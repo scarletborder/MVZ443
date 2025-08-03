@@ -1,6 +1,7 @@
 package roommanager
 
 import (
+	"log"
 	"mvzserver/constants"
 	roomatom "mvzserver/room-atom"
 	"mvzserver/types"
@@ -101,20 +102,27 @@ func (rm *RoomManager) Clean() {
 	rm.rooms.Range(func(id int, room *Room) bool {
 		// 没有人的房间必须移除
 		if room.GetPlayerCount() == 0 {
+			log.Printf("🧹 Cleaning empty room %d (0 players)", id)
 			rm.DestroyRoom(id)
+			return true
 		}
 
 		// 检查是否超过最大空闲时间
 		// 每次用户进行互动都会更新LastActiveTime
-		// TODO: 更新逻辑写在房间监听用户来访中
-		if time.Since(room.LastActiveTime) > 5*time.Minute {
+		idleTime := time.Since(room.LastActiveTime)
+		if idleTime > 5*time.Minute {
+			log.Printf("🧹 Cleaning idle room %d (idle for %v, %d players)", id, idleTime, room.GetPlayerCount())
 			rm.DestroyRoom(id)
+			return true
 		}
 
-		// 如果房间是closed状态， 那么直接摧毁
-		if !room.GameStage.IsLaterThanOrEqual(constants.STAGE_CLOSED) {
+		// 如果房间是closed状态，那么直接摧毁
+		if room.GameStage.IsLaterThanOrEqual(constants.STAGE_CLOSED) {
+			log.Printf("🧹 Cleaning closed room %d (stage: %d)", id, room.GameStage.Load())
 			rm.DestroyRoom(id)
+			return true
 		}
+
 		return true
 	})
 }

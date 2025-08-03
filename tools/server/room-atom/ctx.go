@@ -4,6 +4,7 @@ package roomatom
 // 消息发送 []byte 接口
 
 import (
+	"log"
 	"mvzserver/clients"
 	"mvzserver/constants"
 	"sync"
@@ -115,6 +116,7 @@ func (m *RoomCtx) CreateClientCtxFromConn(conn *websocket.Conn) *ClientCtx {
 // AddUser
 func (m *RoomCtx) AddUser(p *clients.Player) {
 	m.Players.Store(p.Ctx.Id, p)
+	log.Printf("🔵 Player %d added to room context", p.GetID())
 	// 如果 OwnerUserID 还没设置，则设置为第一个加入的用户
 	if m.OwnerUserID == 0 {
 		m.OwnerUserID = p.Ctx.Id
@@ -140,8 +142,10 @@ func (m *RoomCtx) CloseAll() {
 func (m *RoomCtx) GetPeerAddr() []string {
 	var addrs []string
 	m.Players.Range(func(key int, player *clients.Player) bool {
-		if player != nil && player.Ctx != nil && player.Ctx.Conn != nil {
-			addrs = append(addrs, player.Ctx.Conn.RemoteAddr().String())
+		if player != nil && player.Ctx != nil {
+			if addr := player.Ctx.GetRemoteAddr(); addr != "" {
+				addrs = append(addrs, addr)
+			}
 		}
 		return true
 	})
@@ -165,8 +169,8 @@ func (m *RoomCtx) BroadcastMessage(msg protoreflect.ProtoMessage, exclude_ids []
 	}
 
 	m.Players.Range(func(key int, player *clients.Player) bool {
-		if player != nil && player.Ctx != nil && player.Ctx.Conn != nil {
-			return true // 继续遍历
+		if player == nil || player.Ctx == nil || !player.Ctx.IsConnected() {
+			return true // 跳过无效的玩家
 		}
 		// 检查是否在排除列表中
 		if excludeSet.Contains(player.Ctx.Id) {
@@ -189,9 +193,10 @@ func (m *RoomCtx) SendMessageToUser(msg protoreflect.ProtoMessage, userId int) {
 func (m *RoomCtx) SendMessageToUserByPlayer(msg protoreflect.ProtoMessage, player *Player) {
 	data, err := proto.Marshal(msg)
 	if err != nil {
+		log.Printf("SendMessageToUserByPlayer: %v", err)
 		panic(err) // 处理错误
 	}
-	if player != nil && player.Ctx != nil && player.Ctx.Conn != nil {
+	if player != nil && player.Ctx != nil && player.Ctx.IsConnected() {
 		player.Write(data) // 发送消息
 	}
 }

@@ -70,7 +70,7 @@ func (sh *ServerHandler) HandleWS(c *websocket.Conn) {
 		// 房间不存在,创建新房间
 		room = sh.RoomMnager.AddRoom(roomId, _key)
 		// 房间开始运行
-		room.Run()
+		go room.Run()
 	} else {
 		// 房间存在,检查密钥
 		var payload = messages.ResponseJoinRoomFailed{}

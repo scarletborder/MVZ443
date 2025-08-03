@@ -64,8 +64,13 @@ func (room *Room) HasAllPlayerSync() bool {
 	synced := true
 	// 遍历每个玩家的 frameID，若有任意玩家低于阈值，则返回 false
 	room.RoomCtx.Players.Range(func(key int, value *Player) bool {
-		// 当前玩家认为自己位于的帧号
-		player_current_frame := NextRenderFrame
+		// 检查玩家是否为空或玩家上下文为空
+		if value == nil || value.Ctx == nil {
+			synced = false
+			return false
+		}
+		// 获取当前玩家实际的帧号
+		player_current_frame := value.Ctx.LatestFrameID.Load()
 		if player_current_frame < minFrameID {
 			synced = false
 			return false
@@ -75,98 +80,45 @@ func (room *Room) HasAllPlayerSync() bool {
 	return synced
 }
 
-// 对于游戏中消耗性资源
-// 因为发送的广播frame到达会迟于用户消耗
 // 用户可能会疯狂的消耗游戏资源从而种植/使用超过自己能量的植物
 // 所以需要在处理请求时进行校验
 func (room *Room) CouldAffordable(player *Player, base_req *messages.RequestBlank,
 	energy_cost int32, starshards_cost int32,
 	energy_sum int32, starshards_sum int32,
+	lastFrameID uint32, lastAckFrameID uint32,
 ) bool {
-	type ClientFrameData struct {
-		CurrentLogicFrame  uint32 // 他当前的逻辑帧
-		LastAckServerFrame uint32 // 他上一次ack的服务器帧
-		SunOnPlant         int32  // 他此次种植行为发生时候的当前阳光总数
-		PlantCost          int32  // 种植的植物需要消耗的阳光
-	}
-	// ServerUserRecord 服务器记录的该用户上一次成功操作的数据
-	type ServerUserRecord struct {
-		LastUserLogicFrame uint32 // 上一次的最近逻辑帧
-		LastAckServerFrame uint32 // 上一次ack的服务器帧
-		SunBeforeLastPlant int32  // 上一次成功种植时候用户种植前的阳光总数
-		LastPlantCost      int32  // 上一次成功种植时用户消耗的阳光
+	// 检查 player 是否为 nil
+	if player == nil {
+		return false
 	}
 
-	CanPlantValidate := func(clientData ClientFrameData, serverRecord ServerUserRecord) bool {
-		// 1. 基础校验：客户端自认为阳光不足，这是最直接的失败
-		if clientData.SunOnPlant < clientData.PlantCost {
-			return false
-		}
-		// 2. 首次操作处理: 如果服务器没有记录(用0等默认值表示)，则为首次操作
-		if serverRecord.LastUserLogicFrame <= 0 {
-			// 此处已通过了最开始的校验，所以直接成功
-			return true
-		}
-		// 3. 陈旧/重复的帧请求校验
-		if clientData.CurrentLogicFrame <= serverRecord.LastUserLogicFrame {
-			return false
-		}
-		// 4. 核心逻辑：判断是否为快速连续操作
-		isNormalOperation := clientData.LastAckServerFrame > serverRecord.LastAckServerFrame
+	// 简化逻辑：对于第一次种植或使用星之碎片，只通过用户报的总量和消耗来判断
+	isFirstEnergyOperation := player.LastEnergySum == 0 || lastFrameID <= 0
+	isFirstStarShardsOperation := player.LastStarShards == 0 || lastFrameID <= 0
 
-		if isNormalOperation {
-			// --- 常规操作 ---
-			// 客户端状态是“新”的，它上报的阳光数是在收到了服务器所有回执后的最新状态。
-			// 我们可以信任这个值作为校验的基准。
-			// 该校验在函数入口已完成，此处确认逻辑正确。
-			return true
+	// 验证能量消耗
+	energyAffordable := true
+	if energy_cost > 0 {
+		if isFirstEnergyOperation {
+			// 第一次种植：只检查总量是否足够
+			energyAffordable = energy_sum >= energy_cost
 		} else {
-			// --- 快速连续操作 ---
-			// 客户端在发送此请求时，还不知道上一个操作的结果。
-			// 它上报的 SunOnPlant 是扣除了上次消耗后，又加上了本地新增阳光的结果。
-			// 我们需要重建一个可信的“阳光池”来进行校验。
-
-			// 有效阳光池 = 客户端上报的阳光 + 服务器记录的上次消耗（因为客户端已经减过一次了，我们要加回来）
-			effectiveSunPool := clientData.SunOnPlant + serverRecord.LastPlantCost
-
-			// 总消耗 = 服务器记录的上次消耗 + 本次新请求的消耗
-			totalCost := serverRecord.LastPlantCost + clientData.PlantCost
-
-			if effectiveSunPool >= totalCost {
-				return true
-			} else {
-				return false
-			}
+			// 非第一次：检查客户端自报的阳光是否足够
+			energyAffordable = energy_sum >= energy_cost
 		}
 	}
-	lastFrameID := player.Ctx.LatestFrameID.Load()
-	lastAckFrameID := player.Ctx.LatestAckFrameID.Load()
 
-	clientData_energy := ClientFrameData{
-		CurrentLogicFrame:  base_req.FrameId,
-		LastAckServerFrame: base_req.AckFrameId,
-		SunOnPlant:         energy_sum,
-		PlantCost:          energy_cost,
-	}
-	serverData_energy := ServerUserRecord{
-		LastUserLogicFrame: lastFrameID,
-		LastAckServerFrame: lastAckFrameID,
-		SunBeforeLastPlant: player.LastEnergySum,
-		LastPlantCost:      player.LastStarShards,
-	}
-	clientData_starshards := ClientFrameData{
-		CurrentLogicFrame:  base_req.FrameId,
-		LastAckServerFrame: base_req.AckFrameId,
-		SunOnPlant:         starshards_sum,
-		PlantCost:          starshards_cost,
-	}
-	serverData_starshards := ServerUserRecord{
-		LastUserLogicFrame: lastFrameID,
-		LastAckServerFrame: lastAckFrameID,
-		SunBeforeLastPlant: player.LastStarShards,
-		LastPlantCost:      player.LastStarShards,
+	// 验证星之碎片消耗
+	starShardsAffordable := true
+	if starshards_cost > 0 {
+		if isFirstStarShardsOperation {
+			// 第一次使用星之碎片：只检查总量是否足够
+			starShardsAffordable = starshards_sum >= starshards_cost
+		} else {
+			// 非第一次：检查客户端自报的星之碎片是否足够
+			starShardsAffordable = starshards_sum >= starshards_cost
+		}
 	}
 
-	return ((energy_cost == 0) || CanPlantValidate(clientData_energy, serverData_energy)) &&
-		((starshards_cost == 0) || CanPlantValidate(clientData_starshards, serverData_starshards))
+	return energyAffordable && starShardsAffordable
 }

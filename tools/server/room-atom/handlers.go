@@ -19,7 +19,25 @@ type PlayerMessage = clients.PlayerMessage
 
 // WS入口
 func (room *Room) HandleClientJoin(c *websocket.Conn) {
+	log.Printf("🟢 Client connecting to room %d", room.ID)
+
+	// 检查连接是否有效
+	if c == nil {
+		log.Printf("🔴 WebSocket connection is nil")
+		return
+	}
+	log.Printf("🟢 WebSocket connection is valid")
+
 	ctx := room.RoomCtx.CreateClientCtxFromConn(c)
+	log.Printf("🟢 Created client context with ID %d", ctx.Id)
+
+	// 再次检查连接
+	if !ctx.IsConnected() {
+		log.Printf("🔴 Connection became nil after creating context")
+		return
+	}
+	log.Printf("🟢 Connection is still valid after creating context")
+
 	var payload = messages.ResponseJoinRoomSuccess{
 		RoomId:  uint32(room.ID),
 		MyId:    uint32(ctx.Id),
@@ -31,12 +49,35 @@ func (room *Room) HandleClientJoin(c *websocket.Conn) {
 			JoinRoomSuccess: &payload,
 		},
 	}
+	log.Printf("🟢 Sending joinRoomSuccess to client %d", ctx.Id)
 	utils.WriteLobbyResponse(c, &resp)
+	log.Printf("🟢 joinRoomSuccess sent to client %d", ctx.Id)
+
+	// 检查连接在发送响应后的状态
+	if !ctx.IsConnected() {
+		log.Printf("🔴 Connection became nil after sending response")
+		return
+	}
+	log.Printf("🟢 Connection is still valid after sending response")
 
 	// 创建一个新的玩家实例
 	p := clients.NewPlayer(ctx, room.incomingMessages)
-	room.register <- &p // 将玩家加入到注册通道
-	return
+
+	// 最后检查连接
+	if !p.Ctx.IsConnected() {
+		log.Printf("🔴 Connection became nil after creating player")
+		return
+	}
+	log.Printf("🟢 Connection is still valid after creating player")
+
+	log.Printf("🟢 Registering player %d first", ctx.Id)
+	room.register <- &p // 先将玩家加入到注册通道
+	log.Printf("🟢 Player %d registration sent to channel", ctx.Id)
+
+	// **关键修复**：直接在这里处理客户端，而不是在 goroutine 中
+	log.Printf("🟢 Starting client service for player %d directly", ctx.Id)
+	room.StartServeClient(&p) // 阻塞直到连接关闭
+	log.Printf("🟢 Client service ended for player %d", ctx.Id)
 }
 
 // ---------------------------
@@ -45,10 +86,22 @@ func (room *Room) HandleClientJoin(c *websocket.Conn) {
 
 func (room *Room) handleRegister(player *clients.Player) {
 	// ... 注册客户端逻辑 ...
+	log.Printf("🔵 Processing registration for player %d", player.GetID())
+
+	// 更新房间活跃时间
+	room.UpdateActiveTime()
+
 	// 在 Lobby 状态下才允许新玩家加入
 	if room.GameStage.EqualTo(constants.STAGE_InLobby) {
+		log.Printf("🔵 Room is in lobby state, adding player %d", player.GetID())
 		// 向 context 中注册用户
 		room.RoomCtx.AddUser(player)
+
+		// **移除 goroutine**：现在 StartServeClient 在 HandleClientJoin 中直接调用
+		// go func() {
+		//     log.Printf("🟢 Starting client service for player %d", player.GetID())
+		//     room.StartServeClient(player)
+		// }()
 
 		// 制作当前peers信息json
 		// peers = [{"addr" : string, "id": int}, ...]
@@ -58,17 +111,28 @@ func (room *Room) handleRegister(player *clients.Player) {
 		}
 		var peers []PeerInfo
 		room.RoomCtx.Players.Range(func(uid int, player *clients.Player) bool {
+			// 检查 player 和 player.Ctx 是否为 nil，并安全地检查连接
+			if player == nil || player.Ctx == nil || !player.Ctx.IsConnected() {
+				return true // 跳过无效的玩家
+			}
+			addr := "111.111.111.111"
 			peers = append(peers, PeerInfo{
-				Addr: player.Ctx.Conn.RemoteAddr().String(),
+				Addr: addr,
 				Id:   player.Ctx.Id,
 			})
 			return true
 		})
 		jsonPeers, _ := json.Marshal(peers)
 		jsonPeersStr := string(jsonPeers)
+		log.Printf("🔵 Created peers JSON for broadcast: %s", jsonPeersStr)
 
 		// 进行一次广播
+		log.Printf("🔵 Starting roomInfo broadcast to %d players", len(peers))
 		room.RoomCtx.Players.Range(func(uid int, player *clients.Player) bool {
+			// 检查 player 和 player.Ctx 是否为 nil
+			if player == nil || player.Ctx == nil {
+				return true // 跳过无效的玩家
+			}
 			defer func() {
 				if r := recover(); r != nil {
 					log.Printf("处理玩家注册时捕获到 Panic: %v\n", r)
@@ -81,26 +145,31 @@ func (room *Room) handleRegister(player *clients.Player) {
 				LordId: uint32(room.RoomCtx.OwnerUserID),
 				MyId:   uint32(player.Ctx.Id),
 			}
+			log.Printf("🔵 Sending roomInfo to player %d", player.Ctx.Id)
 			room.RoomCtx.SendMessageToUserByPlayer(&messages.RoomResponse{
 				Payload: &messages.RoomResponse_RoomInfo{
 					RoomInfo: &payload,
 				},
 			}, player)
+			log.Printf("🔵 roomInfo sent to player %d", player.Ctx.Id)
 			return true
 		})
-
-		// 开始服务,开goroutine
-		go room.StartServeClient(player)
+		log.Printf("🔵 roomInfo broadcast completed for player registration %d", player.GetID())
 	} else {
 		// 拒绝加入
+		log.Printf("🔴 Registration rejected for player %d - room not in lobby state", player.GetID())
 	}
 }
 
 func (room *Room) handleUnregister(player *clients.Player) {
 	// ... 注销客户端逻辑 ...
+	// 检查 player 和 player.Ctx 是否为 nil
+	if player == nil || player.Ctx == nil {
+		return
+	}
 	room.RoomCtx.DelUser(player.Ctx.Id) // 向 context 中注销用户
 	// 关闭连接
-	if player.Ctx != nil && player.Ctx.Conn != nil {
+	if player.Ctx.IsConnected() {
 		player.Ctx.Close()
 	}
 	// 删除实例
@@ -125,12 +194,22 @@ func (room *Room) handlePlayerMessage(msg *PlayerMessage) {
 			log.Println("程序已从 panic 中恢复，将继续运行。")
 		}
 	}()
+
+	// 更新房间活跃时间 - 任何玩家消息都表示房间是活跃的
+	room.UpdateActiveTime()
+
 	// decode
 	var request messages.Request
 
 	// 2. 反序列化 (解码) 收到的二进制数据
 	if err := proto.Unmarshal(msg.Data, &request); err != nil {
 		log.Printf("Failed to unmarshal request: %v", err)
+		return
+	}
+
+	// 验证 payload 不为 nil
+	if request.Payload == nil {
+		log.Printf("🔴 Request payload is nil for player %d", msg.Player.GetID())
 		return
 	}
 
@@ -164,13 +243,35 @@ func (room *Room) handlePlayerMessage(msg *PlayerMessage) {
 }
 
 func (room *Room) HandleRequestReady(player *Player, req *messages.RequestReady) {
+	log.Printf("🔵 HandleRequestReady: Player %d, isReady: %v, current stage: %d",
+		player.GetID(), req.IsReady, room.GameStage.Load())
+
 	// 只能在 STAGE_Preparing 阶段处理
 	if !room.GameStage.EqualTo(constants.STAGE_Preparing) {
+		log.Printf("🔴 HandleRequestReady: Rejected - room not in Preparing stage, current: %d",
+			room.GameStage.Load())
 		return
 	}
+
 	player.IsReady = req.IsReady
+	log.Printf("🔵 HandleRequestReady: Set player %d isReady to %v", player.GetID(), req.IsReady)
+
+	// 检查所有玩家状态
+	totalPlayers := room.GetPlayerCount()
+	readyCount := 0
+	room.RoomCtx.Players.Range(func(key int, value *clients.Player) bool {
+		if value.IsReady {
+			readyCount++
+		}
+		log.Printf("🔵 Player %d: isReady=%v", key, value.IsReady)
+		return true
+	})
+
+	log.Printf("🔵 HandleRequestReady: %d/%d players ready", readyCount, totalPlayers)
+
 	// 判断是否所有玩家都准备就绪
 	if room.HasAllPlayerReady() {
+		log.Printf("🟢 All players ready! Starting loading phase...")
 		// 如果所有玩家都准备好了，开始加载
 		room.GameStage.Store(constants.STAGE_Loading)
 		// 广播
@@ -183,7 +284,9 @@ func (room *Room) HandleRequestReady(player *Player, req *messages.RequestReady)
 			},
 		}
 		room.RoomCtx.BroadcastMessage(resp, nil)
+		log.Printf("🟢 AllReady message sent")
 	} else {
+		log.Printf("🟡 Not all players ready yet, sending ready count update...")
 		// 发送一次信息， 提醒已经准备的人数
 		payload := messages.ResponseUpdateReadyCount{
 			Count:          room.PlayerReadyCount(),
@@ -195,6 +298,7 @@ func (room *Room) HandleRequestReady(player *Player, req *messages.RequestReady)
 			},
 		}
 		room.RoomCtx.BroadcastMessage(resp, nil)
+		log.Printf("🟡 Ready count update sent: %d/%d", readyCount, totalPlayers)
 	}
 }
 
@@ -203,6 +307,10 @@ func (room *Room) HandleRequestChooseMap(player *Player, req *messages.RequestCh
 	if !room.GameStage.EqualTo(constants.STAGE_InLobby) {
 		return
 	}
+
+	// 更新房间活跃时间 - 选择地图是重要的游戏进展
+	room.UpdateActiveTime()
+
 	// 推进 prepareing 阶段
 	room.GameStage.Store(constants.STAGE_Preparing)
 	room.ChapterID = req.ChapterId
@@ -221,6 +329,10 @@ func (room *Room) HandleRequestChooseMap(player *Player, req *messages.RequestCh
 }
 
 func (room *Room) HandleRequestLeaveChooseMap(player *Player, req *messages.RequestLeaveChooseMap) {
+	// 检查 player 和 player.Ctx 是否为 nil
+	if player == nil || player.Ctx == nil {
+		return
+	}
 	// 只有房主能这样做
 	if room.RoomCtx.OwnerUserID != player.Ctx.Id {
 		return
@@ -229,6 +341,10 @@ func (room *Room) HandleRequestLeaveChooseMap(player *Player, req *messages.Requ
 	if !room.GameStage.EqualTo(constants.STAGE_Preparing) {
 		return
 	}
+
+	// 更新房间活跃时间 - 离开选卡也是游戏操作
+	room.UpdateActiveTime()
+
 	room.GameStage.Store(constants.STAGE_InLobby)
 	room.ChapterID = 0
 	room.StageID = 0
@@ -243,12 +359,34 @@ func (room *Room) HandleRequestLeaveChooseMap(player *Player, req *messages.Requ
 }
 
 func (room *Room) HandleRequestLoaded(player *Player, req *messages.RequestLoaded) {
+	log.Printf("🔵 HandleRequestLoaded: Player %d, isLoaded: %v, current stage: %d",
+		player.GetID(), req.IsLoaded, room.GameStage.Load())
+
 	// 只能在 STAGE_Loading 阶段处理
 	if !room.GameStage.EqualTo(constants.STAGE_Loading) {
+		log.Printf("🔴 HandleRequestLoaded: Rejected - room not in Loading stage, current: %d",
+			room.GameStage.Load())
 		return
 	}
+
 	player.IsLoaded = req.IsLoaded
+	log.Printf("🔵 HandleRequestLoaded: Set player %d isLoaded to %v", player.GetID(), req.IsLoaded)
+
+	// 检查所有玩家状态
+	totalPlayers := room.GetPlayerCount()
+	loadedCount := 0
+	room.RoomCtx.Players.Range(func(key int, value *clients.Player) bool {
+		if value.IsLoaded {
+			loadedCount++
+		}
+		log.Printf("🔵 Player %d: isLoaded=%v", key, value.IsLoaded)
+		return true
+	})
+
+	log.Printf("🔵 HandleRequestLoaded: %d/%d players loaded", loadedCount, totalPlayers)
+
 	if room.HasAllPlayerLoaded() {
+		log.Printf("🟢 All players loaded! Starting game...")
 		// 如果所有玩家都加载完毕，开始游戏
 		room.GameStage.Store(constants.STAGE_InGame)
 		// 发送游戏开始广播帧
@@ -261,22 +399,34 @@ func (room *Room) HandleRequestLoaded(player *Player, req *messages.RequestLoade
 			},
 		}
 		room.RoomCtx.BroadcastMessage(resp, nil)
+		log.Printf("🟢 AllLoaded message sent with seed: %d", room.Seed)
 		// 启动游戏逻辑定时器
 		room.RoomCtx.StartGameTicker()
+		log.Printf("🟢 Game ticker started")
+	} else {
+		log.Printf("🟡 Not all players loaded yet, waiting...")
 	}
 }
 
 // 判断游戏中的客户端发来帧是否可以采用以及更新frame状态
 // Return: 这个帧是否可以采用（没有迟到）
 func (room *Room) HandleRequestBlank(player *Player, req *messages.RequestBlank) bool {
+	// 检查 player 和 player.Ctx 是否为 nil
+	if player == nil || player.Ctx == nil {
+		return false
+	}
+	// 检查 req 是否为 nil
+	if req == nil {
+		log.Printf("🔴 HandleRequestBlank: req is nil for player %d", player.GetID())
+		return false
+	}
 	// 只能在 STAGE_InGame 阶段处理
 	if !room.GameStage.EqualTo(constants.STAGE_InGame) {
 		return false
 	}
-	if req.FrameId < player.Ctx.LatestFrameID.Load() {
-		// 迟到的帧请求，直接忽略
-		return false
-	}
+
+	// 迟到的帧也要处理
+
 	// 空帧请求
 	// 维护该玩家的帧ID和ack ID
 	player.Ctx.UpdatePlayerFrame(req.FrameId, req.AckFrameId)
@@ -284,13 +434,33 @@ func (room *Room) HandleRequestBlank(player *Player, req *messages.RequestBlank)
 }
 
 func (room *Room) HandleRequestCardPlant(player *Player, req *messages.RequestCardPlant) {
+	// 检查 req 和其嵌套字段是否为 nil
+	if req == nil {
+		log.Printf("🔴 HandleRequestCardPlant: req is nil for player %d", player.GetID())
+		return
+	}
+	if req.Base == nil {
+		log.Printf("🔴 HandleRequestCardPlant: req.Base is nil for player %d", player.GetID())
+		return
+	}
+	if req.Base.Base == nil {
+		log.Printf("🔴 HandleRequestCardPlant: req.Base.Base is nil for player %d", player.GetID())
+		return
+	}
+
 	if !room.HandleRequestBlank(player, req.Base.Base) {
 		return
 	}
-	// 此帧想要发生的时机晚于下一帧序号
-	req.Base.ProcessFrameId = max(room.RoomCtx.NextFrameID.Load(), req.Base.ProcessFrameId)
 
-	if !room.CouldAffordable(player, req.Base.Base, req.Cost, 0, req.EnergySum, req.StarShardsSum) {
+	// 在调用前获取原子变量的值
+	lastFrameID := player.Ctx.LatestFrameID.Load()
+	lastAckFrameID := player.Ctx.LatestAckFrameID.Load()
+
+	// 此帧想要发生的时机晚于下一帧序号
+	nextFrameID := room.RoomCtx.NextFrameID.Load()
+	req.Base.ProcessFrameId = max(nextFrameID, req.Base.ProcessFrameId)
+
+	if !room.CouldAffordable(player, req.Base.Base, req.Cost, 0, req.EnergySum, req.StarShardsSum, lastFrameID, lastAckFrameID) {
 		// 无法负担
 		return
 	}
@@ -298,23 +468,58 @@ func (room *Room) HandleRequestCardPlant(player *Player, req *messages.RequestCa
 }
 
 func (room *Room) HandleRequestRemovePlant(player *Player, req *messages.RequestRemovePlant) {
+	// 检查 req 和其嵌套字段是否为 nil
+	if req == nil {
+		log.Printf("🔴 HandleRequestRemovePlant: req is nil for player %d", player.GetID())
+		return
+	}
+	if req.Base == nil {
+		log.Printf("🔴 HandleRequestRemovePlant: req.Base is nil for player %d", player.GetID())
+		return
+	}
+	if req.Base.Base == nil {
+		log.Printf("🔴 HandleRequestRemovePlant: req.Base.Base is nil for player %d", player.GetID())
+		return
+	}
+
 	if !room.HandleRequestBlank(player, req.Base.Base) {
 		return
 	}
 	// 此帧想要发生的时机晚于下一帧序号
-	req.Base.ProcessFrameId = max(room.RoomCtx.NextFrameID.Load(), req.Base.ProcessFrameId)
+	nextFrameID := room.RoomCtx.NextFrameID.Load()
+	req.Base.ProcessFrameId = max(nextFrameID, req.Base.ProcessFrameId)
 
 	room.Logic.RemoveCard(player, req)
 }
 
 func (room *Room) HandleRequestStarShards(player *Player, req *messages.RequestStarShards) {
+	// 检查 req 和其嵌套字段是否为 nil
+	if req == nil {
+		log.Printf("🔴 HandleRequestStarShards: req is nil for player %d", player.GetID())
+		return
+	}
+	if req.Base == nil {
+		log.Printf("🔴 HandleRequestStarShards: req.Base is nil for player %d", player.GetID())
+		return
+	}
+	if req.Base.Base == nil {
+		log.Printf("🔴 HandleRequestStarShards: req.Base.Base is nil for player %d", player.GetID())
+		return
+	}
+
 	if !room.HandleRequestBlank(player, req.Base.Base) {
 		return
 	}
-	// 此帧想要发生的时机晚于下一帧序号
-	req.Base.ProcessFrameId = max(room.RoomCtx.NextFrameID.Load(), req.Base.ProcessFrameId)
 
-	if !room.CouldAffordable(player, req.Base.Base, 0, req.Cost, req.EnergySum, req.StarShardsSum) {
+	// 在调用前获取原子变量的值
+	lastFrameID := player.Ctx.LatestFrameID.Load()
+	lastAckFrameID := player.Ctx.LatestAckFrameID.Load()
+
+	// 此帧想要发生的时机晚于下一帧序号
+	nextFrameID := room.RoomCtx.NextFrameID.Load()
+	req.Base.ProcessFrameId = max(nextFrameID, req.Base.ProcessFrameId)
+
+	if !room.CouldAffordable(player, req.Base.Base, 0, req.Cost, req.EnergySum, req.StarShardsSum, lastFrameID, lastAckFrameID) {
 		// 无法负担
 		return
 	}

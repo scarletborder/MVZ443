@@ -1,6 +1,7 @@
 package clients
 
 import (
+	"log"
 	"sync"
 
 	"github.com/gofiber/websocket/v2"
@@ -74,12 +75,26 @@ func (p *Player) ResetData() {
 }
 
 func (p *Player) GetID() int {
+	if p == nil || p.Ctx == nil {
+		return -1 // 返回一个表示无效的ID
+	}
 	return p.Ctx.Id
 }
 
 // 写入要发送给客户端的信息
 func (p *Player) Write(bytes []byte) {
-	_ = p.Ctx.Conn.WriteMessage(websocket.BinaryMessage, bytes)
+	// 检查 player 和其上下文是否有效
+	if p == nil || p.Ctx == nil {
+		log.Printf("🔴 Cannot write message: player or context is nil")
+		return
+	}
+
+	err := p.Ctx.SafeWriteMessage(websocket.BinaryMessage, bytes)
+	if err != nil {
+		log.Printf("🔴 Failed to write message to player %d: %v", p.GetID(), err)
+	} else {
+		log.Printf("🟢 Message written to player %d, length: %d", p.GetID(), len(bytes))
+	}
 	// TODO: 错判断， 重连
 }
 

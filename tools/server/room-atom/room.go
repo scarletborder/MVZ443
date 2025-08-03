@@ -66,8 +66,8 @@ func NewRoom(id int, stopChan chan int) *Room {
 		destroyOnce:    sync.Once{},
 
 		// 网络
-		register:         make(chan *clients.Player),
-		unregister:       make(chan *clients.Player),
+		register:         make(chan *clients.Player, 8), // 添加缓冲区
+		unregister:       make(chan *clients.Player, 8), // 添加缓冲区
 		reconnect:        make(chan clients.ReconnectRequest),
 		incomingMessages: make(chan *PlayerMessage, 128),
 		ingameOperations: gameOperationChan,
@@ -109,6 +109,9 @@ func (room *Room) Destroy() {
 	}()
 
 	room.destroyOnce.Do(func() {
+		log.Printf("🔥 Destroying room %d (stage: %d, players: %d, idle time: %v)",
+			room.ID, room.GameStage.Load(), room.GetPlayerCount(), time.Since(room.LastActiveTime))
+
 		// 发送房间关闭
 		room.RoomCtx.BroadcastMessage(&messages.RoomResponse{
 			Payload: &messages.RoomResponse_RoomClosed{
@@ -201,4 +204,10 @@ func (room *Room) PlayerReadyCount() uint32 {
 		return true
 	})
 	return count
+}
+
+// UpdateActiveTime 更新房间的最后活跃时间
+func (room *Room) UpdateActiveTime() {
+	room.LastActiveTime = time.Now()
+	log.Printf("🕒 Updated active time for room %d", room.ID)
 }

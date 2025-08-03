@@ -72,11 +72,32 @@ func (room *Room) Run() {
 func (room *Room) StartServeClient(player *clients.Player) {
 	// 基础信息
 	ctx := player.Ctx
-	conn := ctx.Conn
+	log.Printf("🟡 StartServeClient for player %d", player.GetID())
+
+	// 检查基本有效性
+	if ctx == nil {
+		log.Printf("🔴 Player context is nil for player %d at start", player.GetID())
+		return
+	}
+
+	log.Printf("🟢 Starting client service for player %d", player.GetID())
 
 	defer func() {
-		// TODO: 发送掉线消息
-		// ...
+		log.Printf("🟡 StartServeClient ending for player %d", player.GetID())
+
+		// 发送 unregister 信号，通知房间移除这个玩家
+		// 使用非阻塞发送
+		select {
+		case room.unregister <- player:
+			log.Printf("🟡 Sent unregister signal for player %d", player.GetID())
+		default:
+			// 如果 channel 满了，说明房间可能正在关闭或有问题
+			log.Printf("🔴 Failed to send unregister signal for player %d (channel full)", player.GetID())
+			// 但我们仍然需要清理资源
+			if player != nil && player.Ctx != nil {
+				player.Ctx.Close()
+			}
+		}
 
 		if r := recover(); r != nil {
 			// 发生了 panic，r 是 panic 的值
@@ -95,17 +116,34 @@ func (room *Room) StartServeClient(player *clients.Player) {
 	// ...
 
 	// 只接受信息， 并把信息发送到管道中
+	log.Printf("🟡 Starting message loop for player %d", player.GetID())
 	for {
-		messageType, data, err := conn.ReadMessage()
+		messageType, data, err := ctx.SafeReadMessage()
 		if err != nil {
-			// 判断各种错误
+			log.Printf("🔴 ReadMessage error for player %d: %v", player.GetID(), err)
+
+			// 分析不同类型的关闭错误
+			if websocket.IsCloseError(err, websocket.CloseNoStatusReceived) {
+				log.Printf("🔵 Player %d connection closed without status (likely browser refresh/close)", player.GetID())
+			} else if websocket.IsCloseError(err, websocket.CloseGoingAway) {
+				log.Printf("🔵 Player %d going away (page navigation/browser close)", player.GetID())
+			} else if websocket.IsCloseError(err, websocket.CloseNormalClosure) {
+				log.Printf("🔵 Player %d normal closure", player.GetID())
+			} else if websocket.IsCloseError(err, websocket.CloseAbnormalClosure) {
+				log.Printf("🔵 Player %d abnormal closure", player.GetID())
+			} else {
+				// 其他类型的错误
+				log.Printf("🔴 Non-close error for player %d: %v", player.GetID(), err)
+			}
 
 			// 读取错误，可能是连接关闭
-			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Println("read error:", err)
+			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure, websocket.CloseNoStatusReceived) {
+				log.Printf("🔵 Unexpected close error for player %d: %v", player.GetID(), err)
 			}
 			return
 		}
+
+		log.Printf("🟡 Received message from player %d, type: %d, length: %d", player.GetID(), messageType, len(data))
 
 		// 忽略非二进制消息
 		if messageType != websocket.BinaryMessage {
