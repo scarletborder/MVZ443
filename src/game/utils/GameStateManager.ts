@@ -6,12 +6,24 @@ export class GameStateManager {
   private static instance: GameStateManager;
 
   // 当前状态
-  private currentEnergy: number = 100;
+  private currentEnergy: number = 0
   private currentStarShards: number = 0;
+
+  // 能量自然变化状态（仅用于视觉效果）
+  private energyNaturalChangeState: {
+    timeInterval: number;
+    isAdd: boolean;
+    active: boolean;
+  } = {
+      timeInterval: 0,
+      isAdd: false,
+      active: false
+    };
 
   // 状态更新回调
   private energyUpdateCallbacks: ((energy: number) => void)[] = [];
   private starShardsUpdateCallbacks: ((starShards: number) => void)[] = [];
+  private energyNaturalChangeCallbacks: ((state: { timeInterval: number; isAdd: boolean; active: boolean }) => void)[] = [];
 
   private constructor() { }
 
@@ -85,6 +97,48 @@ export class GameStateManager {
     const index = this.starShardsUpdateCallbacks.indexOf(callback);
     if (index > -1) {
       this.starShardsUpdateCallbacks.splice(index, 1);
+    }
+  }
+
+  /**
+   * 设置能量自然变化状态（仅用于视觉效果）
+   * @param timeInterval 时间间隔（毫秒），0表示清除状态
+   * @param isAdd 是否为增加能量
+   */
+  public setEnergyNaturalChangeState(timeInterval: number, isAdd: boolean): void {
+    this.energyNaturalChangeState = {
+      timeInterval,
+      isAdd,
+      active: timeInterval > 0
+    };
+
+    // 通知所有监听器
+    this.energyNaturalChangeCallbacks.forEach(callback =>
+      callback(this.energyNaturalChangeState)
+    );
+  }
+
+  /**
+   * 获取当前能量自然变化状态
+   */
+  public getEnergyNaturalChangeState() {
+    return { ...this.energyNaturalChangeState };
+  }
+
+  /**
+   * 注册能量自然变化状态监听器
+   */
+  public onEnergyNaturalChangeUpdate(callback: (state: { timeInterval: number; isAdd: boolean; active: boolean }) => void): void {
+    this.energyNaturalChangeCallbacks.push(callback);
+  }
+
+  /**
+   * 移除能量自然变化状态监听器
+   */
+  public removeEnergyNaturalChangeListener(callback: (state: { timeInterval: number; isAdd: boolean; active: boolean }) => void): void {
+    const index = this.energyNaturalChangeCallbacks.indexOf(callback);
+    if (index > -1) {
+      this.energyNaturalChangeCallbacks.splice(index, 1);
     }
   }
 }

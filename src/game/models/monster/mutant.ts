@@ -225,6 +225,16 @@ export default class IMutant extends IMonster {
 
     public update(...args: any[]): void {
         this.anim.updatePosition(this.x, this.y);
+        // 超越边界销毁
+        const game = this.game;
+        if (!game) return;
+        if (this.Rank === 'normal' && this.x < -game.gardener.positionCalc.GRID_SIZEX * 1) {
+            console.log('Zombie out of boundary');
+            // 游戏直接失败,结束游戏
+            // 矿车可以被碰撞,如果丢,早丢了
+            this.destroy();
+            game.handleExit(false);
+        }
     }
 
     public takeDamage(damage: number, projectileType?: "bullet" | "laser" | "explosion" | "trajectory") {

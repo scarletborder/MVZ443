@@ -234,7 +234,7 @@ export default class QueueReceive {
       // 该帧有效,帧驱动一些事件发生
       this.game.physics.world.update(this.game.frameTicker.getCurrentTime(), this.game.frameTicker.frameInterval);
       // 例如 plant发出子弹, 刷怪, 避免通过game.timer导致不精确
-      this.game.frameTicker.update();
+      this.game.frameTicker.update(); // 游戏中，非暂停，驱动定时器前进1帧
       EventBus.emit('timeFlow-set', { delta: this.game.frameTicker.frameInterval });
       executedList.forEach((func) => { func(); });
     }

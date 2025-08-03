@@ -326,12 +326,14 @@ export class IZombie extends IMonster {
             this.zombieAnim.updatePosition(this.x + this.offsetX, this.y + this.offsetY);
         }
         // 超越边界销毁
-        if (this.Rank === 'normal' && this.x < - IZombie.GridClan.gardener.positionCalc.GRID_SIZEX * 1) {
+        const game = this.game;
+        if (!game) return;
+        if (this.Rank === 'normal' && this.x < -game.gardener.positionCalc.GRID_SIZEX * 1) {
             console.log('Zombie out of boundary');
             // 游戏直接失败,结束游戏
             // 矿车可以被碰撞,如果丢,早丢了
             this.destroy();
-            EventBus.emit('game-fail');
+            game.handleExit(false);
         }
     }
 

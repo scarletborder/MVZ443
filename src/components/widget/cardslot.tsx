@@ -1,18 +1,16 @@
 import { useEffect, useState } from 'react';
+import { useMemoizedFn, useCreation } from 'ahooks';
 import { IRefPhaserGame } from '../../game/PhaserGame';
 import Card from './card';
 import PlantFactoryMap from '../../game/presets/plant';
-import { useGameContext } from '../../context/garden_ctx';
-import { EventBus } from '../../game/EventBus';
 import { IRecord } from '../../game/models/IRecord';
 import { useSaveManager } from '../../context/save_ctx';
 import { GameParams } from '../../game/models/GameParams';
 import VCard from './vcard';
-import { publicUrl } from '../../utils/browser';
 import { useDeviceType } from '../../hooks/useDeviceType';
 import Pickaxe from './pickaxe';
 import useDarkMode from '../../hooks/useDarkMode';
-import { gameStateManager } from '../../game/utils/GameStateManager';
+import { EnergyDisplay } from './EnergyDisplay';
 
 interface slotProps {
     sceneRef: React.MutableRefObject<IRefPhaserGame | null>;
@@ -20,134 +18,36 @@ interface slotProps {
 }
 
 export function EnergySlot() {
-    const isDarkMode = useDarkMode();
-    const { updateEnergy } = useGameContext();
-    const [energy, setEnergy] = useState(gameStateManager.getCurrentEnergy()); // 从 GameStateManager 获取能量
+    // 能量定时器配置 - 每25秒增加25能量，无首次延迟
+    const energyTimerConfig = {
+        timeInterval: 25000,
+        energyDelta: 25,
+        startDelay: 0
+    };
 
-    // 监听能量变化
-    useEffect(() => {
-        const handleEnergyUpdate = (newEnergy: number) => {
-            setEnergy(newEnergy);
-        };
-
-        gameStateManager.onEnergyUpdate(handleEnergyUpdate);
-
-        // 设置初始值
-        setEnergy(gameStateManager.getCurrentEnergy());
-
-        return () => {
-            gameStateManager.removeEnergyUpdateListener(handleEnergyUpdate);
-        };
-    }, []);
-
-    useEffect(() => {
-        // 处理种植消耗
-        const handlePlant = (data: { pid: number, level: number }) => {
-            // 通过pid获知cost
-            const cost = PlantFactoryMap[data.pid]?.cost(data.level);
-            updateEnergy(-cost);
-        };
-        // 更新能量
-        const handleUpdateEnergy = (data: { energyChange: number, special?: (prev: number) => number }) => {
-            // energy add or decrease
-            updateEnergy(+data.energyChange, data.special);
-            // TODO: 增加动画
-        };
-
-        EventBus.on('card-plant', handlePlant);
-        EventBus.on('energy-update', handleUpdateEnergy);
-        return () => {
-            EventBus.removeListener('card-plant', handlePlant);
-            EventBus.removeListener('energy-update', handleUpdateEnergy);
-        }
-    }, [updateEnergy]);
     return (
-        <div style={{
-            display: "flex",  // 关键：启用 Flexbox 布局
-            flexDirection: "column",
-            justifyContent: "center",  // 让内容垂直居中
-            alignItems: "center",
-            backgroundColor: isDarkMode ? '#333' : '#f0f0f0', // 夜色模式背景
-            width: '6%',
-            minWidth: "6%",
-            maxWidth: '150px', // 避免过窄
-            height: "100%",
-            padding: '10px',
-            color: 'black',
-            textAlign: 'center',
-        }}>
-            <img src={`${publicUrl}/assets/sprite/redstone.png`} alt="energy"
-                style={{ width: '40px', height: '40px', marginBottom: '10px' }} draggable="false" />
-            <p style={{
-                fontSize: '1.6em',
-                color: isDarkMode ? '#e0e0e0' : 'black',
-                margin: 0  // 去除默认外边距
-            }}>{energy}</p>
-        </div>
-    )
+        <EnergyDisplay
+            direction="vertical"
+            energyTimer={energyTimerConfig}
+        />
+    );
 }
 
 
 export function VerticalEnergySlot() {
-    const isDarkMode = useDarkMode();
-    const { updateEnergy } = useGameContext();
-    const [energy, setEnergy] = useState(gameStateManager.getCurrentEnergy()); // 从 GameStateManager 获取能量
+    // 能量定时器配置 - 每25秒增加25能量，无首次延迟
+    const energyTimerConfig = {
+        timeInterval: 25000,
+        energyDelta: 25,
+        startDelay: 0
+    };
 
-    // 监听能量变化
-    useEffect(() => {
-        const handleEnergyUpdate = (newEnergy: number) => {
-            setEnergy(newEnergy);
-        };
-
-        gameStateManager.onEnergyUpdate(handleEnergyUpdate);
-
-        // 设置初始值
-        setEnergy(gameStateManager.getCurrentEnergy());
-
-        return () => {
-            gameStateManager.removeEnergyUpdateListener(handleEnergyUpdate);
-        };
-    }, []);
-
-    useEffect(() => {
-        // 处理种植消耗
-        const handlePlant = (data: { pid: number, level: number }) => {
-            // 通过pid获知cost
-            const cost = PlantFactoryMap[data.pid]?.cost(data.level);
-            updateEnergy(-cost);
-        };
-        // 更新能量
-        const handleUpdateEnergy = (data: { energyChange: number }) => {
-            // energy add or decrease
-            updateEnergy(+data.energyChange);
-            // TODO: 增加动画
-        };
-
-        EventBus.on('card-plant', handlePlant);
-        EventBus.on('energy-update', handleUpdateEnergy);
-        return () => {
-            EventBus.removeListener('card-plant', handlePlant);
-            EventBus.removeListener('energy-update', handleUpdateEnergy);
-        }
-    }, [updateEnergy]);
     return (
-        <div style={{
-            display: "flex",  // 关键：使用 Flexbox 布局
-            flexDirection: "row",
-            alignItems: "center",
-            backgroundColor: isDarkMode ? '#333' : '#f0f0f0', // 夜色模式背景
-            width: '100%',
-            padding: '10px',
-            color: 'black',
-            textAlign: 'center',
-            gap: '10px'  // 增加间距
-        }}>
-            <img src={`${publicUrl}/assets/sprite/redstone.png`} alt="energy"
-                style={{ width: '40px', height: '40px' }} draggable="false" />
-            <p style={{ margin: 0, fontSize: '1.5em', color: isDarkMode ? '#e0e0e0' : 'black', }}>{energy}</p>
-        </div>
-
-    )
+        <EnergyDisplay
+            direction="horizontal"
+            energyTimer={energyTimerConfig}
+        />
+    );
 }
 
 export function CardSlotHorizontal({ sceneRef, gameParams }: slotProps) {
@@ -155,12 +55,16 @@ export function CardSlotHorizontal({ sceneRef, gameParams }: slotProps) {
     // PC 用主要卡槽
     const MaxCardNumber = 10;
     const { currentProgress } = useSaveManager();
-    const [plants, setPlants] = useState<Array<IRecord>>([]);
-    // 使用 WeakMap 来记录 pid 到 level 的映射
-    const [pidToLevelMap, setPidToLevelMap] = useState<Map<number, number>>(new Map());
 
-    useEffect(() => {
+    // 使用 useCreation 优化 Map 创建，避免每次渲染都创建新的 Map
+    const [plants, setPlants] = useState<Array<IRecord>>([]);
+    const [pidToLevelMap, setPidToLevelMap] = useState(() => new Map<number, number>());
+
+    // 使用 useMemoizedFn 优化处理函数
+    const updatePlantsAndLevels = useMemoizedFn(() => {
         if (!gameParams) {
+            setPlants([]);
+            setPidToLevelMap(new Map());
             return;
         }
 
@@ -170,7 +74,7 @@ export function CardSlotHorizontal({ sceneRef, gameParams }: slotProps) {
 
         setPlants(newPlants);
 
-        const newPidToLevelMap = new Map(pidToLevelMap);
+        const newPidToLevelMap = new Map<number, number>();
         currentProgress.plants.forEach(plant => {
             if (gameParams.plants.includes(plant.pid)) {
                 newPidToLevelMap.set(plant.pid, plant.level);
@@ -178,33 +82,39 @@ export function CardSlotHorizontal({ sceneRef, gameParams }: slotProps) {
         });
 
         setPidToLevelMap(newPidToLevelMap);
-    }, [gameParams, currentProgress]);
+    });
 
+    useEffect(() => {
+        updatePlantsAndLevels();
+    }, [gameParams, currentProgress, updatePlantsAndLevels]);
 
-
-
-    return (<div style={{
-        display: 'flex',
-        flexDirection: "row",
-        justifyContent: 'flex-start',
-        backgroundColor: isDarkMode ? '#333' : '#f0f0f0', // 夜色模式背景
+    // 使用 useCreation 优化样式对象
+    const containerStyle = useCreation(() => ({
+        display: 'flex' as const,
+        flexDirection: "row" as const,
+        justifyContent: 'flex-start' as const,
+        backgroundColor: isDarkMode ? '#333' : '#f0f0f0',
         width: '100%',
         height: "100%",
-        alignItems: "center",
-    }} >
-        {plants.map((plant, index) => (
-            <Card
-                key={index}
-                plantName={plant.nameKey}
-                cooldownTime={plant.cooldownTime((pidToLevelMap.get(plant.pid) || 1))}
-                sceneRef={sceneRef}
-                pid={plant.pid}
-                texture={plant.texture}
-                cost={plant.cost(pidToLevelMap.get(plant.pid) || 1)}
-                level={pidToLevelMap.get(plant.pid) || 1}
-            />
-        ))}
-    </div>);
+        alignItems: "center" as const,
+    }), [isDarkMode]);
+
+    return (
+        <div style={containerStyle}>
+            {plants.map((plant, index) => (
+                <Card
+                    key={`${plant.pid}-${index}`} // 更好的 key
+                    plantName={plant.nameKey}
+                    cooldownTime={plant.cooldownTime((pidToLevelMap.get(plant.pid) || 1))}
+                    sceneRef={sceneRef}
+                    pid={plant.pid}
+                    texture={plant.texture}
+                    cost={plant.cost(pidToLevelMap.get(plant.pid) || 1)}
+                    level={pidToLevelMap.get(plant.pid) || 1}
+                />
+            ))}
+        </div>
+    );
 }
 
 
@@ -215,10 +125,13 @@ export function CardSlotVertical({ sceneRef, gameParams }: slotProps) {
     const MaxCardNumber = 9;
     const { currentProgress } = useSaveManager();
     const [plants, setPlants] = useState<Array<IRecord>>([]);
-    const [pidToLevelMap, setPidToLevelMap] = useState<Map<number, number>>(new Map());
+    const [pidToLevelMap, setPidToLevelMap] = useState(() => new Map<number, number>());
 
-    useEffect(() => {
+    // 使用 useMemoizedFn 优化处理函数
+    const updatePlantsAndLevels = useMemoizedFn(() => {
         if (!gameParams) {
+            setPlants([]);
+            setPidToLevelMap(new Map());
             return;
         }
 
@@ -228,7 +141,7 @@ export function CardSlotVertical({ sceneRef, gameParams }: slotProps) {
 
         setPlants(newPlants);
 
-        const newPidToLevelMap = new Map(pidToLevelMap);
+        const newPidToLevelMap = new Map<number, number>();
         currentProgress.plants.forEach(plant => {
             if (gameParams.plants.includes(plant.pid)) {
                 newPidToLevelMap.set(plant.pid, plant.level);
@@ -236,23 +149,29 @@ export function CardSlotVertical({ sceneRef, gameParams }: slotProps) {
         });
 
         setPidToLevelMap(newPidToLevelMap);
-    }, [gameParams, currentProgress]);
+    });
 
+    useEffect(() => {
+        updatePlantsAndLevels();
+    }, [gameParams, currentProgress, updatePlantsAndLevels]);
+
+    // 使用 useCreation 优化样式对象
+    const containerStyle = useCreation(() => ({
+        display: 'flex' as const,
+        flexDirection: "column" as const,
+        justifyContent: 'flex-start' as const,
+        alignItems: 'flex-start' as const,
+        width: '120%',
+        height: "91%",
+        backgroundColor: isDarkMode ? '#333' : '#f0f0f0',
+    }), [isDarkMode]);
 
     return (
-        <div style={{
-            display: 'flex',
-            flexDirection: "column", /* 保持垂直排列 */
-            justifyContent: 'flex-start',
-            alignItems: 'flex-start',
-            width: '120%', /* 调整宽度以适应横向卡片 */
-            height: "91%",
-            backgroundColor: isDarkMode ? '#333' : '#f0f0f0', // 夜色模式背景
-        }}>
+        <div style={containerStyle}>
             {plants.map((plant, index) => (
                 <VCard
-                    key={index}
-                    plantName={plant.nameKey} // 保留参数但不显示
+                    key={`${plant.pid}-${index}`} // 更好的 key
+                    plantName={plant.nameKey}
                     cooldownTime={plant.cooldownTime((pidToLevelMap.get(plant.pid) || 1))}
                     sceneRef={sceneRef}
                     pid={plant.pid}
@@ -269,15 +188,17 @@ export function CardSlotVertical({ sceneRef, gameParams }: slotProps) {
 // 永远竖向排列,有pickaxe和剩余的卡片
 export function ViceCardSlot({ sceneRef, gameParams }: slotProps) {
     const isDarkMode = useDarkMode();
-
-    const ExistedCards = useDeviceType() === 'pc' ? 10 : 9;
+    const deviceType = useDeviceType();
+    const ExistedCards = deviceType === 'pc' ? 10 : 9;
     const { currentProgress } = useSaveManager();
     const [plants, setPlants] = useState<Array<IRecord>>([]);
-    // 使用 WeakMap 来记录 pid 到 level 的映射
-    const [pidToLevelMap, setPidToLevelMap] = useState<Map<number, number>>(new Map());
+    const [pidToLevelMap, setPidToLevelMap] = useState(() => new Map<number, number>());
 
-    useEffect(() => {
+    // 使用 useMemoizedFn 优化处理函数
+    const updatePlantsAndLevels = useMemoizedFn(() => {
         if (!gameParams) {
+            setPlants([]);
+            setPidToLevelMap(new Map());
             return;
         }
 
@@ -288,7 +209,7 @@ export function ViceCardSlot({ sceneRef, gameParams }: slotProps) {
 
             setPlants(newPlants);
 
-            const newPidToLevelMap = new Map(pidToLevelMap);
+            const newPidToLevelMap = new Map<number, number>();
             currentProgress.plants.forEach(plant => {
                 if (gameParams.plants.includes(plant.pid)) {
                     newPidToLevelMap.set(plant.pid, plant.level);
@@ -298,24 +219,30 @@ export function ViceCardSlot({ sceneRef, gameParams }: slotProps) {
             setPidToLevelMap(newPidToLevelMap);
         } else {
             setPlants([]);
+            setPidToLevelMap(new Map());
         }
+    });
 
+    useEffect(() => {
+        updatePlantsAndLevels();
+    }, [gameParams, currentProgress, ExistedCards, updatePlantsAndLevels]);
 
-    }, [gameParams, currentProgress]);
+    // 使用 useCreation 优化样式对象
+    const containerStyle = useCreation(() => ({
+        display: 'flex' as const,
+        flexDirection: "row" as const,
+        justifyContent: 'flex-start' as const,
+        width: '100%',
+        height: "100%",
+        backgroundColor: isDarkMode ? '#333' : '#f0f0f0',
+    }), [isDarkMode]);
 
     return (
-        <div style={{
-            display: 'flex',
-            flexDirection: "row",
-            justifyContent: 'flex-start',
-            width: '100%',
-            height: "100%",
-            backgroundColor: isDarkMode ? '#333' : '#f0f0f0', // 夜色模式背景
-        }} >
+        <div style={containerStyle}>
             <Pickaxe sceneRef={sceneRef} />
             {plants.map((plant, index) => (
                 <Card
-                    key={index}
+                    key={`${plant.pid}-${index}`} // 更好的 key
                     plantName={plant.nameKey}
                     cooldownTime={plant.cooldownTime((pidToLevelMap.get(plant.pid) || 1))}
                     sceneRef={sceneRef}
@@ -325,5 +252,6 @@ export function ViceCardSlot({ sceneRef, gameParams }: slotProps) {
                     level={pidToLevelMap.get(plant.pid) || 1}
                 />
             ))}
-        </div>);
+        </div>
+    );
 }

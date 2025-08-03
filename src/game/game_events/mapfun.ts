@@ -1,9 +1,8 @@
 // 为地图带来独特的设定
 // 例如定期增加energy,定期减少energy
-
-import { EventBus } from "../EventBus";
 import { Game } from "../scenes/Game";
 import { StageDataRecords } from "../utils/loader";
+import { gameStateManager } from "../utils/GameStateManager";
 
 /**
  * 为关卡加入特殊的地图设定
@@ -27,16 +26,10 @@ function Chapter1Dispatch(game: Game, stageId: number) {
     const { width, height } = game.scale;
     // 白天
     if (stageId === 1 || stageId === 2) {
-        // 每25s + 25 energy
+        // 白天关卡，能量增加逻辑现在由React组件处理
         game.dayOrNight = true;
-        game.time.addEvent({
-            startAt: 15000,
-            delay: 25000,
-            callback: () => {
-                EventBus.emit('energy-update', { energyChange: 25 });
-            },
-            loop: true
-        });
+        // 设置自然变化状态（仅用于UI显示）
+        gameStateManager.setEnergyNaturalChangeState(25000, true);
     }
 
     if (stageId === 1) {
@@ -57,17 +50,17 @@ function Chapter1Dispatch(game: Game, stageId: number) {
         // [0][7] = water
         game.dayOrNight = false;
         game.gridProperty[0][7] = 'water';
-        const darkOverlay = game.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.3).setDepth(2);
+        game.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.3).setDepth(2);
     }
 
     if (stageId === 4) {
         game.dayOrNight = false;
-        const darkOverlay = game.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.5).setDepth(2);
+        game.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.5).setDepth(2);
     }
 
     if (stageId === 5 || stageId === 8) {
         game.dayOrNight = false;
-        const darkOverlay = game.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.5).setDepth(2);
+        game.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.5).setDepth(2);
         // row:2, 3  = water
         for (let col = 0; col < game.GRID_COLS; col++) {
             game.gridProperty[2][col] = 'water';
@@ -77,7 +70,7 @@ function Chapter1Dispatch(game: Game, stageId: number) {
 
     if (stageId === 6 || stageId === 9) {
         game.dayOrNight = false;
-        const darkOverlay = game.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.5).setDepth(2);
+        game.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.5).setDepth(2);
         if (stageId === 9) {
             // 在stage 8 基础上,在第一个elite结束后沙砾和碎石砖块会消失变为sky
 

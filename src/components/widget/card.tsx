@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useMemoizedFn, useLatest } from 'ahooks';
 import { IRefPhaserGame } from '../../game/PhaserGame';
 import { Game } from '../../game/scenes/Game';
 import { EventBus } from '../../game/EventBus';
@@ -66,46 +67,45 @@ export default function Card({ pid, texture, plantName, cooldownTime, sceneRef, 
         };
     }, []); // 保持空的依赖数组
 
+    // 使用 useMemoizedFn 优化事件处理函数
+    const handleDeselect = useMemoizedFn((data: { pid: number | null }) => {
+        if (data.pid !== pid) {
+            setIsChosen(false);
+        }
+    });
+
+    const handlePlant = useMemoizedFn((data: { pid: number }) => {
+        if (data.pid === pid) {
+            setIsChosen(false);
+            // Use the isPaused value from the component scope
+            if (!isPaused) {
+                setIsCoolingDown(true);
+                setRemainingTime(cooldownTime);
+            } else {
+                // If paused, wait until unpaused to start cooldown
+                setRemainingTime(cooldownTime);
+                setIsCoolingDown(true);
+                const timer = setInterval(() => {
+                    if (!isPaused) {
+                        console.log('resume');
+                        clearInterval(timer);
+                    }
+                }, 100);
+            }
+        }
+    });
 
     useEffect(() => {
-        const handleDeselect = (data: { pid: number | null }) => {
-            if (data.pid !== pid) {
-                setIsChosen(false);
-            }
-        };
-        const handlePlant = (data: { pid: number }) => {
-            if (data.pid === pid) {
-                setIsChosen(false);
-                // Use the isPaused value from the component scope
-                if (!isPaused) {
-                    setIsCoolingDown(true);
-                    setRemainingTime(cooldownTime);
-                } else {
-                    // If paused, wait until unpaused to start cooldown
-                    setRemainingTime(cooldownTime);
-                    setIsCoolingDown(true);
-                    const timer = setInterval(() => {
-                        if (!isPaused) {
-                            console.log('resume');
-                            clearInterval(timer);
-                        }
-                    }, 100);
-                }
-            }
-        };
-
-
         EventBus.on('card-deselected', handleDeselect);
         EventBus.on('card-plant', handlePlant);
 
         return () => {
             EventBus.removeListener('card-deselected', handleDeselect);
             EventBus.removeListener('card-plant', handlePlant);
-
         };
-    }, [pid, isPaused, cooldownTime]); // Add isPaused and cooldownTime to dependencies
+    }, [handleDeselect, handlePlant]); // 依赖于 memoized 函数
 
-    const handleClick = () => {
+    const handleClick = useMemoizedFn(() => {
         if (isPaused && !settings.isBluePrint) {
             return;
         }
@@ -118,6 +118,7 @@ export default function Card({ pid, texture, plantName, cooldownTime, sceneRef, 
 
         if (energy < cost) {
             console.log('Not enough energy');
+            EventBus.emit('energy-insufficient'); // 发射能量不足事件
             return;
         }
 
@@ -132,7 +133,7 @@ export default function Card({ pid, texture, plantName, cooldownTime, sceneRef, 
             scene.chooseCard(pid, level);
             console.log(`Card ${plantName} (pid=${pid} level=${level}) chosen`);
         }
-    };
+    });
 
     return (
         <button
