@@ -1,10 +1,13 @@
 package roomatom
 
 import (
+	"encoding/json"
 	"log"
 	"mvzserver/clients"
 	"mvzserver/constants"
 	messages "mvzserver/messages/pb"
+	"mvzserver/utils"
+
 	"runtime/debug"
 
 	"github.com/gofiber/websocket/v2"
@@ -17,15 +20,23 @@ type PlayerMessage = clients.PlayerMessage
 // WS入口
 func (room *Room) HandleClientJoin(c *websocket.Conn) {
 	ctx := room.RoomCtx.CreateClientCtxFromConn(c)
+	var payload = messages.ResponseJoinRoomSuccess{
+		RoomId:  uint32(room.ID),
+		MyId:    uint32(ctx.Id),
+		Key:     room.key,
+		Message: "加入房间成功",
+	}
+	var resp = messages.LobbyResponse{
+		Payload: &messages.LobbyResponse_JoinRoomSuccess{
+			JoinRoomSuccess: &payload,
+		},
+	}
+	utils.WriteLobbyResponse(c, &resp)
+
 	// 创建一个新的玩家实例
 	p := clients.NewPlayer(ctx, room.incomingMessages)
-
 	room.register <- &p // 将玩家加入到注册通道
-
-	// TODO： 加入短线重连机制,.具体见我和gemini对话
-
-	// 开始服务
-	room.StartServeClient(&p)
+	return
 }
 
 // ---------------------------
@@ -38,7 +49,48 @@ func (room *Room) handleRegister(player *clients.Player) {
 	if room.GameStage.EqualTo(constants.STAGE_InLobby) {
 		// 向 context 中注册用户
 		room.RoomCtx.AddUser(player)
-		// TODO: 广播人数变化
+
+		// 制作当前peers信息json
+		// peers = [{"addr" : string, "id": int}, ...]
+		type PeerInfo struct {
+			Addr string `json:"addr"`
+			Id   int    `json:"id"`
+		}
+		var peers []PeerInfo
+		room.RoomCtx.Players.Range(func(uid int, player *clients.Player) bool {
+			peers = append(peers, PeerInfo{
+				Addr: player.Ctx.Conn.RemoteAddr().String(),
+				Id:   player.Ctx.Id,
+			})
+			return true
+		})
+		jsonPeers, _ := json.Marshal(peers)
+		jsonPeersStr := string(jsonPeers)
+
+		// 进行一次广播
+		room.RoomCtx.Players.Range(func(uid int, player *clients.Player) bool {
+			defer func() {
+				if r := recover(); r != nil {
+					log.Printf("处理玩家注册时捕获到 Panic: %v\n", r)
+					log.Printf("堆栈信息:\n%s", string(debug.Stack()))
+				}
+			}()
+			payload := messages.ResponseRoomInfo{
+				Peers:  jsonPeersStr,
+				RoomId: uint32(room.ID),
+				LordId: uint32(room.RoomCtx.OwnerUserID),
+				MyId:   uint32(player.Ctx.Id),
+			}
+			room.RoomCtx.SendMessageToUserByPlayer(&messages.RoomResponse{
+				Payload: &messages.RoomResponse_RoomInfo{
+					RoomInfo: &payload,
+				},
+			}, player)
+			return true
+		})
+
+		// 开始服务,开goroutine
+		go room.StartServeClient(player)
 	} else {
 		// 拒绝加入
 	}
@@ -89,6 +141,8 @@ func (room *Room) handlePlayerMessage(msg *PlayerMessage) {
 	// Preparing
 	case *messages.Request_Ready:
 		room.HandleRequestReady(msg.Player, payload.Ready)
+	case *messages.Request_LeaveChooseMap:
+		room.HandleRequestLeaveChooseMap(msg.Player, payload.LeaveChooseMap)
 	// Loading
 	case *messages.Request_Loaded:
 		room.HandleRequestLoaded(msg.Player, payload.Loaded)
@@ -103,6 +157,7 @@ func (room *Room) handlePlayerMessage(msg *PlayerMessage) {
 		room.HandleRequestStarShards(msg.Player, payload.StarShards)
 	case *messages.Request_EndGame:
 		room.HandleRequestEndGame(msg.Player, payload.EndGame)
+
 	default:
 		// 未知请求类型
 	}
@@ -122,8 +177,8 @@ func (room *Room) HandleRequestReady(player *Player, req *messages.RequestReady)
 		payload := messages.ResponseAllReady{
 			AllPlayerCount: room.GetPlayerCount(),
 		}
-		resp := &messages.LobbyResponse{
-			Payload: &messages.LobbyResponse_AllReady{
+		resp := &messages.RoomResponse{
+			Payload: &messages.RoomResponse_AllReady{
 				AllReady: &payload,
 			},
 		}
@@ -134,8 +189,8 @@ func (room *Room) HandleRequestReady(player *Player, req *messages.RequestReady)
 			Count:          room.PlayerReadyCount(),
 			AllPlayerCount: room.GetPlayerCount(),
 		}
-		resp := &messages.LobbyResponse{
-			Payload: &messages.LobbyResponse_UpdateReadyCount{
+		resp := &messages.RoomResponse{
+			Payload: &messages.RoomResponse_UpdateReadyCount{
 				UpdateReadyCount: &payload,
 			},
 		}
@@ -157,9 +212,31 @@ func (room *Room) HandleRequestChooseMap(player *Player, req *messages.RequestCh
 		ChapterId: req.ChapterId,
 		StageId:   req.StageId,
 	}
-	resp := &messages.LobbyResponse{
-		Payload: &messages.LobbyResponse_ChooseMap{
+	resp := &messages.RoomResponse{
+		Payload: &messages.RoomResponse_ChooseMap{
 			ChooseMap: &payload,
+		},
+	}
+	room.RoomCtx.BroadcastMessage(resp, nil)
+}
+
+func (room *Room) HandleRequestLeaveChooseMap(player *Player, req *messages.RequestLeaveChooseMap) {
+	// 只有房主能这样做
+	if room.RoomCtx.OwnerUserID != player.Ctx.Id {
+		return
+	}
+	// 只能在 STAGE_Preparing 阶段处理
+	if !room.GameStage.EqualTo(constants.STAGE_Preparing) {
+		return
+	}
+	room.GameStage.Store(constants.STAGE_InLobby)
+	room.ChapterID = 0
+	room.StageID = 0
+	// 广播，退出选卡
+	payload := messages.ResponseQuitChooseMap{}
+	resp := &messages.RoomResponse{
+		Payload: &messages.RoomResponse_QuitChooseMap{
+			QuitChooseMap: &payload,
 		},
 	}
 	room.RoomCtx.BroadcastMessage(resp, nil)
@@ -178,8 +255,8 @@ func (room *Room) HandleRequestLoaded(player *Player, req *messages.RequestLoade
 		payload := messages.ResponseAllLoaded{
 			Seed: room.Seed,
 		}
-		resp := &messages.LobbyResponse{
-			Payload: &messages.LobbyResponse_AllLoaded{
+		resp := &messages.RoomResponse{
+			Payload: &messages.RoomResponse_AllLoaded{
 				AllLoaded: &payload,
 			},
 		}
@@ -206,106 +283,13 @@ func (room *Room) HandleRequestBlank(player *Player, req *messages.RequestBlank)
 	return true
 }
 
-// 对于游戏中消耗性资源
-// 因为发送的广播frame到达会迟于用户消耗
-// 用户可能会疯狂的消耗游戏资源从而种植/使用超过自己能量的植物
-// 所以需要在处理请求时进行校验
-func (room *Room) CouldAffordable(player *Player, base_req *messages.RequestBlank,
-	energy_cost int32, starshards_cost int32,
-	energy_sum int32, starshards_sum int32,
-) bool {
-	type ClientFrameData struct {
-		CurrentLogicFrame  uint32 // 他当前的逻辑帧
-		LastAckServerFrame uint32 // 他上一次ack的服务器帧
-		SunOnPlant         int32  // 他此次种植行为发生时候的当前阳光总数
-		PlantCost          int32  // 种植的植物需要消耗的阳光
-	}
-	// ServerUserRecord 服务器记录的该用户上一次成功操作的数据
-	type ServerUserRecord struct {
-		LastUserLogicFrame uint32 // 上一次的最近逻辑帧
-		LastAckServerFrame uint32 // 上一次ack的服务器帧
-		SunBeforeLastPlant int32  // 上一次成功种植时候用户种植前的阳光总数
-		LastPlantCost      int32  // 上一次成功种植时用户消耗的阳光
-	}
-
-	CanPlantValidate := func(clientData ClientFrameData, serverRecord ServerUserRecord) bool {
-		// 1. 基础校验：客户端自认为阳光不足，这是最直接的失败
-		if clientData.SunOnPlant < clientData.PlantCost {
-			return false
-		}
-		// 2. 首次操作处理: 如果服务器没有记录(用0等默认值表示)，则为首次操作
-		if serverRecord.LastUserLogicFrame <= 0 {
-			// 此处已通过了最开始的校验，所以直接成功
-			return true
-		}
-		// 3. 陈旧/重复的帧请求校验
-		if clientData.CurrentLogicFrame <= serverRecord.LastUserLogicFrame {
-			return false
-		}
-		// 4. 核心逻辑：判断是否为快速连续操作
-		isNormalOperation := clientData.LastAckServerFrame > serverRecord.LastAckServerFrame
-
-		if isNormalOperation {
-			// --- 常规操作 ---
-			// 客户端状态是“新”的，它上报的阳光数是在收到了服务器所有回执后的最新状态。
-			// 我们可以信任这个值作为校验的基准。
-			// 该校验在函数入口已完成，此处确认逻辑正确。
-			return true
-		} else {
-			// --- 快速连续操作 ---
-			// 客户端在发送此请求时，还不知道上一个操作的结果。
-			// 它上报的 SunOnPlant 是扣除了上次消耗后，又加上了本地新增阳光的结果。
-			// 我们需要重建一个可信的“阳光池”来进行校验。
-
-			// 有效阳光池 = 客户端上报的阳光 + 服务器记录的上次消耗（因为客户端已经减过一次了，我们要加回来）
-			effectiveSunPool := clientData.SunOnPlant + serverRecord.LastPlantCost
-
-			// 总消耗 = 服务器记录的上次消耗 + 本次新请求的消耗
-			totalCost := serverRecord.LastPlantCost + clientData.PlantCost
-
-			if effectiveSunPool >= totalCost {
-				return true
-			} else {
-				return false
-			}
-		}
-	}
-	lastFrameID := player.Ctx.LatestFrameID.Load()
-	lastAckFrameID := player.Ctx.LatestAckFrameID.Load()
-
-	clientData_energy := ClientFrameData{
-		CurrentLogicFrame:  base_req.FrameId,
-		LastAckServerFrame: base_req.AckFrameId,
-		SunOnPlant:         energy_sum,
-		PlantCost:          energy_cost,
-	}
-	serverData_energy := ServerUserRecord{
-		LastUserLogicFrame: lastFrameID,
-		LastAckServerFrame: lastAckFrameID,
-		SunBeforeLastPlant: player.LastEnergySum,
-		LastPlantCost:      player.LastStarShards,
-	}
-	clientData_starshards := ClientFrameData{
-		CurrentLogicFrame:  base_req.FrameId,
-		LastAckServerFrame: base_req.AckFrameId,
-		SunOnPlant:         starshards_sum,
-		PlantCost:          starshards_cost,
-	}
-	serverData_starshards := ServerUserRecord{
-		LastUserLogicFrame: lastFrameID,
-		LastAckServerFrame: lastAckFrameID,
-		SunBeforeLastPlant: player.LastStarShards,
-		LastPlantCost:      player.LastStarShards,
-	}
-
-	return ((energy_cost == 0) || CanPlantValidate(clientData_energy, serverData_energy)) &&
-		((starshards_cost == 0) || CanPlantValidate(clientData_starshards, serverData_starshards))
-}
-
 func (room *Room) HandleRequestCardPlant(player *Player, req *messages.RequestCardPlant) {
 	if !room.HandleRequestBlank(player, req.Base.Base) {
 		return
 	}
+	// 此帧想要发生的时机晚于下一帧序号
+	req.Base.ProcessFrameId = max(room.RoomCtx.NextFrameID.Load(), req.Base.ProcessFrameId)
+
 	if !room.CouldAffordable(player, req.Base.Base, req.Cost, 0, req.EnergySum, req.StarShardsSum) {
 		// 无法负担
 		return
@@ -317,6 +301,9 @@ func (room *Room) HandleRequestRemovePlant(player *Player, req *messages.Request
 	if !room.HandleRequestBlank(player, req.Base.Base) {
 		return
 	}
+	// 此帧想要发生的时机晚于下一帧序号
+	req.Base.ProcessFrameId = max(room.RoomCtx.NextFrameID.Load(), req.Base.ProcessFrameId)
+
 	room.Logic.RemoveCard(player, req)
 }
 
@@ -324,6 +311,9 @@ func (room *Room) HandleRequestStarShards(player *Player, req *messages.RequestS
 	if !room.HandleRequestBlank(player, req.Base.Base) {
 		return
 	}
+	// 此帧想要发生的时机晚于下一帧序号
+	req.Base.ProcessFrameId = max(room.RoomCtx.NextFrameID.Load(), req.Base.ProcessFrameId)
+
 	if !room.CouldAffordable(player, req.Base.Base, 0, req.Cost, req.EnergySum, req.StarShardsSum) {
 		// 无法负担
 		return
@@ -343,8 +333,8 @@ func (room *Room) HandleRequestEndGame(player *Player, req *messages.RequestEndG
 	payload := messages.ResponseGameEnd{
 		GameResult: req.GameResult,
 	}
-	resp := &messages.LobbyResponse{
-		Payload: &messages.LobbyResponse_GameEnd{
+	resp := &messages.RoomResponse{
+		Payload: &messages.RoomResponse_GameEnd{
 			GameEnd: &payload,
 		},
 	}

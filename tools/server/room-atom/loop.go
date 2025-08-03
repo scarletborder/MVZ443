@@ -91,6 +91,9 @@ func (room *Room) StartServeClient(player *clients.Player) {
 		}
 	}()
 
+	// TODO： 加入短线重连机制,.具体见我和gemini对话
+	// ...
+
 	// 只接受信息， 并把信息发送到管道中
 	for {
 		messageType, data, err := conn.ReadMessage()

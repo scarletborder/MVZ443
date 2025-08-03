@@ -351,7 +351,9 @@ export default class Gardener {
 
             const { col, row } = this.positionCalc.getGridByPos(pointer.x, pointer.y);
             if (col >= 0 && row >= 0 && this.canPlant(this.prePlantPid[0], col, row)) {
-                this.scene.sendQueue.sendCardPlant(this.prePlantPid[0], col, row, this.prePlantPid[1]);
+                this.scene.sendQueue.sendCardPlant(this.prePlantPid[0], col, row, this.prePlantPid[1], 
+                    
+                );
             }
         }
 

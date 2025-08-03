@@ -110,8 +110,8 @@ func (room *Room) Destroy() {
 
 	room.destroyOnce.Do(func() {
 		// 发送房间关闭
-		room.RoomCtx.BroadcastMessage(&messages.LobbyResponse{
-			Payload: &messages.LobbyResponse_RoomClosed{
+		room.RoomCtx.BroadcastMessage(&messages.RoomResponse{
+			Payload: &messages.RoomResponse_RoomClosed{
 				RoomClosed: &messages.ResponseRoomClosed{
 					Message: "Room is closed",
 				},

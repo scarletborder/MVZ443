@@ -43,11 +43,18 @@ func (c *ClientCtx) Close() {
 	c.Conn.Close()
 }
 
+// Deprecated: conn只写二进制
 func (c *ClientCtx) WriteJSON(v interface{}) error {
 	return c.Conn.WriteJSON(v)
 }
 
 func (c *ClientCtx) UpdatePlayerFrame(frameId, ackFrameId uint32) {
-	c.LatestFrameID.Store(frameId)
-	c.LatestAckFrameID.Store(ackFrameId)
+	old1 := c.LatestFrameID.Load()
+	if frameId > old1 {
+		c.LatestFrameID.Store(frameId)
+	}
+	old2 := c.LatestAckFrameID.Load()
+	if ackFrameId > old2 {
+		c.LatestAckFrameID.Store(ackFrameId)
+	}
 }

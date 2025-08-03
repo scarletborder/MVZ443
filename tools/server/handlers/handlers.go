@@ -1,9 +1,13 @@
 package handlers
 
 import (
+	"log"
 	"mvzserver/constants"
+	messages "mvzserver/messages/pb"
 	roommanager "mvzserver/room-manager"
 	"mvzserver/types"
+	"mvzserver/utils"
+	"runtime/debug"
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
@@ -35,6 +39,13 @@ func (sh *ServerHandler) HandleListRoom(c *fiber.Ctx) error {
 }
 
 func (sh *ServerHandler) HandleWS(c *websocket.Conn) {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("处理玩家注册时捕获到 Panic: %v\n", r)
+			log.Printf("堆栈信息:\n%s", string(debug.Stack()))
+		}
+	}()
+
 	// 获取查询参数中的房间ID
 	roomId := -1
 	if id := c.Query("id"); id != "" {
@@ -62,41 +73,35 @@ func (sh *ServerHandler) HandleWS(c *websocket.Conn) {
 		room.Run()
 	} else {
 		// 房间存在,检查密钥
+		var payload = messages.ResponseJoinRoomFailed{}
+		var resp = messages.LobbyResponse{
+			Payload: &messages.LobbyResponse_JoinRoomFailed{
+				JoinRoomFailed: &payload,
+			},
+		}
 		if room.CheckKeyCorrect(_key) == false {
-			c.WriteJSON(map[string]interface{}{
-				"success": false,
-				"error":   "密钥错误",
-			})
+			payload.Message = "密钥错误"
+			utils.WriteLobbyResponse(c, &resp)
 			c.Close()
 			return
 		}
 
 		// 房间存在,检查是否已满
 		if room.GetPlayerCount() >= 2 {
-			c.WriteJSON(map[string]interface{}{
-				"success": false,
-				"error":   "房间已满",
-			})
+			payload.Message = "房间已满"
+			utils.WriteLobbyResponse(c, &resp)
 			c.Close()
 			return
 		}
 
-		// 房间是否started
-		if room.GameStage.IsLaterThanOrEqual(constants.STAGE_InGame) {
-			c.WriteJSON(map[string]interface{}{
-				"success": false,
-				"error":   "房间已开始",
-			})
+		// 房间是否进入准备阶段
+		if room.GameStage.IsLaterThanOrEqual(constants.STAGE_Preparing) {
+			payload.Message = "房间已开始"
+			utils.WriteLobbyResponse(c, &resp)
 			c.Close()
 			return
 		}
 	}
-
-	c.WriteJSON(map[string]interface{}{
-		"success": true,
-		"room_id": room.ID,
-		"key":     _key,
-	})
 
 	// 服务用户连接
 	room.HandleClientJoin(c)

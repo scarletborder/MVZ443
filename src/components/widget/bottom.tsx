@@ -54,7 +54,7 @@ export default function BottomTools({ width, chapterID }: Props) {
 
     useEffect(() => {
         const handleStarShardsConsume = () => {
-            if (BackendWS.isConnected) {
+            if (BackendWS.isOnlineMode) {
                 gamectx.updateStarShards(-2);
             } else {
                 gamectx.updateStarShards(-1);

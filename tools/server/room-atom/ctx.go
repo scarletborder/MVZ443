@@ -6,6 +6,7 @@ package roomatom
 import (
 	"mvzserver/clients"
 	"mvzserver/constants"
+	"sync"
 
 	"sync/atomic"
 	"time"
@@ -26,19 +27,51 @@ type RoomCtx struct {
 	nextId      int32     // 用于生成用户ID，初始值设置为100
 
 	// 网络
-	// 发送给客户端的下一帧ID
-	FrameID uint32
+	// 发送给客户端渲染的下一帧ID
+	NextFrameID *atomic.Uint32
+	// 某帧下一次操作的序号
+	// FrameID - OperationID
+	// uint32 - uint32
+	OperationID    map[uint32]uint32
+	OperationMutex sync.Mutex // 确保操作ID的原子性
 
 	// game logic ticker
 	// 一直是nil 直到 InGame 状态切换前赋值
 	GameTicker *time.Ticker
 }
 
+// 获得某帧下一次操作的序号并自增
+func (m *RoomCtx) GetNextOperationID(frameID uint32) uint32 {
+	m.OperationMutex.Lock()
+	defer m.OperationMutex.Unlock()
+	// 如果不存在，则返回1，存入2
+	nextID, exists := m.OperationID[frameID]
+	if !exists {
+		m.OperationID[frameID] = 2
+		return 1
+	}
+	// 如果存在，则返回当前值并自增
+	m.OperationID[frameID] = nextID + 1
+	return nextID
+}
+
+// 在广播某帧后，删除他的map记录
+func (m *RoomCtx) DeleteOperationID(frameID uint32) {
+	m.OperationMutex.Lock()
+	defer m.OperationMutex.Unlock()
+	delete(m.OperationID, frameID)
+}
+
 func NewRoomCtx() *RoomCtx {
+	NextRenderFrame := &atomic.Uint32{}
+	NextRenderFrame.Store(1) // 下一帧渲染为1，当前都在0
 	return &RoomCtx{
-		FrameID:     0, // 初始帧ID为0
-		OwnerUserID: 0, // unset
+		NextFrameID: NextRenderFrame, // 初始帧ID为0
+		OwnerUserID: 0,               // unset
 		nextId:      100,
+
+		OperationID:    make(map[uint32]uint32), // 初始化操作ID映射
+		OperationMutex: sync.Mutex{},            // 初始化互斥锁
 
 		GameTicker: nil, // 初始没有， 只有开始游戏后才会NewTimer
 	}
@@ -46,7 +79,7 @@ func NewRoomCtx() *RoomCtx {
 
 // 重置状态以允许下场游戏
 func (m *RoomCtx) Reset() {
-	m.FrameID = 0
+	m.NextFrameID.Store(1) // 重置帧ID为1
 	if m.GameTicker != nil {
 		m.GameTicker.Stop()
 	}
@@ -127,11 +160,10 @@ func (m *RoomCtx) BroadcastMessage(msg protoreflect.ProtoMessage, exclude_ids []
 	}
 	// 先制作mapset
 	excludeSet := mapset.NewSet[int]()
-	if exclude_ids != nil {
-		for _, id := range exclude_ids {
-			excludeSet.Add(id)
-		}
+	for _, id := range exclude_ids {
+		excludeSet.Add(id)
 	}
+
 	m.Players.Range(func(key int, player *clients.Player) bool {
 		if player != nil && player.Ctx != nil && player.Ctx.Conn != nil {
 			return true // 继续遍历

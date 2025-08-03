@@ -1,415 +1,263 @@
 import Denque from "denque";
 import { Game } from "../scenes/Game";
 import BackendWS from "../../utils/net/sync";
-import encodeMessageToBinary from "../../utils/net/encode";
 import { EventBus } from "../EventBus";
+import {
+  InGameOperation,
+  InGameResponse
+} from "../../pb/response";
 
 // 单人游戏
 interface SingleParams {
-    mode: 'single';
+  mode: 'single';
 }
 
 // 多人联机
 interface MultiParams {
-    mode: 'multi';
+  mode: 'multi';
 }
-
-// 消息类型
-export type _RoomInfo = {
-    // 多人only,服务器告知你房间信息
-    type: 0x00;
-    roomID: number; // 目前无用
-    lordID: number; // 房主的addr
-    myID: number; // 我的id
-    chapterId: number; // 当前章节
-    peer: string[]; // 房间其他人的addr
-}
-
-export type _ChooseMap = {
-    type: 0x10;
-    chapterId: number;
-}
-
-export type _GameStart = {
-    type: 0x01;
-    seed: number;
-    myID: number;
-};
-
-type _GameEnd = {
-    type: 0x20;
-    GameResult: number; // uint16
-}
-
-type _CardPlant = {
-    type: 0x02;
-    pid: number;
-    level: number;
-    col: number;
-    row: number;
-    uid: number; // 来源用户
-    FrameID: number;
-};
-
-type _RemovePlant = {
-    type: 0x04;
-    pid: number;
-    col: number;
-    row: number;
-    uid: number; // 来源用户
-    FrameID: number;
-}
-
-type _UseStarShards = {
-    type: 0x08;
-    pid: number;
-    col: number;
-    row: number;
-    uid: number; // 来源用户
-    FrameID: number;
-}
-
-type _ResponseBlank = {
-    type: 0x03;
-    FrameID: number;
-}
-
-export type _receiveType = _GameStart | _CardPlant | _RemovePlant | _UseStarShards | _ResponseBlank | _GameEnd;
-
-export type _Message =
-    | _RoomInfo
-    | _ChooseMap
-    | _GameStart | _GameEnd
-    | _ResponseBlank
-    | _CardPlant | _RemovePlant | _UseStarShards;
-
-
-/**
- * 将 Base64 字符串转换为 ArrayBuffer
- * @param base64 - Base64编码的字符串
- * @returns ArrayBuffer
- */
-function base64ToArrayBuffer(base64: string): ArrayBuffer {
-    const binaryString = atob(base64);
-    const len = binaryString.length;
-    const bytes = new Uint8Array(len);
-    for (let i = 0; i < len; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
-    }
-    return bytes.buffer;
-}
-
-/**
- * 解码二进制消息，返回对应的消息对象
- * @param buffer ArrayBuffer 从服务器接收的数据
- */
-export function decodeMessage(base64: string): _Message | null {
-    const buffer = base64ToArrayBuffer(base64);
-    const view = new DataView(buffer);
-    const type = view.getUint8(0);
-    let offset = 1;
-
-    switch (type) {
-        case 0x00: {
-            // RoomInfo: roomID(uint16), lordID(uint16), myID(uint16), chapterId(uint16)
-            const roomID = view.getUint16(offset);
-            offset += 2;
-            const lordID = view.getUint16(offset);
-            offset += 2;
-            const myID = view.getUint16(offset);
-            offset += 2;
-            const chapterId = view.getUint16(offset);
-            offset += 2;
-            // 接下来是 peer 数组：先读个数(uint8)，再循环读取每个字符串（长度 uint8 + 字节）
-            const peerCount = view.getUint8(offset);
-            offset += 1;
-            const peer: string[] = [];
-            const decoder = new TextDecoder();
-            for (let i = 0; i < peerCount; i++) {
-                const strLen = view.getUint8(offset);
-                offset += 1;
-                const strBytes = new Uint8Array(buffer, offset, strLen);
-                const str = decoder.decode(strBytes);
-                peer.push(str);
-                offset += strLen;
-            }
-            return {
-                type: 0x00,
-                roomID,
-                lordID,
-                myID,
-                chapterId,
-                peer,
-            };
-        }
-        case 0x01: {
-            // GameStart: seed(int32) + myID(uint16)
-            const seed = view.getInt32(offset);
-            offset += 4;
-            const myID = view.getUint16(offset);
-            offset += 2;
-            return {
-                type: 0x01,
-                seed,
-                myID,
-            };
-        }
-        case 0x02: {
-            // CardPlant: frameID(uint16), pid(uint16), level(uint8), col(uint8), row(uint8), uid(uint16)
-            const frameID = view.getUint16(offset);
-            offset += 2;
-            const pid = view.getUint16(offset);
-            offset += 2;
-            const level = view.getUint8(offset);
-            offset += 1;
-            const col = view.getUint8(offset);
-            offset += 1;
-            const row = view.getUint8(offset);
-            offset += 1;
-            const uid = view.getUint16(offset);
-            offset += 2;
-            return {
-                type: 0x02,
-                pid,
-                level,
-                col,
-                row,
-                uid,
-                FrameID: frameID,
-            };
-        }
-        case 0x03: {
-            // Blank: frameID(uint16)
-            const frameID = view.getUint16(offset);
-            offset += 2;
-            return {
-                type: 0x03,
-                FrameID: frameID,
-            };
-        }
-        case 0x04: {
-            // RemovePlant: frameID(uint16), pid(uint16), col(uint8), row(uint8), uid(uint16)
-            const frameID = view.getUint16(offset);
-            offset += 2;
-            const pid = view.getUint16(offset);
-            offset += 2;
-            const col = view.getUint8(offset);
-            offset += 1;
-            const row = view.getUint8(offset);
-            offset += 1;
-            const uid = view.getUint16(offset);
-            offset += 2;
-            return {
-                type: 0x04,
-                pid,
-                col,
-                row,
-                uid,
-                FrameID: frameID,
-            };
-        }
-        case 0x08: {
-            // UseStarShards: frameID(uint16), pid(uint16), col(uint8), row(uint8), uid(uint16)
-            const frameID = view.getUint16(offset);
-            offset += 2;
-            const pid = view.getUint16(offset);
-            offset += 2;
-            const col = view.getUint8(offset);
-            offset += 1;
-            const row = view.getUint8(offset);
-            offset += 1;
-            const uid = view.getUint16(offset);
-            offset += 2;
-            return {
-                type: 0x08,
-                pid,
-                col,
-                row,
-                uid,
-                FrameID: frameID,
-            };
-        }
-        case 0x10: {
-            // ChooseMap: chapterId(uint16)
-            const chapterId = view.getUint16(offset);
-            offset += 2;
-            return {
-                type: 0x10,
-                chapterId,
-            };
-        }
-        case 0x20: {
-            // GameEnd : GameResult(uint16)
-            const GameResult = view.getUint16(offset);
-            offset += 2;
-            return {
-                type: 0x20,
-                GameResult,
-            };
-        }
-        default:
-            console.error("Unknown message type:", type);
-            return null;
-    }
-}
-
 
 export default class QueueReceive {
-    game: Game
-    queues: Denque<_receiveType>
-    // sync: Syncer | null = null
+  game: Game;
 
-    myID: number = 0
-    seed: number = 0
+  queues: Denque<InGameResponse>;
 
-    // 多人游戏专用属性
-    isHalted: boolean = false; // 是否halt 了game, 由于没有及时接收到下一个服务器帧
+  // frameid_to_process
+  // 过去的服务器response中存放的未来才会处理的操作
+  laterOperations: Map<number, InGameOperation[]> = new Map<number, InGameOperation[]>();
 
-    constructor(params: SingleParams | MultiParams, game: Game) {
-        this.game = game;
-        this.queues = new Denque();
-        if (params.mode == 'single') {
-            // this.sync = null;
-            // 单人游戏模拟发送一次服务器 blank, default = 1
-            this.queues.push({
-                type: 0x03,
-                FrameID: 1,
-            })
+  myID: number = 0;
+  seed: number = 0;
 
+  // 多人游戏专用属性
+  isHalted: boolean = false; // 是否halt 了game, 由于没有及时接收到下一个服务器帧
+
+  constructor(params: SingleParams | MultiParams, game: Game) {
+    this.game = game;
+    this.queues = new Denque();
+    this.laterOperations = new Map();
+
+    if (params.mode === 'single') {
+      // 单人游戏模拟直接向 recv_queue 发一次 InGameResponse.game_event,
+      // 帧号是服务器要让客户端前进到的帧号，即 1
+
+    }
+  }
+
+  // 处理游戏内响应
+  handleInGameResponse(response: InGameResponse) {
+    // 直接将整个InGameResponse放入队列，由Consume方法处理
+    this.queues.push(response);
+  }
+
+  // 将operation转换为要做的函数
+  private _operationToFunction(operation: InGameOperation): (() => void) {
+    // 就是本次nextFrameID的操作
+    switch (operation.payload.oneofKind) {
+      case 'cardPlant':
+        const cardPlant = operation.payload.cardPlant;
+        if (cardPlant.base) {
+          return () => {
+            this._cardPlant(cardPlant.pid, cardPlant.base!.col, cardPlant.base!.row, cardPlant.level, cardPlant.base!.uid);
+          };
+        }
+        break;
+      case 'removePlant':
+        const removePlant = operation.payload.removePlant;
+        if (removePlant.base) {
+          return () => {
+            this._removePlant(removePlant.pid, removePlant.base!.col, removePlant.base!.row);
+          };
+        }
+        break;
+      case 'useStarShards':
+        const useStarShards = operation.payload.useStarShards;
+        if (useStarShards.base) {
+          return () => {
+            this._useStarShards(useStarShards.pid, useStarShards.base!.col, useStarShards.base!.row, useStarShards.base!.uid);
+          };
+        }
+        break;
+      case 'gameEvent':
+        // 处理游戏事件 - 暂时跳过，因为Game类没有这个方法
+        const gameEvent = operation.payload.gameEvent;
+        if (gameEvent) {
+          if (gameEvent.eventType === 0x4000) {
+            return () => { };
+          }
+          return () => console.log('Game event;type=', gameEvent.eventType, ';message=', gameEvent.message);
+        }
+        break;
+      case 'error':
+        const error = operation.payload.error;
+        if (error) {
+          return () => console.error('Game error:', error.message);
+        }
+        break;
+      default:
+        return () => console.warn('Unknown game operation type:', operation.payload.oneofKind);
+    }
+    return () => console.warn('No operation function defined for:', operation.payload.oneofKind);
+  }
+
+
+  // 游戏每逻辑帧时机到调用,循环消费直到空
+  Consume() {
+    // 单人模式先消费一次发送队列
+    if (!BackendWS.isOnlineMode) {
+      this.game.sendQueue.DispatchSingleModeQueue();
+    }
+
+    const executedList: (() => void)[] = [];
+
+    // 先获得本次loop后要前进到的帧ID
+    // 也即所有的操作都是为了 本帧 到 nextFrameID
+    const nextFrameID = BackendWS.GetNextFrameID();
+
+    // 这里也存放这服务器返回的response
+    // 但是他们的FrameID 都大于 nextFrameID
+    // 这一次循环绝对不会采纳他们， 因为process_frame_id 肯定都会大于nextFrameID
+    // 结束后会加回接受队列
+    const tmpLeftFrames: InGameResponse[] = [];
+
+    // 为了完成这次跨越，需要做的操作们
+    // 默认值从laterOperations中获取
+    const operations = this.laterOperations.get(nextFrameID) || [];
+
+    // 此轮逻辑帧是否执行了，
+    // 服务器会向本接受队列发送 InGameResponse
+    // InGameResponse.FrameID 是服务器需要让所有客户端跨越到的下一帧ID
+    // 如果在消费接受队列时没有发现等同于nextFrameID的消息
+    // 那么halt
+    let hasGetThisFrame = false;
+
+    // 消费游戏接受消息队列
+    while (!this.queues.isEmpty()) {
+      const response = this.queues.shift();
+      if (!response) continue;
+
+      // 检查帧ID
+      if (response.frameId > nextFrameID) {
+        // 此次循环绝对不会用的
+        // 稍后他们会回到接受队列
+        tmpLeftFrames.push(response);
+        continue;
+      }
+
+      if (response.frameId < nextFrameID) {
+        continue;
+      }
+
+      if (response.frameId === 1) {
+        // TODO: 移动到 onAllLoaded 事件中
+        this.game.handleGameFrameStart(); // 刷怪开始
+      }
+
+      // 太好了！这是消息队列中本次nextFrameID的Response
+      hasGetThisFrame = true;
+
+      // 处理响应中的所有操作
+      for (const operation of response.operations) {
+        // 虽然是本frame的response
+        // 但是未来才需要做的
+        if (operation.processFrameId > nextFrameID) {
+          // 未来的操作，存入laterOperations
+          if (!this.laterOperations.has(operation.processFrameId)) {
+            this.laterOperations.set(operation.processFrameId, []);
+          }
+          this.laterOperations.get(operation.processFrameId)?.push(operation);
+          continue;
+        }
+
+        // 一个几乎不可能的情况， prcessFrameId 小于 nextFrameID
+        if (operation.processFrameId < nextFrameID) {
+          console.warn('Received operation with processFrameId less than nextFrameID:', operation);
+          continue;
+        }
+
+        operations.push(operation);
+      }
+    }
+
+    if (tmpLeftFrames.length > 0) {
+      // 将未来的帧数据重新放回队列
+      for (const frame of tmpLeftFrames) {
+        this.queues.push(frame);
+      }
+    }
+
+    if (!hasGetThisFrame) {
+      // 如果本次没有接收到 下一个服务器帧没有接收到服务器的命令,那么暂停游戏,等待下一次服务器帧再次判断
+      this._haltGame();
+    } else {
+      // 此次有效
+      // 排序operations
+      // processFrameId 小的在前
+      operations.sort((a, b) => a.processFrameId - b.processFrameId);
+      // 执行
+      for (const operation of operations) {
+        const func = this._operationToFunction(operation);
+        if (func) {
+          executedList.push(func);
+        }
+      }
+
+      // 清空本frameid的laterOperations
+      this.laterOperations.delete(nextFrameID);
+
+      // 收到了 下一个服务器帧的命令,自增frameID,发送确认接收信息
+      if (BackendWS.isOnlineMode) {
+        // 发送确认信息 - 使用新的protobuf结构
+        BackendWS.sendBlankFrame(nextFrameID);
+        BackendWS.GoToFrameID(nextFrameID);
+      } else {
+        // 单人游戏
+        // 如果游戏没有暂停
+        if (!this.game.time.paused) {
+          BackendWS.GoToFrameID(nextFrameID);
+          // 单人游戏响应到了模拟服务器的发送
+          // send blank frame
+          this.game.sendQueue.sendBlankFrame(nextFrameID);
         } else {
-            // 多人
-            // this.sync = new Syncer();
+          // 如果游戏暂停了,那么不需要模拟发送blank
+          // 也不能让自己frameID自增,因为有私密图纸
+          return;
         }
+      }
+
+      this._resumeGame();
+      // 该帧有效,帧驱动一些事件发生
+      this.game.physics.world.update(this.game.frameTicker.getCurrentTime(), this.game.frameTicker.frameInterval);
+      // 例如 plant发出子弹, 刷怪, 避免通过game.timer导致不精确
+      this.game.frameTicker.update();
+      EventBus.emit('timeFlow-set', { delta: this.game.frameTicker.frameInterval });
+      executedList.forEach((func) => { func(); });
     }
+  }
 
-    // 游戏每次update的入口位置直接调用,循环消费直到空
-    Consume() {
-        const executedList: (() => void)[] = [];
+  private _cardPlant(pid: number, col: number, row: number, level: number, uid: number) {
+    this.game.handleCardPlant(pid, level, col, row, uid);
+  }
 
-        // 先获得当前的帧ID
-        const nextFrameID = 1 + BackendWS.GetFrameID();
-        const tmpLeftFrames = []; // 存放未来frame的数据
-        let hasExecuted = false;
+  private _removePlant(pid: number, col: number, row: number) {
+    this.game.handleRemovePlant(pid, col, row);
+  }
 
-        // console.log('expected frameID:', nextFrameID);
+  private _useStarShards(pid: number, col: number, row: number, uid: number) {
+    this.game.handleStarShards(pid, col, row, uid);
+  }
 
-        // 消费队列
-        while (!this.queues.isEmpty()) {
-            const data = this.queues.shift();
-            if (!data) continue;
-            // console.log('receive data:', data);
+  // 由于接收不到服务器的命令,游戏暂停
+  private _haltGame() {
+    this.isHalted = true;
+    this.game.doHalt();
+  }
 
-            if (data.type === 0x20) {
-                // 直接结束游戏
-                const isWin = data.GameResult === 1 ? true : false;
-                this.game.ExitEntry(isWin);
-            }
-
-            if ("FrameID" in data && data.FrameID > nextFrameID) {
-                tmpLeftFrames.push(data);
-                continue;
-            }
-
-            if ("FrameID" in data && data.FrameID < nextFrameID) {
-                continue;
-            }
-
-            if ("FrameID" in data && data.FrameID === 2) {
-                this.game.handleGameFrameStart(); // 刷怪开始
-            }
-
-            hasExecuted = true;
-            switch (data.type) {
-                case 0x01:
-                    this._startGame(data.seed, data.myID);;
-                    break;
-                case 0x02:
-                    executedList.push(() => { this._cardPlant(data.pid, data.col, data.row, data.level, data.uid); });
-                    break;
-                case 0x04:
-                    executedList.push(() => { this._removePlant(data.pid, data.col, data.row, data.uid); });
-                    break;
-                case 0x08:
-                    executedList.push(() => { this._useStarShards(data.pid, data.col, data.row, data.uid); });
-                    break;
-            }
-        }
-
-        if (tmpLeftFrames.length > 0) {
-            // 将未来的帧数据重新放回队列
-            for (const frame of tmpLeftFrames) {
-                this.queues.push(frame);
-            }
-        }
-
-        if (!hasExecuted) {
-            // 如果本次没有接收到 下一个服务器帧没有接收到服务器的命令,那么暂停游戏,等待下一次服务器帧再次判断
-            this._haltGame();
-        } else {
-            // 收到了 下一个服务器帧的命令,自增frameID,发送确认接收信息
-            if (BackendWS.isConnected) {
-                //TODO: 发送确认信息
-                console.log('myid', this.myID)
-                const encoded = encodeMessageToBinary({
-                    type: 0x03,
-                    FrameID: nextFrameID,
-                    uid: this.myID
-                }, nextFrameID);
-                BackendWS.IncreaseFrameID();
-                BackendWS.send(encoded);
-            } else {
-                // 单人游戏
-                // 如果游戏没有暂停
-                if (!this.game.time.paused) {
-                    BackendWS.IncreaseFrameID();
-                    // 单人游戏模拟发送一次服务器 blank
-                    this.queues.push({
-                        type: 0x03,
-                        FrameID: nextFrameID + 1,
-                    })
-                } else {
-                    // 如果游戏暂停了,那么不需要模拟发送blank
-                    // 也不能让自己frameID自增,因为有私密图纸
-                    return;
-                }
-            }
-
-            this._resumeGame();
-            // 该帧有效,帧驱动一些事件发生
-            this.game.physics.world.update(this.game.frameTicker.getCurrentTime(), this.game.frameTicker.frameInterval);
-            // 例如 plant发出子弹, 刷怪, 避免通过game.timer导致不精确
-            this.game.frameTicker.update();
-            EventBus.emit('timeFlow-set', { delta: this.game.frameTicker.frameInterval });
-            executedList.forEach((func) => { func(); });
-        }
-    }
-
-    private _startGame(seed: number, myID: number) {
-        // TODO:在启动游戏主进程前,调用发送队列设置发送队列的myID
-        console.log('game start', myID);
-        this.myID = myID;
-        this.game.handleGameStart(seed, myID);
-    }
-    private _cardPlant(pid: number, col: number, row: number, level: number, uid: number) {
-        this.game.handleCardPlant(pid, level, col, row, uid);
-    }
-    private _removePlant(pid: number, col: number, row: number, uid: number) {
-        this.game.handleRemovePlant(pid, col, row);
-    }
-    private _useStarShards(pid: number, col: number, row: number, uid: number) {
-        this.game.handleStarShards(pid, col, row, uid);
-    }
-
-    // 由于接收不到服务器的命令,游戏暂停
-    private _haltGame() {
-        this.isHalted = true;
-        this.game.doHalt();
-    }
-    private _resumeGame() {
-        if (!this.isHalted) return;
-        // 如果游戏因为没有接收到服务器的命令而暂停,那么恢复游戏
-        // 现在只可能是多人游戏,因为单人游戏保证了queue必定有NextFrameID
-        this.game.doResume();
-        this.isHalted = false;
-    }
+  private _resumeGame() {
+    if (!this.isHalted) return;
+    // 如果游戏因为没有接收到服务器的命令而暂停,那么恢复游戏
+    // 现在只可能是多人游戏,因为单人游戏保证了queue必定有NextFrameID
+    this.game.doResume();
+    this.isHalted = false;
+  }
 }

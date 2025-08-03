@@ -14,6 +14,8 @@ message Request {
   // oneof 确保一个 Request 消息实例中，只有一个字段能被设置
   oneof payload {
     RequestChooseMap choose_map = 6;
+    RequestLeaveChooseMap leave_choose_map = 9;
+    
     RequestReady ready = 5;
     RequestLoaded loaded = 8;
 
@@ -28,6 +30,16 @@ message Request {
 
 // --- 以下是具体的消息定义，从你的 Go 代码翻译而来 ---
 
+// RequestChooseMap 请求选择地图
+// 房主客户端在选择地图时发送此请求
+// 进入preparing阶段
+message RequestChooseMap {
+  uint32 chapter_id = 1;
+  uint32 stage_id = 2;
+}
+
+// 退出选preparing阶段
+message RequestLeaveChooseMap {}
 
 // Ready 表示某个客户端在选卡界面切换准备就绪
 message RequestReady {
@@ -39,12 +51,6 @@ message RequestLoaded {
   bool isLoaded = 1;
 }
 
-// RequestChooseMap 请求选择地图
-// 房主客户端在选择地图时发送此请求
-message RequestChooseMap {
-  uint32 chapter_id = 1;
-  uint32 stage_id = 2;
-}
 
 
 // ----------

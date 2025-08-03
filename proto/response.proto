@@ -11,13 +11,39 @@ message ResponseErrorMessage {
   string message = 1;
 }
 
+
+// ----------
+// 大厅（房间外）
+// 在一次加入流程中只会有一个响应
+message LobbyResponse {
+  oneof payload {
+    ResponseJoinRoomSuccess join_room_success = 1;
+    ResponseJoinRoomFailed join_room_failed = 2;
+  }
+}
+
+// 加入房间失败
+message ResponseJoinRoomFailed {
+  string message = 1; // 错误信息
+}
+
+// 加入房间成功
+message ResponseJoinRoomSuccess {
+  uint32 room_id = 1; // 房间 ID
+  uint32 my_id = 2; // 我的 ID
+  string key = 4; // 房间密钥
+  string message = 5; // 成功信息
+}
+
+
 // ----------
 
-// 大厅（游戏外），包含所有可能的响应类型
-message LobbyResponse {
+// 房间（游戏外），包含所有可能的响应类型
+message RoomResponse {
   oneof payload {
     ResponseRoomInfo room_info = 1;
     ResponseChooseMap choose_map = 2;
+    ResponseQuitChooseMap quit_choose_map = 9; // 退出选卡阶段
     ResponseRoomClosed room_closed = 3;
     ResponseGameEnd game_end = 8; // 游戏结束响应
     ResponseErrorMessage error = 4;
@@ -40,7 +66,8 @@ message ResponseRoomInfo {
   uint32 my_id = 3;
 
   // 房间内玩家情况
-  repeated string peer = 4; // repeated 关键字表示这是一个数组
+  // json 字段
+  string peers = 4;
 }
 
 // 已经选择了地图
@@ -49,6 +76,9 @@ message ResponseChooseMap {
   uint32 chapter_id = 1;
   uint32 stage_id = 2; 
 }
+
+// 退出选卡阶段
+message ResponseQuitChooseMap {}
 
 // 更新已经准备的人数
 message ResponseUpdateReadyCount {
@@ -97,17 +127,27 @@ message ResponseRoomClosed {
 message InGameResponse {
   // 此帧序号， 从0起
   uint32 frame_id = 1;
-  // 本帧所有操作
+  // 本帧所有转发给客户端的操作列表
+  // 客户端需要自行提取， 未来的几帧中会做哪些操作
   repeated InGameOperation operations = 2;
 }
 
 // 游戏内单个操作的封装
 message InGameOperation {
+  // 此操作应该在哪一帧时进行
+  // 服务端转发的最小process_frame_id应该恰好等于服务端要求客户端渲染的下一frame_id
+  // 服务端不会因为这个字段的原因而推迟此operation的转发
+  // 而是尽职的立刻转发， 从而便于客户端计算自己的偏差
+  uint32 process_frame_id = 1;
+
+  // 此操作列表在帧中处理的序号，数字越小，越先处理
+  uint32 operation_index = 2;
+
   oneof payload {
-    ResponseCardPlant card_plant = 2;
-    ResponseRemovePlant remove_plant = 3;
-    ResponseUseStarShards use_star_shards = 4;
-    ResponseGameEvent game_event = 5;
+    ResponseCardPlant card_plant = 3;
+    ResponseRemovePlant remove_plant = 4;
+    ResponseUseStarShards use_star_shards = 5;
+    ResponseGameEvent game_event = 6;
     ResponseErrorMessage error = 7;
   }
 }
@@ -120,10 +160,6 @@ message ResponseGridOperation {
   uint32 col = 2;
   // 操作的格子行
   uint32 row = 3;
-  // 此操作应该在哪一帧时进行
-  // 服务端不会因为这个字段的原因而推迟此operation的转发
-  // 而是尽职的立刻转发， 从而便于客户端计算自己的偏差
-  uint32 process_frame_id = 4;
 }
 
 // 广播卡牌种植
@@ -132,8 +168,6 @@ message ResponseCardPlant {
   uint32 level = 2;
   // 消耗
   int32 cost = 3;
-  // 成功与否， 如果失败，会让客户端补偿
-  bool success = 4;
   ResponseGridOperation base = 5;
 }
 
@@ -149,14 +183,15 @@ message ResponseUseStarShards {
   uint32 pid = 1;
   // 消耗
   int32 cost = 2;
-  // 成功与否， 如果失败，会让客户端补偿
-  bool success = 3;
   ResponseGridOperation base = 4;
 }
 
 message ResponseGameEvent {
-  uint32 event_type = 1; // 事件类型
-  string message = 2; // 事件base64,自行解析
+  // 事件类型 
+  // 0x4000 - 0x4FFF 为本地游戏事件
+  uint32 event_type = 1; 
+  // 事件base64,自行解析
+  string message = 2; 
 }
 
 

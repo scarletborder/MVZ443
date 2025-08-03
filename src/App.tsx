@@ -55,7 +55,7 @@ function App() {
         // 结算
         setGameResult(result);
         setShowGameResult(true);
-        if (BackendWS.isConnected) {
+        if (BackendWS.isOnlineMode) {
             const encoded = encodeMessageToBinary({ type: 0x20 });
             BackendWS.send(encoded);
         }
