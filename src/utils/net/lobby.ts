@@ -69,7 +69,7 @@ export function RoomListWidget(info: RoomInfo, baseUrl: string, key: string, set
     const wsUrl = `wss://${baseUrl}/ws?id=${info.room_id}&key=${myKey}`;
 
     const onClick = () => {
-        if (BackendWS.isOnlineMode) {
+        if (BackendWS.isOnlineMode()) {
             alert("请先断开当前连接");
             return;
         }
@@ -91,7 +91,7 @@ export function RoomListWidget(info: RoomInfo, baseUrl: string, key: string, set
 }
 
 export function createRoom(baseUrl: string, key: string) {
-    if (BackendWS.isOnlineMode) {
+    if (BackendWS.isOnlineMode()) {
         alert("请先断开当前连接");
         return;
     }

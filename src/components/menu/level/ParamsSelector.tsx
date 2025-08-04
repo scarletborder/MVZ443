@@ -1,7 +1,6 @@
 // src/components/ParamsSelector.tsx
 import React from 'react';
 import { GameParams } from '../../../game/models/GameParams';
-import { useGameContext } from '../../../context/garden_ctx';
 import { useSaveManager } from '../../../context/save_ctx';
 import { StageDataRecords } from '../../../game/utils/loader';
 import PlantFactoryMap from '../../../game/presets/plant';
@@ -9,6 +8,7 @@ import { publicUrl } from '../../../utils/browser';
 import { useSettings } from '../../../context/settings_ctx';
 import { useLocaleMessages } from '../../../hooks/useLocaleMessages';
 import { useSetState, useLocalStorageState, useMount, useMemoizedFn } from 'ahooks';
+import { SendReady } from '../../../utils/net/room';
 
 interface ParamsSelectorProps {
   chapterId: number;
@@ -17,6 +17,14 @@ interface ParamsSelectorProps {
   startGame: () => void;
   onBack: () => void;
   clearLevelSelection: () => void;
+  // 联机模式相关属性
+  isOnlineMode?: boolean;
+  islord?: boolean;
+  gameStage?: number;
+  isLoading?: boolean;
+  canProceed?: boolean;
+  buttonText?: string;
+  buttonStyle?: React.CSSProperties;
 }
 
 interface PlantElem {
@@ -31,7 +39,15 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({
   setGameParams,
   startGame,
   onBack,
-  clearLevelSelection
+  clearLevelSelection,
+  // 联机模式相关属性
+  isOnlineMode = false,
+  islord = false,
+  gameStage,
+  isLoading = false,
+  canProceed = true,
+  buttonText,
+  buttonStyle
 }) => {
   const [state, setState] = useSetState({
     selectedPlants: [] as number[],
@@ -48,7 +64,6 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({
     }
   });
 
-  const garden_ctx = useGameContext();
   const saveManager = useSaveManager();
   const settings = useSettings();
   const { translate } = useLocaleMessages();
@@ -134,12 +149,47 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({
   });
 
   const handleStart = useMemoizedFn(() => {
-    const _ = () => { console.log('no gameexit Implemented') };
+    // 联机模式下的特殊处理
+    if (isOnlineMode) {
+      // 在线模式下，房主和普通玩家都需要设置GameParams
+      const params: GameParams = {
+        level: stageId,
+        plants: state.selectedPlants,
+        gameExit: () => { console.log('no gameexit Implemented') },
+        gameSettings: {
+          isBluePrint: settings.isBluePrint,
+          isDebug: settings.isDebug,
+          isBgm: settings.isBgm,
+          isSoundAudio: settings.isSoundAudio,
+        }
+      };
 
+      // 保存植物选择到 localStorage
+      setPlantSelection({
+        lastSelectedPlants: state.selectedPlants,
+        lastStageId: stageId
+      });
+
+      // 清除选关相关的 localStorage
+      clearLevelSelection();
+      setGameParams(params);
+
+      if (islord) {
+        console.log("房主发送准备信号");
+        SendReady(true); // 房主发送准备请求
+      } else {
+        console.log("玩家发送准备信号");
+        SendReady(true); // 发送准备请求到服务器
+      }
+
+      return;
+    }
+
+    // 单机模式的原有逻辑
     const params: GameParams = {
       level: stageId,
       plants: state.selectedPlants,
-      gameExit: _,
+      gameExit: () => { console.log('no gameexit Implemented') },
       gameSettings: {
         isBluePrint: settings.isBluePrint,
         isDebug: settings.isDebug,
@@ -208,6 +258,26 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({
           >
             {translate('menu_back')}
           </button>
+
+          {/* 联机模式状态显示 */}
+          {isOnlineMode && (
+            <div style={{
+              marginLeft: '16px',
+              padding: '6px 12px',
+              background: 'rgba(0, 200, 255, 0.2)',
+              border: '1px solid rgba(0, 200, 255, 0.5)',
+              borderRadius: '4px',
+              color: '#00ccff',
+              fontSize: '12px',
+              fontWeight: 'bold'
+            }}>
+              {islord ? '房主模式' : '玩家模式'} | {
+                isLoading ? '等待中...' :
+                  !canProceed ? '请等待房主操作' :
+                    gameStage === 0x21 ? '准备阶段' : '可以操作'
+              }
+            </div>
+          )}
           <div style={{
             marginLeft: '10px',
             color: '#ddd',
@@ -366,18 +436,22 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({
         </div>
 
         <button
-          style={{
+          style={buttonStyle || {
             padding: '3% 40%',
-            background: '#00ccff',
+            background: canProceed ? '#00ccff' : '#666',
             border: 'none',
-            color: '#fff',
-            cursor: 'pointer',
+            color: canProceed ? '#fff' : '#ccc',
+            cursor: canProceed ? 'pointer' : 'not-allowed',
             transition: 'all 0.3s ease',
             alignSelf: 'center'
           }}
-          onClick={handleStart}
+          onClick={canProceed ? handleStart : undefined}
+          disabled={!canProceed || isLoading}
         >
-          {translate('start')}
+          {isLoading && (
+            <span style={{ marginRight: '8px' }}>⏳</span>
+          )}
+          {buttonText || translate('start')}
         </button>
       </div>
     </div>

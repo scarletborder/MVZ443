@@ -15,23 +15,13 @@ class WebSocketClient {
     private sendQueue: QueueSend | null = null;
     public url: string = "";
 
-    private additionalListeners: ((event: MessageEvent) => void)[] = [];
-
     // 帧时间差值估算器
     private frameDeltaEstimator: FrameDeltaEstimator = new FrameDeltaEstimator();
 
+    private messageCounter: number = 0;
+
     constructor() {
-        // 创建一个默认的Handler
-        const defaultLordHandler = (event: MessageEvent) => {
-            console.log(event.data);
-            // 不再需要， 因为现在通过 protobuf     
-            // const data = JSON.parse(event.data);
-            // if (data.type === 0x00) {
-            //     this.lord_id = data.lordID;
-            //     this.my_id = data.myID;
-            // }
-        }
-        this.additionalListeners.push(defaultLordHandler);
+        // 不再需要旧的默认处理器
     }
 
     setQueue(receiveQueue: QueueReceive, sendQueue: QueueSend) {
@@ -111,19 +101,25 @@ class WebSocketClient {
         };
 
         this.ws.onmessage = (event: MessageEvent) => {
+            this.messageCounter++;
             if (!(event.data instanceof ArrayBuffer)) {
-                console.warn("Received non-binary message, ignoring:", event.data);
+                console.warn(`Message #${this.messageCounter}: Received non-binary message, ignoring:`, event.data);
                 return;
             }
 
+            // console.log(`Message #${this.messageCounter} received:`, event.data);
+
             const data = new Uint8Array(event.data);
+            // console.log(`Message #${this.messageCounter}: Processing message, onlineMode:`, onlineStateManager.getIsOnlineMode(), "gameStage:", onlineStateManager.getCurrentGameStage());
 
             try {
                 if (!onlineStateManager.getIsOnlineMode()) {
                     // 尚未确定与房间建立联系
+                    console.log(`Message #${this.messageCounter}: Handling as LobbyResponse`);
                     this.handlers.handleLobbyResponse(data);
                 } else {
                     // 已经在房间内部
+                    // console.log(`Message #${this.messageCounter}: Handling as RoomResponse, current stage:`, onlineStateManager.getCurrentGameStage());
                     switch (onlineStateManager.getCurrentGameStage()) {
                         case EnumGameStage.InLobby:
                             this.handlers.handleRoomResponse(data);
@@ -145,12 +141,18 @@ class WebSocketClient {
                             break;
                     }
                 }
-                // 现在完全不需要了，因为protobuf已经处理了
-                this.onMessageReceived(event);
             } catch (e) {
                 // 发生解析错误可能意味着协议不同步，关闭连接
                 console.error("Failed to parse Protobuf message:", e);
-                alert("发生错误,请检查网络或服务器");
+                console.error("Error stack:", e instanceof Error ? e.stack : e);
+                console.error("Message details:", {
+                    dataLength: data.length,
+                    firstBytes: Array.from(data.slice(0, Math.min(20, data.length))),
+                    onlineMode: onlineStateManager.getIsOnlineMode(),
+                    gameStage: onlineStateManager.getCurrentGameStage(),
+                    errorMessage: e instanceof Error ? e.message : String(e)
+                });
+                alert("发生错误,请检查网络或服务器: " + (e instanceof Error ? e.message : String(e)));
                 this.closeConnection();
             }
         };
@@ -159,8 +161,16 @@ class WebSocketClient {
             console.error("WebSocket error: ", error);
         };
 
-        this.ws.onclose = () => {
-            console.log("WebSocket connection closed.");
+        this.ws.onclose = (event: CloseEvent) => {
+            console.log("WebSocket connection closed:", {
+                code: event.code,
+                reason: event.reason,
+                wasClean: event.wasClean,
+                timeStamp: new Date().toISOString(),
+                onlineMode: onlineStateManager.getIsOnlineMode(),
+                gameStage: onlineStateManager.getGameStageName(),
+                roomInfo: onlineStateManager.getRoomInfo()
+            });
             onlineStateManager.updateOnlineMode(false);
         };
     }
@@ -180,7 +190,6 @@ class WebSocketClient {
         if (this.ws && this.ws.readyState === WebSocket.OPEN && this.sendQueue) {
             // 使用sendQueue发送blank frame
             this.sendQueue.sendBlankFrame(frameId);
-            console.log("Sending blank frame:", frameId);
         } else {
             console.error("WebSocket is not open or sendQueue not available. Cannot send blank frame.");
         }
@@ -195,27 +204,6 @@ class WebSocketClient {
         }
     }
 
-    // Method to add additional message listeners
-    addMessageListener(listener: (event: MessageEvent) => void) {
-        this.additionalListeners.push(listener);
-    }
-
-    delMessageListener(listener: (event: MessageEvent) => void) {
-        const index = this.additionalListeners.indexOf(listener);
-        if (index > -1) {
-            this.additionalListeners.splice(index, 1);
-        }
-    }
-
-    // Internal method to handle received messages - 已废弃，使用新的protobuf处理
-    private onMessageReceived(event: MessageEvent) {
-        console.log("Message received:", event.data);
-        // 通知额外的监听器
-        for (const listener of this.additionalListeners) {
-            listener(event);
-        }
-    }
-
     // Method to send messages from the sendQueue to the WebSocket
     consumeSendQueue() {
         if (this.ws && this.ws.readyState === WebSocket.OPEN) {
@@ -224,7 +212,6 @@ class WebSocketClient {
                 if (message) {
                     // 使用protobuf编码发送消息到WebSocket
                     // 将消息序列化为二进制格式后发送
-                    console.log("Sending message:", message);
                     this.ws.send(Request.toBinary(message));
                 }
             }
@@ -293,6 +280,10 @@ class WebSocketClient {
 
     set AckFrameID(value: number) {
         onlineStateManager.updateAckFrameId(value);
+    }
+
+    isOnlineMode(): boolean {
+        return onlineStateManager.getIsOnlineMode();
     }
 }
 

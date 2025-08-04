@@ -59,7 +59,7 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
 
     useEffect(() => {
         const interval = setInterval(() => {
-            setLinkStatus(BackendWS.isOnlineMode);
+            setLinkStatus(BackendWS.isOnlineMode());
         }, 500);
 
         return () => clearInterval(interval);

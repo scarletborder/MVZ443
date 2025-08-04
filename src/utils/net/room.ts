@@ -14,7 +14,7 @@ import BackendWS from "./sync";
 
 function SendChooseMap(chapterId: number, stageId: number) {
     // 只在多人游戏中发送ChooseMap消息，且只有房主可以发送
-    if (!BackendWS.isOnlineMode || !BackendWS.isLord()) {
+    if (!BackendWS.isOnlineMode() || !BackendWS.isLord()) {
         return;
     }
     const request: RequestChooseMap = {
@@ -41,7 +41,7 @@ function SendLoaded(isLoaded: boolean = true) {
         return;
     }
     // 只在多人游戏中发送Loaded消息
-    if (!BackendWS.isOnlineMode) {
+    if (!BackendWS.isOnlineMode()) {
         // 单人游戏直接开始
         EventBus.emit('room-game-start', { seed: Math.random(), myID: BackendWS.my_id }); // 单人
         return;

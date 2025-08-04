@@ -6,6 +6,7 @@ import { publicUrl } from '../../utils/browser';
 import useDarkMode from '../../hooks/useDarkMode';
 import { gameStateManager } from '../../store/GameStateManager';
 import CircularProgress from './CircularProgress';
+import PlantFactoryMap from '../../game/presets/plant';
 
 interface EnergyDisplayProps {
     /** 布局方向 */
@@ -127,9 +128,13 @@ export function EnergyDisplay({ direction, energyTimer }: EnergyDisplayProps) {
     });
 
     // 处理植物种植事件（消耗能量）
-    const handlePlant = useMemoizedFn((_data: { pid: number, level: number }) => {
-        // 这个事件在其他地方已经处理，这里不需要重复处理
-        // 但保留监听以保持兼容性
+    const handlePlant = useMemoizedFn((data: { pid: number, level: number }) => {
+        const plantRecord = PlantFactoryMap[data.pid];
+        if (plantRecord && plantRecord.cost) {
+            const cost = plantRecord.cost(data.level);
+            // 消耗能量
+            updateEnergy(-cost);
+        }
     });
 
     // 监听事件

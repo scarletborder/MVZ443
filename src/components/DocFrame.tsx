@@ -6,7 +6,8 @@ import Settings from './menu/settings';
 import { GameParams } from '../game/models/GameParams';
 import { publicUrl } from '../utils/browser';
 import { useDeviceType } from '../hooks/useDeviceType';
-import BackendWS from '../utils/net/sync';
+import { OnlineStateManager } from '../store/OnlineStateManager';
+import { EventBus } from '../game/EventBus';
 import Shop from './shop/shop';
 import { useNavigate } from 'react-router-dom';
 import { useLocaleMessages } from '../hooks/useLocaleMessages';
@@ -47,29 +48,53 @@ export default function DocFrame({ width, height, sceneRef, setGameParams, gameS
     const navigate = useNavigate();
 
     useEffect(() => {
-        // 处理联机事件
-        const chapterJumpHandler = (event: MessageEvent) => {
-            const data = JSON.parse(event.data);
-            if (data.type === 0x00 && data.lordID !== data.myID) {
-                // 跳转章节,直接到选卡界面
-                const chapterID = data.chapterId;
-                if (chapterID !== undefined && chapterID !== null && chapterID > 0) {
-                    console.log('jump to chapter', chapterID);
-                    setChosenStage(chapterID);
+        // 监听房间信息和身份变化
+        const handleLobbyJoinSuccess = (event: any) => {
+            // 成功加入房间，确定身份
+            const { myId } = event;
+            const onlineManager = OnlineStateManager.getInstance();
+            const lordId = onlineManager.getRoomInfo().lordId;
+            setIslord(myId === lordId);
+        };
+
+        const handleRoomChooseMap = (event: any) => {
+            // 房主选择了地图，非房主需要跳转到选卡界面
+            const onlineManager = OnlineStateManager.getInstance();
+            const myId = onlineManager.getRoomInfo().myId;
+            const lordId = onlineManager.getRoomInfo().lordId;
+
+            if (myId !== lordId) {
+                // 非房主，跳转到选卡界面
+                const { stageId } = event;
+                if (stageId && stageId > 0) {
+                    console.log('非房主收到选图消息，跳转到选卡界面:', stageId);
+                    setChosenStage(stageId);
                     setSkipToParams(true);
                     setCurrentView('levels');
                 }
-                setIslord(false);
-            } else if (data.type === 0x00 && data.lordID === data.myID) {
-                console.log('i am load')
-                setIslord(true);
             }
+        };
 
-        }
-        BackendWS.addMessageListener(chapterJumpHandler);
+        const handleRoomAllReady = (event: any) => {
+            // 所有玩家准备就绪，进入加载阶段，应该启动游戏
+            console.log('所有玩家准备就绪，即将开始加载阶段:', event);
+            // 触发游戏开始 - 调用传入的gameStart函数
+            if (gameStart) {
+                console.log('触发游戏开始...');
+                gameStart();
+            }
+        };
+
+        // 通过EventBus监听事件
+        EventBus.on('lobby-join-success', handleLobbyJoinSuccess);
+        EventBus.on('room-choose-map', handleRoomChooseMap);
+        EventBus.on('room-all-ready', handleRoomAllReady);
+
         return () => {
-            BackendWS.delMessageListener(chapterJumpHandler);
-        }
+            EventBus.off('lobby-join-success', handleLobbyJoinSuccess);
+            EventBus.off('room-choose-map', handleRoomChooseMap);
+            EventBus.off('room-all-ready', handleRoomAllReady);
+        };
     }, []);
 
     useEffect(() => {
@@ -278,7 +303,7 @@ export default function DocFrame({ width, height, sceneRef, setGameParams, gameS
         <>
             {currentView === 'main' || currentView === 'about' ? <MainMenu /> : null}
             {currentView === 'levels' && <LevelSelect width={width} height={height} onBack={() => setCurrentView('main')}
-                startGame={gameStart} setGameParams={setGameParams} skipToParams={skipToParams} chosenStage={chosenStage}
+                startGame={gameStart} setGameParams={setGameParams} skipToParams={skipToParams} chosenStage={chosenStage || undefined}
             />}
             {currentView === 'pokedex' && <Pokedex sceneRef={sceneRef} width={width} height={height} onBack={() => setCurrentView('main')} />}
             {currentView === 'shop' && <Shop width={width} height={height} onBack={() => setCurrentView('main')} />}

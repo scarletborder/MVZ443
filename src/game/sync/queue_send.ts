@@ -54,7 +54,7 @@ export default class QueueSend {
 
   Consume() {
     // 如果是单人游戏,直接返回
-    if (!BackendWS.isOnlineMode) return;
+    if (!BackendWS.isOnlineMode()) return;
     else {
       // 多人游戏
       // 直接发送数据到服务器
@@ -188,7 +188,15 @@ export default class QueueSend {
   }
 
   public sendCardPlant(pid: number, col: number, row: number, level: number) {
+    // 创建 RequestBlank 基础消息
+    const blankBase: RequestBlank = {
+      frameId: BackendWS.GetFrameID(),
+      ackFrameId: BackendWS.AckFrameID
+    };
+
+    // 创建 RequestGridOperation
     const base: RequestGridOperation = {
+      base: blankBase,
       col: col,
       row: row,
       processFrameId: BackendWS.GetFrameID() + BackendWS.calculateServerFrameDiff()
@@ -215,7 +223,15 @@ export default class QueueSend {
   }
 
   public sendRemovePlant(pid: number, col: number, row: number) {
+    // 创建 RequestBlank 基础消息
+    const blankBase: RequestBlank = {
+      frameId: BackendWS.GetFrameID(),
+      ackFrameId: BackendWS.AckFrameID
+    };
+
+    // 创建 RequestGridOperation
     const base: RequestGridOperation = {
+      base: blankBase,
       col: col,
       row: row,
       processFrameId: BackendWS.GetFrameID() + BackendWS.calculateServerFrameDiff()
@@ -234,7 +250,15 @@ export default class QueueSend {
   }
 
   public sendStarShards(pid: number, col: number, row: number) {
+    // 创建 RequestBlank 基础消息
+    const blankBase: RequestBlank = {
+      frameId: BackendWS.GetFrameID(),
+      ackFrameId: BackendWS.AckFrameID
+    };
+
+    // 创建 RequestGridOperation
     const base: RequestGridOperation = {
+      base: blankBase,
       col: col,
       row: row,
       processFrameId: BackendWS.GetFrameID() + BackendWS.calculateServerFrameDiff()
@@ -242,7 +266,7 @@ export default class QueueSend {
 
     const currentStarShards = gameStateManager.getCurrentStarShards();
     let cost = 1;
-    if (BackendWS.isOnlineMode) {
+    if (BackendWS.isOnlineMode()) {
       if (currentStarShards > 1) {
         cost = 2;
       }

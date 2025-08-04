@@ -104,7 +104,7 @@ export default class QueueReceive {
   // 游戏每逻辑帧时机到调用,循环消费直到空
   Consume() {
     // 单人模式先消费一次发送队列
-    if (!BackendWS.isOnlineMode) {
+    if (!BackendWS.isOnlineMode()) {
       this.game.sendQueue.DispatchSingleModeQueue();
     }
 
@@ -148,13 +148,9 @@ export default class QueueReceive {
         continue;
       }
 
-      if (response.frameId === 1) {
-        // TODO: 移动到 onAllLoaded 事件中
-        this.game.handleGameFrameStart(); // 刷怪开始
-      }
-
       // 太好了！这是消息队列中本次nextFrameID的Response
       hasGetThisFrame = true;
+      BackendWS.AckFrameID = response.frameId;
 
       // 处理响应中的所有操作
       for (const operation of response.operations) {
@@ -206,7 +202,7 @@ export default class QueueReceive {
       this.laterOperations.delete(nextFrameID);
 
       // 收到了 下一个服务器帧的命令,自增frameID,发送确认接收信息
-      if (BackendWS.isOnlineMode) {
+      if (BackendWS.isOnlineMode()) {
         // 发送确认信息 - 使用新的protobuf结构
         BackendWS.sendBlankFrame(nextFrameID);
         BackendWS.GoToFrameID(nextFrameID);

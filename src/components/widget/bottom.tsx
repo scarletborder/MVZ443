@@ -74,7 +74,7 @@ export default function BottomTools({ width, chapterID }: Props) {
     }, [handleBossHealth, handleBossDead]);
 
     const handleStarShardsConsume = useMemoizedFn(() => {
-        if (BackendWS.isOnlineMode) {
+        if (BackendWS.isOnlineMode()) {
             gamectx.updateStarShards(-2);
         } else {
             gamectx.updateStarShards(-1);

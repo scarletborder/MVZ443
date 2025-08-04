@@ -105,7 +105,7 @@ export class Game extends Scene {
 
     // 目前只有单机
     // 判断是否联机
-    if (!BackendWS.isOnlineMode) {
+    if (!BackendWS.isOnlineMode()) {
       this.recvQueue = new QueueReceive({ mode: 'single' }, this);
       this.sendQueue = new QueueSend({ mode: 'single', recvQueue: this.recvQueue.queues });
     } else {
@@ -215,7 +215,7 @@ export class Game extends Scene {
 
     this.musical = new Musical(this, this.params.gameSettings.isBgm, this.params.gameSettings.isSoundAudio);
 
-    if (!BackendWS.isOnlineMode) {
+    if (!BackendWS.isOnlineMode()) {
       // 发送blank帧
       this.sendQueue.sendBlankFrame(BackendWS.GetFrameID());
     }
@@ -277,6 +277,8 @@ export class Game extends Scene {
       new MineCart(this, -1, i);
     }
     this.isGameEnd = false;
+
+    this.handleGameFrameStart(); // 刷怪开始
   }
 
   // 处理来自房间的游戏结束事件（多人游戏）
@@ -305,8 +307,8 @@ export class Game extends Scene {
       // 成功种植,如果是自己
       if (this.myID === uid) {
         this.cancelPrePlant(); //现在可以取消预种植了
-        // 可以进行冷却 
-        this.broadCastPlant(pid);
+        // 可以进行冷却和消耗能量
+        this.broadCastMyPlant(pid);
         // 播放音效
         this.musical.plantAudio.play('placePlant');
       }
@@ -381,7 +383,7 @@ export class Game extends Scene {
   }
   // game->app 通知种植卡片
   // 在react manager中处理消耗energy,处理冷却时间
-  broadCastPlant(pid: number) {
+  broadCastMyPlant(pid: number) {
     EventBus.emit('card-plant', { pid });
   }
   // game->app 通知取消种植卡片
@@ -401,7 +403,7 @@ export class Game extends Scene {
   // 处理暂停
   handlePause({ paused }: { paused: boolean }) {
     // 联机模式下不允许手动handle暂停
-    if (BackendWS.isOnlineMode) {
+    if (BackendWS.isOnlineMode()) {
       return;
     }
 
@@ -449,7 +451,7 @@ export class Game extends Scene {
   handleExit(isWin: boolean = false) {
     // 向发送队列发送消息,准备退出游戏
     if (this.isGameEnd) return; // 如果游戏已经结束，则不执行任何操作
-    if (!BackendWS.isOnlineMode) {
+    if (!BackendWS.isOnlineMode()) {
       this.ExitEntry(isWin);
     } else {
       SendEndGame(isWin);
