@@ -1,5 +1,5 @@
 // src/components/ParamsSelector.tsx
-import React from 'react';
+import React, { useEffect } from 'react';
 import { GameParams } from '../../../game/models/GameParams';
 import { useSaveManager } from '../../../context/save_ctx';
 import { StageDataRecords } from '../../../game/utils/loader';
@@ -9,6 +9,7 @@ import { useSettings } from '../../../context/settings_ctx';
 import { useLocaleMessages } from '../../../hooks/useLocaleMessages';
 import { useSetState, useLocalStorageState, useMount, useMemoizedFn } from 'ahooks';
 import { SendReady } from '../../../utils/net/room';
+import { EventBus } from '../../../game/EventBus';
 
 interface ParamsSelectorProps {
   chapterId: number;
@@ -54,19 +55,48 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({
     availablePlants: [] as PlantElem[],
     isOverLimit: false,
     selectUpperLimit: 0,
+    // 联机模式的准备状态
+    readyPlayerCount: 0,
+    totalPlayerCount: 0,
+    hasUserClicked: false, // 跟踪用户是否已经点击了准备按钮
   });
 
   // 使用 useLocalStorageState 保存用户选择的植物配置
   const [plantSelection, setPlantSelection] = useLocalStorageState('plantSelection', {
     defaultValue: {
       lastSelectedPlants: [] as number[],
-      lastStageId: null as number | null,
+      lastStageId: null as number | null
     }
   });
 
-  const saveManager = useSaveManager();
   const settings = useSettings();
+  const saveManager = useSaveManager();
   const { translate } = useLocaleMessages();
+
+  // 联机模式下监听准备状态更新
+  useEffect(() => {
+    if (!isOnlineMode) return;
+
+    const handleReadyCountUpdate = (event: { readyCount: number; totalPlayers: number }) => {
+      setState({
+        readyPlayerCount: event.readyCount,
+        totalPlayerCount: event.totalPlayers
+      });
+    };
+
+    const handleQuitChooseMap = () => {
+      // 房主取消了选图，重置用户点击状态
+      setState({ hasUserClicked: false });
+    };
+
+    EventBus.on('room-update-ready-count', handleReadyCountUpdate);
+    EventBus.on('room-quit-choose-map', handleQuitChooseMap);
+
+    return () => {
+      EventBus.off('room-update-ready-count', handleReadyCountUpdate);
+      EventBus.off('room-quit-choose-map', handleQuitChooseMap);
+    };
+  }, [isOnlineMode]);
 
   // 计算可用植物
   const calculateAvailablePlants = useMemoizedFn(() => {
@@ -151,6 +181,9 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({
   const handleStart = useMemoizedFn(() => {
     // 联机模式下的特殊处理
     if (isOnlineMode) {
+      // 标记用户已经点击了准备按钮
+      setState({ hasUserClicked: true });
+
       // 在线模式下，房主和普通玩家都需要设置GameParams
       const params: GameParams = {
         level: stageId,
@@ -272,9 +305,11 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({
               fontWeight: 'bold'
             }}>
               {islord ? '房主模式' : '玩家模式'} | {
-                isLoading ? '等待中...' :
-                  !canProceed ? '请等待房主操作' :
-                    gameStage === 0x21 ? '准备阶段' : '可以操作'
+                state.hasUserClicked ? 
+                  `等待其他玩家 (${state.readyPlayerCount}/${state.totalPlayerCount})` :
+                  isLoading ? '等待中...' :
+                    !canProceed ? '请等待房主操作' :
+                      gameStage === 0x21 ? '准备阶段' : '可以操作'
               }
             </div>
           )}
@@ -438,20 +473,23 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({
         <button
           style={buttonStyle || {
             padding: '3% 40%',
-            background: canProceed ? '#00ccff' : '#666',
+            background: (canProceed && !(isOnlineMode && state.hasUserClicked)) ? '#00ccff' : '#666',
             border: 'none',
-            color: canProceed ? '#fff' : '#ccc',
-            cursor: canProceed ? 'pointer' : 'not-allowed',
+            color: (canProceed && !(isOnlineMode && state.hasUserClicked)) ? '#fff' : '#ccc',
+            cursor: (canProceed && !(isOnlineMode && state.hasUserClicked)) ? 'pointer' : 'not-allowed',
             transition: 'all 0.3s ease',
             alignSelf: 'center'
           }}
-          onClick={canProceed ? handleStart : undefined}
-          disabled={!canProceed || isLoading}
+          onClick={(canProceed && !(isOnlineMode && state.hasUserClicked)) ? handleStart : undefined}
+          disabled={!canProceed || isLoading || (isOnlineMode && state.hasUserClicked)}
         >
           {isLoading && (
             <span style={{ marginRight: '8px' }}>⏳</span>
           )}
-          {buttonText || translate('start')}
+          {(isOnlineMode && state.hasUserClicked) ? 
+            `等待其他玩家 (${state.readyPlayerCount}/${state.totalPlayerCount})` :
+            (buttonText || translate('start'))
+          }
         </button>
       </div>
     </div>

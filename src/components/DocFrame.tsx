@@ -9,8 +9,10 @@ import { useDeviceType } from '../hooks/useDeviceType';
 import { OnlineStateManager } from '../store/OnlineStateManager';
 import { EventBus } from '../game/EventBus';
 import Shop from './shop/shop';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useLocaleMessages } from '../hooks/useLocaleMessages';
+import OnlineStatus from './OnlineStatus';
+import GlobalRoomListener from './GlobalRoomListener';
 
 interface Props {
     width: number,
@@ -46,6 +48,26 @@ export default function DocFrame({ width, height, sceneRef, setGameParams, gameS
     const [commitVersion, setCommitVersion] = useState('develop');
     const deviceType = useDeviceType();
     const navigate = useNavigate();
+    const [searchParams, setSearchParams] = useSearchParams();
+
+    useEffect(() => {
+        // 处理从其他页面跳转过来的自动选图
+        const autoSelectStage = searchParams.get('autoSelectStage');
+        const fromPage = searchParams.get('fromPage');
+        
+        if (autoSelectStage && fromPage) {
+            const stageId = parseInt(autoSelectStage);
+            if (stageId > 0) {
+                console.log('🎮 检测到自动选图参数，从', decodeURIComponent(fromPage), '跳转，进入选卡界面，关卡:', stageId);
+                setChosenStage(stageId);
+                setSkipToParams(true);
+                setCurrentView('levels');
+                
+                // 清除URL参数
+                setSearchParams({});
+            }
+        }
+    }, [searchParams, setSearchParams]);
 
     useEffect(() => {
         // 监听房间信息和身份变化
@@ -300,15 +322,21 @@ export default function DocFrame({ width, height, sceneRef, setGameParams, gameS
 
     // 根据当前视图渲染不同内容
     return (
-        <>
+        <div style={{ position: 'relative', width: `${width}px`, height: `${height}px` }}>
+            <OnlineStatus />
+            <GlobalRoomListener 
+                setCurrentView={setCurrentView}
+                setSkipToParams={setSkipToParams}
+                setChosenStage={setChosenStage}
+            />
             {currentView === 'main' || currentView === 'about' ? <MainMenu /> : null}
             {currentView === 'levels' && <LevelSelect width={width} height={height} onBack={() => setCurrentView('main')}
                 startGame={gameStart} setGameParams={setGameParams} skipToParams={skipToParams} chosenStage={chosenStage || undefined}
             />}
-            {currentView === 'pokedex' && <Pokedex sceneRef={sceneRef} width={width} height={height} onBack={() => setCurrentView('main')} />}
+            {currentView === 'pokedex' && <Pokedex width={width} height={height} onBack={() => setCurrentView('main')} />}
             {currentView === 'shop' && <Shop width={width} height={height} onBack={() => setCurrentView('main')} />}
             {currentView === 'settings' && <Settings width={width} height={height} onBack={() => setCurrentView('main')} />}
-
+            
             <style>
                 {`
                     @keyframes frameFadeIn {
@@ -334,6 +362,6 @@ export default function DocFrame({ width, height, sceneRef, setGameParams, gameS
                     }
                 `}
             </style>
-        </>
+        </div>
     );
 }

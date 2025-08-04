@@ -3,18 +3,22 @@ import { IRefPhaserGame, PhaserGame } from './game/PhaserGame';
 import { CardSlotHorizontal, CardSlotVertical, EnergySlot, VerticalEnergySlot, ViceCardSlot } from './components/widget/cardslot';
 import BottomTools from './components/widget/bottom';
 import DocFrame from './components/DocFrame';
+import GlobalOnlineStateListener from './components/GlobalOnlineStateListener';
 import { useSettings } from './context/settings_ctx';
 import { GameParams } from './game/models/GameParams';
 import { StageResult } from './game/models/IRecord';
 import GameResultView from './components/menu/result';
 import { useDeviceType } from './hooks/useDeviceType';
 import BackendWS from './utils/net/sync';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, useNavigate, useLocation } from 'react-router-dom';
 import UpdatesPage from './pages/updates';
 import SettingsPage from './pages/settings';
 import Docs from './pages/docs';
 import DocDetail from './pages/docDetail';
 import { publicUrl } from './utils/browser';
+import { EventBus } from './game/EventBus';
+import { OnlineStateManager } from './store/OnlineStateManager';
+import EnumGameStage from './utils/net/game_state';
 
 
 function App() {
@@ -58,7 +62,7 @@ function App() {
   }, [setShowGameScreen, setShowGameTool]);
 
   // Event emitted from the PhaserGame component
-  const currentScene = (scene: Phaser.Scene) => {
+  const currentScene = (_scene: Phaser.Scene) => {
     // setCanMoveSprite(scene.scene.key !== 'MainMenu');
   }
 
@@ -87,7 +91,7 @@ function App() {
   }, []);
 
   const GameMainWindow = () => {
-    return (<div id="app" onContextMenu={(e) => { event?.preventDefault() }} style={{
+    return (<div id="app" onContextMenu={(e) => { e?.preventDefault() }} style={{
       userSelect: "none",
       WebkitUserSelect: "none",
       MozUserSelect: "none",
@@ -171,7 +175,7 @@ function App() {
             {showGameTool &&
               <BottomTools
                 width={width}
-                chapterID={gameParams?.level}
+                chapterID={gameParams?.level ?? null}
               />
             }
           </div>
@@ -196,6 +200,9 @@ function App() {
 
   return (
     <Router>
+      {/* 全局在线状态变化监听器 */}
+      <GlobalOnlineStateListener />
+      
       <Routes>
         <Route path={`${publicUrl}/`} element={<GameMainWindow />} />
         <Route path={`${publicUrl}/settings`} element={<SettingsPage width={width} height={width * 3 / 4} />} />

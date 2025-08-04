@@ -9,6 +9,7 @@ import BackendWS from "../../utils/net/sync";
 import { useLocaleMessages } from "../../hooks/useLocaleMessages";
 import { gameStateManager } from "../../store/GameStateManager";
 import { useMemoizedFn, useLatest } from "ahooks";
+import OnlineStatus from "../OnlineStatus";
 
 type Props = {
     width: number
@@ -179,7 +180,21 @@ export default function BottomTools({ width, chapterID }: Props) {
                     </div>
                 )
             }
-            <div className='stageDisplay' onClick={handleSetPause}>{chapterID ? translate(StageDataRecords[chapterID].nameKey) : 'loading'}</div>
+            <div className='stageDisplay' onClick={handleSetPause}>
+                {chapterID ? translate(StageDataRecords[chapterID].nameKey) : 'loading'}
+            </div>
+            
+            {/* 在游戏场景中显示在线状态，替换暂停按钮区域 */}
+            {BackendWS.isOnlineMode() && (
+                <div style={{
+                    position: 'absolute',
+                    bottom: '10px',
+                    right: '10px',
+                    zIndex: 1000
+                }}>
+                    <OnlineStatus />
+                </div>
+            )}
         </div >
     );
 }

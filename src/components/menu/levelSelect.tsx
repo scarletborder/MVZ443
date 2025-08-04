@@ -79,6 +79,7 @@ const LevelSelector: React.FC<LevelSelectorProps> = ({
         if (isOnlineMode) {
             // 监听游戏阶段变化
             const handleGameStageChange = (gameStage: number) => {
+                console.log('🎮 GameStage changed from', state.gameStage, 'to', gameStage, 'current step:', state.currentStep);
                 setState({ gameStage });
 
                 // 根据游戏阶段调整UI状态
@@ -90,12 +91,27 @@ const LevelSelector: React.FC<LevelSelectorProps> = ({
                 } else if (gameStage === EnumGameStage.Loading) {
                     setState({ isLoading: true });
                 } else if (gameStage === EnumGameStage.InLobby) {
-                    setState({
-                        currentStep: 'chapter',
-                        isLoading: false,
-                        selectedChapterId: null,
-                        selectedStageId: null
-                    });
+                    // 只有在明确需要回到大厅时才重置状态
+                    // 避免在准备阶段的状态更新导致误跳转
+                    console.log('🔄 Received InLobby state, current step:', state.currentStep);
+                    
+                    // 如果当前在选卡界面，不要重置，除非明确是从游戏结束或房间关闭等情况
+                    const shouldReset = state.currentStep !== 'params' || 
+                                      state.gameStage === EnumGameStage.PostGame || 
+                                      state.gameStage === EnumGameStage.InGame;
+                    
+                    if (shouldReset) {
+                        console.log('🔄 Resetting to chapter selection');
+                        setState({
+                            currentStep: 'chapter',
+                            isLoading: false,
+                            selectedChapterId: null,
+                            selectedStageId: null
+                        });
+                    } else {
+                        console.log('🔄 Staying in current step to avoid unwanted jump');
+                        setState({ isLoading: false });
+                    }
                 }
             };
 
@@ -275,29 +291,6 @@ const LevelSelector: React.FC<LevelSelectorProps> = ({
             animation: "frameFadeIn 0.5s ease-out",
             whiteSpace: "pre-wrap"
         }}>
-            {/* 联机模式状态显示 */}
-            {isOnlineMode && (
-                <div style={{
-                    position: 'absolute',
-                    top: '10px',
-                    right: '10px',
-                    background: 'rgba(0, 0, 0, 0.7)',
-                    color: 'white',
-                    padding: '8px 12px',
-                    borderRadius: '4px',
-                    fontSize: '12px',
-                    zIndex: 1000
-                }}>
-                    {islord ? '房主' : '玩家'} | 阶段: {
-                        state.gameStage === EnumGameStage.InLobby ? '大厅' :
-                            state.gameStage === EnumGameStage.Preparing ? '准备中' :
-                                state.gameStage === EnumGameStage.Loading ? '加载中' :
-                                    state.gameStage === EnumGameStage.InGame ? '游戏中' :
-                                        state.gameStage === EnumGameStage.PostGame ? '结算' : '未知'
-                    } | 玩家: {state.totalPlayerCount}
-                </div>
-            )}
-
             {state.currentStep === 'chapter' && (
                 <ChapterSelector
                     onSelect={handleChapterSelect}

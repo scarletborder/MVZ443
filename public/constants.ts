@@ -1,4 +1,4 @@
-export const VERSION = `0.0.4b`;
+export const VERSION = `0.1.1a`;
 
 export const SECKILL = 99889988;
 

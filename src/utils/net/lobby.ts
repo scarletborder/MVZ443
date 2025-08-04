@@ -81,8 +81,8 @@ export function RoomListWidget(info: RoomInfo, baseUrl: string, key: string, set
     };
 
     return {
-        title: `房间号: ${info.room_id} ${info.need_key ? "私密" : "公开"}`,
-        description: `人数: ${info.player_count} ${gameStateToString(info.game_state)}`,
+        titleKey: `房间号: ${info.room_id} ${info.need_key ? "私密" : "公开"}`,
+        descriptionKey: `人数: ${info.player_count} ${gameStateToString(info.game_state)}`,
         controlType: 'button',
         controlProps: {
             onClick: onClick,
@@ -100,4 +100,4 @@ export function createRoom(baseUrl: string, key: string) {
     const wsUrl = `wss://${baseUrl}/ws?key=${myKey}`;
     BackendWS.setConnectionUrl(wsUrl);
     BackendWS.startConnection();
-}
+} 
