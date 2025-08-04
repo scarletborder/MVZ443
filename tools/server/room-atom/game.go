@@ -26,6 +26,8 @@ func (room *Room) runGameTick() {
 		room.RoomCtx.NextFrameID.Add(1)
 		// 删除本帧的操作ID记录
 		room.RoomCtx.DeleteOperationID(NextRenderFrame)
+		// 更新游戏逻辑
+		room.Logic.Reset()
 	}()
 
 	// 读取operation chan
