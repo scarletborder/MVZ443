@@ -85,7 +85,9 @@ export default class QueueReceive {
           if (gameEvent.eventType === 0x4000) {
             return () => { };
           }
-          return () => console.log('Game event;type=', gameEvent.eventType, ';message=', gameEvent.message);
+          return () => {
+            console.log('Game event;type=', gameEvent.eventType, ';message=', gameEvent.message);
+          };
         }
         break;
       case 'error':
@@ -261,4 +263,4 @@ export default class QueueReceive {
     this.game.doResume();
     this.isHalted = false;
   }
-}
+} 
