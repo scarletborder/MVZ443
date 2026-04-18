@@ -1,72 +1,89 @@
-import { SECKILL } from "../../../../../public/constants";
-import { item } from "../../../../components/shop/types";
-
-import { GetDecValue } from "../../../../utils/numbervalue";
-import { IPlant } from "../../../models/IPlant";
-import { IRecord } from "../../../models/IRecord";
+import { PlantStat } from "../../../../utils/numbervalue";
+import { PositionManager } from "../../../managers/view/PositionManager";
+import { PlantEntity } from "../../../models/entities/PlantEntity";
+import { PlantModel } from "../../../models/PlantModel";
 import { Game } from "../../../scenes/Game";
+import ResourceCmd from "../../../utils/cmd/ResourceCmd";
 
-class Furnace extends IPlant {
-    game: Game;
-    updateEnergy: number = 25;
-    constructor(scene: Game, col: number, row: number, level: number) {
-        super(scene, col, row, FurnaceRecord.texture, FurnaceRecord.pid, level);
-        this.game = scene;
-        this.setFrame(0);
-        this.setHealthFirstly(300);
 
-        if (level >= 9) {
-            this.updateEnergy = 40;
+export class FurnaceModel extends PlantModel {
+  public override pid = 2;
+  public override nameKey = 'name_furnace';
+  public override descriptionKey = 'furnace_description';
+  public override texturePath = 'plant/furnace';
+
+  public maxHealth = new PlantStat(300);
+  public cost = new PlantStat(50).setThreshold(5, 35);
+  public cooldown = new PlantStat(6000);
+  public cooldownStartAtRatio = 0.7; // startAt: cooldownTime * 0.7
+
+  generateEnergyCooldown = new PlantStat(25000).setDecValue(0.85); // 生成能量的冷却时间，随等级增加而递减
+  generateEnergyAmount = new PlantStat(25).setThreshold(9, 40); // 生成能量的数量，9级时提升
+  public damage = new PlantStat(0); // 炉子没有伤害
+
+  isNightPlant = false;
+
+  onCreate(entity: FurnaceEntity): void {
+    // 启动能量生产定时器
+    const cooldownTime = this.generateEnergyCooldown.getValueAt(entity.level);
+
+    entity.tickmanager.addEvent({
+      startAt: cooldownTime * 0.7,
+      delay: cooldownTime,
+      repeat: -1,
+      callback: () => {
+        if (entity.isSleeping) return;
+        if (entity.currentHealth > 0 && entity.scene && entity.scene.time) {
+          entity.playGenerateAnimation();
+          const energyToAdd = this.generateEnergyAmount.getValueAt(entity.level);
+          ResourceCmd.AddEnergyToAll(energyToAdd);
         }
+      }
+    });
+  }
 
-        const cooldownTime = GetDecValue(25000, 0.85, level);
+  onStarShards(entity: FurnaceEntity): void {
+    // 一次性加能量
+    ResourceCmd.AddEnergyToAll(450);
+  }
 
-        this.Timer = scene.frameTicker.addEvent({
-            delay: cooldownTime, // 每18秒生产能量
-            startAt: cooldownTime * 0.7,
-            loop: true,
-            callback: () => {
-                if (this.isSleeping) return;
-                if (this.health > 0 && scene && scene.time) {
-                    this.setFrame(1);
-                    scene.broadCastEnergy(+this.updateEnergy);
-                    scene?.time.delayedCall(1000, () => {
-                        if (this && this.health && this.health > 0) {
-                            this.setFrame(0);
-                        }
-                    });
-                }
-            },
-        });
-    }
-
-    public onStarShards(): void {
-        super.onStarShards();
-        // 一次性加能量
-        this.game?.broadCastEnergy(+450);
-    }
-
+  public createEntity(scene: Game, col: number, row: number, level: number) {
+    return new FurnaceEntity(scene, col, row, level);
+  }
 }
 
-function NewFurnace(scene: Game, col: number, row: number, level: number): IPlant {
-    const furnace = new Furnace(scene, col, row, level);
-    return furnace;
+export class FurnaceEntity extends PlantEntity {
+  constructor(scene: Game, col: number, row: number, level: number) {
+    super(scene, col, row, FurnaceData, level);
+  }
+
+  protected buildView() {
+    const size = PositionManager.Instance.getPlantDisplaySize();
+
+    const sprite = this.scene.add.sprite(this.x, this.y, this.model.texturePath, 0)
+      .setOrigin(0.5, 1)
+      .setDisplaySize(size.sizeX, size.sizeY)
+      .setDepth(this.baseDepth);
+
+    this.viewGroup.add(sprite);
+  }
+
+  public playGenerateAnimation() {
+    const sprite = this.viewGroup.getChildren()[0] as Phaser.GameObjects.Sprite;
+    if (!sprite) return;
+
+    // 切换帧到生成状态
+    sprite.setFrame(1);
+
+    // 1秒后恢复
+    this.scene.time.delayedCall(
+      1000,
+      () => {
+        if (this && this.currentHealth && this.currentHealth > 0) {
+          sprite.setFrame(0);
+        }
+      });
+  }
 }
 
-function cost(level?: number): number {
-    if ((level || 1) >= 5) return 35;
-    return 50;
-}
-
-const FurnaceRecord: IRecord = {
-    pid: 2,
-    nameKey: 'name_furnace',
-    cost: cost,
-    cooldownTime: () => 6,
-    NewFunction: NewFurnace,
-    texture: 'plant/furnace',
-    descriptionKey: 'furnace_description',
-
-};
-
-export default FurnaceRecord;
+export const FurnaceData = new FurnaceModel();

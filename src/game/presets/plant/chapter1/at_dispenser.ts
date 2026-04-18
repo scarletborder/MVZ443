@@ -1,265 +1,191 @@
 import ProjectileDamage from "../../../../constants/damage";
-import { GetIncValue } from "../../../../utils/numbervalue";
-import { IExpolsion } from "../../../models/IExplosion";
-import { IPlant } from "../../../models/IPlant";
-import { IRecord } from "../../../models/IRecord";
+import { PlantStat } from "../../../../utils/numbervalue";
+import { DeferredManager } from "../../../managers/DeferredManager";
+import PlantsManager from "../../../managers/combat/PlantsManager";
+import { PositionManager } from "../../../managers/view/PositionManager";
+import { PlantEntity } from "../../../models/entities/PlantEntity";
+import { PlantModel } from "../../../models/PlantModel";
 import { Game } from "../../../scenes/Game";
-import createShootBurst from "../../../sprite/shoot_anim";
-import { FrameTimer } from "../../../sync/ticker";
-import NewHorizontalFireWork, { HFireWork } from "../../bullet/firework";
-import DispenserRecord from "./dispenser";
+import createShootBurstAnim from "../../../sprite/shoot_anim";
+import { ProjectileCmd } from "../../../utils/cmd/ProjectileCmd";
+import CombatHelper from "../../../utils/helper/CombatHelper";
+import { HFireWorkConfig, HFireWorkData, HFireWorkEntity, HFireWorkModel } from "../../bullet/firework";
+import { DispenserData } from "./dispenser";
 
+// 特殊的星辰碎片烟花模型
+export class ATAirHFireWorkModel extends HFireWorkModel {
+  public override createEntity(scene: Game, x: number, row: number, config: HFireWorkConfig): ATAirHFireWorkEntity {
+    return new ATAirHFireWorkEntity(scene, x, row, this, config);
+  }
+}
+export const ATAirHFireWorkData = new ATAirHFireWorkModel();
 
-class at_dispenser extends IPlant {
-    game: Game;
-    base: Phaser.GameObjects.Sprite; // 底座，frame 0
-    head: Phaser.GameObjects.Sprite; // 头部，frame 1
-    container: Phaser.GameObjects.Container;
+export class ATAirHFireWorkEntity extends HFireWorkEntity {
+  private customExplodeDamage: number;
 
-    headX: number;
+  constructor(scene: Game, x: number, row: number, model: ATAirHFireWorkModel, cfg: HFireWorkConfig) {
+    // 传入 explodeDamage: 0 来阻止基类触发默认的单次爆炸
+    super(scene, x, row, model, { ...cfg, explodeDamage: 0 });
+    this.customExplodeDamage = cfg.explodeDamage ?? 0;
+  }
 
+  public override destroy(): void {
+    const scene = this.scene;
 
-    public onStarShards(): void {
-        super.onStarShards();
-        if (!this || !this.game) return;
+    if (scene && this.customExplodeDamage > 0) {
+      const row = PositionManager.Instance.getRowByY(this.y);
+      const gridGap = PositionManager.Instance.GRID_SIZEX * 1.5;
 
-        // 发射一颗高射烟花火箭
-        new at_air_HFirework(this.game, this.col, this.row, 50, this.game.positionCalc.GRID_SIZEX * 4,
-            'zombie', 300);
+      const offsets = [
+        { dx: 0, dr: 0 },
+        { dx: gridGap, dr: 2 },
+        { dx: -gridGap, dr: 2 },
+        { dx: gridGap, dr: -2 },
+        { dx: -gridGap, dr: -2 },
+      ];
+
+      for (const offset of offsets) {
+        ProjectileCmd.CreateExplosion(scene, this.x + offset.dx, row + offset.dr, {
+          damage: this.customExplodeDamage,
+          rightGrid: 1.5,
+          leftGrid: 1.5,
+          upGrid: 1,
+          faction: this.faction,
+          dealer: this.dealer,
+        });
+      }
     }
 
+    super.destroy();
+  }
+}
 
-    constructor(scene: Game, col: number, row: number, texture: string, level: number) {
-        // 首先获得当前格子中作为基座的 发射器destroyPlant基座植物
-        const key = `${col}-${row}`;
-        const plants = scene.gardener.planted.get(key) || [];
+export class ATDispenserModel extends PlantModel {
+  public override pid = 14;
+  public override nameKey = 'name_at_dispenser';
+  public override descriptionKey = 'at_dispenser_description';
+  public override texturePath = 'plant/at_dispenser';
 
-        for (const plant of plants) {
-            if (plant.pid === DispenserRecord.pid) { // 基座
-                plant.destroyPlant();
-                break;
-            }
-        }
+  public maxHealth = new PlantStat(450).setIncRatio(2);
+  public cost = new PlantStat(450).setThreshold(5, 425);
 
+  public cooldown = new PlantStat(60000).setThreshold(9, 48000);
+  public cooldownStartAtRatio = 0.5;
 
-        super(scene, col, row, texture, ATDispenserRecord.pid, level);
-        this.setVisible(false);
-        this.game = scene;
-        const health = GetIncValue(450, 2, level);
-        this.setHealthFirstly(health);
+  public damage = new PlantStat(ProjectileDamage.bullet.firework).setIncRatio(1.4);
+  public isNightPlant: boolean = false;
 
-        // anim
-        const size = scene.positionCalc.getPlantDisplaySize();
-        // 头部：frame 1，初始位置与底座对齐
-        this.head = scene.add.sprite(this.x, this.y, texture, 2).setOrigin(0.5, 1)
-            .setDisplaySize(size.sizeX * 1.2, size.sizeY * 1.2).setDepth(this.depth);
-        // 底座：frame 0
-        this.base = scene.add.sprite(this.x, this.y, texture, 1).setOrigin(0.5, 1)
-            .setDisplaySize(size.sizeX * 1.5, size.sizeY * 1.5).setDepth(this.depth - 1);
-        // !important: 不要用container,很神奇吧,也不要add existing
-        this.headX = this.head.x;
-        this.Timer = this.normalShootEvent();
+  public override createEntity(scene: Game, col: number, row: number, level: number): ATDispenserEntity {
+    // 首先获得当前格子中作为基座的 发射器植物并销毁它
+    const key = `${col}-${row}`;
+    const plants = PlantsManager.Instance.PlantsMap.get(key) || [];
+
+    for (const plant of plants) {
+      if (plant.model.pid === DispenserData.pid) { // 基座
+        DeferredManager.Instance.defer(() => {
+          plant.destroy();
+        });
+        break;
+      }
     }
+    return new ATDispenserEntity(scene, col, row, level);
+  }
 
-    shootAnimation() {
-        // 安全检查：确保所有需要的对象都存在
-        if (!this.scene || !this.head || this.health <= 0) {
-            return;
-        }
+  public override onCreate(entity: ATDispenserEntity): void {
+    entity.tickmanager.addEvent({
+      startAt: 2500,
+      delay: 3550,
+      repeat: -1,
+      callback: () => {
+        if (entity.isSleeping) return;
 
-        try {
-            // 计算移动距离
-            const moveDistance = this.head.displayWidth * 0.15;
-            const originalX = this.headX;
-
-            // 第一个 tween：向左平移
-            this.scene.tweens.add({
-                targets: this.head,
-                x: originalX - moveDistance,
-                duration: 200,
-                ease: 'Sine.easeOut',
-                onComplete: () => {
-                    // 完成时再次检查对象是否有效
-                    if (!this.scene || !this.head || this.health <= 0) {
-                        return;
-                    }
-
-                    createShootBurst(
-                        this.scene,
-                        this.head.x + this.width * 2 / 9,
-                        this.head.y - this.height * 2 / 3,
-                        24,
-                        this.depth + 2
-                    );
-
-                    createShootBurst(
-                        this.scene,
-                        this.head.x + this.width * 3 / 9,
-                        this.head.y - this.height * 2 / 3,
-                        24,
-                        this.depth + 2
-                    );
-
-                    createShootBurst(
-                        this.scene,
-                        this.head.x + this.width * 2 / 9,
-                        this.head.y - this.height * 1 / 3,
-                        24,
-                        this.depth + 2
-                    );
-
-                    // 回弹动画前再次检查
-                    if (this.scene && this.head && this.health > 0) {
-                        this.scene?.tweens.add({
-                            targets: this.head,
-                            x: originalX,
-                            duration: 200,
-                            ease: 'Sine.easeIn',
-                            onComplete: () => {
-                                // 确保结束时位置正确
-                                if (this.head && this.health > 0) {
-                                    this.head.x = originalX;
-                                }
-                            }
-                        });
-                    }
-                }
-            });
-        } catch (e) {
-            console.warn('Dispenser shootAnimation error:', e);
-            // 发生错误时尝试恢复位置
-            if (this.head && this.health > 0) {
-                this.head.x = this.headX;
-            }
-        }
-    }
-
-
-    normalShootEvent(): FrameTimer | null {
-        // 如果对象或场景不存在，则直接返回 null
-        if (!this.scene || this.health <= 0) {
-            return null;
-        }
-        return this.scene?.frameTicker.addEvent({
-            startAt: 2500,
-            delay: 3550,
-            loop: true,
+        if (CombatHelper.HasEnemyFactionOnRow(entity.faction, entity.GetRow())) {
+          entity.playShootAnimation();
+          entity.tickmanager.delayedCall({
+            delay: 200,
             callback: () => {
-                // 这里先判断对象及场景是否有效
-                if (!this.scene || this.health <= 0) {
-                    // 如果不再有效，则移除 Timer
-                    if (this.Timer) {
-                        this.Timer.remove();
-                    }
-                    return;
-                }
-                if (this.isSleeping) return;
-                if (this.scene.monsterSpawner.hasMonsterInRowWithElastic(this.row)
-                    || this.scene?.monsterSpawner.hasMonsterInRowAfterX(this.row, this.x)) {
-                    this.shootAnimation();
-                    this.scene?.frameTicker.delayedCall({
-                        delay: 200,
-                        callback: () => { shootArrow(this.scene, this); },
-                    });
-                }
+              this.normalShot(entity);
             }
-        });
-    }
+          });
+        }
+      }
+    });
+  }
 
-    destroy(fromScene?: boolean): void {
-        this.head?.destroy();
-        this.base?.destroy();
-        super.destroy(fromScene);
-    }
+  public override onSleepStateChange(entity: ATDispenserEntity, isSleeping: boolean): void { }
+
+  public override onStarShards(entity: ATDispenserEntity): void {
+    // 发射一颗高射烟花火箭
+    ProjectileCmd.Create<ATAirHFireWorkModel>(ATAirHFireWorkData, entity.scene, entity.x, entity.row, {
+      damage: 50,
+      maxDistance: PositionManager.Instance.GRID_SIZEX * 4,
+      faction: entity.faction,
+      dealer: entity,
+      explodeDamage: 300
+    });
+  }
+
+  protected normalShot(entity: ATDispenserEntity) {
+    ProjectileCmd.Create<HFireWorkModel>(HFireWorkData, entity.scene, entity.x, entity.row, {
+      damage: this.damage.getValueAt(entity.level),
+      maxDistance: PositionManager.Instance.GRID_SIZEX * 32,
+      faction: entity.faction,
+      dealer: entity,
+      explodeDamage: ProjectileDamage.bullet.firework_splash
+    });
+  }
 }
 
-function NewATDispenser(scene: Game, col: number, row: number, level: number): IPlant {
-    const peashooter = new at_dispenser(scene, col, row, 'plant/at_dispenser', level);
-    return peashooter;
+export const ATDispenserData = new ATDispenserModel();
+
+export class ATDispenserEntity extends PlantEntity {
+  private headX: number = 0;
+  private head!: Phaser.GameObjects.Sprite;
+
+  constructor(scene: Game, col: number, row: number, level: number) {
+    super(scene, col, row, ATDispenserData, level);
+  }
+
+  protected override buildView() {
+    const size = PositionManager.Instance.getPlantDisplaySize();
+
+    // 底座：frame 1
+    const base = this.scene.add.sprite(this.x, this.y, this.model.texturePath, 1)
+      .setOrigin(0.5, 1)
+      .setDisplaySize(size.sizeX * 1.5, size.sizeY * 1.5)
+      .setDepth(this.baseDepth - 1);
+
+    // 头部：frame 2
+    const head = this.scene.add.sprite(this.x, this.y, this.model.texturePath, 2)
+      .setOrigin(0.5, 1)
+      .setDisplaySize(size.sizeX * 1.2, size.sizeY * 1.2)
+      .setDepth(this.baseDepth);
+
+    this.headX = this.x;
+    this.head = head;
+    this.viewGroup.addMultiple([base, head]);
+  }
+
+  public playShootAnimation() {
+    if (this.currentHealth <= 0) return;
+
+    const head = this.head;
+    const moveDistance = head.displayWidth * 0.15;
+    const originalX = this.headX;
+
+    this.scene.tweens.add({
+      targets: head,
+      x: originalX - moveDistance,
+      duration: 200,
+      yoyo: true,
+      ease: 'Sine.easeInOut',
+      onYoyo: () => {
+        if (this.currentHealth <= 0) return;
+
+        createShootBurstAnim(this.scene, head.x + head.displayWidth * 2 / 9, head.y - head.displayHeight * 2 / 3, 24, this.baseDepth + 2);
+        createShootBurstAnim(this.scene, head.x + head.displayWidth * 3 / 9, head.y - head.displayHeight * 2 / 3, 24, this.baseDepth + 2);
+        createShootBurstAnim(this.scene, head.x + head.displayWidth * 2 / 9, head.y - head.displayHeight * 1 / 3, 24, this.baseDepth + 2);
+      }
+    });
+  }
 }
-
-function shootArrow(scene: Game, shooter: IPlant) {
-    if (!scene || !shooter || shooter.health <= 0) {
-        return;
-    }
-
-    const level = shooter.level;
-    //  根据等级略微提高伤害
-    const damage = GetIncValue(ProjectileDamage.bullet.firework, level, 1.4);
-    const penetrate = 1;
-
-    const arrow = NewHorizontalFireWork(scene, shooter.col, shooter.row,
-        scene.positionCalc.GRID_SIZEX * 32, damage, 'zombie', ProjectileDamage.bullet.firework_splash);
-    arrow.penetrate = penetrate;
-    return arrow;
-}
-
-
-class at_air_HFirework extends HFireWork {
-    destroy(fromScene?: boolean): void {
-        const game = this.scene;
-        const x = this.x;
-        const row = this.row;
-        const explodeDamage = this.explodeDamage;
-        console.log('炸弹炸了', x, row, explodeDamage);
-        super.destroy(fromScene);
-        if (!game) return;
-
-        const gridGap = game.positionCalc.GRID_SIZEX * 1.5;
-
-        // 对多个角度设置爆炸
-        new IExpolsion(game, x, row, {
-            damage: explodeDamage,
-            rightGrid: 1.5,
-            leftGrid: 1.5,
-            upGrid: 1,
-        });
-
-        new IExpolsion(game, x + gridGap, row + 2, {
-            damage: explodeDamage,
-            rightGrid: 1.5,
-            leftGrid: 1.5,
-            upGrid: 1,
-        });
-
-        new IExpolsion(game, x - gridGap, row + 2, {
-            damage: explodeDamage,
-            rightGrid: 1.5,
-            leftGrid: 1.5,
-            upGrid: 1,
-        });
-
-        new IExpolsion(game, x + gridGap, row - 2, {
-            damage: explodeDamage,
-            rightGrid: 1.5,
-            leftGrid: 1.5,
-            upGrid: 1,
-        });
-
-        new IExpolsion(game, x - gridGap, row - 2, {
-            damage: explodeDamage,
-            rightGrid: 1.5,
-            leftGrid: 1.5,
-            upGrid: 1,
-        });
-    }
-}
-
-
-const ATDispenserRecord: IRecord = {
-    pid: 14,
-    nameKey: 'name_at_dispenser',
-    cost: (level) => {
-        if (level && level >= 5) return 425;
-        return 450;
-    },
-    cooldownTime: (level) => {
-        if (level && level >= 9) return 48;
-        return 60;
-    },
-    NewFunction: NewATDispenser,
-    texture: 'plant/at_dispenser',
-    descriptionKey: 'at_dispenser_description',
-};
-
-export default ATDispenserRecord;

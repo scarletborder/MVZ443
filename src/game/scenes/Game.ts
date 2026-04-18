@@ -1,51 +1,49 @@
-import { EventBus } from '../EventBus';
+import {
+  PhaserEventBus,
+  PhaserEvents,
+} from '../EventBus';
 import { Scene } from 'phaser';
-import { IPlant } from '../models/IPlant';
-import { IBullet } from '../models/IBullet';
-import { PositionCalc } from '../utils/position';
-import Gardener from '../utils/gardener';
-import MonsterSpawner from '../utils/spawner';
+import { PositionManager } from '../managers/view/PositionManager';
+import CursorManager from '../managers/combat/CursorManager';
+import PlantsManager from '../managers/combat/PlantsManager';
 import { GameParams, GameSettings } from '../models/GameParams';
-import PlantFactoryMap from '../presets/plant';
 import QueueReceive from '../sync/queue_receive';
 import QueueSend from '../sync/queue_send';
 import CreateInnerMenu from '../utils/inner_menu';
 import { StageData } from '../models/IRecord';
-import MineCart from '../presets/bullet/minecart';
-import AddMapFunction from '../game_events/mapfun';
 import BackendWS, { HasConnected } from '../../utils/net/sync';
-import { IExpolsion } from '../models/IExplosion';
-import { ILaser } from '../models/ILaser';
-import IObstacle from '../presets/obstacle/IObstacle';
-import { generateStageScript } from '../game_events/stage_script';
 import seedrandom from 'seedrandom';
-import DepthManager from '../../utils/depth';
-import { IMonster } from '../models/monster/IMonster';
-import { FrameTick } from '../../../public/constants';
-import FrameTicker from '../sync/ticker';
+import DepthUtils from '../../utils/depth';
 import Musical from '../utils/musical';
-import { gameStateManager } from '../../store/GameStateManager';
-import { SendEndGame, SendLoaded } from '../../utils/net/room';
-
+import { RapierPhysicsManager } from '../managers/RapierPhysicsManager';
+import RAPIER from '@dimforge/rapier2d-deterministic-compat';
+import CombatManager from '../managers/CombatManager';
+import GridManager from '../managers/combat/GridManager';
+import MobManager from '../managers/combat/MobManager';
+import AudioManager from '../managers/combat/AudioManager';
+import { BaseManager } from '../managers/BaseManager';
+import CardpileManager from '../managers/combat/CardpileManager';
+import KeybindManager from '../managers/combat/KeybindManager';
+import ResourceManager from '../managers/combat/ResourceManager';
+import SyncManager from '../managers/combat/SyncManager';
+import TickerManager from '../managers/combat/TickerManager';
+import DebugManager from '../managers/view/DebugManager';
+import { BaseEntity } from '../models/core/BaseEntity';
+import { DeferredManager } from '../managers/DeferredManager';
+import { SendLoaded } from '../../utils/net/room';
+import StageHelper from '../utils/helper/StageHelper';
 
 
 export class Game extends Scene {
-  private myID: number = 0;
-
+  private ManagerGroup: BaseManager[] = [];
   private scaleFactor: number = 1;
-  public GRID_ROWS = 4;
-  public GRID_COLS = 9;
 
-  public positionCalc: PositionCalc;
-  public gardener: Gardener;
-  public monsterSpawner: MonsterSpawner;
   public innerSettings: GameSettings;
-  public frameTicker: FrameTicker;
 
-  /**
-   * gridProperty[row][col]
-   */
-  public gridProperty: ("ground" | "water" | "sky")[][];
+  public rapierWorld: RAPIER.World;
+  public rapierPhysics: RapierPhysicsManager;
+  public rapierEventQueue: RAPIER.EventQueue;
+
 
   camera: Phaser.Cameras.Scene2D.Camera;
   background: Phaser.GameObjects.Image;
@@ -56,24 +54,10 @@ export class Game extends Scene {
   speedText: Phaser.GameObjects.Text;
 
   params: GameParams;
-  public seed: number = 0;
-  private isDestroyed = false; // Track if the scene/game is destroyed
+
   public stageData: StageData;
-  public dayOrNight: boolean = true; // day = true
-  // 定期波数的额外游戏设置,如切换地图,进行额外非常规设置,在spawner中消费
-  public extraFunc: Map<number, (game: Game, waveIdx: number) => void> = new Map<number, (game: Game) => void>();
 
   musical: Musical;
-
-  // command queue
-  private frameTick: number = 0; // 服务器帧
-  private elapsed500: number = 0;
-
-  sendQueue: QueueSend
-  recvQueue: QueueReceive
-
-  isPaused = true; // 是否暂停
-  isGameEnd: boolean = true;
 
 
   constructor() {
@@ -86,28 +70,52 @@ export class Game extends Scene {
     this.params = this.game.registry.get('gameParams') as GameParams;
     this.stageData = this.cache.json.get(`ch${this.params.level}`) as StageData;
     this.innerSettings = this.params.gameSettings;
+
+    this.ManagerGroup = [
+      CombatManager.Instance,
+      AudioManager.Instance,
+      CardpileManager.Instance,
+      CursorManager.Instance,
+      DeferredManager.Instance,
+      GridManager.Instance,
+      KeybindManager.Instance,
+      MobManager.Instance,
+      PlantsManager.Instance,
+      ResourceManager.Instance,
+      SyncManager.Instance,
+      TickerManager.Instance,
+      DebugManager.Instance,
+      PositionManager.Instance,
+    ];
   }
 
-  create() {
-    this.isGameEnd = true;
-    this.frameTicker = new FrameTicker();
+  async create() {
     // read external data
     // TODO : 根据type具体判断放置那张背景图
     this.params = this.game.registry.get('gameParams') as GameParams;
     this.scaleFactor = this.scale.displaySize.width / 800;
 
-    this.GRID_ROWS = this.stageData.rows;
-    this.gridProperty = new Array(this.GRID_ROWS).fill(0).map(() => new Array(this.GRID_COLS).fill('ground')); //  默认全为地板
-    this.positionCalc = new PositionCalc(this.scaleFactor, this.GRID_ROWS, this.GRID_COLS);
-    const randomPrng = seedrandom.alea(String(this.seed * 17));
-    const waves = generateStageScript(this.stageData.stageScript, randomPrng, this.params.level);
-    this.monsterSpawner = new MonsterSpawner(this, waves);
+    // 初始化各个Manager
+    for (const manager of this.ManagerGroup) {
+      manager.setScene(this);
+      manager.Load();
+    }
 
-    // 目前只有单机
-    // 判断是否联机
+    PositionManager.Instance.setStageGrid(this.scaleFactor, this.stageData.rows);
+    const gridProperties = new Array(PositionManager.Instance.Row_Number)
+      .fill(0).map(() => new Array(PositionManager.Instance.Col_Number).fill('ground')); //  默认全为地板
+    GridManager.Instance.setGridProperty(gridProperties);
+
+    const randomPrng = seedrandom.alea(String(CombatManager.Instance.seed));
+    const waves = StageHelper.generateStageScript(this.stageData.stageScript, randomPrng, this.params.level);
+    MobManager.Instance.setWaves(waves);
+
+
+    // 初始化消息队列
     if (!BackendWS.isOnlineMode()) {
       this.recvQueue = new QueueReceive({ mode: 'single' }, this);
       this.sendQueue = new QueueSend({ mode: 'single', recvQueue: this.recvQueue.queues });
+      // TODO: BackendWs也要设置，但是多绑定一个mockserver
     } else {
       this.recvQueue = new QueueReceive({ mode: 'multi' }, this);
       this.sendQueue = new QueueSend({ mode: 'single', recvQueue: this.recvQueue.queues }); // 断线后单人可玩
@@ -117,12 +125,6 @@ export class Game extends Scene {
 
     // 菜单
     CreateInnerMenu(this);
-
-    if (this.innerSettings.isDebug) {
-      // 网格初始化
-      this.physics.world.createDebugGraphic(); // 显示所有物体的碰撞体
-    }
-    this.physics.resume(); // 恢复物理系统
 
     // 设置主摄像机背景颜色
     this.camera = this.cameras.main;
@@ -137,7 +139,6 @@ export class Game extends Scene {
     this.cameras.main.scrollX = 0;
     this.cameras.main.scrollY = 0;
 
-
     // 创建一个waiting text
     this.waitText = this.add.text(
       this.cameras.main.width / 2,
@@ -149,96 +150,39 @@ export class Game extends Scene {
         backgroundColor: 'rgba(0, 0, 0, 0.35)',
         padding: { x: 10, y: 5 },
       }
-    ).setOrigin(0.5).setDepth(DepthManager.getMenuDepth()).setVisible(false);
+    ).setOrigin(0.5).setDepth(DepthUtils.getMenuDepth()).setVisible(false);
 
-    // 禁用物理更新,使用frame的更新
-    this.physics.disableUpdate();
-    // 创建分组
-    IPlant.InitGroup(this);
-    IMonster.InitGroup(this);
-    IBullet.InitGroup(this);
-    IExpolsion.InitGroup(this);
-    ILaser.InitGroup(this);
-    IObstacle.InitGroup(this);
-
-
-    // 设置bullet与僵尸的碰撞检测
-    // @ts-ignore 
-    this.physics.add.overlap(IBullet.Group, IMonster.Group, damageZombie, null, this);
-    // @ts-ignore
-    this.physics.add.overlap(IBullet.Group, IPlant.Group, damagePlantByBullet, null, this);
-    // 设置plant与僵尸的碰撞检测
-    // @ts-ignore
-    this.physics.add.overlap(IPlant.Group, IMonster.Group, damagePlantByZombie, null, this);
-    // 设置爆炸与僵尸的碰撞检测
-    // @ts-ignore
-    this.physics.add.overlap(IExpolsion.Group, IMonster.Group, explodeZombie, null, this);
-    // 设置激光与僵尸的碰撞检测
-    // @ts-ignore
-    this.physics.add.overlap(ILaser.Group, IMonster.Group, laserZombie, null, this);
-    // 设置激光与植物的碰撞检测
-    // @ts-ignore
-    this.physics.add.overlap(ILaser.Group, IPlant.Group, laserZombie, null, this);
-
-
-    // obstacle
-    // @ts-ignore 
-    this.physics.add.overlap(IBullet.Group, IObstacle.Group, damageZombie, null, this);
-    // @ts-ignore
-    this.physics.add.overlap(IExpolsion.Group, IObstacle.Group, explodeZombie, null, this);
-    // @ts-ignore
-    this.physics.add.overlap(ILaser.Group, IObstacle.Group, laserZombie, null, this);
+    // 初始化物理世界
+    await RAPIER.init();
+    this.rapierWorld = new RAPIER.World({ x: 0, y: 0 }); // 无重力的物理世界
+    this.rapierPhysics = new RapierPhysicsManager(this, { x: 0, y: 0 });
+    this.rapierEventQueue = new RAPIER.EventQueue(true);
 
 
 
+    if (this.innerSettings.isDebug) {
+      // 调试模式下可以添加可视化代码
+      // TODO: 实现 RAPIER 的调试可视化
+    }
 
-    // 监听
-    this.gardener = new Gardener(this, this.positionCalc);
+    // TODO:RAPIER物理碰撞检测将在 queue_receive 的 update 中调用
 
-    this.input.on('pointerup', (pointer: Phaser.Input.Pointer) => {
-      this.gardener.onClickUp(pointer);
-    }, this);
-    this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
-      this.gardener.onMouseMoveEvent(pointer);
-    }, this);
-
-    const escKey = this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
-    escKey?.on('down', () => {
-      // 判断场景有无暂停
-      const currently = this.isPaused;
-      this.handlePause({ paused: !currently });
+    PhaserEventBus.on(PhaserEvents.RoomGameEnd, this.handleRoomGameEnd, this);
+    CombatManager.Instance.Eventbus.on('onCombatPause', () => {
+      this.handlePause({ paused: true });
     });
-
-    EventBus.on('setIsPaused', this.handlePause, this);
-    EventBus.on('room-game-start', this.handleRoomGameStart, this);
-    EventBus.on('room-game-end', this.handleRoomGameEnd, this);
+    CombatManager.Instance.Eventbus.on('onCombatResume', () => {
+      this.handlePause({ paused: false });
+    });
 
     this.musical = new Musical(this, this.params.gameSettings.isBgm, this.params.gameSettings.isSoundAudio);
 
-    if (!BackendWS.isOnlineMode()) {
-      // 发送blank帧
-      this.sendQueue.sendBlankFrame(BackendWS.GetFrameID());
-    }
     console.log('load finish');
     SendLoaded(); // 加载完毕
   }
 
-  update(_time: number, delta: number): void {
-    this.frameTick += delta; // 服务器帧
-    this.elapsed500 += delta;
-    const realFrameTick = FrameTick / this.time.timeScale; // 真实的帧间隔 
-    if (this.frameTick >= realFrameTick) {  // 达到 100 毫秒，执行函数
-      this.recvQueue.Consume();
-      this.frameTick -= realFrameTick; // 保留多余的时间，避免累积误差
-    }
-    if (this.elapsed500 >= 500) {  // 达到 500 毫秒，执行耗时函数
-      // 更新怪物排序
-      this.monsterSpawner.sortMonsters();
-      this.elapsed500 -= 500; // 保留多余的时间，避免累积误差
-    }
-
-    // 每次更新直接消费 发送队列
-    this.sendQueue.Consume();
+  update(time: number, delta: number): void {
+    CombatManager.Instance.update(time, delta);
   }
 
   changeScene() {
@@ -250,85 +194,6 @@ export class Game extends Scene {
    * 接收队列消费函数
   */
 
-  // 游戏开始
-  // 处理room-game-start游戏开始事件
-  // 此事件来自单人游戏的load或者多人游戏处理all-loaded事件
-  handleRoomGameStart({ seed, myID }: { seed: number; myID: number }) {
-    console.log('Room game start received:', seed, myID);
-    this.seed = seed;
-    this.musical.playCurrent();
-    this.monsterSpawner.setRandomSeed(seed);
-    EventBus.emit('current-scene-ready', this);
-    this.myID = myID;
-    this.sendQueue.setMyID(myID);
-
-    // 使用GameStateManager设置初始能量
-    gameStateManager.updateEnergy(this.stageData.energy);
-
-    AddMapFunction(this);
-
-    EventBus.emit('boss-dead');
-    EventBus.emit('game-progress', { progress: 0 });
-    // 销毁waitText
-    this.waitText.destroy();
-
-    // 设置一排minecart
-    for (let i = 0; i < this.GRID_ROWS; i++) {
-      new MineCart(this, -1, i);
-    }
-    this.isGameEnd = false;
-
-    this.handleGameFrameStart(); // 刷怪开始
-  }
-
-  // 处理来自房间的游戏结束事件（多人游戏）
-  handleRoomGameEnd({ isWin }: { isWin: boolean }) {
-    console.log('Room game end received:', isWin);
-    this.ExitEntry(isWin);
-  }
-
-  // 和时间敏感事件的游戏开始
-  handleGameFrameStart() {
-    this.frameTicker.initStart();
-    this.monsterSpawner.startWave();
-    this.isPaused = false;
-    EventBus.emit('okIsPaused', { paused: false });
-  }
-
-  handleCardPlant(pid: number, level: number, col: number, row: number, uid: number) {
-    // 关于判断能否种,本地已经判断,这里只判断冲突
-    if (this.gardener.canPlant(pid, col, row)) {
-      // 根据 pid 创建具体植物,这里注册函数在preload时候放到game的loader里面
-      // 本地种植
-      const plantRecord = PlantFactoryMap[pid];
-      if (plantRecord) {
-        plantRecord.NewFunction(this, col, row, level);
-      }
-      // 成功种植,如果是自己
-      if (this.myID === uid) {
-        this.cancelPrePlant(); //现在可以取消预种植了
-        // 可以进行冷却和消耗能量
-        this.broadCastMyPlant(pid);
-        // 播放音效
-        this.musical.plantAudio.play('placePlant');
-      }
-    }
-  }
-
-  handleRemovePlant(pid: number, col: number, row: number) {
-    // 本地移除
-    this.gardener.removePlant(pid, col, row);
-    // 音效
-    this.musical.plantAudio.play('plantRemove');
-  }
-
-  handleStarShards(pid: number, col: number, row: number, uid: number) {
-    const success = this.gardener.launchStarShards(pid, col, row);
-
-    if (success && this.myID === uid) {
-      EventBus.emit('starshards-consume');
-    }
-  }
 
   broadCastFlag() {
     this.musical.unlimitAudio.play('wave1');
@@ -343,7 +208,7 @@ export class Game extends Scene {
         backgroundColor: 'rgba(0, 0, 0, 0.35)',
         padding: { x: 10, y: 5 },
       }
-    ).setOrigin(0.5).setDepth(DepthManager.getMenuDepth());
+    ).setOrigin(0.5).setDepth(DepthUtils.getMenuDepth());
 
     // 4秒后更换文本内容为“来袭!!”
     this.time.addEvent({
@@ -368,98 +233,50 @@ export class Game extends Scene {
    * 本地
   */
 
-  // app->game 选择卡片，更新预种植植物
-  chooseCard(pid: number, level: number) {
-    this.gardener.setPrePlantPid(pid, level);
-    EventBus.emit('card-deselected', { pid }); // 通知所有卡片取消选中
-    // 播放音效
-    this.musical.plantAudio.play('plantChoose');
-  }
 
-  // app->game 取消预种植
-  cancelPrePlant() {
-    this.gardener.cancelPrePlant();
-    EventBus.emit('card-deselected', { pid: null }); // 通知卡片取消选中
-  }
-  // game->app 通知种植卡片
-  // 在react manager中处理消耗energy,处理冷却时间
-  broadCastMyPlant(pid: number) {
-    EventBus.emit('card-plant', { pid });
-  }
-  // game->app 通知取消种植卡片
-  broadCastCancelPrePlant() {
-    EventBus.emit('card-deselected', { pid: null }); // 通知卡片取消选中
-  }
-  // game->app 通知更新能量
-  broadCastEnergy(energyChange: number) {
-    if (HasConnected() && energyChange > 0) energyChange = Math.ceil(0.5 * energyChange); // 联机模式下获取能量减半 
-    EventBus.emit('energy-update', { energyChange });
-  }
-  // game->app 通知游戏进度
-  broadCastProgress(progress: number) {
-    EventBus.emit('game-progress', { progress });
-  }
 
   // 处理暂停
-  handlePause({ paused }: { paused: boolean }) {
+  private handlePause({ paused }: { paused: boolean }) {
     // 联机模式下不允许手动handle暂停
     if (BackendWS.isOnlineMode()) {
       return;
     }
-
-    if (this.isDestroyed) {
-      return; // Skip if scene is destroyed
-    }
-
     const pauseMenu = (this as any).pauseMenu;
     if (!pauseMenu) {
       return;
     }
 
     if (paused) {
-      this.doHalt();
+      this.pauseGameScene();
       pauseMenu.show();
     } else {
-      this.doResume();
+      this.resumeGameScene();
       pauseMenu.hide();
     }
   }
 
-  doHalt() {
-    if (this.isDestroyed) return; // Skip if scene is destroyed
-    this.physics.world.pause(); // 暂停物理系统
+  // 停止game scene
+  private pauseGameScene() {
+    // RAPIER物理系统暂停处理
+    this.rapierPhysics.pause();
     this.anims?.pauseAll();
     this.tweens?.pauseAll();
     this.time.paused = true;
-    EventBus.emit('okIsPaused', { paused: true });
-    this.isPaused = true;
     this.musical.pause();
   }
 
-  doResume() {
-    if (this.isDestroyed) return; // Skip if scene is destroyed
-    this.physics.world.resume(); // 恢复物理系统
+  // 恢复game scene
+  private resumeGameScene() {
+    // RAPIER物理系统恢复处理
+    this.rapierPhysics.resume();
     this.anims?.resumeAll();
     this.tweens?.resumeAll();
     this.time.paused = false;
-    EventBus.emit('okIsPaused', { paused: false });
-    this.isPaused = false;
     this.musical.resume();
   }
 
-  // game->app 通知游戏结束
-  handleExit(isWin: boolean = false) {
-    // 向发送队列发送消息,准备退出游戏
-    if (this.isGameEnd) return; // 如果游戏已经结束，则不执行任何操作
-    if (!BackendWS.isOnlineMode()) {
-      this.ExitEntry(isWin);
-    } else {
-      SendEndGame(isWin);
-    }
-  }
-
   // 游戏退出真实入口, 由消息队列调用
-  ExitEntry(isWin: boolean = false) {
+  private handleRoomGameEnd(isWin: boolean = false) {
     this.musical.destroy();
 
     // 销毁暂停菜单
@@ -468,27 +285,27 @@ export class Game extends Scene {
       pauseMenu.destroy();
     }
 
-    // 移除所有game的事件监听
+    // 移除所有对game的监听，停止所有事件响应
     this.sound.stopAll();
     this.input.keyboard?.removeAllKeys(true, true);
     this.input.keyboard?.removeAllListeners();
     this.tweens.killAll();
 
-    this.isGameEnd = true;
-    EventBus.emit('okIsPaused', { paused: false });
-    this.isDestroyed = true;
-    EventBus.off('setIsPaused', this.handlePause, this); // Clean up listener
-    EventBus.off('room-game-start', this.handleRoomGameStart, this);
-    EventBus.off('room-game-end', this.handleRoomGameEnd, this);
     this.input.keyboard?.removeAllKeys(); // Clean up keyboard listeners
     this.input.off('pointerup'); // Remove pointer listeners
     this.input.off('pointermove');
+
+    // TODO: Reset managers
+    for (const manager of this.ManagerGroup) {
+      manager.Reset();
+    }
+
     this.scene.start('GameOver');
     this.params.gameExit({
       isWin,
       onWin: this.stageData.onWin,
       rewards: this.stageData.rewards,
-      progress: isWin ? 100 : this.monsterSpawner.progress,
+      progress: isWin ? 100 : MobManager.Instance.progress,
     });
   }
 
@@ -503,42 +320,35 @@ export class Game extends Scene {
     // this.physics.world.timeScale = newPhysicsTimeFlow; // 设置新的物理速率
     this.speedText.setText(newTimeFlow + '速');
   }
-}
 
-// bullet与僵尸碰撞的伤害判定
-function damageZombie(bulletSprite: Phaser.GameObjects.GameObject, zombieSprite: Phaser.GameObjects.GameObject) {
-  const bullet = bulletSprite as IBullet;
-  const zombie = zombieSprite as IMonster | IObstacle;
+  handleCollision(handle1: number, handle2: number) {
+    // 1. 通过 handle 获取 Collider
+    const colliderA = this.rapierWorld.getCollider(handle1);
+    const colliderB = this.rapierWorld.getCollider(handle2);
+    if (!colliderA || !colliderB) return;
 
-  bullet.CollideObject(zombie);
-}
+    // 2. 获取 Collider 绑定的 RigidBody
+    // 【修正】：collider.parent() 直接返回 RigidBody 对象本身
+    const bodyA = colliderA.parent();
+    const bodyB = colliderB.parent();
+    if (!bodyA || !bodyB) return;
 
-// bullet与植物碰撞的伤害判定
-function damagePlantByBullet(bulletSprite: Phaser.GameObjects.GameObject, plantSprite: Phaser.GameObjects.GameObject) {
-  const bullet = bulletSprite as IBullet;
-  const plant = plantSprite as IPlant;
-  bullet.CollideObject(plant);
-}
-
-// 植物受到怪物碰撞的处理
-function damagePlantByZombie(plantSprite: Phaser.GameObjects.GameObject, zombieSprite: Phaser.GameObjects.GameObject) {
-  const plant = plantSprite as IPlant;
-  const zombie = zombieSprite as IMonster;
-  // console.log('size', plant.body?.width, plant.body?.height)
-
-  zombie.startAttacking(plant);
-}
-
-// 爆炸碰撞怪物
-function explodeZombie(explosionSprite: Phaser.GameObjects.GameObject, zombieSprite: Phaser.GameObjects.GameObject) {
-  const explosion = explosionSprite as IExpolsion;
-  const zombie = zombieSprite as IMonster | IObstacle;
-  explosion.CollideObject(zombie);
-}
-
-// 激光碰撞怪物
-function laserZombie(laserSprite: Phaser.GameObjects.GameObject, zombieSprite: Phaser.GameObjects.GameObject) {
-  const laser = laserSprite as ILaser;
-  const zombie = zombieSprite as IMonster | IObstacle | IPlant;
-  laser.CollideObject(zombie);
+    // 3. 拿到你绑定的实体数据 BaseEntity
+    const entityA = bodyA.userData as BaseEntity;
+    const entityB = bodyB.userData as BaseEntity;
+    if (!entityA || !entityB) return;
+    //  将碰撞事件广播给两个实体
+    entityA.onCollision({
+      sourceEntity: entityA,
+      targetEntity: entityB,
+      sourceCollider: colliderA,
+      targetCollider: colliderB,
+    });
+    entityB.onCollision({
+      sourceEntity: entityB,
+      targetEntity: entityA,
+      sourceCollider: colliderB,
+      targetCollider: colliderA,
+    });
+  }
 }

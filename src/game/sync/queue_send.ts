@@ -14,7 +14,7 @@ import {
   RequestGridOperation,
   Request
 } from "../../pb/request";
-import { EventBus } from "../EventBus";
+import { PhaserEventBus } from "../EventBus";
 import { InGameOperation, InGameResponse, ResponseGridOperation } from "../../pb/response";
 
 // 单人游戏
@@ -31,7 +31,6 @@ interface MultiParams {
 export default class QueueSend {
   queues: Denque<Request>;
   singRecvQueue: Denque<InGameResponse> | null = null; // 仅singlePlayer,接收队列
-  myID: number = 0;
 
   // 仅单机有用
   // 下一帧已经有了多少操作， 用于生成sequence
@@ -45,11 +44,6 @@ export default class QueueSend {
       // 多人
       this.singRecvQueue = null;
     }
-  }
-
-  // 立即的方法,设置本myId
-  setMyID(myID: number) {
-    this.myID = myID;
   }
 
   Consume() {

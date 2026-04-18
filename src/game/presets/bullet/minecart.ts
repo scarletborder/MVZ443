@@ -1,50 +1,58 @@
 import { SECKILL } from "../../../../public/constants";
-import { IBullet } from "../../models/IBullet";
-import { IPlant } from "../../models/IPlant";
-import { IMonster } from "../../models/monster/IMonster";
+import { PositionManager } from "../../managers/view/PositionManager";
+import { BulletEntity } from "../../models/projectiles/BulletEntity";
+import { BulletConfig, BulletModel } from "../../models/projectiles/ProjectileModels";
 import { Game } from "../../scenes/Game";
-import IObstacle from "../obstacle/IObstacle";
+import { CombatEntity } from "../../models/core/CombatEntity";
+import { Faction } from "../../models/Enum";
 
+export class MineCartModel extends BulletModel<BulletConfig, MineCartEntity> {
+  texture = 'bullet/minecart';
+  public speed = 0; // 初始速度为 0
+  public penetratePower = 999; // 无限穿透
+  public penetratedPunish = 1.0; // 伤害不衰减
 
+  public createEntity(scene: Game, x: number, row: number, config: BulletConfig): MineCartEntity {
+    return new MineCartEntity(scene, x, row, this, config);
+  }
+}
 
-export default class MineCart extends IBullet {
-    screenWidth: number;
-    screenFactor: number = 1;
+export const MineCartData = new MineCartModel();
 
+export class MineCartEntity extends BulletEntity {
+  constructor(scene: Game, col: number, row: number, model: MineCartModel, cfg: BulletConfig) {
+    super(scene, col, row, model, cfg);
 
-    constructor(scene: Game, col: number, row: number) {
-        super(scene, col, row, 'bullet/minecart', SECKILL, 'zombie');
-        this.screenWidth = scene.sys.canvas.width;
-        this.screenFactor = scene.positionCalc.scaleFactor;
+    // 设置初始伤害
+    this.currentDamage = SECKILL;
 
-        this.setDisplaySize(64 * this.screenFactor, 64 * this.screenFactor);
+    // 自定义大小
+    const scaleFactor = PositionManager.Instance.scaleFactor;
+    this.sprite.setDisplaySize(64 * scaleFactor, 64 * scaleFactor);
+  }
 
-        this.setVelocityX(0); // 一定要在add    之后设置速度
-        this.addVisible();
+  protected applyEffect(t: CombatEntity): void {
+    super.applyEffect(t);
+
+    // 如果还没有速度，说明是第一次碰撞，赋予速度 200
+    if (this.rigidBody) {
+      const currentVel = this.rigidBody.linvel();
+      if (Math.abs(currentVel.x) < 1) {
+        const velX = 200 * PositionManager.Instance.scaleFactor;
+        const direction = this.faction === Faction.PLANT ? 1 : -1;
+        this.rigidBody.setLinvel({ x: velX * direction, y: currentVel.y }, true);
+      }
     }
+  }
 
-    CollideObject(object: IMonster | IPlant | IObstacle): void {
-        if (this.hasPenetrated.has(object)) {
-            return;
-        }
-        this.hasPenetrated.add(object);
-        const damage = SECKILL;
-        // 矿车移动直到屏幕外边
-        if (object instanceof IMonster || object instanceof IObstacle) {
-            object.takeDamage(damage, 'bullet');
-            // 如果没有速度,则设置速度
-            if (this.body?.velocity.x === undefined || this.body?.velocity.x < 1) {
-                this.setVelocityX(200 * this.screenFactor);
-            }
-        }
-    }
+  stepUpdate() {
+    super.stepUpdate();
 
-    update(...args: any[]): void {
-        super.update(...args);
-        // 超越边界销毁
-        if (this.x > this.screenWidth * 1.2) {
-            console.log('minecart out of screen');
-            this.destroy();
-        }
+    // 超过屏幕边界销毁
+    const screenWidth = this.scene.sys.canvas.width;
+    if (this.x > screenWidth * 1.2) {
+      console.log('minecart out of screen');
+      this.destroy();
     }
+  }
 }

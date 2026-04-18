@@ -3,13 +3,16 @@ import React, { useEffect } from 'react';
 import { GameParams } from '../../../game/models/GameParams';
 import { useSaveManager } from '../../../context/save_ctx';
 import { StageDataRecords } from '../../../game/utils/loader';
-import PlantFactoryMap from '../../../game/presets/plant';
 import { publicUrl } from '../../../utils/browser';
 import { useSettings } from '../../../context/settings_ctx';
 import { useLocaleMessages } from '../../../hooks/useLocaleMessages';
 import { useSetState, useLocalStorageState, useMount, useMemoizedFn } from 'ahooks';
+import {
+  PhaserEventBus,
+  PhaserEvents,
+} from '../../../game/EventBus';
+import { PlantLibrary } from '../../../game/managers/library/PlantLibrary';
 import { SendReady } from '../../../utils/net/room';
-import { EventBus } from '../../../game/EventBus';
 
 interface ParamsSelectorProps {
   chapterId: number;
@@ -89,12 +92,12 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({
       setState({ hasUserClicked: false });
     };
 
-    EventBus.on('room-update-ready-count', handleReadyCountUpdate);
-    EventBus.on('room-quit-choose-map', handleQuitChooseMap);
+    PhaserEventBus.on(PhaserEvents.RoomUpdateReadyCount, handleReadyCountUpdate);
+    PhaserEventBus.on(PhaserEvents.RoomQuitChooseMap, handleQuitChooseMap);
 
     return () => {
-      EventBus.off('room-update-ready-count', handleReadyCountUpdate);
-      EventBus.off('room-quit-choose-map', handleQuitChooseMap);
+      PhaserEventBus.off(PhaserEvents.RoomUpdateReadyCount, handleReadyCountUpdate);
+      PhaserEventBus.off(PhaserEvents.RoomQuitChooseMap, handleQuitChooseMap);
     };
   }, [isOnlineMode]);
 
@@ -109,15 +112,15 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({
     let newAvailablePlants: PlantElem[] = [];
     for (let i = 0; i < plantProgress.length; ++i) {
       const pid = plantProgress[i].pid;
-      const plantObj = PlantFactoryMap[pid];
-      if (!plantObj) {
+      const plantModel = PlantLibrary.GetModel(pid);
+      if (!plantModel) {
         console.warn(`Plant with pid ${pid} not found in PlantFactoryMap`);
         continue;
       }
       const newPlant: PlantElem = {
         pid: pid,
-        name: translate(plantObj.nameKey),
-        imgUrl: `${publicUrl}/assets/card/${plantObj.texture}.png`,
+        name: translate(plantModel.nameKey),
+        imgUrl: `${publicUrl}/assets/card/${plantModel.texturePath}.png`,
         level: plantProgress[i].level
       };
       newAvailablePlants.push(newPlant);
@@ -305,7 +308,7 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({
               fontWeight: 'bold'
             }}>
               {islord ? '房主模式' : '玩家模式'} | {
-                state.hasUserClicked ? 
+                state.hasUserClicked ?
                   `等待其他玩家 (${state.readyPlayerCount}/${state.totalPlayerCount})` :
                   isLoading ? '等待中...' :
                     !canProceed ? '请等待房主操作' :
@@ -486,7 +489,7 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({
           {isLoading && (
             <span style={{ marginRight: '8px' }}>⏳</span>
           )}
-          {(isOnlineMode && state.hasUserClicked) ? 
+          {(isOnlineMode && state.hasUserClicked) ?
             `等待其他玩家 (${state.readyPlayerCount}/${state.totalPlayerCount})` :
             (buttonText || translate('start'))
           }

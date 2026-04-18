@@ -90,6 +90,9 @@ message ResponseUpdateReadyCount {
 message ResponseAllReady {
   // 房间内总人数
   uint32 all_player_count = 1; 
+  int32 seed = 2; 
+  uint32 my_id = 3;
+  repeated uint32 player_ids = 4; // 房间内所有玩家的ID列表
 }
 
 // 告知所有玩家， 所有玩家已经loaded， 可以开始InGame游戏
@@ -100,10 +103,7 @@ message ResponseAllReady {
 // 服务端
 // 初始默认所有客户端都ack了0
 // 置 “发送给客户端的下一帧” 为1
-message ResponseAllLoaded {
-   // seed 不可以是负数，用 int32
-  int32 seed = 1; 
-}
+message ResponseAllLoaded {}
 
 // 本局游戏结束（客户端要判断在InGame才会结算）
 message ResponseGameEnd {

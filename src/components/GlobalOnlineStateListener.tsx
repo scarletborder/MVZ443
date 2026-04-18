@@ -1,6 +1,9 @@
 import { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { EventBus } from '../game/EventBus';
+import {
+  PhaserEventBus,
+  PhaserEvents,
+} from '../game/EventBus';
 import { OnlineStateManager } from '../store/OnlineStateManager';
 import EnumGameStage from '../utils/net/game_state';
 import { publicUrl } from '../utils/browser';
@@ -23,7 +26,7 @@ const GlobalOnlineStateListener: React.FC = () => {
       // 如果不是房主，需要跳转到主页并进入选卡界面
       if (myId !== lordId) {
         console.log('🎮 非房主收到选图消息，从', location.pathname, '跳转到主页选卡界面');
-        
+
         // 如果不在主页，先跳转到主页，并通过URL参数传递选图信息
         if (location.pathname !== `${publicUrl}/`) {
           const { stageId } = event;
@@ -36,13 +39,13 @@ const GlobalOnlineStateListener: React.FC = () => {
     // 监听游戏阶段变化
     const handleGameStageChange = (gameStage: number) => {
       console.log('🎮 全局监听到游戏阶段变化:', gameStage, '当前页面:', location.pathname);
-      
+
       // 如果进入准备阶段且不在主页，跳转到主页
       if (gameStage === EnumGameStage.Preparing && location.pathname !== `${publicUrl}/`) {
         console.log('🎮 进入准备阶段，从', location.pathname, '跳转到主页');
         navigate(`${publicUrl}/`);
       }
-      
+
       // 如果游戏开始且不在主页，跳转到主页
       if (gameStage === EnumGameStage.InGame && location.pathname !== `${publicUrl}/`) {
         console.log('🎮 游戏开始，从', location.pathname, '跳转到主页');
@@ -59,13 +62,13 @@ const GlobalOnlineStateListener: React.FC = () => {
     };
 
     // 注册事件监听器
-    EventBus.on('room-choose-map', handleRoomChooseMap);
-    EventBus.on('room-all-ready', handleRoomAllReady);
+    PhaserEventBus.on(PhaserEvents.RoomChooseMap, handleRoomChooseMap);
+    PhaserEventBus.on(PhaserEvents.RoomAllReady, handleRoomAllReady);
     onlineManager.onGameStageUpdate(handleGameStageChange);
 
     return () => {
-      EventBus.off('room-choose-map', handleRoomChooseMap);
-      EventBus.off('room-all-ready', handleRoomAllReady);
+      PhaserEventBus.off(PhaserEvents.RoomChooseMap, handleRoomChooseMap);
+      PhaserEventBus.off(PhaserEvents.RoomAllReady, handleRoomAllReady);
       onlineManager.removeGameStageUpdateListener(handleGameStageChange);
     };
   }, [navigate, location.pathname]);

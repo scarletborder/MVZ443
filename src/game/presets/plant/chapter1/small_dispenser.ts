@@ -1,109 +1,122 @@
-import { SECKILL } from "../../../../../public/constants";
-import { item } from "../../../../components/shop/types";
 import ProjectileDamage from "../../../../constants/damage";
-
-import { GetIncValue } from "../../../../utils/numbervalue";
-import { IExpolsion } from "../../../models/IExplosion";
-import { IPlant, INightPlant } from "../../../models/IPlant";
-import { IRecord } from "../../../models/IRecord";
+import { PlantStat } from "../../../../utils/numbervalue";
+import { PositionManager } from "../../../managers/view/PositionManager";
+import { PlantEntity } from "../../../models/entities/PlantEntity";
+import { PlantModel } from "../../../models/PlantModel";
 import { Game } from "../../../scenes/Game";
-import createShootBurst from "../../../sprite/shoot_anim";
-import NewSnowBullet, { SnowBall } from "../../bullet/snowball";
+import createShootBurstAnim from "../../../sprite/shoot_anim";
+import { PlantCmd } from "../../../utils/cmd/PlantCmd";
+import { ProjectileCmd } from "../../../utils/cmd/ProjectileCmd";
+import CombatHelper from "../../../utils/helper/CombatHelper";
+import { SnowBallData, SnowBallModel, BombSnowBallModel } from "../../bullet/snowball";
 
-class smallDispenser extends INightPlant {
-    maxDistance: number; // 画面的绝对坐标,非格子
-
-    game: Game
-    constructor(scene: Game, col: number, row: number, texture: string, level: number) {
-        let maxDistance = (3.6 * scene.positionCalc.GRID_SIZEX);
-        // 精英1, 提升攻击范围
-        if (level >= 5) {
-            maxDistance = 5.6 * scene.positionCalc.GRID_SIZEX;
-        }
-
-        super(scene, col, row, texture, SmallDispenserRecord.pid, level);
-        this.plant_height = 1;
-        this.game = scene;
-        this.setHealthFirstly(300);
-        this.maxDistance = maxDistance;
-
-        this.Timer = scene.frameTicker.addEvent({
-            startAt: 500, // 已经使用的时间,即开始时间
-            callback: () => {
-                if (this && this.health > 0 && scene) {
-                    if (scene.monsterSpawner.hasMonsterInRowAfterX(this.row, this.x, this.maxDistance)) {
-                        shootSnowBall(scene, this, this.maxDistance);
-                    }
-                }
-            },
-            loop: true,
-            delay: 1000,  // 每隔1秒发射一次
-        });
-    }
-
-    public onStarShards(): void {
-        super.onStarShards();
-
-        if (this.isSleeping) this.setSleeping(false);
-
-        // 射出一个炸弹雪球
-
-        const snowball = new BombSnowBall(this.game, this.col, this.row, 'bullet/fireball',
-            GetIncValue(ProjectileDamage.bullet.bomb_fireBall, 1.2, this.level),
-            this.game?.positionCalc.GRID_SIZEY * 12, 'zombie');
-    }
+export class FireBallModel extends BombSnowBallModel {
+  public override texture = 'bullet/fireball';
 }
 
-function NewDispenser(scene: Game, col: number, row: number, level: number): IPlant {
-    const small_dispenser = new smallDispenser(scene, col, row, 'plant/small_dispenser', level);
+export const FireBallData = new FireBallModel();
+
+export class SmallDispenserModel extends PlantModel {
+  public override pid = 5;
+  public override nameKey = 'name_small_dispenser';
+  public override descriptionKey = 'small_dispenser_description';
+  public override texturePath = 'plant/small_dispenser';
+
+  public maxHealth = new PlantStat(300);
+  public cost = new PlantStat(0);
+
+  public cooldown = new PlantStat(10000);
+  public cooldownStartAtRatio = 1;
+
+  public damage = new PlantStat(ProjectileDamage.bullet.snowBall).setIncRatio(1.3);
+  public isNightPlant = true;
+  public isTiny = true;
+
+  public override createEntity(scene: Game, col: number, row: number, level: number): SmallDispenserEntity {
+    return new SmallDispenserEntity(scene, col, row, level);
+  }
+
+  public override onCreate(entity: SmallDispenserEntity): void {
     // 精英2, 白天不睡觉
-    if (level === 9) {
-        small_dispenser.setSleeping(false);
+    if (entity.level >= 9) {
+      PlantCmd.SetSleeping(entity, false);
     }
-    return small_dispenser;
+
+    let maxDistanceGrid = 3.6;
+    if (entity.level >= 5) {
+      maxDistanceGrid = 5.6;
+    }
+
+    entity.tickmanager.addEvent({
+      startAt: 500,
+      delay: 1000,
+      loop: true,
+      callback: () => {
+        if (entity.isSleeping || entity.currentHealth <= 0) return;
+
+        if (CombatHelper.HasEnemyFactionOnRowInDistance(entity.faction, entity.GetRow(), entity.x, 0, maxDistanceGrid)) {
+          entity.playShootAnimation();
+
+          ProjectileCmd.Create<SnowBallModel>(SnowBallData, entity.scene, entity.x, entity.row, {
+            damage: this.damage.getValueAt(entity.level),
+            maxDistance: maxDistanceGrid * PositionManager.Instance.GRID_SIZEX,
+            faction: entity.faction,
+            dealer: entity
+          });
+        }
+      }
+    });
+  }
+
+  public override onStarShards(entity: SmallDispenserEntity): void {
+    if (entity.isSleeping) {
+      PlantCmd.SetSleeping(entity, false);
+    }
+
+    const dmg = new PlantStat(ProjectileDamage.bullet.bomb_fireBall).setIncRatio(1.2).getValueAt(entity.level);
+
+    ProjectileCmd.Create<FireBallModel>(FireBallData, entity.scene, entity.x, entity.row, {
+      damage: dmg,
+      maxDistance: PositionManager.Instance.GRID_SIZEY * 12,
+      faction: entity.faction,
+      dealer: entity
+    });
+  }
 }
 
-function shootSnowBall(scene: Game, shooter: IPlant, maxDistance: number) {
-    const level = shooter.level;
-    //  根据等级略微提高伤害
-    const damage = GetIncValue(ProjectileDamage.bullet.snowBall, level, 1.3);
+export const SmallDispenserData = new SmallDispenserModel();
 
+export class SmallDispenserEntity extends PlantEntity {
+  private mainSprite!: Phaser.GameObjects.Sprite;
 
-    if (!shooter.isSleeping) {
-        createShootBurst(scene, shooter.x + shooter.width * 1 / 3, shooter.y - shooter.height / 7,
-            16, shooter.depth + 1);
-        const arrow = NewSnowBullet(scene, shooter.col, shooter.row, maxDistance, damage);
-    }
+  constructor(scene: Game, col: number, row: number, level: number) {
+    super(scene, col, row, SmallDispenserData, level);
+  }
+
+  protected override buildView() {
+    const size = PositionManager.Instance.getPlantDisplaySize();
+
+    this.mainSprite = this.scene.add.sprite(this.x, this.y, this.model.texturePath)
+      .setOrigin(0.5, 1)
+      .setDisplaySize(size.sizeX, size.sizeY)
+      .setDepth(this.baseDepth);
+
+    this.viewGroup.add(this.mainSprite);
+  }
+
+  public playShootAnimation() {
+    if (this.currentHealth <= 0) return;
+
+    // original logic uses width*1/3, height/7
+    const width = this.mainSprite.displayWidth;
+    const height = this.mainSprite.displayHeight;
+
+    createShootBurstAnim(
+      this.scene,
+      this.x + width * (1 / 3),
+      this.y - height / 7,
+      16,
+      this.baseDepth + 1
+    );
+  }
 }
-
-
-class BombSnowBall extends SnowBall {
-    destroy(): void {
-        const scene = this.game;
-        const x = this.x;
-        const row = this.row;
-        const dmg = ProjectileDamage.bullet.bomb_fireBall_splash;
-        super.destroy();
-        if (!scene) return;
-        // 生成大爆炸
-        new IExpolsion(scene, x, row, {
-            damage: dmg,
-            rightGrid: 1.75,
-            leftGrid: 1.5,
-            upGrid: 1,
-        });
-    }
-}
-
-const SmallDispenserRecord: IRecord = {
-    pid: 5,
-    nameKey: 'name_small_dispenser',
-    cost: () => 0,
-    cooldownTime: () => 10,
-    NewFunction: NewDispenser,
-    texture: 'plant/small_dispenser',
-    descriptionKey: 'small_dispenser_description',
-
-};
-
-export default SmallDispenserRecord;

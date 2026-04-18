@@ -1,12 +1,11 @@
 import { useEffect, useRef } from 'react';
-import { useCreation, useMount, useUpdateEffect } from 'ahooks';
+import { useCreation, useMount } from 'ahooks';
 import { useSaveManager } from '../../context/save_ctx';
 import { OnWin, ProgressReward } from '../../game/models/IRecord';
 import { ChapterDataRecords, StageDataRecords } from '../../game/utils/loader';
-import PlantFactoryMap from '../../game/presets/plant';
 import Stuff from '../../constants/stuffs';
-import { useGameContext } from '../../context/garden_ctx';
 import { useLocaleMessages } from '../../hooks/useLocaleMessages';
+import { PlantLibrary } from '../../game/managers/library/PlantLibrary';
 
 interface Props {
     width: number;
@@ -21,7 +20,6 @@ interface Props {
 export default function GameResultView({ width, height, isWin, onWin, progressRewards, myProgress, onBack }: Props) {
     // console.log(onWin)
     const saveManager = useSaveManager();
-    const { setIsPaused, isPaused } = useGameContext();
     const hasSavedRef = useRef(false);
 
     const { translate } = useLocaleMessages();
@@ -44,14 +42,10 @@ export default function GameResultView({ width, height, isWin, onWin, progressRe
         if (!onWin.unLockPlant || onWin.unLockPlant.length === 0) return "无";
         
         const computedPlants = onWin.unLockPlant.map((pid) => {
-            return translate(PlantFactoryMap[pid].nameKey);
+            return translate(PlantLibrary.GetModel(pid)?.nameKey ?? 'unknown plant');
         }).filter(item => item !== "");
         return computedPlants.length > 0 ? computedPlants.join(" ") : "无";
     }, [onWin, translate]);
-
-    useMount(() => {
-        if (!isPaused) setIsPaused(true);
-    });
 
     useEffect(() => {
         if (!hasSavedRef.current) {

@@ -30,6 +30,7 @@
     },
     "dependencies": {
         "-": "^0.0.1",
+        "@dimforge/rapier2d-deterministic-compat": "^0.19.3",
         "@protobuf-ts/plugin": "^2.11.1",
         "@protobuf-ts/runtime": "^2.11.1",
         "@react-spring/web": "^9.7.5",

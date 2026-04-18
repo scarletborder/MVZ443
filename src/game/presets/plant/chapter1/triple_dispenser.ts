@@ -1,302 +1,303 @@
-import { SECKILL } from "../../../../../public/constants";
-import { item } from "../../../../components/shop/types";
 import ProjectileDamage from "../../../../constants/damage";
-
-import { GetIncValue } from "../../../../utils/numbervalue";
-import { IPlant } from "../../../models/IPlant";
-import { IRecord } from "../../../models/IRecord";
+import { PlantStat } from "../../../../utils/numbervalue";
+import { PositionManager } from "../../../managers/view/PositionManager";
+import { PlantEntity } from "../../../models/entities/PlantEntity";
+import { PlantModel } from "../../../models/PlantModel";
 import { Game } from "../../../scenes/Game";
-import createShootBurst from "../../../sprite/shoot_anim";
-import { FrameTimer } from "../../../sync/ticker";
-import NewArrow, { NewMutantYAxisArrow } from "../../bullet/arrow";
+import createShootBurstAnim from "../../../sprite/shoot_anim";
+import { ProjectileCmd } from "../../../utils/cmd/ProjectileCmd";
+import CombatHelper from "../../../utils/helper/CombatHelper";
+import { ArrowData, ArrowModel, MutantYAxisArrowData, MutantYAxisArrowModel } from "../../bullet/arrow";
 
-class triple_dispenser extends IPlant {
-    game: Game;
-    base: Phaser.GameObjects.Sprite; // 底座，frame 0
-    head: Phaser.GameObjects.Sprite; // 头部，frame 1
+export class TripleDispenserModel extends PlantModel {
+  public override pid = 13;
+  public override nameKey = 'name_triple_dispenser';
+  public override descriptionKey = 'triple_dispenser_description';
+  public override texturePath = 'plant/triple_dispenser';
 
-    headX: number;
+  public maxHealth = new PlantStat(300);
+  public cost = new PlantStat(325).setThreshold(9, 350);
 
-    isInBruteShoot = false;
+  public cooldown = new PlantStat(10000);
+  public cooldownStartAtRatio = 1;
 
-    public onStarShards(): void {
-        super.onStarShards();
+  public damage = new PlantStat(ProjectileDamage.bullet.arrow).setIncRatio(1.35);
+  public isNightPlant = false;
 
-        const totalArrows = 10; // Total number of arrows to shoot
+  public override createEntity(scene: Game, col: number, row: number, level: number): TripleDispenserEntity {
+    return new TripleDispenserEntity(scene, col, row, level);
+  }
 
-        // 如果存在 Timer，则先移除（防止多重 Timer 并存）
-        if (this.Timer) {
-            this.Timer.remove();
-        }
+  public override onCreate(entity: TripleDispenserEntity): void {
+    entity.tickmanager.addEvent({
+      startAt: 600,
+      delay: 1200,
+      loop: true,
+      callback: () => {
+        if (entity.isSleeping || entity.currentHealth <= 0) return;
 
-        // 开始暴力发射，并保存 Timer
-        this.Timer = this.bruteShootEvent(totalArrows);
-        // 根据暴力发射的总时长，发射结束后恢复 normalShootEvent
-        const overallDuration = 200 + 80 * (totalArrows - 1);
-        this.game.time.delayedCall(overallDuration, () => {
-            // 再次判断对象是否有效
-            if (!this || !this.scene || this.health <= 0) {
-                return;
-            }
-            if (this.Timer) {
-                this.Timer.remove();
-            }
-            this.Timer = this.normalShootEvent();
-        });
-    }
+        const scene = entity.scene;
+        const hasEnemyInRange =
+          CombatHelper.HasEnemyFactionOnRow(entity.faction, entity.GetRow() - 1) ||
+          CombatHelper.HasEnemyFactionOnRow(entity.faction, entity.GetRow()) ||
+          CombatHelper.HasEnemyFactionOnRow(entity.faction, entity.GetRow() + 1) ||
+          CombatHelper.HasEnemyFactionOnRow(entity.faction, entity.GetRow());
 
+        if (hasEnemyInRange) {
+          entity.playShootAnimation();
 
-    constructor(scene: Game, col: number, row: number, texture: string, level: number) {
-        super(scene, col, row, texture, TripleDispenserRecord.pid, level);
-        this.setVisible(false);
-        this.game = scene;
-        this.setHealthFirstly(300);
-
-        // anim
-        const size = scene.positionCalc.getPlantDisplaySize();
-        size.sizeX *= 1.2;
-        size.sizeY *= 1.2;
-        // 头部：frame 1，初始位置与底座对齐
-        this.head = scene.add.sprite(this.x, this.y, texture, 2).setOrigin(0.5, 1)
-            .setDisplaySize(size.sizeX, size.sizeY).setDepth(this.depth);
-        // 底座：frame 0
-        this.base = scene.add.sprite(this.x, this.y, texture, 1).setOrigin(0.5, 1)
-            .setDisplaySize(size.sizeX, size.sizeY).setDepth(this.depth - 1);
-        // !important: 不要用container,很神奇吧,也不要add existing
-        this.headX = this.head.x;
-        this.Timer = this.normalShootEvent();
-    }
-
-    shootAnimation() {
-        // 安全检查：确保所有需要的对象都存在
-        if (!this.scene || !this.head || this.health <= 0) {
-            return;
-        }
-
-        try {
-            // 计算移动距离
-            const moveDistance = this.head.displayWidth * 0.15;
-            const originalX = this.headX;
-
-            // 第一个 tween：向左平移
-            this.scene.tweens.add({
-                targets: this.head,
-                x: originalX - moveDistance,
-                duration: 200,
-                ease: 'Sine.easeOut',
-                onComplete: () => {
-                    // 完成时再次检查对象是否有效
-                    if (!this.scene || !this.head || this.health <= 0) {
-                        return;
-                    }
-
-                    createShootBurst(
-                        this.scene,
-                        this.head.x + this.width * 4 / 9,
-                        this.head.y - this.height * 2 / 3,
-                        24,
-                        this.depth + 2
-                    );
-
-                    // 回弹动画前再次检查
-                    if (this.scene && this.head && this.health > 0) {
-                        this.scene?.tweens.add({
-                            targets: this.head,
-                            x: originalX,
-                            duration: 200,
-                            ease: 'Sine.easeIn',
-                            onComplete: () => {
-                                // 确保结束时位置正确
-                                if (this.head && this.health > 0) {
-                                    this.head.x = originalX;
-                                }
-                            }
-                        });
-                    }
-                }
-            });
-        } catch (e) {
-            console.warn('Dispenser shootAnimation error:', e);
-            // 发生错误时尝试恢复位置
-            if (this.head && this.health > 0) {
-                this.head.x = this.headX;
-            }
-        }
-    }
-
-
-    normalShootEvent(): FrameTimer | null {
-        // 如果对象或场景不存在，则直接返回 null
-        if (!this.scene || this.health <= 0) {
-            return null;
-        }
-        return this.scene?.frameTicker.addEvent({
-            startAt: 600,
-            delay: 1200,
-            loop: true,
+          entity.tickmanager.delayedCall({
+            delay: 200,
             callback: () => {
-                // 这里先判断对象及场景是否有效
-                if (!this.scene || this.health <= 0) {
-                    // 如果不再有效，则移除 Timer
-                    if (this.Timer) {
-                        this.Timer.remove();
-                    }
-                    return;
-                }
-                if (this.isSleeping) return;
-
-                const scene = this.scene;
-                if (
-                    scene.monsterSpawner.hasMonsterInRowWithElastic(this.row - 1)
-                    || scene.monsterSpawner.hasMonsterInRowWithElastic(this.row)
-                    || scene.monsterSpawner.hasMonsterInRowWithElastic(this.row + 1)
-                    || scene.monsterSpawner.hasMonsterInRowAfterX(this.row, this.x)
-                    || scene.monsterSpawner.hasMonsterInRowAfterX(this.row - 1, this.x)
-                    || scene.monsterSpawner.hasMonsterInRowAfterX(this.row + 1, this.x)) {
-                    this.shootAnimation();
-
-                    this.scene?.frameTicker.delayedCall({
-                        delay: 200,
-                        callback: () => { shootArrow(this.scene, this); },
-                    });
-                }
+              this.shootArrows(entity, false);
             }
-        });
-    }
-
-    bruteShootEvent(totalArrows: number): FrameTimer | null {
-        // 如果对象或场景不存在，则直接返回 null
-        if (!this.scene || this.health <= 0) {
-            return null;
+          });
         }
-        const scene = this.scene;
-        this.isInBruteShoot = true;
+      }
+    });
+  }
 
-        const moveDistance = this.head.displayWidth * 0.15;
-        const originalX = this.head.x;
+  public override onStarShards(entity: TripleDispenserEntity): void {
+    // 星辰碎片触发暴力发射
+    const totalArrows = 10;
 
-        // Tween：先向左移动
-        scene?.tweens.add({
-            targets: this.head,
-            x: originalX - moveDistance,
-            duration: 200,
-            ease: 'Sine.easeOut',
-            // 动画完成后也不必在这里发射箭，发射逻辑由 Timer 控制
+    entity.playBruteShootSequence(totalArrows);
+
+    const overallDuration = 200 + 80 * (totalArrows - 1);
+    entity.tickmanager.delayedCall({
+      delay: overallDuration,
+      callback: () => {
+        // 暴力发射结束后，继续正常射击
+        if (entity.currentHealth > 0) {
+          entity.resetHeadPosition();
+        }
+      }
+    });
+  }
+
+  private shootArrows(entity: TripleDispenserEntity, isBrute: boolean = false): void {
+    const damage = this.damage.getValueAt(entity.level);
+    const penetrate = 1;
+
+    if (isBrute) {
+      // 暴力散射：射向极上方和极下方
+      const topRow = -5;
+      const bottomRow = 8;
+      for (let speed = 0; speed < 600; speed += 40) {
+        ProjectileCmd.Create<MutantYAxisArrowModel>(MutantYAxisArrowData, entity.scene, entity.x, entity.row, {
+          damage: damage / 2,
+          maxDistance: PositionManager.Instance.GRID_SIZEX * 32,
+          targetRow: topRow,
+          ySpeed: speed,
+          faction: entity.faction,
+          dealer: entity,
+          penetratePower: penetrate
         });
 
-        // 创建 Timer 事件：延迟 200ms 后开始暴力发射箭，每 50ms 一次
-        const bruteTimer = scene?.frameTicker.addEvent({
-            startAt: 200,
-            delay: 80,
-            repeat: totalArrows - 1,
-            callback: () => {
-                // 每次发射前判断对象是否存活
-                if (!this.scene || this.health <= 0) {
-                    bruteTimer.remove();
-                    return;
-                }
-                shootArrow(scene, this, true);
-            }
+        ProjectileCmd.Create<MutantYAxisArrowModel>(MutantYAxisArrowData, entity.scene, entity.x, entity.row, {
+          damage: damage / 2,
+          maxDistance: PositionManager.Instance.GRID_SIZEX * 32,
+          targetRow: bottomRow,
+          ySpeed: speed,
+          faction: entity.faction,
+          dealer: entity,
+          penetratePower: penetrate
         });
-
-        // 计算总持续时间：Tween 200ms + Timer 发射的时长
-        const overallDuration = 200 + 50 * (totalArrows - 1);
-        // 发射结束后回归 Tween
-        scene.time.delayedCall(overallDuration, () => {
-            this.isInBruteShoot = false;
-            if (!this.scene || this.health <= 0) {
-                return;
-            }
-            this.scene?.tweens.add({
-                targets: this.head,
-                x: originalX,
-                duration: 200,
-                ease: 'Sine.easeIn'
-            });
-        });
-
-        return bruteTimer;
+      }
+      return;
     }
 
-    destroy(fromScene?: boolean): void {
-        this.head?.destroy();
-        this.base?.destroy();
-        super.destroy(fromScene);
+    // 中路箭
+    ProjectileCmd.Create<ArrowModel>(ArrowData, entity.scene, entity.x, entity.row, {
+      damage: damage,
+      maxDistance: PositionManager.Instance.GRID_SIZEX * 32,
+      faction: entity.faction,
+      dealer: entity,
+      penetratePower: penetrate
+    });
+
+    // 精英3+：中路多一发
+    if (entity.level >= 3) {
+      ProjectileCmd.Create<ArrowModel>(ArrowData, entity.scene, entity.x, entity.row, {
+        damage: damage,
+        maxDistance: PositionManager.Instance.GRID_SIZEX * 32,
+        faction: entity.faction,
+        dealer: entity,
+        penetratePower: penetrate
+      });
     }
+
+    // 上路箭
+    if (entity.row >= 1) {
+      ProjectileCmd.Create<MutantYAxisArrowModel>(MutantYAxisArrowData, entity.scene, entity.x, entity.row, {
+        damage: damage,
+        maxDistance: PositionManager.Instance.GRID_SIZEX * 32,
+        targetRow: entity.row - 1,
+        faction: entity.faction,
+        dealer: entity,
+        penetratePower: penetrate
+      });
+
+      // 精英9+：上路多一发
+      if (entity.level >= 9) {
+        ProjectileCmd.Create<MutantYAxisArrowModel>(MutantYAxisArrowData, entity.scene, entity.x, entity.row, {
+          damage: damage,
+          maxDistance: PositionManager.Instance.GRID_SIZEX * 32,
+          targetRow: entity.row - 1,
+          faction: entity.faction,
+          dealer: entity,
+          penetratePower: penetrate
+        });
+      }
+    }
+
+    // 下路箭
+    if (entity.row <= PositionManager.Instance.Row_Number - 2) {
+      ProjectileCmd.Create<MutantYAxisArrowModel>(MutantYAxisArrowData, entity.scene, entity.x, entity.row, {
+        damage: damage,
+        maxDistance: PositionManager.Instance.GRID_SIZEX * 32,
+        targetRow: entity.row + 1,
+        faction: entity.faction,
+        dealer: entity,
+        penetratePower: penetrate
+      });
+
+      // 精英9+：下路多一发
+      if (entity.level >= 9) {
+        ProjectileCmd.Create<MutantYAxisArrowModel>(MutantYAxisArrowData, entity.scene, entity.x, entity.row, {
+          damage: damage,
+          maxDistance: PositionManager.Instance.GRID_SIZEX * 32,
+          targetRow: entity.row + 1,
+          faction: entity.faction,
+          dealer: entity,
+          penetratePower: penetrate
+        });
+      }
+    }
+  }
 }
 
-function NewTripleDispenser(scene: Game, col: number, row: number, level: number): IPlant {
-    const peashooter = new triple_dispenser(scene, col, row, 'plant/triple_dispenser', level);
-    return peashooter;
+export const TripleDispenserData = new TripleDispenserModel();
+
+export class TripleDispenserEntity extends PlantEntity {
+  private base!: Phaser.GameObjects.Sprite;
+  private head!: Phaser.GameObjects.Sprite;
+  private headX: number = 0;
+  public game: Game;
+
+  constructor(scene: Game, col: number, row: number, level: number) {
+    super(scene, col, row, TripleDispenserData, level);
+    this.game = scene;
+  }
+
+  protected override buildView() {
+    const size = PositionManager.Instance.getPlantDisplaySize();
+    const scaledSize = {
+      sizeX: size.sizeX * 1.2,
+      sizeY: size.sizeY * 1.2
+    };
+
+    // 底座：frame 1
+    this.base = this.scene.add.sprite(this.x, this.y, this.model.texturePath, 1)
+      .setOrigin(0.5, 1)
+      .setDisplaySize(scaledSize.sizeX, scaledSize.sizeY)
+      .setDepth(this.baseDepth - 1);
+
+    // 头部：frame 2
+    this.head = this.scene.add.sprite(this.x, this.y, this.model.texturePath, 2)
+      .setOrigin(0.5, 1)
+      .setDisplaySize(scaledSize.sizeX, scaledSize.sizeY)
+      .setDepth(this.baseDepth);
+
+    this.headX = this.head.x;
+    this.viewGroup.addMultiple([this.base, this.head]);
+  }
+
+  public playShootAnimation() {
+    if (this.currentHealth <= 0 || !this.head) return;
+
+    const moveDistance = this.head.displayWidth * 0.15;
+    const originalX = this.headX;
+
+    this.scene.tweens.add({
+      targets: this.head,
+      x: originalX - moveDistance,
+      duration: 200,
+      ease: 'Sine.easeOut',
+      onComplete: () => {
+        if (this.currentHealth <= 0 || !this.head) return;
+
+        createShootBurstAnim(
+          this.scene,
+          this.head.x + this.head.displayWidth * 4 / 9,
+          this.head.y - this.head.displayHeight * 2 / 3,
+          24,
+          this.baseDepth + 2
+        );
+
+        this.scene.tweens.add({
+          targets: this.head,
+          x: originalX,
+          duration: 200,
+          ease: 'Sine.easeIn',
+          onComplete: () => {
+            if (this.head && this.currentHealth > 0) {
+              this.head.x = originalX;
+            }
+          }
+        });
+      }
+    });
+  }
+
+  public playBruteShootSequence(totalArrows: number) {
+    if (this.currentHealth <= 0 || !this.head) return;
+
+    const moveDistance = this.head.displayWidth * 0.15;
+    const originalX = this.headX;
+
+    // 头部向左移动
+    this.scene.tweens.add({
+      targets: this.head,
+      x: originalX - moveDistance,
+      duration: 200,
+      ease: 'Sine.easeOut'
+    });
+
+    // 定时发射箭
+    this.tickmanager.addEvent({
+      startAt: 200,
+      delay: 80,
+      repeat: totalArrows - 1,
+      callback: () => {
+        if (this.currentHealth <= 0) return;
+        (this.model as TripleDispenserModel)['shootArrows'](this, true);
+      }
+    });
+
+    // 发射结束后头部回弹
+    const overallDuration = 200 + 80 * (totalArrows - 1);
+    this.scene.time.delayedCall(overallDuration, () => {
+      if (this.currentHealth > 0 && this.head) {
+        this.scene.tweens.add({
+          targets: this.head,
+          x: originalX,
+          duration: 200,
+          ease: 'Sine.easeIn'
+        });
+      }
+    });
+  }
+
+  public resetHeadPosition() {
+    if (this.head) {
+      this.head.x = this.headX;
+    }
+  }
+
+  public override destroy(): void {
+    super.destroy();
+  }
 }
 
-function shootArrow(scene: Game, shooter: IPlant, isStar: boolean = false) {
-    if (!scene || !shooter || shooter.health <= 0) {
-        return;
-    }
-
-    const level = shooter.level;
-    //  根据等级略微提高伤害
-    const damage = GetIncValue(ProjectileDamage.bullet.arrow, level, 1.35);
-    let penetrate = 1;
-
-    if (isStar) {
-        const topRow = -5; // 确保一个非常上方的行让视觉看起来是散射
-        const bottomRow = 8; // 确保一个非常下方的行让视觉看起来是散射
-        // 星之碎片,纯散射
-        for (let speed = 0; speed < 600; speed += 40) {
-            NewMutantYAxisArrow(scene, shooter.col, shooter.row, scene.positionCalc.GRID_SIZEX * 32, damage / 2, 'zombie', topRow, speed).penetrate = penetrate;
-            NewMutantYAxisArrow(scene, shooter.col, shooter.row, scene.positionCalc.GRID_SIZEX * 32, damage / 2, 'zombie', bottomRow, speed).penetrate = penetrate;
-        }
-        return;
-    }
-
-
-    // 三个row分别进行实例化
-    const arrow2 = NewArrow(scene, shooter.col, shooter.row, scene.positionCalc.GRID_SIZEX * 32, damage);
-    arrow2.penetrate = penetrate;
-
-    if (level >= 3) {
-        // 中路多一发
-        const arrow4 = NewArrow(scene, shooter.col, shooter.row, scene.positionCalc.GRID_SIZEX * 32, damage);
-        arrow4.penetrate = penetrate;
-    }
-
-    if (shooter.row >= 1) {
-        // 有上面的row
-        const arrow1 = NewMutantYAxisArrow(scene, shooter.col, shooter.row, scene.positionCalc.GRID_SIZEX * 32, damage, 'zombie', shooter.row - 1);
-        arrow1.penetrate = penetrate;
-        if (level >= 9) {
-            // 上路多一发
-            const arrow5 = NewMutantYAxisArrow(scene, shooter.col, shooter.row, scene.positionCalc.GRID_SIZEX * 32, damage, 'zombie', shooter.row - 1);
-            arrow5.penetrate = penetrate;
-        }
-    }
-
-    if (shooter.row <= scene.GRID_ROWS - 2) {
-        // 有下面的row
-        const arrow3 = NewMutantYAxisArrow(scene, shooter.col, shooter.row, scene.positionCalc.GRID_SIZEX * 32, damage, 'zombie', shooter.row + 1);
-        arrow3.penetrate = penetrate;
-        if (level >= 9) {
-            // 下路多一发
-            const arrow6 = NewMutantYAxisArrow(scene, shooter.col, shooter.row, scene.positionCalc.GRID_SIZEX * 32, damage, 'zombie', shooter.row + 1);
-            arrow6.penetrate = penetrate;
-        }
-    }
-}
-
-const TripleDispenserRecord: IRecord = {
-    pid: 13,
-    nameKey: 'name_triple_dispenser',
-    cost: (level) => {
-        if (level && level >= 9) return 350;
-        return 325;
-    },
-    cooldownTime: () => 10,
-    NewFunction: NewTripleDispenser,
-    texture: 'plant/triple_dispenser',
-    descriptionKey: 'triple_dispenser_description',
-
-};
-
-export default TripleDispenserRecord;
+export default TripleDispenserData;

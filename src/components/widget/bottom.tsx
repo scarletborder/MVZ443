@@ -1,200 +1,159 @@
 // BottomTools.jsx
-import { useGameContext } from "../../context/garden_ctx";
 import { useEffect, useState } from "react";
-import { EventBus } from "../../game/EventBus";
+import {
+  PhaserEventBus,
+  PhaserEvents,
+} from "../../game/EventBus";
 import { StageDataRecords } from "../../game/utils/loader";
 import { publicUrl } from "../../utils/browser";
 import { useSaveManager } from "../../context/save_ctx";
 import BackendWS from "../../utils/net/sync";
 import { useLocaleMessages } from "../../hooks/useLocaleMessages";
-import { gameStateManager } from "../../store/GameStateManager";
-import { useMemoizedFn, useLatest } from "ahooks";
+import { useMemoizedFn, useLatest, useSetState } from "ahooks";
 import OnlineStatus from "../OnlineStatus";
+import CardpileManager from "../../game/managers/combat/CardpileManager";
+import CombatManager from "../../game/managers/CombatManager";
+import { ProgressMode, ProgressUpdateEvent } from "../../game/managers/combat/MobManager";
+import ResourceManager from "../../game/managers/combat/ResourceManager";
 
 type Props = {
-    width: number
-    chapterID: number | null
+  width: number
+  chapterID: number | null
 }
 
 export default function BottomTools({ width, chapterID }: Props) {
-    const gamectx = useGameContext();
-    const savectx = useSaveManager();
-    const { translate } = useLocaleMessages();
-    const starUri = `${publicUrl}/assets/sprite/star.png`;
+  const savectx = useSaveManager();
+  const { translate } = useLocaleMessages();
+  const starUri = `${publicUrl}/assets/sprite/star.png`;
 
-    const [bossHealth, setBossHealth] = useState<number>(-1);
-    const [starShards, setStarShards] = useState(gameStateManager.getCurrentStarShards()); // 从 GameStateManager 获取星之碎片
+  const [progressState, setProgressState] = useSetState<ProgressUpdateEvent>({
+    mode: ProgressMode.Normal,
+    totalWaves: 99,
+    currentWave: 0,
+    flagWaves: [],
+  });
 
-    // 监听星之碎片变化
-    useEffect(() => {
-        const handleStarShardsUpdate = (newStarShards: number) => {
-            setStarShards(newStarShards);
-        };
+  const [starShards, setStarShards] = useState<number>(0);
 
-        gameStateManager.onStarShardsUpdate(handleStarShardsUpdate);
-
-        // 设置初始值
-        setStarShards(gameStateManager.getCurrentStarShards());
-
-        return () => {
-            gameStateManager.removeStarShardsUpdateListener(handleStarShardsUpdate);
-        };
-    }, []);
-
-    // 使用 useMemoizedFn 优化事件处理函数
-    const handleProgress = useMemoizedFn((data: { progress: number }) => {
-        gamectx.updateWave(data.progress);
+  // 监听星之碎片变化
+  useEffect(() => {
+    const offListen = ResourceManager.Instance.Eventbus.on('onStarShardsUpdate', (newStarShards: number, playerId: number) => {
+      if (playerId === ResourceManager.Instance.mineId) {
+        setStarShards(newStarShards);
+      }
     });
 
-    useEffect(() => {
-        EventBus.on('game-progress', handleProgress);
 
-        return () => {
-            EventBus.removeListener('game-progress', handleProgress);
-        }
-    }, [handleProgress]);
+    return () => {
+      offListen();
+    };
+  }, []);
 
-    const handleBossHealth = useMemoizedFn((data: { health: number }) => {
-        gamectx.updateBossHealth(data.health);
-        setBossHealth(data.health);
-    });
+  const handleStarClick = useMemoizedFn(() => {
+    if (starShards <= 0) return;
+    CardpileManager.Instance.ClickStarShards();
+  });
 
-    const handleBossDead = useMemoizedFn(() => {
-        gamectx.updateBossHealth(-1);
-        setBossHealth(-1);
-    });
+  const handleSetPause = useMemoizedFn(() => {
+    PhaserEventBus.emit(PhaserEvents.TogglePause);
+  });
 
-    useEffect(() => {
-        // boss health 实际上是百分比[0,100]
-        EventBus.on('boss-dead', handleBossDead);
-        EventBus.on('boss-health', handleBossHealth);
-        return () => {
-            EventBus.removeListener('boss-health', handleBossHealth);
-            EventBus.removeListener('boss-dead', handleBossDead);
-        }
-    }, [handleBossHealth, handleBossDead]);
+  const ProgressBarComponent = () => {
+    if (progressState.mode === ProgressMode.Boss) {
+      const progress = (progressState.bossHealthPercent || 0) * 100;
+      return (
+        <div className="boss-health">
+          <div className="progress-bar">
+            <div
+              className="progress-fill"
+              style={{ width: `${progress}%`, backgroundColor: 'red' }}
+            ></div>
+          </div>
+        </div>
+      );
+    }
 
-    const handleStarShardsConsume = useMemoizedFn(() => {
-        if (BackendWS.isOnlineMode()) {
-            gamectx.updateStarShards(-2);
-        } else {
-            gamectx.updateStarShards(-1);
-        }
-    });
+    // Normal mode
+    const { totalWaves, currentWave, flagWaves } = progressState;
 
-    const handleStarShardsGet = useMemoizedFn(() => {
-        gamectx.updateStarShards(1);
-    });
-
-    useEffect(() => {
-        EventBus.on('starshards-consume', handleStarShardsConsume);
-        EventBus.on('starshards-get', handleStarShardsGet);
-        return () => {
-            EventBus.removeListener('starshards-consume', handleStarShardsConsume);
-            EventBus.removeListener('starshards-get', handleStarShardsGet);
-        }
-    }, [handleStarShardsConsume, handleStarShardsGet]);
-
-    const handleStarClick = useMemoizedFn(() => {
-        EventBus.emit('card-deselected', { pid: null }); // 通知卡片取消选中
-        if (gamectx.isPaused) return;
-        if (starShards <= 0) return;
-        EventBus.emit('starshards-click');
-    });
-
-    const gamectxLatest = useLatest(gamectx);
-
-    const handleSetPause = useMemoizedFn(() => {
-        const newPaused = !gamectxLatest.current?.isPaused;
-        EventBus.emit('setIsPaused', { paused: newPaused });
-    });
-
-    useEffect(() => {
-        EventBus.on('okIsPaused', (data: { paused: boolean }) => {
-            gamectx.setIsPaused(data.paused);
-        });
-        return () => {
-            EventBus.removeListener('okIsPaused');
-        }
-    }, []); // 不要改
-
-    // 优化键盘事件处理
-    const handleKeyPress = useMemoizedFn((event: { key: string; }) => {
-        if (event.key === 'w' || event.key === 'W') { // 支持小写和大写 "w"
-            handleStarClick(); // 按下 w 键时调用 handleStarClick
-        }
-    });
-
-    // 添加键盘事件监听
-    useEffect(() => {
-        // 绑定键盘事件
-        window.addEventListener('keydown', handleKeyPress);
-
-        // 清理函数，在组件卸载时移除事件监听器
-        return () => {
-            window.removeEventListener('keydown', handleKeyPress);
-        };
-    }, [handleKeyPress]); // 依赖于 memoized 函数
-
-
-    // 计算进度条百分比
-    const progress = bossHealth > 0 ?
-        (bossHealth) :
-        (gamectx.wave);
+    let progress = 0;
+    if (totalWaves > 1) {
+      if (currentWave <= 0) progress = 0;
+      else if (currentWave >= totalWaves - 1) progress = 100;
+      else progress = (currentWave / (totalWaves - 1)) * 100;
+    } else {
+      progress = currentWave >= 0 ? 100 : 0;
+    }
 
     return (
-        <div className="bottom" style={{
-            width: width,
-            height: width / 32,
-        }}>
-            <div className="money">{savectx.currentProgress.items.get(1) ? savectx.currentProgress.items.get(1)?.count : '0'} $</div>
-            <div className={`stars ${gamectx.isPaused ? 'paused' : ''}`} onClick={handleStarClick}>
-                {Array.from({ length: starShards }).map((_, index) => (
-                    <img
-                        draggable={false}
-                        key={index}
-                        src={starUri}
-                    />
-                ))}
-            </div>
-
-
-            {
-                bossHealth > 0 ? (
-                    <div className="boss-health">
-                        <div className="progress-bar">
-                            <div
-                                className="progress-fill"
-                                style={{ width: `${progress}%` }}
-                            ></div>
-                        </div>
-                    </div>
-                ) : (
-                    <div className="wave">
-                        <div className="progress-bar">
-                            <div
-                                className="progress-fill"
-                                style={{ width: `${progress}%` }}
-                            ></div>
-                        </div>
-                    </div>
-                )
-            }
-            <div className='stageDisplay' onClick={handleSetPause}>
-                {chapterID ? translate(StageDataRecords[chapterID].nameKey) : 'loading'}
-            </div>
-            
-            {/* 在游戏场景中显示在线状态，替换暂停按钮区域 */}
-            {BackendWS.isOnlineMode() && (
-                <div style={{
-                    position: 'absolute',
-                    bottom: '10px',
-                    right: '10px',
-                    zIndex: 1000
-                }}>
-                    <OnlineStatus />
-                </div>
-            )}
-        </div >
+      <div className="wave" style={{ position: 'relative' }}>
+        <div className="progress-bar" style={{ position: 'relative' }}>
+          <div
+            className="progress-fill"
+            style={{
+              width: `${Math.max(0, Math.min(100, progress))}%`,
+              position: 'absolute',
+              right: 0,
+              top: 0,
+              bottom: 0
+            }}
+          ></div>
+          {/* 渲染旗帜分割线 */}
+          {flagWaves && totalWaves > 1 && flagWaves.map((flagWaveId, idx) => {
+            const flagPercent = (flagWaveId / (totalWaves - 1)) * 100;
+            return (
+              <div
+                key={idx}
+                style={{
+                  position: 'absolute',
+                  right: `${flagPercent}%`,
+                  top: 0,
+                  bottom: 0,
+                  width: '2px',
+                  backgroundColor: 'white', /* 也可以使用图片或者别的颜色体现旗帜 */
+                  zIndex: 2,
+                }}
+              />
+            );
+          })}
+        </div>
+      </div>
     );
+  };
+
+  return (
+    <div className="bottom" style={{
+      width: width,
+      height: width / 32,
+    }}>
+      <div className="money">{savectx.currentProgress.items.get(1) ? savectx.currentProgress.items.get(1)?.count : '0'} $</div>
+      <div className={"stars"} onClick={handleStarClick}>
+        {Array.from({ length: starShards }).map((_, index) => (
+          <img
+            draggable={false}
+            key={index}
+            src={starUri}
+          />
+        ))}
+      </div>
+
+      <ProgressBarComponent />
+
+      <div className='stageDisplay' onClick={handleSetPause}>
+        {chapterID ? translate(StageDataRecords[chapterID].nameKey) : 'loading'}
+      </div>
+
+      {/* 在游戏场景中显示在线状态，替换暂停按钮区域 */}
+      {BackendWS.isOnlineMode() && (
+        <div style={{
+          position: 'absolute',
+          bottom: '10px',
+          right: '10px',
+          zIndex: 1000
+        }}>
+          <OnlineStatus />
+        </div>
+      )}
+    </div >
+  );
 }

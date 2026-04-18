@@ -197,7 +197,7 @@ class WebSocketClient {
 
     send(message: Uint8Array<ArrayBufferLike>) {
         if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-            this.ws.send(message.buffer); // 发送的是 ArrayBuffer
+            this.ws.send(message.buffer as ArrayBuffer); // 发送的是 ArrayBuffer
             console.log("Sent binary message:", message);
         } else {
             console.error("WebSocket is not open. Cannot send message.");
@@ -212,7 +212,8 @@ class WebSocketClient {
                 if (message) {
                     // 使用protobuf编码发送消息到WebSocket
                     // 将消息序列化为二进制格式后发送
-                    this.ws.send(Request.toBinary(message));
+                    const binary = Request.toBinary(message);
+                    this.ws.send(binary.buffer as ArrayBuffer);
                 }
             }
         } else {

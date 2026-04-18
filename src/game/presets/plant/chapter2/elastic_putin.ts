@@ -1,148 +1,110 @@
-import { IBullet } from "../../../models/IBullet";
-import { INightPlant, IPlant } from "../../../models/IPlant";
-import { IRecord } from "../../../models/IRecord";
+/**
+ * 弹性小兵 - 反弹敌方子弹，支持闪电增强
+ */
+
+import { PlantStat } from "../../../../utils/numbervalue";
+import { PositionManager } from "../../../managers/view/PositionManager";
+import { PlantEntity } from "../../../models/entities/PlantEntity";
+import { PlantModel } from "../../../models/PlantModel";
 import { Game } from "../../../scenes/Game";
-import BounceableBullet from "../../bullet/bounceable";
+import { CollisionContext } from "../../../types";
+import { BulletEntity } from "../../../models/projectiles/BulletEntity";
+import { ArrowEntity } from "../../bullet/arrow";
 
+export class ElasticPutinModel extends PlantModel {
+  public override pid = 15;
+  public override nameKey = 'name_elastic_putin';
+  public override descriptionKey = 'elastic_putin_description';
+  public override texturePath = 'plant/elastic_putin';
 
-class ElasticPutin extends INightPlant {
-    // 技能, 是否让穿过的bullet带上雷电爆炸属性
-    isLightning: boolean = false;
-    duration: number = 5000; // 技能持续时间
+  public maxHealth = new PlantStat(300);
+  public cost = new PlantStat(100).setThreshold(3, 75);
+  public cooldown = new PlantStat(8000);
+  public cooldownStartAtRatio = 0;
+  public damage = new PlantStat(0);
+  public isNightPlant = true;
 
-    // 碰撞
-    colliderBullet: Phaser.Physics.Arcade.Collider;
-    colliderCallback: any;
+  public override createEntity(scene: Game, col: number, row: number, level: number): ElasticPutinEntity {
+    return new ElasticPutinEntity(scene, col, row, level);
+  }
 
-    collideredBullets: Set<IBullet> = new Set();
+  public override onCreate(entity: ElasticPutinEntity): void {
+    // 弹性小兵是被动单位，无需周期性检查
+  }
 
-    constructor(scene: Game, col: number, row: number, level: number) {
-        super(scene, col, row, ElasticPutinRecord.texture, ElasticPutinRecord.pid, level);
-        this.setFrame(0);
-        this.setHealthFirstly(300);
-        this.plant_height = 2;
-        if (level >= 7) {
-            this.duration = 8000;
-        }
+  public override onStarShards(entity: ElasticPutinEntity): void {
+    // 唤醒（如果在睡眠）
+    entity.setSleeping(false);
 
-        // 默认反弹回调
-        this.colliderCallback = this.bounceBulletOffWall;
-
-        // 设置反弹属性
-        if (this.body) {
-            this.setImmovable(true);
-            scene.gardener.elastic_putin_nums[row]++;
-
-            this.colliderBullet = scene.physics.add.collider(
-                IBullet.Group,
-                this,
-                this.colliderCallback,
-                // @ts-ignore
-                this.processCollider,
-                this
-            );
-        }
-    }
-
-    public onStarShards(): void {
-        super.onStarShards();
-        this.setSleeping(false); // 立即唤醒
-        const scene = this.scene;
-        if (!scene) return;
-        // 为所有反弹的子弹添加雷电属性
-        this.isLightning = true;
-        // TODO: 设置动画
-
-        if (this.level) {
-            scene.frameTicker.delayedCall({
-                delay: this.duration,
-                callback: () => {
-                    this.isLightning = false;
-                    // TODO 取消动画
-                }
-            });
-        }
-    }
-
-    destroy(fromScene?: boolean): void {
-        this.scene.gardener.elastic_putin_nums[this.row]++;
-        this.colliderBullet.destroy();
-        // 清空set
-        this.collideredBullets.clear();
-        super.destroy(fromScene);
-    }
-
-
-    // 处理前
-    processCollider(wall: IPlant, bullet: IBullet) {
-        // 判断是否已经碰撞过
-        if (this.collideredBullets.has(bullet)) {
-            return false;
-        }
-
-        // 保存原先速度
-        if (bullet.body && !wall.isSleeping && (bullet instanceof BounceableBullet)) {
-            bullet._prevX = bullet.body.velocity.x;
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * 子弹撞到墙壁时被调用
-     * @param {Phaser.Physics.Arcade.Sprite|Image} bullet  子弹
-     * @param {Phaser.Physics.Arcade.Image} wall           撞到的墙壁
-     */
-    bounceBulletOffWall(wall: IPlant, bullet: IBullet) {
-        // 只会反弹arrow或者arrow的变体(原型链)
-        if (!bullet.body || !((bullet instanceof BounceableBullet))) {
-            return;
-        }
-
-        const vx = bullet._prevX ?? 50;
-        const f = 1;  // 取墙壁上的反弹系数，默认 1
-
-        // 反弹目标是zombie的子弹
-        if (bullet.targetCamp === 'zombie' && !this.collideredBullets.has(bullet)) {
-            this.collideredBullets.add(bullet);
-            bullet.destoryCallback.push(() => {
-                this.collideredBullets.delete(bullet);
-            });
-            bullet.setVelocityX(-vx * f);
-        }
-
-        // 如果isLightning,对过来的arrow设置lightning
-        if (this.isLightning) {
-            bullet.catchEnhancement('lightning');
-        }
-
-        // 结束
-        if (bullet._prevX) {
-            delete bullet._prevX;
-        }
-    }
+    // 激活闪电效果
+    const duration = entity.level >= 7 ? 8000 : 5000;
+    entity.activateLightning(duration);
+  }
 }
 
+export const ElasticPutinData = new ElasticPutinModel();
 
-function NewElasticPutin(scene: Game, col: number, row: number, level: number): IPlant {
-    const elasticPutin = new ElasticPutin(scene, col, row, level);
-    return elasticPutin;
+export class ElasticPutinEntity extends PlantEntity {
+  private isLightning: boolean = false;
+
+  constructor(scene: Game, col: number, row: number, level: number) {
+    super(scene, col, row, ElasticPutinData, level);
+  }
+
+  protected override buildView() {
+    const size = PositionManager.Instance.getPlantDisplaySize();
+
+    // frame 0
+    const sprite = this.scene.add.sprite(this.x, this.y, this.model.texturePath, 0)
+      .setOrigin(0.5, 1)
+      .setDisplaySize(size.sizeX, size.sizeY)
+      .setDepth(this.baseDepth);
+
+    this.viewGroup.add(sprite);
+  }
+
+  /**
+   * 碰撞事件处理：反弹子弹
+   */
+  public override onCollision(ctx: CollisionContext): void {
+    // 只反弹 BulletEntity
+    if (!(ctx.targetEntity instanceof BulletEntity)) return;
+
+    const bullet = ctx.targetEntity as BulletEntity;
+
+    // 只反弹自己的子弹
+    if (bullet.faction !== this.faction) return;
+
+    // 如果子弹不可反弹，则不反弹
+    if (!bullet.bounceable) return;
+
+    // 调用子弹的反弹方法
+    bullet.reverseVelocityX();
+
+    // 如果激活了闪电效果，为子弹施加增强
+    if (this.isLightning && bullet instanceof ArrowEntity) {
+      bullet.catchEnhancement('lightning');
+    }
+  }
+
+  /**
+   * 激活闪电效果，持续指定时间
+   */
+  public activateLightning(duration: number): void {
+    this.isLightning = true;
+    // TODO: 可在此处添加动画效果
+
+    this.scene.time.delayedCall(duration, () => {
+      if (this.currentHealth > 0) {
+        this.isLightning = false;
+        // TODO: 移除动画效果
+      }
+    });
+  }
+
+  public override destroy(): void {
+    super.destroy();
+  }
 }
 
-function cost(level?: number) {
-    if ((level ?? 1) >= 3) return 75;
-    return 100;
-}
-
-const ElasticPutinRecord: IRecord = {
-    pid: 15,
-    nameKey: 'name_elastic_putin',
-    cost: cost,
-    cooldownTime: () => 8,
-    NewFunction: NewElasticPutin,
-    texture: 'plant/elastic_putin',
-    descriptionKey: 'elastic_putin_description',
-}
-
-
-export default ElasticPutinRecord;
+export default ElasticPutinData;

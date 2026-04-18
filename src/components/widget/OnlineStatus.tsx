@@ -2,16 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { OnlineStateManager } from '../../store/OnlineStateManager';
 import BackendWS from '../../utils/net/sync';
 import EnumGameStage from '../../utils/net/game_state';
-import { EventBus } from '../../game/EventBus';
+import {
+  PhaserEventBus,
+  PhaserEvents,
+} from '../../game/EventBus';
 
 interface OnlineStatusProps {
   isInGame?: boolean; // 是否在游戏场景中
   position?: 'top-right' | 'bottom-right';
 }
 
-const OnlineStatus: React.FC<OnlineStatusProps> = ({ 
-  isInGame = false, 
-  position = 'top-right' 
+const OnlineStatus: React.FC<OnlineStatusProps> = ({
+  isInGame = false,
+  position = 'top-right'
 }) => {
   const [isOnline, setIsOnline] = useState(false);
   const [gameStage, setGameStage] = useState(EnumGameStage.InLobby);
@@ -25,11 +28,11 @@ const OnlineStatus: React.FC<OnlineStatusProps> = ({
 
   useEffect(() => {
     const onlineManager = OnlineStateManager.getInstance();
-    
+
     // 初始化状态
     setIsOnline(BackendWS.isOnlineMode());
     setGameStage(onlineManager.getCurrentGameStage());
-    
+
     const roomInfoData = onlineManager.getRoomInfo();
     setRoomInfo({
       roomId: roomInfoData.roomId,
@@ -68,13 +71,13 @@ const OnlineStatus: React.FC<OnlineStatusProps> = ({
     onlineManager.onOnlineModeUpdate(handleOnlineModeChange);
     onlineManager.onGameStageUpdate(handleGameStageChange);
     onlineManager.onRoomInfoUpdate(handleRoomInfoChange);
-    EventBus.on('room-update-ready-count', handleReadyCountUpdate);
+    PhaserEventBus.on(PhaserEvents.RoomUpdateReadyCount, handleReadyCountUpdate);
 
     return () => {
       onlineManager.removeOnlineModeUpdateListener(handleOnlineModeChange);
       onlineManager.removeGameStageUpdateListener(handleGameStageChange);
       onlineManager.removeRoomInfoUpdateListener(handleRoomInfoChange);
-      EventBus.off('room-update-ready-count', handleReadyCountUpdate);
+      PhaserEventBus.off(PhaserEvents.RoomUpdateReadyCount, handleReadyCountUpdate);
     };
   }, []);
 

@@ -16,7 +16,7 @@ import SettingsPage from './pages/settings';
 import Docs from './pages/docs';
 import DocDetail from './pages/docDetail';
 import { publicUrl } from './utils/browser';
-import { EventBus } from './game/EventBus';
+import { PhaserEventBus } from './game/EventBus';
 import { OnlineStateManager } from './store/OnlineStateManager';
 import EnumGameStage from './utils/net/game_state';
 
@@ -202,7 +202,7 @@ function App() {
     <Router>
       {/* 全局在线状态变化监听器 */}
       <GlobalOnlineStateListener />
-      
+
       <Routes>
         <Route path={`${publicUrl}/`} element={<GameMainWindow />} />
         <Route path={`${publicUrl}/settings`} element={<SettingsPage width={width} height={width * 3 / 4} />} />

@@ -1,176 +1,158 @@
 import React, { useState, useEffect } from 'react';
-import { useMemoizedFn, useLatest } from 'ahooks';
+import { useMemoizedFn } from 'ahooks';
 import { IRefPhaserGame } from '../../game/PhaserGame';
 import { Game } from '../../game/scenes/Game';
-import { EventBus } from '../../game/EventBus';
-import { useGameContext } from '../../context/garden_ctx';
-import { useSettings } from '../../context/settings_ctx';
 import { publicUrl } from '../../utils/browser';
-import PlantFactoryMap from '../../game/presets/plant';
 import { useLocaleMessages } from '../../hooks/useLocaleMessages';
-import { gameStateManager } from '../../store/GameStateManager';
+import CardpileManager from '../../game/managers/combat/CardpileManager';
+import ResourceManager from '../../game/managers/combat/ResourceManager';
+import PlantsManager from '../../game/managers/combat/PlantsManager';
+import { PlantModel } from '../../game/models/PlantModel';
 
-
-interface CardProps {
-    pid: number;
-    texture: string;
-    plantName: string;
-    cost: number;
-    cooldownTime: number;
-    sceneRef: React.MutableRefObject<IRefPhaserGame | null>;
-    level: number;
+// TODO: 替换成 PlantModel
+export interface CardProps {
+  plantModel: PlantModel;
+  level: number;
+  sceneRef: React.MutableRefObject<IRefPhaserGame | null>;
 }
 
-export default function Card({ pid, texture, plantName, cooldownTime, sceneRef, cost, level }: CardProps) {
-    const needFirstCoolDown = PlantFactoryMap[pid].needFirstCoolDown || false;
-    const [isCoolingDown, setIsCoolingDown] = useState(needFirstCoolDown);
-    const [remainingTime, setRemainingTime] = useState(needFirstCoolDown ? cooldownTime : 0);
-    const [isChosen, setIsChosen] = useState(false);
-    const [energy, setEnergy] = useState(gameStateManager.getCurrentEnergy()); // 从 GameStateManager 获取能量
-    const { isPaused } = useGameContext();
-    const settings = useSettings();
-    const { translate } = useLocaleMessages();
+export default function Card({ plantModel, level, sceneRef }: CardProps) {
+  const { pid, texturePath, nameKey, cost: costStat } = plantModel;
+  const cost = costStat.getValueAt(level);
+  const [leftCooldownPercent, setLeftCooldownPercent] = useState(1);
+  const [reloaded, setReloaded] = useState(false);
 
+  const [isChosen, setIsChosen] = useState(false);
+  const [energy, setEnergy] = useState(0); // 从 ResourceManager 获取能量
+
+  const { translate } = useLocaleMessages();
+
+  const handleDeselect = useMemoizedFn((data: { pid: number | null }) => {
+    if (data.pid !== pid) {
+      setIsChosen(false);
+    }
+  });
+
+  useEffect(() => {
     // 监听能量变化
-    useEffect(() => {
-        const handleEnergyUpdate = (newEnergy: number) => {
-            setEnergy(newEnergy);
-        };
-
-        gameStateManager.onEnergyUpdate(handleEnergyUpdate);
-
-        // 设置初始值
-        setEnergy(gameStateManager.getCurrentEnergy());
-
-        return () => {
-            gameStateManager.removeEnergyUpdateListener(handleEnergyUpdate);
-        };
-    }, []);
-
-    useEffect(() => {
-        const handleSetTimeFlow = (data: { delta: number }) => {
-            setRemainingTime(prevRemainingTime => {
-                const newRemainingTime = parseFloat((prevRemainingTime - data.delta * 0.001).toFixed(3)); // 保留3位小数
-                if (newRemainingTime <= 0) {
-                    setIsCoolingDown(false);
-                    return 0;
-                } else if (newRemainingTime > 0) {
-                    setIsCoolingDown(true);
-                }
-                return newRemainingTime;
-            });
-        };
-
-        EventBus.on('timeFlow-set', handleSetTimeFlow);
-        return () => {
-            EventBus.removeListener('timeFlow-set', handleSetTimeFlow);
-        };
-    }, []); // 保持空的依赖数组
-
-    // 使用 useMemoizedFn 优化事件处理函数
-    const handleDeselect = useMemoizedFn((data: { pid: number | null }) => {
-        if (data.pid !== pid) {
-            setIsChosen(false);
-        }
+    const offListen1 = ResourceManager.Instance.Eventbus.on('onEnergyUpdate', (
+      newEnergy: number,
+      playerId: number
+    ) => {
+      if (playerId === ResourceManager.Instance.mineId) {
+        setEnergy(newEnergy);
+      }
     });
 
-    const handlePlant = useMemoizedFn((data: { pid: number }) => {
-        if (data.pid === pid) {
-            setIsChosen(false);
-            // Use the isPaused value from the component scope
-            if (!isPaused) {
-                setIsCoolingDown(true);
-                setRemainingTime(cooldownTime);
-            } else {
-                // If paused, wait until unpaused to start cooldown
-                setRemainingTime(cooldownTime);
-                setIsCoolingDown(true);
-                const timer = setInterval(() => {
-                    if (!isPaused) {
-                        console.log('resume');
-                        clearInterval(timer);
-                    }
-                }, 100);
-            }
-        }
+    // 监听冷却变化
+    const offListen2 = CardpileManager.Instance.EventBus.on('onCooldownStatus', (status: Map<number, {
+      hasReloaded: boolean;
+      leftPercent: number;
+    }>) => {
+      const cardStatus = status.get(pid);
+      if (cardStatus) {
+        setLeftCooldownPercent(cardStatus.leftPercent);
+        setReloaded(cardStatus.hasReloaded);
+      }
+    })
+    return () => {
+      offListen1();
+      offListen2();
+    };
+  }, []);
+
+
+
+  useEffect(() => {
+    const offListen1 = CardpileManager.Instance.EventBus.on('onChosenCard', (chosenPid: number) => {
+      if (chosenPid === pid) {
+        setIsChosen(true);
+        console.log(`Card ${nameKey} (pid=${pid} level=${level}) chosen`);
+      } else {
+        setIsChosen(false);
+      }
     });
-
-    useEffect(() => {
-        EventBus.on('card-deselected', handleDeselect);
-        EventBus.on('card-plant', handlePlant);
-
-        return () => {
-            EventBus.removeListener('card-deselected', handleDeselect);
-            EventBus.removeListener('card-plant', handlePlant);
-        };
-    }, [handleDeselect, handlePlant]); // 依赖于 memoized 函数
-
-    const handleClick = useMemoizedFn(() => {
-        if (isPaused && !settings.isBluePrint) {
-            return;
-        }
-        if (!sceneRef.current) return;
-        const scene = sceneRef.current.scene as Game;
-        if (!scene || scene.scene.key !== 'Game') {
-            console.error('当前场景不是Game');
-            return;
-        }
-
-        if (energy < cost) {
-            console.log('Not enough energy');
-            EventBus.emit('energy-insufficient'); // 发射能量不足事件
-            return;
-        }
-
-        if (isChosen) {
-            setIsChosen(false);
-            scene.cancelPrePlant();
-            return;
-        }
-
-        if (!isCoolingDown) {
-            setIsChosen(true);
-            scene.chooseCard(pid, level);
-            console.log(`Card ${plantName} (pid=${pid} level=${level}) chosen`);
-        }
+    const offListen2 = CardpileManager.Instance.EventBus.on('onChosenPickaxe', () => {
+      setIsChosen(false);
     });
+    const offListen3 = CardpileManager.Instance.EventBus.on('onChosenStarShards', () => {
+      setIsChosen(false);
+    });
+    const offListen4 = CardpileManager.Instance.EventBus.on('onCancelChosen', () => {
+      setIsChosen(false);
+    });
+    return () => {
+      offListen1();
+      offListen2();
+      offListen3();
+      offListen4();
+    };
+  }, [handleDeselect]); // 依赖于 memoized 函数
 
-    return (
-        <button
-            className={`card ${isCoolingDown ? 'cooling' : ''} ${isChosen ? 'chosen' : ''} 
-                ${(energy < cost) ? 'expensive' : ''} ${(isPaused && !settings.isBluePrint) ? 'paused' : ''}`}
-            onClick={handleClick}
-            disabled={isCoolingDown}
-        >
-            <div className="card-content">
-                <div className="plant-name">{translate(plantName)}</div>
-                <div className="plant-image">
-                    {texture && texture !== "" && (
-                        <img
-                            src={`${publicUrl}/assets/card/${texture}.png`}
-                            alt={plantName}
-                            style={{
-                                width: "100%",
-                                height: "100%",
-                            }}
-                            draggable="false"
-                        />
-                    )}
-                </div>
-                <div className="plant-cost">{cost}</div>
-            </div>
-            {isCoolingDown && (
-                <div
-                    className="cooldown-overlay"
-                    style={{
-                        animationPlayState: isPaused ? 'paused' : 'running',
-                        // 使用剩余时间和冷却时间的比率来设置高度
-                        transform: `scaleY(${remainingTime / cooldownTime})`,
-                        transformOrigin: 'bottom'
-                    }}
-                />
-            )}
+  const handleClick = useMemoizedFn(() => {
+    if (!sceneRef.current) return;
+    const scene = sceneRef.current.scene as Game;
+    if (!scene || scene.scene.key !== 'Game') {
+      console.error('当前场景不是Game');
+      return;
+    }
 
-        </button>
-    );
+    if (energy < cost) {
+      console.log('Not enough energy');
+      PlantsManager.Instance.EventBus.emit('onEnergyInsufficient');
+      return;
+    }
+
+    if (!reloaded) {
+      console.log('Card is cooling down');
+      return;
+    }
+
+    if (isChosen) {
+      CardpileManager.Instance.cancelSelection();
+      return;
+    }
+
+    CardpileManager.Instance.ClickCard(pid, level);
+  });
+
+  return (
+    <button
+      className={`card ${reloaded ? '' : 'cooling'} 
+                ${isChosen ? 'chosen' : ''} 
+                ${(energy < cost) ? 'expensive' : ''}`}
+      onClick={handleClick}
+      disabled={!reloaded || (energy < cost)}
+    >
+      <div className="card-content">
+        <div className="plant-name">{translate(nameKey)}</div>
+        <div className="plant-image">
+          {texturePath && texturePath !== "" && (
+            <img
+              src={`${publicUrl}/assets/card/${texturePath}.png`}
+              alt={nameKey}
+              style={{
+                width: "100%",
+                height: "100%",
+              }}
+              draggable="false"
+            />
+          )}
+        </div>
+        <div className="plant-cost">{cost}</div>
+      </div>
+
+      {!reloaded && (
+        <div
+          className="cooldown-overlay"
+          style={{
+            // 使用剩余时间和冷却时间的比率来设置高度
+            transform: `scaleY(${leftCooldownPercent})`,
+            transformOrigin: 'bottom'
+          }}
+        />
+      )}
+
+    </button>
+  );
 }

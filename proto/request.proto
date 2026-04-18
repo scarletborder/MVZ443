@@ -78,6 +78,7 @@ message RequestGridOperation {
   uint32 row = 3;
 
   // 此操作应该在哪一帧时进行
+  // 主动避让，避免多次的回溯
   uint32 process_frame_id = 4;
 }
 

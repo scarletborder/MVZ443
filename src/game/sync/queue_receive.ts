@@ -1,11 +1,16 @@
 import Denque from "denque";
 import { Game } from "../scenes/Game";
 import BackendWS from "../../utils/net/sync";
-import { EventBus } from "../EventBus";
+import {
+  PhaserEventBus,
+  PhaserEvents,
+} from "../EventBus";
 import {
   InGameOperation,
   InGameResponse
 } from "../../pb/response";
+import { EventBus } from "../../utils/eventBus";
+import SyncManager from "../managers/combat/SyncManager";
 
 // 单人游戏
 interface SingleParams {
@@ -17,31 +22,41 @@ interface MultiParams {
   mode: 'multi';
 }
 
-export default class QueueReceive {
-  game: Game;
+type InGameEvent = {
+  onCardPlant: (pid: number, col: number, row: number, level: number, uid: number) => void;
+  onRemovePlant: (pid: number, col: number, row: number) => void;
+  onUseStarShards: (pid: number, col: number, row: number, uid: number) => void;
+  onGameEvent: (eventType: number, message: string) => void;
+  onError: (message: string) => void;
+}
 
+export default class QueueReceive {
+  InGameEventBus: EventBus<InGameEvent>;
+
+  // 游戏内的事件队列
+  // 游戏外的事件直接消费
   queues: Denque<InGameResponse>;
 
+  lastAckFrameId: number = 0; // 上一个被ack的服务器帧ID
+
+
   // frameid_to_process
-  // 过去的服务器response中存放的未来才会处理的操作
-  laterOperations: Map<number, InGameOperation[]> = new Map<number, InGameOperation[]>();
+  // 缓冲区，缓存ack id 以后的操作,回溯使用
+  backupOperations: Map<number, InGameOperation[]> = new Map<number, InGameOperation[]>();
 
-  myID: number = 0;
-  seed: number = 0;
-
-  // 多人游戏专用属性
-  isHalted: boolean = false; // 是否halt 了game, 由于没有及时接收到下一个服务器帧
+  consumedResponseFrames: Set<number> = new Set<number>();
 
   constructor(params: SingleParams | MultiParams, game: Game) {
-    this.game = game;
     this.queues = new Denque();
-    this.laterOperations = new Map();
+    this.backupOperations = new Map();
+    this.InGameEventBus = new EventBus<InGameEvent>();
+  }
 
-    if (params.mode === 'single') {
-      // 单人游戏模拟直接向 recv_queue 发一次 InGameResponse.game_event,
-      // 帧号是服务器要让客户端前进到的帧号，即 1
-
-    }
+  Reset() {
+    this.queues.clear();
+    this.backupOperations.clear();
+    this.lastAckFrameId = 0;
+    this.consumedResponseFrames.clear();
   }
 
   // 处理游戏内响应
@@ -51,31 +66,28 @@ export default class QueueReceive {
   }
 
   // 将operation转换为要做的函数
-  private _operationToFunction(operation: InGameOperation): (() => void) {
+  public ConsumeInGameOperation(operation: InGameOperation): void {
     // 就是本次nextFrameID的操作
     switch (operation.payload.oneofKind) {
       case 'cardPlant':
         const cardPlant = operation.payload.cardPlant;
         if (cardPlant.base) {
-          return () => {
-            this._cardPlant(cardPlant.pid, cardPlant.base!.col, cardPlant.base!.row, cardPlant.level, cardPlant.base!.uid);
-          };
+          this.InGameEventBus.emit('onCardPlant', cardPlant.pid, cardPlant.base!.col, cardPlant.base!.row, cardPlant.level, cardPlant.base!.uid);
+          return;
         }
         break;
       case 'removePlant':
         const removePlant = operation.payload.removePlant;
         if (removePlant.base) {
-          return () => {
-            this._removePlant(removePlant.pid, removePlant.base!.col, removePlant.base!.row);
-          };
+          this.InGameEventBus.emit('onRemovePlant', removePlant.pid, removePlant.base!.col, removePlant.base!.row);
+          return;
         }
         break;
       case 'useStarShards':
         const useStarShards = operation.payload.useStarShards;
         if (useStarShards.base) {
-          return () => {
-            this._useStarShards(useStarShards.pid, useStarShards.base!.col, useStarShards.base!.row, useStarShards.base!.uid);
-          };
+          this.InGameEventBus.emit('onUseStarShards', useStarShards.pid, useStarShards.base!.col, useStarShards.base!.row, useStarShards.base!.uid);
+          return;
         }
         break;
       case 'gameEvent':
@@ -83,184 +95,114 @@ export default class QueueReceive {
         const gameEvent = operation.payload.gameEvent;
         if (gameEvent) {
           if (gameEvent.eventType === 0x4000) {
-            return () => { };
+            return;
           }
-          return () => {
-            console.log('Game event;type=', gameEvent.eventType, ';message=', gameEvent.message);
-          };
+          this.InGameEventBus.emit('onGameEvent', gameEvent.eventType, gameEvent.message);
+          console.log('Game event;type=', gameEvent.eventType, ';message=', gameEvent.message);
+          return;
         }
         break;
       case 'error':
         const error = operation.payload.error;
         if (error) {
-          return () => console.error('Game error:', error.message);
+          this.InGameEventBus.emit('onError', error.message);
+          console.error('Game error:', error.message);
+          return;
         }
         break;
       default:
-        return () => console.warn('Unknown game operation type:', operation.payload.oneofKind);
+        console.warn('Unknown game operation type:', operation.payload.oneofKind);
+        return;
     }
-    return () => console.warn('No operation function defined for:', operation.payload.oneofKind);
+    console.warn('No operation function defined for:', operation.payload.oneofKind)
+    return;
   }
 
 
   // 游戏每逻辑帧时机到调用,循环消费直到空
   Consume() {
-    // 单人模式先消费一次发送队列
-    if (!BackendWS.isOnlineMode()) {
-      this.game.sendQueue.DispatchSingleModeQueue();
-    }
-
-    const executedList: (() => void)[] = [];
-
     // 先获得本次loop后要前进到的帧ID
     // 也即所有的操作都是为了 本帧 到 nextFrameID
     const nextFrameID = BackendWS.GetNextFrameID();
 
-    // 这里也存放这服务器返回的response
-    // 但是他们的FrameID 都大于 nextFrameID
-    // 这一次循环绝对不会采纳他们， 因为process_frame_id 肯定都会大于nextFrameID
-    // 结束后会加回接受队列
-    const tmpLeftFrames: InGameResponse[] = [];
+    // 缓存早到的resp
+    const cacheResponse: InGameResponse[] = [];
 
-    // 为了完成这次跨越，需要做的操作们
-    // 默认值从laterOperations中获取
-    const operations = this.laterOperations.get(nextFrameID) || [];
-
-    // 此轮逻辑帧是否执行了，
-    // 服务器会向本接受队列发送 InGameResponse
-    // InGameResponse.FrameID 是服务器需要让所有客户端跨越到的下一帧ID
-    // 如果在消费接受队列时没有发现等同于nextFrameID的消息
-    // 那么halt
-    let hasGetThisFrame = false;
+    // 使用回溯，所有frameID > ack Id 的帧都要被消费
+    let needBackTrace = false;
+    // 最早需要回溯到的帧
+    let earliestBackTraceFrameID = Number.MAX_SAFE_INTEGER;
 
     // 消费游戏接受消息队列
     while (!this.queues.isEmpty()) {
       const response = this.queues.shift();
       if (!response) continue;
+      // 不接受落后ack ID的帧
+      if (response.frameId <= this.lastAckFrameId) {
+        console.warn('Received response with frameId less than or equal to lastAckFrameId:', response.frameId, 'lastAckFrameId:', this.lastAckFrameId);
+        continue;
+      }
 
-      // 检查帧ID
       if (response.frameId > nextFrameID) {
-        // 此次循环绝对不会用的
-        // 稍后他们会回到接受队列
-        tmpLeftFrames.push(response);
+        // 早到的帧，缓存起来
+        cacheResponse.push(response);
         continue;
       }
 
-      if (response.frameId < nextFrameID) {
+      // 已经消费过的帧
+      if (this.consumedResponseFrames.has(response.frameId)) {
+        console.warn('Received response with frameId that has already been consumed:', response.frameId);
         continue;
       }
 
-      // 太好了！这是消息队列中本次nextFrameID的Response
-      hasGetThisFrame = true;
-      BackendWS.AckFrameID = response.frameId;
+      this.consumedResponseFrames.add(response.frameId);
 
-      // 处理响应中的所有操作
+      // 加入缓冲区
       for (const operation of response.operations) {
-        // 虽然是本frame的response
-        // 但是未来才需要做的
-        if (operation.processFrameId > nextFrameID) {
-          // 未来的操作，存入laterOperations
-          if (!this.laterOperations.has(operation.processFrameId)) {
-            this.laterOperations.set(operation.processFrameId, []);
-          }
-          this.laterOperations.get(operation.processFrameId)?.push(operation);
+        if (operation.processFrameId <= this.lastAckFrameId) {
+          console.warn('Received operation with processFrameId less than or equal to lastAckFrameId:', operation.processFrameId, 'lastAckFrameId:', this.lastAckFrameId);
           continue;
         }
 
-        // 一个几乎不可能的情况， prcessFrameId 小于 nextFrameID
         if (operation.processFrameId < nextFrameID) {
-          console.warn('Received operation with processFrameId less than nextFrameID:', operation);
-          continue;
+          // 之前的帧，回溯
+          needBackTrace = true;
+          earliestBackTraceFrameID = Math.min(earliestBackTraceFrameID, operation.processFrameId);
         }
 
-        operations.push(operation);
+        const newFrameList = this.backupOperations.get(operation.processFrameId) || [];
+        newFrameList.push(operation);
+        this.backupOperations.set(operation.processFrameId, newFrameList);
       }
+
+      // TODO: 移除 onlineStateManager 这个之前的依赖
+      BackendWS.AckFrameID = response.frameId;
     }
 
-    if (tmpLeftFrames.length > 0) {
-      // 将未来的帧数据重新放回队列
-      for (const frame of tmpLeftFrames) {
-        this.queues.push(frame);
-      }
+    // 缓存重新放入队列
+    for (const resp of cacheResponse) {
+      this.queues.unshift(resp);
     }
 
-    if (!hasGetThisFrame) {
-      // 如果本次没有接收到 下一个服务器帧没有接收到服务器的命令,那么暂停游戏,等待下一次服务器帧再次判断
-      this._haltGame();
-    } else {
-      // 此次有效
-      // 排序operations
-      // processFrameId 小的在前
-      operations.sort((a, b) => a.processFrameId - b.processFrameId);
-      // 执行
-      for (const operation of operations) {
-        const func = this._operationToFunction(operation);
-        if (func) {
-          executedList.push(func);
-        }
-      }
-
-      // 清空本frameid的laterOperations
-      this.laterOperations.delete(nextFrameID);
-
-      // 收到了 下一个服务器帧的命令,自增frameID,发送确认接收信息
-      if (BackendWS.isOnlineMode()) {
-        // 发送确认信息 - 使用新的protobuf结构
-        BackendWS.sendBlankFrame(nextFrameID);
-        BackendWS.GoToFrameID(nextFrameID);
-      } else {
-        // 单人游戏
-        // 如果游戏没有暂停
-        if (!this.game.time.paused) {
-          BackendWS.GoToFrameID(nextFrameID);
-          // 单人游戏响应到了模拟服务器的发送
-          // send blank frame
-          this.game.sendQueue.sendBlankFrame(nextFrameID);
-        } else {
-          // 如果游戏暂停了,那么不需要模拟发送blank
-          // 也不能让自己frameID自增,因为有私密图纸
-
-          // 如果有私密图纸，那么这里允许所有的操作
-          if (this.game.innerSettings.isBluePrint === true) {
-            executedList.forEach((func) => { func(); });
-          }
-          return;
-        }
-      }
-
-      this._resumeGame();
-      // 该帧有效,帧驱动一些事件发生
-      this.game.physics.world.update(this.game.frameTicker.getCurrentTime(), this.game.frameTicker.frameInterval);
-      // 例如 plant发出子弹, 刷怪, 避免通过game.timer导致不精确
-      this.game.frameTicker.update(); // 游戏中，非暂停，驱动定时器前进1帧
-      EventBus.emit('timeFlow-set', { delta: this.game.frameTicker.frameInterval });
-      executedList.forEach((func) => { func(); });
+    if (needBackTrace) {
+      SyncManager.Instance.BacktrackToFrame(earliestBackTraceFrameID);
+      return;
     }
-  }
 
-  private _cardPlant(pid: number, col: number, row: number, level: number, uid: number) {
-    this.game.handleCardPlant(pid, level, col, row, uid);
-  }
+    // 此次有效不需要回溯
+    const operations = this.backupOperations.get(nextFrameID) || [];
 
-  private _removePlant(pid: number, col: number, row: number) {
-    this.game.handleRemovePlant(pid, col, row);
-  }
+    // 执行
+    for (const operation of operations) {
+      this.ConsumeInGameOperation(operation);
+    }
 
-  private _useStarShards(pid: number, col: number, row: number, uid: number) {
-    this.game.handleStarShards(pid, col, row, uid);
-  }
 
-  // 由于接收不到服务器的命令,游戏暂停
-  private _haltGame() {
-    this.isHalted = true;
-    this.game.doHalt();
-  }
+    // 发送确认信息 - 使用新的protobuf结构
+    BackendWS.sendBlankFrame(nextFrameID);
+    BackendWS.GoToFrameID(nextFrameID);
 
-  private _resumeGame() {
-    if (!this.isHalted) return;
-    // 如果游戏因为没有接收到服务器的命令而暂停,那么恢复游戏
-    // 现在只可能是多人游戏,因为单人游戏保证了queue必定有NextFrameID
-    this.game.doResume();
-    this.isHalted = false;
+    // FUTURE： 不需要再手动维护事件顺序了，因为未来会使用各种cmd主动进行lateUpdate
+
   }
 } 

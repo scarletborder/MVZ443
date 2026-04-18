@@ -1,5 +1,8 @@
 import React, { useEffect } from 'react';
-import { EventBus } from '../game/EventBus';
+import {
+  PhaserEventBus,
+  PhaserEvents,
+} from '../game/EventBus';
 
 interface GlobalRoomListenerProps {
   setCurrentView: (view: string) => void;
@@ -25,10 +28,10 @@ const GlobalRoomListener: React.FC<GlobalRoomListenerProps> = ({
     };
 
     // 监听房间选图事件
-    EventBus.on('room-choose-map', handleRoomChooseMap);
+    PhaserEventBus.on(PhaserEvents.RoomChooseMap, handleRoomChooseMap);
 
     return () => {
-      EventBus.off('room-choose-map', handleRoomChooseMap);
+      PhaserEventBus.off(PhaserEvents.RoomChooseMap, handleRoomChooseMap);
     };
   }, [setCurrentView, setSkipToParams, setChosenStage]);
 

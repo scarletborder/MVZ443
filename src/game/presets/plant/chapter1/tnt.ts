@@ -1,172 +1,190 @@
 import seedrandom from "seedrandom";
-import { SECKILL } from "../../../../../public/constants";
-import { item } from "../../../../components/shop/types";
-
-import { GetDecValue, GetIncValue } from "../../../../utils/numbervalue";
-import { IExpolsion, NewExplosionByGrid } from "../../../models/IExplosion";
-import { IPlant } from "../../../models/IPlant";
-import { IRecord } from "../../../models/IRecord";
+import { GetDecValue, GetIncValue, PlantStat } from "../../../../utils/numbervalue";
+import { PositionManager } from "../../../managers/view/PositionManager";
+import { PlantEntity } from "../../../models/entities/PlantEntity";
+import { PlantModel } from "../../../models/PlantModel";
 import { Game } from "../../../scenes/Game";
 import { StartArc } from "../../../utils/arc";
+import { ProjectileCmd } from "../../../utils/cmd/ProjectileCmd";
+import { Faction } from "../../../models/Enum";
+import CombatManager from "../../../managers/CombatManager";
 
-class _Tnt extends IPlant {
-    game: Game;
-    damage: number = 3000;
-    random: seedrandom.PRNG;
+export class TntModel extends PlantModel {
+  public override pid = 7;
+  public override nameKey = 'name_tnt';
+  public override descriptionKey = 'tnt_description';
+  public override texturePath = 'plant/tnt';
 
+  public maxHealth = new PlantStat(2000).setThreshold(1, 2000); // SECKILL 高血量
+  public cost = new PlantStat(150);
 
-    constructor(scene: Game, col: number, row: number, level: number) {
-        super(scene, col, row, TntRecord.texture, TntRecord.pid, level);
-        // 取消物理效果
-        scene.physics.world.disable(this);
-        this.game = scene;
-        this.setHealthFirstly(SECKILL);
-        this.damage = GetIncValue(1400, 1.35, level);
-        this.damage *= (level >= 5 ? 1.3 : 1);
-        this.random = seedrandom.alea(String(scene.seed * 5));
+  public cooldown = new PlantStat(50000).setIncRatio(0.85);
+  public cooldownStartAtRatio = 1;
 
-        const x = this.x;
-        const _row = this.row;
+  public damage = new PlantStat(1400).setIncRatio(1.35);
+  public isNightPlant = false;
 
-        // 设定闪烁效果，并添加回调函数
-        scene.tweens.add({
-            targets: this,
-            alpha: { from: 1, to: 0.2 },  // 从原状态到白色高光
-            duration: 300,                // 每次闪烁的时长
-            yoyo: true,                   // 使得动画完成后反向播放
-            repeat: 3,                    // 重复5次（从原状态到高光，再回来，总共3次）
-            ease: 'Sine.easeInOut',       // 缓动效果
-        });
-        scene.frameTicker.delayedCall({
-            delay: 850,
-            callback: () => {
-                new IExpolsion(this.game, x, _row, {
-                    damage: this.damage,
-                    rightGrid: 1.5,
-                    leftGrid: 1.5,
-                    upGrid: 1
-                });
-                this.setVisible(false);
-            }
-        })
-        scene.frameTicker.delayedCall({
-            delay: 900,
-            callback: () => {
-                this.eliteClusterBomb();
-                this.destroyPlant();
-            }
-        });
+  public override createEntity(scene: Game, col: number, row: number, level: number): TntEntity {
+    return new TntEntity(scene, col, row, level);
+  }
 
+  public override onCreate(entity: TntEntity): void {
+    // 计算伤害值
+    let baseDamage = this.damage.getValueAt(entity.level);
+    if (entity.level >= 5) {
+      baseDamage *= 1.3;
     }
+    entity.explosionDamage = baseDamage;
 
-    public onStarShards(): void {
-        super.onStarShards();
-        if (!this.game) return;
+    // 闪烁效果（表现层），使用 scene.time
+    entity.scene.tweens.add({
+      targets: entity.mainSprite,
+      alpha: { from: 1, to: 0.2 },
+      duration: 300,
+      yoyo: true,
+      repeat: 3,
+      ease: 'Sine.easeInOut'
+    });
 
-        const scene = this.game;
+    // 倒计时爆炸（游戏逻辑），使用 tickmanager
+    entity.tickmanager.delayedCall({
+      delay: 850,
+      callback: () => {
+        entity.primaryExplosion();
+      }
+    });
 
-        function getExplosionTargets(game: Game, col: number, row: number) {
-            const targets: number[][] = [];
-            if (col === game.GRID_COLS - 1) {
-                // 最右边的列：在左侧生成爆炸，针对上下边缘分别处理
-                if (row === 0) {
-                    targets.push([col - 2, row]);
-                    targets.push([col, row + 2]);
-                } else if (row === game.GRID_ROWS - 1) {
-                    targets.push([col - 2, row]);
-                    targets.push([col, row - 2]);
-                } else {
-                    targets.push([col - 1, Math.max(row - 2, 0)]);
-                    targets.push([col - 1, Math.min(row + 2, game.GRID_ROWS - 1)]);
-                }
-            } else {
-                // 非最右边的列：向前生成爆炸
-                const newCol = Math.min(col + 2, game.GRID_COLS - 1);
-                if (row === 0) {
-                    targets.push([newCol, row]);
-                    targets.push([newCol, row + 2]);
-                } else if (row === game.GRID_ROWS - 1) {
-                    targets.push([newCol, row]);
-                    targets.push([newCol, row - 2]);
-                } else {
-                    targets.push([newCol, Math.max(row - 2, 0)]);
-                    targets.push([newCol, Math.min(row + 2, game.GRID_ROWS - 1)]);
-                }
-            }
-            return targets;
+    entity.tickmanager.delayedCall({
+      delay: 900,
+      callback: () => {
+        entity.destroy();
+      }
+    });
+  }
+
+  public override onStarShards(entity: TntEntity): void {
+    if (!entity.game) return;
+
+    const scene = entity.game;
+
+    function getExplosionTargets(game: Game, col: number, row: number) {
+      const targets: number[][] = [];
+      if (col === PositionManager.Instance.Col_Number - 1) {
+        // 最右边的列：在左侧生成爆炸
+        if (row === 0) {
+          targets.push([col - 2, row]);
+          targets.push([col, row + 2]);
+        } else if (row === PositionManager.Instance.Row_Number - 1) {
+          targets.push([col - 2, row]);
+          targets.push([col, row - 2]);
+        } else {
+          targets.push([col - 1, Math.max(row - 2, 0)]);
+          targets.push([col - 1, Math.min(row + 2, PositionManager.Instance.Row_Number - 1)]);
         }
+      } else {
+        // 非最右边的列：向前生成爆炸
+        const newCol = Math.min(col + 2, PositionManager.Instance.Col_Number - 1);
+        if (row === 0) {
+          targets.push([newCol, row]);
+          targets.push([newCol, row + 2]);
+        } else if (row === PositionManager.Instance.Row_Number - 1) {
+          targets.push([newCol, row]);
+          targets.push([newCol, row - 2]);
+        } else {
+          targets.push([newCol, Math.max(row - 2, 0)]);
+          targets.push([newCol, Math.min(row + 2, PositionManager.Instance.Row_Number - 1)]);
+        }
+      }
+      return targets;
+    }
 
-        // 使用辅助函数生成爆炸效果
-        const targets = getExplosionTargets(scene, this.col, this.row);
-        targets.forEach(([targetCol, targetRow]) => {
-            const { x, y } = this.gardener.positionCalc.getPlantBottomCenter(targetCol, targetRow);
-            StartArc(scene, this.x, this.y, x, y, 'plant/tnt', 800, () => {
-                NewExplosionByGrid(scene, targetCol, targetRow, {
-                    damage: this.damage,
-                    rightGrid: 1.5,
-                    leftGrid: 1.5,
-                    upGrid: 1
-                });
-
-                if ((this.level || 1) >= 7) {
-                    scene?.frameTicker.delayedCall({
-                        delay: 3900,
-                        callback: () => {
-                            NewExplosionByGrid(scene, targetCol, targetRow, {
-                                damage: this.damage / 3,
-                                rightGrid: 1.5,
-                                leftGrid: 1.5,
-                                upGrid: 1
-                            });
-                        }
-                    });
-                }
-            });
+    // 生成爆炸效果
+    const targets = getExplosionTargets(scene, entity.col, entity.row);
+    targets.forEach(([targetCol, targetRow]) => {
+      const { x, y } = PositionManager.Instance.getPlantBottomCenter(targetCol, targetRow);
+      StartArc(scene, entity.x, entity.y, x, y, 'plant/tnt', 800, () => {
+        ProjectileCmd.CreateExplosion(scene, x, targetRow, {
+          damage: entity.explosionDamage,
+          rightGrid: 1.5,
+          leftGrid: 1.5,
+          upGrid: 1,
+          faction: entity.faction,
+          dealer: entity
         });
 
-    }
-
-    public eliteClusterBomb() {
-        if (!this.game) return;
-
-        const scene = this.game;
-        if (this.level >= 7) {
-            scene?.time.delayedCall(3900, () => {
-                new IExpolsion(scene, this.x, this.row, {
-                    damage: this.damage / 3,
-                    rightGrid: 1.5,
-                    leftGrid: 1.5,
-                    upGrid: 1
-                })
-            })
+        // 精英7+：延迟爆炸
+        if (entity.level >= 7) {
+          entity.tickmanager.delayedCall({
+            delay: 3900,
+            callback: () => {
+              ProjectileCmd.CreateExplosion(scene, x, targetRow, {
+                damage: entity.explosionDamage / 3,
+                rightGrid: 1.5,
+                leftGrid: 1.5,
+                upGrid: 1,
+                faction: entity.faction,
+                dealer: entity
+              });
+            }
+          });
         }
+      });
+    });
 
+    // 中心延迟爆炸（精英7+）
+    if (entity.level >= 7) {
+      entity.tickmanager.delayedCall({
+        delay: 4750,
+        callback: () => {
+          ProjectileCmd.CreateExplosion(scene, entity.x, entity.row, {
+            damage: entity.explosionDamage / 3,
+            rightGrid: 1.5,
+            leftGrid: 1.5,
+            upGrid: 1,
+            faction: entity.faction,
+            dealer: entity
+          });
+        }
+      });
     }
+  }
 }
 
-function NewTnt(scene: Game, col: number, row: number, level: number): IPlant {
-    const furnace = new _Tnt(scene, col, row, level);
-    return furnace;
+export const TntData = new TntModel();
+
+export class TntEntity extends PlantEntity {
+  public explosionDamage: number = 0;
+  public random: seedrandom.PRNG;
+  public game: Game;
+  public mainSprite!: Phaser.GameObjects.Sprite;
+
+  constructor(scene: Game, col: number, row: number, level: number) {
+    super(scene, col, row, TntData, level);
+    this.random = seedrandom.alea(String(CombatManager.Instance.seed * 5));
+    this.game = scene;
+  }
+
+  protected override buildView() {
+    const size = PositionManager.Instance.getPlantDisplaySize();
+
+    this.mainSprite = this.scene.add.sprite(this.x, this.y, this.model.texturePath)
+      .setOrigin(0.5, 1)
+      .setDisplaySize(size.sizeX, size.sizeY)
+      .setDepth(this.baseDepth);
+
+    this.viewGroup.add(this.mainSprite);
+  }
+
+  public primaryExplosion() {
+    ProjectileCmd.CreateExplosion(this.scene, this.x, this.row, {
+      damage: this.explosionDamage,
+      rightGrid: 1.5,
+      leftGrid: 1.5,
+      upGrid: 1,
+      faction: this.faction,
+      dealer: this
+    });
+  }
 }
 
-function cost(level?: number): number {
-    return 150;
-}
-
-function cooldownTime(level?: number): number {
-    return GetDecValue(50, 0.85, level || 1);
-}
-
-
-const TntRecord: IRecord = {
-    pid: 7,
-    nameKey: 'name_tnt',
-    cost: cost,
-    cooldownTime: cooldownTime,
-    NewFunction: NewTnt,
-    texture: 'plant/tnt',
-    descriptionKey: 'tnt_description',
-    needFirstCoolDown: true,
-};
-
-export default TntRecord;
+export default TntData;

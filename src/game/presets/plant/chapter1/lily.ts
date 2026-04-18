@@ -1,77 +1,93 @@
+import { PlantStat } from "../../../../utils/numbervalue";
+import PlantsManager from "../../../managers/combat/PlantsManager";
+import GridManager from "../../../managers/combat/GridManager";
+import { PositionManager } from "../../../managers/view/PositionManager";
+import { PlantEntity } from "../../../models/entities/PlantEntity";
+import { PlantModel } from "../../../models/PlantModel";
 import { Game } from "../../../scenes/Game";
-import { IPlant } from "../../../models/IPlant";
-import { IRecord } from "../../../models/IRecord";
+import { PlantCmd } from "../../../utils/cmd/PlantCmd";
 
-import { item } from "../../../../components/shop/types";
-import { GetIncValue } from "../../../../utils/numbervalue";
-import { SECKILL } from "../../../../../public/constants";
 
-class _Lily extends IPlant {
-    game: Game;
-    constructor(scene: Game, col: number, row: number, texture: string, pid: number, level: number) {
-        super(scene, col, row, texture, pid, level);
-        this.setHealthFirstly(GetIncValue(300, 2, level));
-        this.game = scene;
-        this.plant_height = 1;
-        this.setDepth(this.depth - 2);
-    }
+export class LilyModel extends PlantModel {
+  public override pid = 6;
+  public override nameKey = 'name_lily';
+  public override descriptionKey = 'lily_description';
+  public override texturePath = 'plant/lily';
 
-    public onStarShards(): void {
-        super.onStarShards();
-        if (!this.game) return;
+  public maxHealth = new PlantStat(300).setIncRatio(2);
+  public cost = new PlantStat(25).setThreshold(5, 0); // 5级以上无需能量
+  public cooldown = new PlantStat(4000);
+  public cooldownStartAtRatio = 0.7;
+  public damage = new PlantStat(0); // Lily没有伤害
 
-        const game = this.game;
-        // 为周围一片种植lily
-        for (let i = this.col - 1; i <= this.col + 1; i++) {
-            for (let j = this.row - 1; j <= this.row + 1; j++) {
-                if (i >= 0 && i < game.positionCalc.Col_Number && j >= 0 && j < game.positionCalc.Row_Number && (i !== this.col || j !== this.row)) {
-                    if (game.gridProperty[j][i] !== 'water') continue;
+  isNightPlant = false;
 
-                    const key = `${i}-${j}`;
-                    // 查找list
-                    let couldPlant = true;
-                    if (game.gardener.planted.has(key)) {
-                        const list = game.gardener.planted.get(key);
-                        if (list) {
-                            // 没有Lily
-                            for (const plant of list) {
-                                if (plant.pid === Lily.pid) {
-                                    couldPlant = false;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                    if (couldPlant) {
-                        NewLily(game, i, j, this.level);
-                    }
-                }
-            }
+  onStarShards(entity: LilyEntity): void {
+    if (entity.currentHealth <= 0) return;
+
+    const scene = entity.scene as Game;
+
+    // 在周围3x3的水地形上种植Lily
+    for (let i = entity.col - 1; i <= entity.col + 1; i++) {
+      for (let j = entity.row - 1; j <= entity.row + 1; j++) {
+        // 检查坐标合法性
+        if (i < 0 || i >= PositionManager.Instance.Col_Number ||
+          j < 0 || j >= PositionManager.Instance.Row_Number) {
+          continue;
         }
+
+        // 跳过自己
+        if (i === entity.col && j === entity.row) {
+          continue;
+        }
+
+        // 检查是否为水地形
+        const gridProp = GridManager.Instance.GetGridProperty(i, j);
+        if (!gridProp || gridProp.type !== 'water') {
+          continue;
+        }
+
+        // 检查该位置是否已有Lily
+        const key = `${i}-${j}`;
+        let hasLily = false;
+        const plantList = PlantsManager.Instance.PlantsMap.get(key);
+        if (plantList) {
+          for (const plant of plantList) {
+            if (plant.pid === this.pid) {
+              hasLily = true;
+              break;
+            }
+          }
+        }
+
+        // 如果没有Lily，则种植一个
+        if (!hasLily) {
+          PlantCmd.Create<LilyModel>(LilyData, scene, i, j, entity.level);
+        }
+      }
     }
+  }
+
+  public createEntity(scene: Game, col: number, row: number, level: number) {
+    return new LilyEntity(scene, col, row, level);
+  }
 }
 
+export class LilyEntity extends PlantEntity {
+  constructor(scene: Game, col: number, row: number, level: number) {
+    super(scene, col, row, LilyData, level);
+  }
 
-function cost(level?: number): number {
-    if ((level || 1) >= 5) return 0;
-    return 25;
+  protected buildView() {
+    const size = PositionManager.Instance.getPlantDisplaySize();
+
+    const sprite = this.scene.add.sprite(this.x, this.y, this.model.texturePath, 0)
+      .setOrigin(0.5, 1)
+      .setDisplaySize(size.sizeX, size.sizeY)
+      .setDepth(this.baseDepth - 2); // Lily的深度比其他植物低2层
+
+    this.viewGroup.add(sprite);
+  }
 }
 
-function NewLily(scene: Game, col: number, row: number, level: number): IPlant {
-    const lily = new _Lily(scene, col, row, 'plant/lily', Lily.pid, level);
-    return lily;
-}
-
-
-const Lily: IRecord = {
-    pid: 6,
-    nameKey: 'name_lily',
-    cost: cost,
-    cooldownTime: () => 4,
-    NewFunction: NewLily,
-    texture: 'plant/lily',
-    descriptionKey: 'lily_description',
-
-};
-
-export default Lily;
+export const LilyData = new LilyModel();
