@@ -20,6 +20,7 @@ import RAPIER from '@dimforge/rapier2d-deterministic-compat';
 import CombatManager from '../managers/CombatManager';
 import GridManager from '../managers/combat/GridManager';
 import MobManager from '../managers/combat/MobManager';
+import ObstacleManager from '../managers/combat/ObstacleManager';
 import AudioManager from '../managers/combat/AudioManager';
 import { BaseManager } from '../managers/BaseManager';
 import CardpileManager from '../managers/combat/CardpileManager';
@@ -80,6 +81,7 @@ export class Game extends Scene {
       GridManager.Instance,
       KeybindManager.Instance,
       MobManager.Instance,
+      ObstacleManager.Instance,
       PlantsManager.Instance,
       ResourceManager.Instance,
       SyncManager.Instance,

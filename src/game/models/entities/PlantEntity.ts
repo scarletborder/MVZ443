@@ -87,9 +87,9 @@ export abstract class PlantEntity extends CombatEntity {
   // 由具体子类覆盖，或者根据 Model 决定如何构建图像
   protected abstract buildView(): void;
 
-  public takeDamage(amount: number) {
+  public takeDamage(amount: number, dealer?: BaseEntity, source?: BaseEntity) {
     this.scene.musical.plantAudio.play('plantHit');
-    super.takeDamage(amount);
+    super.takeDamage(amount, dealer, source);
   }
 
   public onHurt(amount: number, realDamage: number, dealer?: BaseEntity, source?: BaseEntity): void {

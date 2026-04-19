@@ -103,7 +103,7 @@ export class BulletEntity extends ProjectileEntity<BulletModel> {
   }
 
   // 重载碰撞分发器，实现穿透和优先级逻辑
-  public onCollision(ctx: CollisionContext): void {
+  override onCollision(ctx: CollisionContext): void {
     // 判断是否为战斗实体
     if (!(ctx.targetEntity instanceof CombatEntity)) return;
 

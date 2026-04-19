@@ -1,7 +1,29 @@
 import { PositionManager } from "../../../managers/view/PositionManager";
+import { Faction } from "../../../models/Enum";
 import { WardenGolemAnimProps } from "../../../sprite/normal_golem";
+import MobCmd from "../../../utils/cmd/MobCmd";
+import { ProjectileCmd } from "../../../utils/cmd/ProjectileCmd";
 import { PresetMonsterModel } from "../common";
-import { BaseGolemEntity, createWardenLaser, createWardenSmash } from "./shared";
+import { BaseGolemEntity } from "./shared";
+
+function createWardenLaser(entity: BaseGolemEntity) {
+  ProjectileCmd.CreateLaser(entity.scene, entity.x, entity.row, {
+    damage: 1000,
+    distance: 13,
+    duration: 3500,
+    faction: Faction.ZOMBIE,
+    color: 0x39c5bb,
+    alphaFrom: 0.4,
+    alphaTo: 0.9,
+  });
+}
+
+function createWardenSmash(entity: BaseGolemEntity) {
+  MobCmd.DamagePlantsArea(entity.col, entity.row, 1, 1, 180);
+  MobCmd.Spawn(4, entity.scene, entity.col, entity.row, -10);
+  MobCmd.Spawn(5, entity.scene, entity.col, entity.row, -10);
+}
+
 
 export class WardenEntity extends BaseGolemEntity {
   public constructor(scene: Phaser.Scene & any, col: number, row: number, model: PresetMonsterModel, waveID: number) {
@@ -71,3 +93,4 @@ export const WardenData = new PresetMonsterModel({
   attackInterval: 1200,
   createEntity: (scene, col, row, model, waveID) => new WardenEntity(scene, col, row, model, waveID),
 });
+

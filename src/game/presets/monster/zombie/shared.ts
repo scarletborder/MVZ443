@@ -7,6 +7,7 @@ import { BaseEntity } from "../../../models/core/BaseEntity";
 import { Faction } from "../../../models/Enum";
 import { Game } from "../../../scenes/Game";
 import { addHandAttachment, ArmorMonsterEntity, PresetMonsterModel, StagedBodyMonsterEntity } from "../common";
+import { VindicatorData } from "./vindicator";
 
 export class BaseZombieEntity extends StagedBodyMonsterEntity {
   protected damageThresholds = [150];
@@ -171,7 +172,7 @@ export class EvokerEntity extends BaseZombieEntity {
     ];
 
     for (const [col, row] of entries) {
-      MobCmd.Spawn(10, this.scene, col, row, -10);
+      MobCmd.Spawn(VindicatorData.mid, this.scene, col, row, -10);
     }
 
     this.scene.time.delayedCall(3000, () => {

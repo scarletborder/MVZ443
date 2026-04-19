@@ -1,4 +1,5 @@
 import { DeferredManager } from "../../managers/DeferredManager";
+import { BaseEntity } from "../../models/core/BaseEntity";
 import { PlantEntity } from "../../models/entities/PlantEntity";
 import { PlantModel } from "../../models/PlantModel";
 import { Game } from "../../scenes/Game";
@@ -26,10 +27,12 @@ export namespace PlantCmd {
     scene: Game,
     col: number,
     row: number,
-    level: number
+    level: number,
+    callback?: (entity: PlantEntity) => void
   ) {
     DeferredManager.Instance.defer(() => {
-      model.createEntity(scene, col, row, level);
+      const entity = model.createEntity(scene, col, row, level);
+      if (callback) callback(entity);
     });
   }
 
@@ -45,6 +48,15 @@ export namespace PlantCmd {
   export function SetHealth(plant: PlantEntity, newHealth: number) {
     DeferredManager.Instance.defer(() => {
       plant.currentHealth = newHealth;
+    });
+  }
+
+  /**
+   * 直接造成伤害
+   */
+  export function DealDamage(plant: PlantEntity, damage: number, dealer?: BaseEntity, source?: BaseEntity) {
+    DeferredManager.Instance.defer(() => {
+      plant.takeDamage(damage, dealer, source);
     });
   }
 

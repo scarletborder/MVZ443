@@ -96,8 +96,7 @@ export class DispenserModel extends PlantModel {
   }
 
   public createEntity(scene: Game, col: number, row: number, level: number) {
-    const vec = PositionManager.Instance.getPlantBottomCenter(col, row);
-    return new DispenserEntity(scene, vec.x, vec.y, level);
+    return new DispenserEntity(scene, col, row, level);
   }
 }
 

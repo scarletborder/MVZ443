@@ -1,14 +1,19 @@
 import seedrandom from "seedrandom";
 import { PhaserEventBus, PhaserEvents } from "../../../EventBus";
+import PlantsManager from "../../../managers/combat/PlantsManager";
 import { PositionManager } from "../../../managers/view/PositionManager";
+import { ObstacleEntity } from "../../../models/entities/ObstacleEntity";
 import { createGolemAnimController } from "../../../models/monster/anims/LegacyMonsterAnimControllers";
 import { Faction } from "../../../models/Enum";
 import { Game } from "../../../scenes/Game";
 import { GolemAnimProps } from "../../../sprite/golem";
+import { StartArc } from "../../../utils/arc";
 import MobCmd from "../../../utils/cmd/MobCmd";
+import ObstacleCmd from "../../../utils/cmd/ObstacleCmd";
 import { ProjectileCmd } from "../../../utils/cmd/ProjectileCmd";
 import StageHelper from "../../../utils/helper/StageHelper";
 import { BaseMonsterEntity, PresetMonsterModel } from "../common";
+import { SECKILL } from "../../../../../public/constants";
 
 export abstract class BaseGolemEntity extends BaseMonsterEntity {
   protected readonly random: seedrandom.PRNG;
@@ -123,38 +128,5 @@ export abstract class BaseGolemEntity extends BaseMonsterEntity {
   }
 }
 
-export function createObsidianColumnBurst(entity: BaseGolemEntity, cols: number[]) {
-  cols.forEach((col, index) => {
-    entity.tickmanager.delayedCall({
-      delay: 800 + index * 600,
-      callback: () => {
-        const x = PositionManager.Instance.getPlantBottomCenter(col, entity.row).x;
-        ProjectileCmd.CreateExplosion(entity.scene, x, entity.row, {
-          damage: 300,
-          leftGrid: 0.5,
-          rightGrid: 0.5,
-          upGrid: 0.5,
-          faction: Faction.ZOMBIE,
-        });
-      }
-    });
-  });
-}
 
-export function createWardenLaser(entity: BaseGolemEntity) {
-  ProjectileCmd.CreateLaser(entity.scene, entity.x, entity.row, {
-    damage: 1000,
-    distance: 13,
-    duration: 3500,
-    faction: Faction.ZOMBIE,
-    color: 0x39c5bb,
-    alphaFrom: 0.4,
-    alphaTo: 0.9,
-  });
-}
 
-export function createWardenSmash(entity: BaseGolemEntity) {
-  MobCmd.DamagePlantsArea(entity.col, entity.row, 1, 1, 180);
-  MobCmd.Spawn(4, entity.scene, entity.col, entity.row, -10);
-  MobCmd.Spawn(5, entity.scene, entity.col, entity.row, -10);
-}

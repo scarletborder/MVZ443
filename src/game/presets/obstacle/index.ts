@@ -1,0 +1,1 @@
+export { ObsidianObstacleData } from "./obsidian";
