@@ -1,3 +1,4 @@
+import { PositionManager } from "../managers/view/PositionManager";
 import { Game } from "../scenes/Game";
 
 export interface MutantAnimProps {
@@ -113,11 +114,11 @@ export default class IMutantAnim {
   setBackObject(key: string) { }
 
   constructor(scene: Game, x: number, y: number, props: MutantAnimProps) {
-    x = x + this.wholeOffset[0] * scene.positionCalc.scaleFactor;
-    y = y + this.wholeOffset[1] * scene.positionCalc.scaleFactor;
+    x = x + this.wholeOffset[0] * PositionManager.Instance.scaleFactor;
+    y = y + this.wholeOffset[1] * PositionManager.Instance.scaleFactor;
 
     this.species = props.Species;
-    this.scaleFactor = scene.positionCalc.scaleFactor;
+    this.scaleFactor = PositionManager.Instance.scaleFactor;
     this.scene = scene;
     this.x = x;
     this.y = y;
@@ -746,10 +747,10 @@ export default class IMutantAnim {
       callback: () => {
         const depth = this.body.depth + 1;
         const centerX = this.x;
-        const centerY = this.y - this.scene.positionCalc.GRID_SIZEY / 2;
-        const rangeWidth = this.scene.positionCalc.GRID_SIZEX;
-        const rangeHeight = this.scene.positionCalc.GRID_SIZEY;
-        const textSize = this.scene.positionCalc.GRID_SIZEX / 5;
+        const centerY = this.y - PositionManager.Instance.GRID_SIZEY / 2;
+        const rangeWidth = PositionManager.Instance.GRID_SIZEX;
+        const rangeHeight = PositionManager.Instance.GRID_SIZEY;
+        const textSize = PositionManager.Instance.GRID_SIZEX / 5;
         const textCount = 6;
 
         for (let i = 0; i < textCount; i++) {
@@ -865,11 +866,11 @@ export default class IMutantAnim {
     const depth = this.body.depth + 1;  // 根据实际情况调整深度
     const centerX = this.x;
     // 因为僵尸的 body 原点为 (0.5, 1)，这里将中心点向上偏移一半的 GRID_SIZEY
-    const centerY = this.y - this.scene.positionCalc.GRID_SIZEY / 2;
+    const centerY = this.y - PositionManager.Instance.GRID_SIZEY / 2;
 
-    const rangeWidth = this.scene.positionCalc.GRID_SIZEX;   // 横向范围
-    const rangeHeight = this.scene.positionCalc.GRID_SIZEY;    // 纵向范围
-    const textSize = this.scene.positionCalc.GRID_SIZEX / 5;    // 字体大小
+    const rangeWidth = PositionManager.Instance.GRID_SIZEX;   // 横向范围
+    const rangeHeight = PositionManager.Instance.GRID_SIZEY;    // 纵向范围
+    const textSize = PositionManager.Instance.GRID_SIZEX / 5;    // 字体大小
     const textCount = 6;   // 文本数量
 
     for (let i = 0; i < textCount; i++) {

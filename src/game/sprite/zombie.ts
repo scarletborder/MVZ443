@@ -1,3 +1,4 @@
+import { PositionManager } from "../managers/view/PositionManager";
 import { Game } from "../scenes/Game";
 
 export interface ZombieAnimProps {
@@ -54,10 +55,10 @@ export default class IZombieAnim {
 
     constructor(scene: Game, x: number, y: number, props: ZombieAnimProps) {
         x = x;
-        y = y - scene.positionCalc.gridOffsetY * 5 / 12;
+        y = y - PositionManager.Instance.GRID_SIZEY * 5 / 12;
 
         this.species = props.Species;
-        this.scaneFactor = scene.positionCalc.scaleFactor * 1.2;
+        this.scaneFactor = PositionManager.Instance.scaleFactor * 1.2;
         this.scene = scene;
         this.x = x;
         this.y = y;
@@ -187,7 +188,7 @@ export default class IZombieAnim {
 
     updatePosition(x: number, y: number) {
         x = x;
-        y = y - this.scene.positionCalc.GRID_SIZEY * 25 / 54;
+        y = y - PositionManager.Instance.GRID_SIZEY * 25 / 54;
         this.x = x;
         this.y = y;
         this.body.setPosition(x, y);
@@ -239,11 +240,11 @@ export default class IZombieAnim {
         const depth = this.body.depth + 1;  // 根据实际情况调整深度
         const centerX = this.x;
         // 因为僵尸的 body 原点为 (0.5, 1)，这里将中心点向上偏移一半的 GRID_SIZEY
-        const centerY = this.y - this.scene.positionCalc.GRID_SIZEY / 2;
+        const centerY = this.y - PositionManager.Instance.GRID_SIZEY / 2;
 
-        const rangeWidth = this.scene.positionCalc.GRID_SIZEX;   // 横向范围
-        const rangeHeight = this.scene.positionCalc.GRID_SIZEY;    // 纵向范围
-        const textSize = this.scene.positionCalc.GRID_SIZEX / 5;    // 字体大小
+        const rangeWidth = PositionManager.Instance.GRID_SIZEX;   // 横向范围
+        const rangeHeight = PositionManager.Instance.GRID_SIZEY;    // 纵向范围
+        const textSize = PositionManager.Instance.GRID_SIZEX / 5;    // 字体大小
         const textCount = 6;   // 文本数量
 
         for (let i = 0; i < textCount; i++) {
@@ -282,10 +283,10 @@ export default class IZombieAnim {
             callback: () => {
                 const depth = this.body.depth + 1;
                 const centerX = this.x;
-                const centerY = this.y - this.scene.positionCalc.GRID_SIZEY / 2;
-                const rangeWidth = this.scene.positionCalc.GRID_SIZEX;
-                const rangeHeight = this.scene.positionCalc.GRID_SIZEY;
-                const textSize = this.scene.positionCalc.GRID_SIZEX / 5;
+                const centerY = this.y - PositionManager.Instance.GRID_SIZEY / 2;
+                const rangeWidth = PositionManager.Instance.GRID_SIZEX;
+                const rangeHeight = PositionManager.Instance.GRID_SIZEY;
+                const textSize = PositionManager.Instance.GRID_SIZEX / 5;
                 const textCount = 6;
 
                 for (let i = 0; i < textCount; i++) {
