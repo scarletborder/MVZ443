@@ -1,6 +1,6 @@
-import { Game } from "../scenes/Game";
-import { BaseEntity } from "./core/BaseEntity";
-import { MonsterEntity } from "./entities/MonsterEntity";
+import type { Game } from "../scenes/Game";
+import type { BaseEntity } from "./core/BaseEntity";
+import type { MonsterEntity } from "./entities/MonsterEntity";
 
 export abstract class MonsterModel {
   public abstract readonly mid: number;
@@ -25,11 +25,12 @@ export abstract class MonsterModel {
 
   public abstract getWeight(waveID: number): number;
 
-  public onCreate(entity: MonsterEntity) { }
+  public onCreate(_entity: MonsterEntity) { }
 
-  public onHurt(entity: MonsterEntity, damage: number, realDamage: number, dealer?: BaseEntity, source?: BaseEntity) { }
+  public onHurt(_entity: MonsterEntity, _damage: number, _realDamage: number,
+    _dealer?: BaseEntity, _source?: BaseEntity) { }
 
-  public onDeath(entity: MonsterEntity) { }
+  public onDeath(_entity: MonsterEntity) { }
 
   public abstract createEntity(scene: Game, col: number, row: number, waveID: number): MonsterEntity;
 }

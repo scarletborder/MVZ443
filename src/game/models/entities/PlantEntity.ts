@@ -1,7 +1,7 @@
 import RAPIER, { Vector } from "@dimforge/rapier2d-deterministic-compat";
 import PlantsManager from "../../managers/combat/PlantsManager";
 import { PositionManager } from "../../managers/view/PositionManager";
-import { Game } from "../../scenes/Game";
+import type { Game } from "../../scenes/Game";
 import { CombatEntity } from "../core/CombatEntity";
 import { Faction } from "../Enum";
 import { PlantModel } from "../PlantModel";
@@ -38,10 +38,9 @@ export abstract class PlantEntity extends CombatEntity {
     // 传入模型计算出的血量，并指定为 PLANT 阵营
     const hp = model.maxHealth.getValueAt(level);
     super(scene, x, y, hp, Faction.PLANT);
-
+    this.model = model;
     this.baseDepth = DepthUtils.getPlantBasicDepth(row);
 
-    this.model = model;
     this.col = col;
     this.row = row;
     this.level = level;
@@ -105,7 +104,7 @@ export abstract class PlantEntity extends CombatEntity {
     this.model.onDeath(this);
   }
 
-  onCollision(ctx: CollisionContext): void {
+  onCollision(_ctx: CollisionContext): void {
     // 植物碰到，不在植物这里处理
   }
 

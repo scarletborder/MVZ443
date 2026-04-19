@@ -1,5 +1,5 @@
 import RAPIER from "@dimforge/rapier2d-deterministic-compat";
-import { Game } from "../../scenes/Game";
+import type { Game } from "../../scenes/Game";
 import { CollisionContext } from "../../types";
 import { BaseEntity } from "../core/BaseEntity";
 import { CombatEntity } from "../core/CombatEntity";

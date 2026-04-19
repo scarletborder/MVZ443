@@ -1,7 +1,7 @@
 import { PositionManager } from "../../managers/view/PositionManager";
 import { BulletEntity } from "../../models/projectiles/BulletEntity";
 import { BulletConfig, BulletModel } from "../../models/projectiles/ProjectileModels";
-import { Game } from "../../scenes/Game";
+import type { Game } from "../../scenes/Game";
 import { ProjectileCmd } from "../../utils/cmd/ProjectileCmd";
 
 export interface HFireWorkConfig extends BulletConfig {

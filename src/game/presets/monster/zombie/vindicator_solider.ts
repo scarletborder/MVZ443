@@ -1,5 +1,5 @@
-import { PresetMonsterModel } from "../common";
-import { ShieldVindicatorEntity } from "./shared";
+import { PresetMonsterModel, ShieldVindicatorEntity } from "../../../models/entities/MonsterEntity";
+
 
 export const VindicatorSoliderData = new PresetMonsterModel({
   mid: 11,

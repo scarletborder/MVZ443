@@ -2,7 +2,7 @@ import { DeferredManager } from "../../managers/DeferredManager";
 import { ObstacleLibrary } from "../../managers/library/ObstacleLibrary";
 import { PositionManager } from "../../managers/view/PositionManager";
 import { ObstacleConfig, ObstacleEntity } from "../../models/entities/ObstacleEntity";
-import { Game } from "../../scenes/Game";
+import type { Game } from "../../scenes/Game";
 
 namespace ObstacleCmd {
   export function createInGrid(

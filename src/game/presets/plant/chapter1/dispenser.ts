@@ -3,7 +3,7 @@ import { PlantStat } from "../../../../utils/numbervalue";
 import { PositionManager } from "../../../managers/view/PositionManager";
 import { PlantEntity } from "../../../models/entities/PlantEntity";
 import { PlantModel } from "../../../models/PlantModel";
-import { Game } from "../../../scenes/Game";
+import type { Game } from "../../../scenes/Game";
 import createShootBurstAnim from "../../../sprite/shoot_anim";
 import { ProjectileCmd } from "../../../utils/cmd/ProjectileCmd";
 import CombatHelper from "../../../utils/helper/CombatHelper";
@@ -46,8 +46,6 @@ export class DispenserModel extends PlantModel {
         }
       }
     })
-    // 启动普通发射动画
-    entity.playShootAnimation();
   }
 
   onSleepStateChange(entity: DispenserEntity, isSleeping: boolean): void {

@@ -1,7 +1,7 @@
 import { _Typedebuffs } from "../../../constants/game";
 import DepthUtils from "../../../utils/depth";
 import { PositionManager } from "../../managers/view/PositionManager";
-import { Game } from "../../scenes/Game";
+import type { Game } from "../../scenes/Game";
 import { CollisionContext } from "../../types";
 import PlantHelper from "../../utils/helper/PlantHelper";
 import { CombatEntity } from "../core/CombatEntity";

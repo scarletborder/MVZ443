@@ -22,16 +22,21 @@ export abstract class PlantModel {
 
   // 行为接口：当植物准备就绪
   // 注意：传入的是 entity (实体对象)，Model本身不保存任何状态！
-  public onCreate(entity: PlantEntity) { };
+  public onCreate(_entity: PlantEntity) {
+  };
 
-  public onSleepStateChange(entity: PlantEntity, isSleeping: boolean) { };
+  public onSleepStateChange(_entity: PlantEntity, _isSleeping: boolean) {
+  };
 
   // 行为接口：当释放大招(星之碎片)时触发什么？
-  public onStarShards(entity: PlantEntity) { };
+  public onStarShards(_entity: PlantEntity) {
+  };
 
-  public onHurt(entity: PlantEntity, damage: number, realDamage: number, dealer?: BaseEntity, source?: BaseEntity) { };
+  public onHurt(_entity: PlantEntity, _damage: number, _realDamage: number, _dealer?: BaseEntity, _source?: BaseEntity) {
 
-  public onDeath(entity: PlantEntity) { };
+  };
+
+  public onDeath(_entity: PlantEntity) { };
 
   public abstract createEntity(scene: Game, col: number, row: number, level: number): PlantEntity;
 }

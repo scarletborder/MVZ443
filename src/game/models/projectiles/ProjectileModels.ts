@@ -1,6 +1,6 @@
 import { _Typedebuffs } from "../../../constants/game";
 import { PositionManager } from "../../managers/view/PositionManager";
-import { Game } from "../../scenes/Game";
+import type { Game } from "../../scenes/Game";
 import { CombatEntity } from "../core/CombatEntity";
 import { ProjectileEntity } from "../entities/ProjectileEntity";
 import { Faction } from "../Enum";

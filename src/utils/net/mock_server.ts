@@ -1,72 +1,579 @@
-// 单机游戏下的模拟服务器 - Echo 实现
-// 游戏外+游戏内模拟服务器行为
+import {
+  Request,
+  RequestCardPlant,
+  RequestGridOperation,
+  RequestRemovePlant,
+  RequestStarShards
+} from "../../pb/request";
+import {
+  InGameOperation,
+  InGameResponse,
+  RoomResponse
+} from "../../pb/response";
 
-// TODO: 实现帧计数器
+export type MockPacketChannel = "lobby" | "room" | "ingame";
 
-import { Request } from "../../pb/request";
+export interface MockPacket {
+  channel: MockPacketChannel;
+  data: Uint8Array;
+}
 
+interface ClientSession {
+  id: number;
+  ackFrameId: number;
+  lastSeenAt: number;
+  highestSubmittedFrame: number;
+  isReady: boolean;
+  isLoaded: boolean;
+}
 
-/**
- * MockServer - Echo 服务器
- * 直接回显客户端发送的请求作为响应
- */
+interface FrameSubmission {
+  operations: InGameOperation[];
+  operationSignatures: Set<string>;
+}
+
 class MockServer {
+  private readonly clientTimeoutMs: number = 15000;
+  private readonly maxResendPerPull: number = 32;
+  private readonly maxHistoryFrames: number = 600;
+
   private isRunning: boolean = false;
+  private roomId: number = 1;
+  private myId: number = 1;
+  private lordId: number = 1;
+  private seed: number = 1;
+  private serverFrameId: number = 0;
+  private operationSerial: number = 0;
 
-  constructor() {
-    this.isRunning = false;
-  }
+  private clients: Map<number, ClientSession> = new Map<number, ClientSession>();
+  private frameSubmissions: Map<number, Map<number, FrameSubmission>> = new Map<number, Map<number, FrameSubmission>>();
+  private frameHistory: Map<number, InGameResponse> = new Map<number, InGameResponse>();
 
-  /**
-   * 启动模拟服务器
-   */
-  start() {
+  startSingleRoom(): MockPacket[] {
+    const now = Date.now();
     this.isRunning = true;
-    console.log("MockServer started in echo mode");
+    this.seed = Math.floor(Math.random() * 2147483647);
+    this.serverFrameId = 0;
+    this.operationSerial = 0;
+    this.clients.clear();
+    this.frameSubmissions.clear();
+    this.frameHistory.clear();
+    this.ensureClient(this.myId, now);
+
+    return [
+      {
+        channel: "room",
+        data: RoomResponse.toBinary({
+          payload: {
+            oneofKind: "roomInfo",
+            roomInfo: {
+              roomId: this.roomId,
+              lordId: this.lordId,
+              myId: this.myId,
+              peers: JSON.stringify([{ id: this.myId, addr: "local-mock" }])
+            }
+          }
+        })
+      }
+    ];
   }
 
-  /**
-   * 停止模拟服务器
-   */
   stop() {
     this.isRunning = false;
-    console.log("MockServer stopped");
+    this.clients.clear();
+    this.frameSubmissions.clear();
+    this.frameHistory.clear();
   }
 
-  /**
-   * Echo 处理 - 直接返回接收到的消息
-   * @param message 接收到的二进制消息
-   * @returns 回显的二进制消息
-   */
-  handleMessage(message: Uint8Array): Uint8Array {
-    if (!this.isRunning) {
-      console.warn("MockServer is not running");
-      return new Uint8Array(0);
-    }
-
-    try {
-      // 解析接收到的请求
-      const request = Request.fromBinary(message);
-      console.log("MockServer received request:", request);
-
-      // Echo 模式：直接返回原始消息
-      // 在实际应用中，这里可以根据请求类型生成对应的响应
-      return message;
-    } catch (e) {
-      console.error("MockServer: Failed to parse message:", e);
-      return new Uint8Array(0);
-    }
-  }
-
-  /**
-   * 检查服务器是否运行
-   */
   isActive(): boolean {
     return this.isRunning;
   }
+
+  handleMessage(message: Uint8Array): MockPacket[] {
+    if (!this.isRunning) {
+      return [];
+    }
+
+    try {
+      const now = Date.now();
+      this.cleanupTimedOutClients(now);
+
+      const request = Request.fromBinary(message);
+      switch (request.payload.oneofKind) {
+        case "chooseMap":
+          return [this.makeChooseMapPacket(request.payload.chooseMap.chapterId, request.payload.chooseMap.stageId)];
+        case "leaveChooseMap":
+          return [this.makeQuitChooseMapPacket()];
+        case "ready":
+          return this.handleReadyRequest(this.myId, request.payload.ready.isReady, now);
+        case "loaded":
+          return this.handleLoadedRequest(this.myId, request.payload.loaded.isLoaded, now);
+        case "endGame":
+          return [this.makeGameEndPacket(request.payload.endGame.gameResult)];
+        case "blank":
+        case "plant":
+        case "removePlant":
+        case "starShards":
+          return this.handleInGameRequest(request, now);
+        default:
+          return [];
+      }
+    } catch (error) {
+      console.error("MockServer: Failed to parse message:", error);
+      return [];
+    }
+  }
+
+  private handleReadyRequest(clientId: number, isReady: boolean, now: number): MockPacket[] {
+    const client = this.ensureClient(clientId, now);
+    client.lastSeenAt = now;
+    client.isReady = isReady;
+
+    const readyCount = this.getReadyCount();
+    const packets: MockPacket[] = [this.makeUpdateReadyCountPacket(readyCount, this.clients.size)];
+    if (this.areAllClientsReady()) {
+      packets.push(this.makeAllReadyPacket());
+    }
+    return packets;
+  }
+
+  private handleLoadedRequest(clientId: number, isLoaded: boolean, now: number): MockPacket[] {
+    const client = this.ensureClient(clientId, now);
+    client.lastSeenAt = now;
+    client.isLoaded = isLoaded;
+    if (!this.areAllClientsLoaded()) {
+      return [];
+    }
+    return [this.makeAllLoadedPacket()];
+  }
+
+  private handleInGameRequest(request: Request, now: number): MockPacket[] {
+    if (!this.areAllClientsLoaded()) {
+      return [];
+    }
+
+    const client = this.ensureClient(this.myId, now);
+    client.lastSeenAt = now;
+
+    const ackFrameId = this.extractAckFrameId(request);
+    if (ackFrameId !== undefined) {
+      client.ackFrameId = Math.max(client.ackFrameId, ackFrameId);
+    }
+
+    const targetFrameId = this.extractTargetFrameId(request);
+    if (targetFrameId !== undefined) {
+      this.recordSubmission(targetFrameId, client.id, request);
+      client.highestSubmittedFrame = Math.max(client.highestSubmittedFrame, targetFrameId);
+      this.finalizeReadyFrames();
+    }
+
+    this.pruneHistories();
+    return this.collectPacketsForClient(client.id);
+  }
+
+  private ensureClient(clientId: number, now: number): ClientSession {
+    const client = this.clients.get(clientId);
+    if (client) {
+      return client;
+    }
+    const created: ClientSession = {
+      id: clientId,
+      ackFrameId: 0,
+      lastSeenAt: now,
+      highestSubmittedFrame: 0,
+      isReady: false,
+      isLoaded: false
+    };
+    this.clients.set(clientId, created);
+    return created;
+  }
+
+  private cleanupTimedOutClients(now: number) {
+    for (const [clientId, client] of this.clients.entries()) {
+      if (now - client.lastSeenAt > this.clientTimeoutMs) {
+        this.clients.delete(clientId);
+      }
+    }
+  }
+
+  private extractAckFrameId(request: Request): number | undefined {
+    switch (request.payload.oneofKind) {
+      case "blank":
+        return request.payload.blank.ackFrameId;
+      case "plant":
+        return request.payload.plant.base?.base?.ackFrameId;
+      case "removePlant":
+        return request.payload.removePlant.base?.base?.ackFrameId;
+      case "starShards":
+        return request.payload.starShards.base?.base?.ackFrameId;
+      default:
+        return undefined;
+    }
+  }
+
+  private extractTargetFrameId(request: Request): number | undefined {
+    switch (request.payload.oneofKind) {
+      case "blank":
+        return request.payload.blank.frameId;
+      case "plant":
+        return this.resolveOperationFrame(request.payload.plant.base);
+      case "removePlant":
+        return this.resolveOperationFrame(request.payload.removePlant.base);
+      case "starShards":
+        return this.resolveOperationFrame(request.payload.starShards.base);
+      default:
+        return undefined;
+    }
+  }
+
+  private resolveOperationFrame(base: RequestGridOperation | undefined): number {
+    return Math.max(base?.processFrameId ?? 0, (base?.base?.frameId ?? 0) + 1);
+  }
+
+  private recordSubmission(frameId: number, clientId: number, request: Request) {
+    let frameEntry = this.frameSubmissions.get(frameId);
+    if (!frameEntry) {
+      frameEntry = new Map<number, FrameSubmission>();
+      this.frameSubmissions.set(frameId, frameEntry);
+    }
+
+    let submission = frameEntry.get(clientId);
+    if (!submission) {
+      submission = {
+        operations: [],
+        operationSignatures: new Set<string>()
+      };
+      frameEntry.set(clientId, submission);
+    }
+
+    const operation = this.buildOperationForFrame(frameId, request, clientId);
+    if (!operation) {
+      return;
+    }
+
+    const signature = this.getOperationSignature(operation);
+    if (submission.operationSignatures.has(signature)) {
+      return;
+    }
+    submission.operationSignatures.add(signature);
+    submission.operations.push(operation);
+  }
+
+  private finalizeReadyFrames() {
+    while (this.isFrameReady(this.serverFrameId + 1)) {
+      const frameId = this.serverFrameId + 1;
+      const frameEntry = this.frameSubmissions.get(frameId);
+      const operations = frameEntry
+        ? [...frameEntry.entries()]
+            .sort((a, b) => a[0] - b[0])
+            .flatMap(([, submission]) => submission.operations)
+            .sort((a, b) => a.operationIndex - b.operationIndex)
+        : [];
+
+      this.serverFrameId = frameId;
+      this.frameHistory.set(frameId, {
+        frameId,
+        operations
+      });
+      this.frameSubmissions.delete(frameId);
+    }
+  }
+
+  private isFrameReady(frameId: number): boolean {
+    if (this.clients.size === 0) {
+      return false;
+    }
+    const frameEntry = this.frameSubmissions.get(frameId);
+    if (!frameEntry) {
+      return false;
+    }
+    for (const client of this.clients.values()) {
+      if (!frameEntry.has(client.id)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  private getReadyCount(): number {
+    let count = 0;
+    for (const client of this.clients.values()) {
+      if (client.isReady) {
+        count += 1;
+      }
+    }
+    return count;
+  }
+
+  private areAllClientsReady(): boolean {
+    return this.clients.size > 0 && this.getReadyCount() === this.clients.size;
+  }
+
+  private areAllClientsLoaded(): boolean {
+    if (this.clients.size === 0) {
+      return false;
+    }
+    for (const client of this.clients.values()) {
+      if (!client.isLoaded) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  private collectPacketsForClient(clientId: number): MockPacket[] {
+    const client = this.clients.get(clientId);
+    if (!client) {
+      return [];
+    }
+
+    const packets: MockPacket[] = [];
+    const fromFrameId = Math.max(client.ackFrameId + 1, this.getEarliestHistoryFrame());
+    const toFrameId = Math.min(this.serverFrameId, fromFrameId + this.maxResendPerPull - 1);
+    for (let frameId = fromFrameId; frameId <= toFrameId; frameId++) {
+      const frame = this.frameHistory.get(frameId);
+      if (!frame) {
+        continue;
+      }
+      packets.push({
+        channel: "ingame",
+        data: InGameResponse.toBinary(frame)
+      });
+    }
+    return packets;
+  }
+
+  private getEarliestHistoryFrame(): number {
+    if (this.frameHistory.size === 0) {
+      return this.serverFrameId + 1;
+    }
+    let minFrameId = Number.MAX_SAFE_INTEGER;
+    for (const frameId of this.frameHistory.keys()) {
+      minFrameId = Math.min(minFrameId, frameId);
+    }
+    return minFrameId;
+  }
+
+  private pruneHistories() {
+    if (this.frameHistory.size === 0) {
+      return;
+    }
+
+    let minAckFrameId = this.serverFrameId;
+    if (this.clients.size > 0) {
+      minAckFrameId = Number.MAX_SAFE_INTEGER;
+      for (const client of this.clients.values()) {
+        minAckFrameId = Math.min(minAckFrameId, client.ackFrameId);
+      }
+    }
+
+    for (const frameId of this.frameHistory.keys()) {
+      const tooOldForAck = frameId <= minAckFrameId;
+      const tooOldForWindow = frameId <= this.serverFrameId - this.maxHistoryFrames;
+      if (tooOldForAck || tooOldForWindow) {
+        this.frameHistory.delete(frameId);
+      }
+    }
+  }
+
+  private buildOperationForFrame(frameId: number, request: Request, clientId: number): InGameOperation | null {
+    switch (request.payload.oneofKind) {
+      case "plant":
+        return this.buildCardPlantOperation(frameId, request.payload.plant, clientId);
+      case "removePlant":
+        return this.buildRemovePlantOperation(frameId, request.payload.removePlant, clientId);
+      case "starShards":
+        return this.buildStarShardsOperation(frameId, request.payload.starShards, clientId);
+      default:
+        return null;
+    }
+  }
+
+  private nextOperationIndex(): number {
+    this.operationSerial += 1;
+    return this.operationSerial;
+  }
+
+  private buildCardPlantOperation(frameId: number, request: RequestCardPlant, clientId: number): InGameOperation | null {
+    if (!request.base) {
+      return null;
+    }
+    return {
+      processFrameId: frameId,
+      operationIndex: this.nextOperationIndex(),
+      payload: {
+        oneofKind: "cardPlant",
+        cardPlant: {
+          pid: request.pid,
+          level: request.level,
+          cost: request.cost,
+          base: {
+            uid: clientId,
+            col: request.base.col,
+            row: request.base.row
+          }
+        }
+      }
+    };
+  }
+
+  private buildRemovePlantOperation(frameId: number, request: RequestRemovePlant, clientId: number): InGameOperation | null {
+    if (!request.base) {
+      return null;
+    }
+    return {
+      processFrameId: frameId,
+      operationIndex: this.nextOperationIndex(),
+      payload: {
+        oneofKind: "removePlant",
+        removePlant: {
+          pid: request.pid,
+          base: {
+            uid: clientId,
+            col: request.base.col,
+            row: request.base.row
+          }
+        }
+      }
+    };
+  }
+
+  private buildStarShardsOperation(frameId: number, request: RequestStarShards, clientId: number): InGameOperation | null {
+    if (!request.base) {
+      return null;
+    }
+    return {
+      processFrameId: frameId,
+      operationIndex: this.nextOperationIndex(),
+      payload: {
+        oneofKind: "useStarShards",
+        useStarShards: {
+          pid: request.pid,
+          cost: request.cost,
+          base: {
+            uid: clientId,
+            col: request.base.col,
+            row: request.base.row
+          }
+        }
+      }
+    };
+  }
+
+  private getOperationSignature(operation: InGameOperation): string {
+    switch (operation.payload.oneofKind) {
+      case "cardPlant":
+        return [
+          operation.processFrameId,
+          operation.payload.oneofKind,
+          operation.payload.cardPlant.pid,
+          operation.payload.cardPlant.level,
+          operation.payload.cardPlant.base?.uid,
+          operation.payload.cardPlant.base?.col,
+          operation.payload.cardPlant.base?.row
+        ].join(":");
+      case "removePlant":
+        return [
+          operation.processFrameId,
+          operation.payload.oneofKind,
+          operation.payload.removePlant.pid,
+          operation.payload.removePlant.base?.uid,
+          operation.payload.removePlant.base?.col,
+          operation.payload.removePlant.base?.row
+        ].join(":");
+      case "useStarShards":
+        return [
+          operation.processFrameId,
+          operation.payload.oneofKind,
+          operation.payload.useStarShards.pid,
+          operation.payload.useStarShards.base?.uid,
+          operation.payload.useStarShards.base?.col,
+          operation.payload.useStarShards.base?.row
+        ].join(":");
+      default:
+        return `${operation.processFrameId}:${operation.operationIndex}:${operation.payload.oneofKind}`;
+    }
+  }
+
+  private makeChooseMapPacket(chapterId: number, stageId: number): MockPacket {
+    return {
+      channel: "room",
+      data: RoomResponse.toBinary({
+        payload: {
+          oneofKind: "chooseMap",
+          chooseMap: { chapterId, stageId }
+        }
+      })
+    };
+  }
+
+  private makeQuitChooseMapPacket(): MockPacket {
+    return {
+      channel: "room",
+      data: RoomResponse.toBinary({
+        payload: {
+          oneofKind: "quitChooseMap",
+          quitChooseMap: {}
+        }
+      })
+    };
+  }
+
+  private makeUpdateReadyCountPacket(count: number, allPlayerCount: number): MockPacket {
+    return {
+      channel: "room",
+      data: RoomResponse.toBinary({
+        payload: {
+          oneofKind: "updateReadyCount",
+          updateReadyCount: { count, allPlayerCount }
+        }
+      })
+    };
+  }
+
+  private makeAllReadyPacket(): MockPacket {
+    const playerIds = [...this.clients.keys()].sort((a, b) => a - b);
+    return {
+      channel: "room",
+      data: RoomResponse.toBinary({
+        payload: {
+          oneofKind: "allReady",
+          allReady: {
+            allPlayerCount: playerIds.length,
+            seed: this.seed,
+            myId: this.myId,
+            playerIds
+          }
+        }
+      })
+    };
+  }
+
+  private makeAllLoadedPacket(): MockPacket {
+    return {
+      channel: "room",
+      data: RoomResponse.toBinary({
+        payload: {
+          oneofKind: "allLoaded",
+          allLoaded: {}
+        }
+      })
+    };
+  }
+
+  private makeGameEndPacket(gameResult: number): MockPacket {
+    return {
+      channel: "room",
+      data: RoomResponse.toBinary({
+        payload: {
+          oneofKind: "gameEnd",
+          gameEnd: { gameResult }
+        }
+      })
+    };
+  }
 }
 
-// 导出单例
 const mockServer = new MockServer();
 
 export default mockServer;

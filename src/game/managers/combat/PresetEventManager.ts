@@ -1,5 +1,14 @@
+import { DispenserData } from "../../presets/plant/chapter1/dispenser";
+import { FurnaceData } from "../../presets/plant/chapter1/furnace";
+import type { Game } from "../../scenes/Game";
+import { PlantCmd } from "../../utils/cmd/PlantCmd";
+import { StageDataRecords } from "../../utils/loader";
 import { BaseManager } from "../BaseManager";
+import CombatManager from "../CombatManager";
+import { PositionManager } from "../view/PositionManager";
+import GridManager from "./GridManager";
 import MobManager from "./MobManager";
+import PlantsManager from "./PlantsManager";
 
 /**
  * 预设事件管理器
@@ -34,8 +43,19 @@ export class PresetEventManager extends BaseManager {
    * 游戏开始时触发 (waveId = 0)
    */
   private triggerCombatStartEvent(): void {
+    if (!this.scene) {
+      console.warn('PresetEventManager: scene is not set. Cannot trigger combat start event.');
+      return;
+    }
     console.log('Combat start event triggered at wave 0');
-    // TODO: 实现游戏开始时的预设事件处理逻辑
+    // 实现游戏开始时的预设事件处理逻辑
+    GridManager.Instance.initGridProperties();
+    const stageId = this.scene?.params.level || 0;
+    const chapterId = StageDataRecords[stageId].chapterID;
+    // dispatch stage or chapter
+    if (chapterId === 1) {
+      this.Chapter1Dispatch(this.scene, stageId);
+    }
   }
 
   /**
@@ -43,7 +63,7 @@ export class PresetEventManager extends BaseManager {
    */
   private triggerSpecifiedWaveEvent(waveId: number, isFlag: boolean): void {
     console.log(`Specified wave event triggered at wave ${waveId}, isFlag: ${isFlag}`);
-    // TODO: 实现特定波数的预设事件处理逻辑
+    // 实现特定波数的预设事件处理逻辑
   }
 
   /**
@@ -56,4 +76,87 @@ export class PresetEventManager extends BaseManager {
       this.onNewWaveHandler = null;
     }
   }
+
+
+  Chapter1Dispatch(game: Game, stageId: number) {
+    // 第一章的
+    const { width, height } = game.scale;
+    // 白天
+    if (stageId === 1 || stageId === 2) {
+      // 白天关卡，能量增加逻辑现在由React组件处理
+      CombatManager.Instance.combatStatus.dayOrNight = true;
+    }
+
+    if (stageId === 1) {
+      debugger;
+      PlantsManager.Instance.PlantCard(9961, DispenserData.pid, 1, 1, 1);
+      PlantsManager.Instance.PlantCard(9961, DispenserData.pid, 1, 1, 2);
+      PlantsManager.Instance.PlantCard(9961, DispenserData.pid, 1, 1, 3);
+      PlantsManager.Instance.PlantCard(9961, DispenserData.pid, 1, 1, 4);
+      PlantsManager.Instance.PlantCard(9961, DispenserData.pid, 1, 1, 5);
+    }
+
+    if (stageId === 7) {
+      PlantsManager.Instance.PlantCard(9961, FurnaceData.pid, 1, 1, 1);
+      PlantsManager.Instance.PlantCard(9961, FurnaceData.pid, 1, 1, 2);
+      PlantsManager.Instance.PlantCard(9961, FurnaceData.pid, 1, 1, 3);
+    }
+
+    if (stageId === 3 || stageId === 7) {
+      // [0][7] = water
+      CombatManager.Instance.combatStatus.dayOrNight = false;
+      GridManager.Instance.setSingleGridProperty(7, 0, { type: 'water' });
+      game.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.3).setDepth(2);
+    }
+
+    if (stageId === 4) {
+      CombatManager.Instance.combatStatus.dayOrNight = false;
+      game.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.5).setDepth(2);
+    }
+
+    if (stageId === 5 || stageId === 8) {
+      CombatManager.Instance.combatStatus.dayOrNight = false;
+      game.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.5).setDepth(2);
+      // row:2, 3  = water
+      for (let col = 0; col < PositionManager.Instance.Col_Number; col++) {
+        GridManager.Instance.setSingleGridProperty(col, 2, { type: 'water' });
+        GridManager.Instance.setSingleGridProperty(col, 3, { type: 'water' });
+      }
+    }
+
+    if (stageId === 6 || stageId === 9) {
+      CombatManager.Instance.combatStatus.dayOrNight = false;
+      game.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.5).setDepth(2);
+      if (stageId === 9) {
+        // 在stage 8 基础上,在第一个elite结束后沙砾和碎石砖块会消失变为sky
+
+        // 切换地图为 `bg/bgRainbowCave2`
+
+        // 开始定时能量恢复
+      }
+
+    }
+
+
+
+
+    // 绘制阴影表格
+    // stage1 黑色
+    if (game.params.level === 1) {
+      for (let row = 0; row < PositionManager.Instance.Row_Number; row++) {
+        // game.grid[row] = [];
+        for (let col = 0; col < PositionManager.Instance.Col_Number; col++) {
+          const { x, y } = PositionManager.Instance.getGridTopLeft(col, row);
+          const rect = game.add.rectangle(x, y, PositionManager.Instance.GRID_SIZEX,
+            PositionManager.Instance.GRID_SIZEY, 0x000000, 0.12)
+            .setOrigin(0, 0).setDepth(3);
+          rect.setStrokeStyle(1, 0xffffff, 0.1);
+        }
+      }
+    }
+
+    // stage 4,5 手动暗淡
+  }
+
+
 }

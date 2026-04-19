@@ -12,8 +12,8 @@ import SyncManager from "./SyncManager";
 
 type PlantsManagerEvent = {
   // 用户决定操作事件，之后要在send_queue监听
-  onDeterminePlant: (pid: number, level: number, col: number, row: number) => void;
-  onDetermineUseStarShards: (pid: number, col: number, row: number) => void;
+  onDeterminePlant: (pid: number, level: number, col: number, row: number, cost: number) => void;
+  onDetermineUseStarShards: (pid: number, col: number, row: number, cost: number) => void;
   onDetermineRemovePlant: (pid: number, col: number, row: number) => void;
 
   // sfx 反馈，没能量但是想种植高昂植物
@@ -118,7 +118,10 @@ export default class PlantsManager extends BaseManager {
 
     // 扣除资源，冷却等
     ResourceManager.Instance.UpdateEnergy(-cost, playerId);
-    CardpileManager.Instance.reloadCard(pid);
+    if (playerId === ResourceManager.Instance.mineId) {
+      CardpileManager.Instance.reloadCard(pid);
+    }
+
     DeferredManager.Instance.defer(() => {
       if (!this.scene) return;
       model.createEntity(this.scene, col, row, level);
@@ -176,7 +179,7 @@ export default class PlantsManager extends BaseManager {
     if (!targetPlant) return;
     // 如果星之碎片余量充足,则发动效果
     if (ResourceManager.Instance.StarShardsSufficient(1, 'mine')) {
-      this.EventBus.emit('onDetermineUseStarShards', targetPlant.pid, col, row);
+      this.EventBus.emit('onDetermineUseStarShards', targetPlant.pid, col, row, 1);
     }
   }
 
@@ -216,7 +219,7 @@ export default class PlantsManager extends BaseManager {
     if (!PlantHelper.CanPlantInGrid(existedPlants, pid, targetGridProperty)) return;
 
     // 种植
-    this.EventBus.emit('onDeterminePlant', pid, level, col, row);
+    this.EventBus.emit('onDeterminePlant', pid, level, col, row, cost);
   }
 }
 

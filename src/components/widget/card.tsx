@@ -9,7 +9,6 @@ import ResourceManager from '../../game/managers/combat/ResourceManager';
 import PlantsManager from '../../game/managers/combat/PlantsManager';
 import { PlantModel } from '../../game/models/PlantModel';
 
-// TODO: 替换成 PlantModel
 export interface CardProps {
   plantModel: PlantModel;
   level: number;

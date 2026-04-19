@@ -1,7 +1,7 @@
 import { PositionManager } from "../../managers/view/PositionManager";
 import { ObstacleModel } from "../../models/ObstacleModel";
 import { ObstacleConfig, ObstacleEntity } from "../../models/entities/ObstacleEntity";
-import { Game } from "../../scenes/Game";
+import type { Game } from "../../scenes/Game";
 
 export class ObsidianObstacleModel extends ObstacleModel {
   public readonly oid = 1;

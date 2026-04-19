@@ -1,12 +1,7 @@
 import { Scene } from 'phaser';
 import { GameParams } from '../models/GameParams';
-import {
-  PhaserEventBus,
-  PhaserEvents,
-} from '../EventBus';
-import PlantFactoryMap from '../presets/plant';
-import { HasConnected } from '../../utils/net/sync';
 import { preloadData, StageData } from '../models/IRecord';
+import { PlantLibrary } from '../managers/library/PlantLibrary';
 
 export class Preloader extends Scene {
   constructor() {
@@ -55,31 +50,28 @@ export class Preloader extends Scene {
 
     //  Move to the MainMenu. You could also swap this for a Scene Transition, such as a camera fade.
     // this.loadbg.destroy();
-    for (let i = 0; i < 10; ++i) {
-      PhaserEventBus.emit(EVENT_StarShardsConsume);
-    }
     this.scene.start('Game');
   }
 
   // 加载全部器械
   loadAllPlant(ids: number[]) {
-    if (HasConnected()) {
-      // 联机模式全部加载
-      const allRecords = Object.values(PlantFactoryMap);
-      for (const record of allRecords) {
-        this.load.spritesheet(record.texture, record.texture + '.png', {
-          frameWidth: 64, frameHeight: 64
-        });
-      }
-
-      return;
-    }
-    for (const id of ids) {
-      const texture = PlantFactoryMap[id].texture;
-      this.load.spritesheet(texture, texture + '.png', {
+    // if (HasConnected()) {
+    // 联机模式全部加载
+    const allRecords = PlantLibrary.GetAllModels();
+    for (const record of allRecords) {
+      this.load.spritesheet(record.texturePath, record.texturePath + '.png', {
         frameWidth: 64, frameHeight: 64
       });
     }
+
+    return;
+    // }
+    // for (const id of ids) {
+    //   const texture = PlantFactoryMap[id].texture;
+    //   this.load.spritesheet(texture, texture + '.png', {
+    //     frameWidth: 64, frameHeight: 64
+    //   });
+    // }
   }
 
   // 加载全部怪物
@@ -231,7 +223,8 @@ export class Preloader extends Scene {
 
     // 预先需要加载的器械
     for (const plantID of preloadData.plants || []) {
-      const texture = PlantFactoryMap[plantID].texture;
+      const texture = PlantLibrary.GetModel(plantID)?.texturePath;
+      if (!texture) continue;
       if (this.textures && !this.textures.exists(texture)) {
         this.load.spritesheet(texture, texture + '.png', {
           frameWidth: 64, frameHeight: 64

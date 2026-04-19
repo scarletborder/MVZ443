@@ -1,4 +1,4 @@
-import {
+﻿import {
   PhaserEventBus,
   PhaserEvents,
 } from '../EventBus';
@@ -7,21 +7,17 @@ import { PositionManager } from '../managers/view/PositionManager';
 import CursorManager from '../managers/combat/CursorManager';
 import PlantsManager from '../managers/combat/PlantsManager';
 import { GameParams, GameSettings } from '../models/GameParams';
-import QueueReceive from '../sync/queue_receive';
-import QueueSend from '../sync/queue_send';
 import CreateInnerMenu from '../utils/inner_menu';
 import { StageData } from '../models/IRecord';
 import BackendWS, { HasConnected } from '../../utils/net/sync';
 import seedrandom from 'seedrandom';
 import DepthUtils from '../../utils/depth';
 import Musical from '../utils/musical';
-import { RapierPhysicsManager } from '../managers/RapierPhysicsManager';
 import RAPIER from '@dimforge/rapier2d-deterministic-compat';
 import CombatManager from '../managers/CombatManager';
 import GridManager from '../managers/combat/GridManager';
 import MobManager from '../managers/combat/MobManager';
 import ObstacleManager from '../managers/combat/ObstacleManager';
-import AudioManager from '../managers/combat/AudioManager';
 import { BaseManager } from '../managers/BaseManager';
 import CardpileManager from '../managers/combat/CardpileManager';
 import KeybindManager from '../managers/combat/KeybindManager';
@@ -31,8 +27,9 @@ import TickerManager from '../managers/combat/TickerManager';
 import DebugManager from '../managers/view/DebugManager';
 import { BaseEntity } from '../models/core/BaseEntity';
 import { DeferredManager } from '../managers/DeferredManager';
-import { SendLoaded } from '../../utils/net/room';
 import StageHelper from '../utils/helper/StageHelper';
+import { Request, RequestLoaded } from '../../pb/request';
+import { PresetEventManager } from '../managers/combat/PresetEventManager';
 
 
 export class Game extends Scene {
@@ -42,7 +39,6 @@ export class Game extends Scene {
   public innerSettings: GameSettings;
 
   public rapierWorld: RAPIER.World;
-  public rapierPhysics: RapierPhysicsManager;
   public rapierEventQueue: RAPIER.EventQueue;
 
 
@@ -74,7 +70,6 @@ export class Game extends Scene {
 
     this.ManagerGroup = [
       CombatManager.Instance,
-      AudioManager.Instance,
       CardpileManager.Instance,
       CursorManager.Instance,
       DeferredManager.Instance,
@@ -83,6 +78,7 @@ export class Game extends Scene {
       MobManager.Instance,
       ObstacleManager.Instance,
       PlantsManager.Instance,
+      PresetEventManager.Instance,
       ResourceManager.Instance,
       SyncManager.Instance,
       TickerManager.Instance,
@@ -111,19 +107,6 @@ export class Game extends Scene {
     const randomPrng = seedrandom.alea(String(CombatManager.Instance.seed));
     const waves = StageHelper.generateStageScript(this.stageData.stageScript, randomPrng, this.params.level);
     MobManager.Instance.setWaves(waves);
-
-
-    // 初始化消息队列
-    if (!BackendWS.isOnlineMode()) {
-      this.recvQueue = new QueueReceive({ mode: 'single' }, this);
-      this.sendQueue = new QueueSend({ mode: 'single', recvQueue: this.recvQueue.queues });
-      // TODO: BackendWs也要设置，但是多绑定一个mockserver
-    } else {
-      this.recvQueue = new QueueReceive({ mode: 'multi' }, this);
-      this.sendQueue = new QueueSend({ mode: 'single', recvQueue: this.recvQueue.queues }); // 断线后单人可玩
-      // this.sendQueue = new QueueSend({ mode: 'multi' });
-      BackendWS.setQueue(this.recvQueue, this.sendQueue);
-    }
 
     // 菜单
     CreateInnerMenu(this);
@@ -157,7 +140,6 @@ export class Game extends Scene {
     // 初始化物理世界
     await RAPIER.init();
     this.rapierWorld = new RAPIER.World({ x: 0, y: 0 }); // 无重力的物理世界
-    this.rapierPhysics = new RapierPhysicsManager(this, { x: 0, y: 0 });
     this.rapierEventQueue = new RAPIER.EventQueue(true);
 
 
@@ -166,8 +148,6 @@ export class Game extends Scene {
       // 调试模式下可以添加可视化代码
       // TODO: 实现 RAPIER 的调试可视化
     }
-
-    // TODO:RAPIER物理碰撞检测将在 queue_receive 的 update 中调用
 
     PhaserEventBus.on(PhaserEvents.RoomGameEnd, this.handleRoomGameEnd, this);
     CombatManager.Instance.Eventbus.on('onCombatPause', () => {
@@ -180,7 +160,10 @@ export class Game extends Scene {
     this.musical = new Musical(this, this.params.gameSettings.isBgm, this.params.gameSettings.isSoundAudio);
 
     console.log('load finish');
-    SendLoaded(); // 加载完毕
+    if (BackendWS.isRoomSessionMode()) {
+      const request: RequestLoaded = { isLoaded: true };
+      BackendWS.send(Request.toBinary({ payload: { loaded: request, oneofKind: 'loaded' } }));
+    }
   }
 
   update(time: number, delta: number): void {
@@ -259,8 +242,6 @@ export class Game extends Scene {
 
   // 停止game scene
   private pauseGameScene() {
-    // RAPIER物理系统暂停处理
-    this.rapierPhysics.pause();
     this.anims?.pauseAll();
     this.tweens?.pauseAll();
     this.time.paused = true;
@@ -269,8 +250,6 @@ export class Game extends Scene {
 
   // 恢复game scene
   private resumeGameScene() {
-    // RAPIER物理系统恢复处理
-    this.rapierPhysics.resume();
     this.anims?.resumeAll();
     this.tweens?.resumeAll();
     this.time.paused = false;

@@ -20,9 +20,35 @@ export default class GridManager extends BaseManager {
     // 初始化
   }
 
+  public initGridProperties() {
+    // 获得行列
+    const rowNumber = PositionManager.Instance.Row_Number;
+    const colNumber = PositionManager.Instance.Col_Number;
+    // 初始化格子属性为 ground
+    const gridProperties: Record<number, Record<number, GridProperty>> = {};
+    for (let row = 0; row < rowNumber; row++) {
+      gridProperties[row] = {};
+      for (let col = 0; col < colNumber; col++) {
+        gridProperties[row][col] = { type: 'ground' };
+      }
+    }
+    this.GridProperties = gridProperties;
+  }
+
   public setGridProperty(gridProperties: Record<number, Record<number, GridProperty>>) {
     this.GridProperties = gridProperties;
   }
+
+  public setSingleGridProperty(col: number, row: number, property: GridProperty) {
+    if (!this.GridProperties) return;
+    if (!this.GridProperties[row]) {
+      this.GridProperties[row] = {};
+    }
+    this.GridProperties[row][col] = property;
+    this.__hasCaculatedGridPropertyRatio = false; // 标记需要重新计算占比
+  }
+
+
   public Load(): void { }
   public Reset() {
     this.GridProperties = null;

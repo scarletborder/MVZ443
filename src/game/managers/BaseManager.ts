@@ -1,4 +1,4 @@
-import { Game } from "../scenes/Game";
+import type { Game } from "../scenes/Game";
 
 /**
  * 管理器基类

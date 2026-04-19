@@ -1,9 +1,9 @@
 import { PositionManager } from "../../../managers/view/PositionManager";
+import { PresetMonsterModel } from "../../../models/entities/MonsterEntity";
 import { Faction } from "../../../models/Enum";
 import { WardenGolemAnimProps } from "../../../sprite/normal_golem";
 import MobCmd from "../../../utils/cmd/MobCmd";
 import { ProjectileCmd } from "../../../utils/cmd/ProjectileCmd";
-import { PresetMonsterModel } from "../common";
 import { BaseGolemEntity } from "./shared";
 
 function createWardenLaser(entity: BaseGolemEntity) {

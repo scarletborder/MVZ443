@@ -1,5 +1,5 @@
 import { BaseManager } from "../BaseManager";
-import { Game } from "../../scenes/Game";
+import type { Game } from "../../scenes/Game";
 import { PhaserEventBus, PhaserEvents } from "../../EventBus";
 import CardpileManager from "./CardpileManager";
 

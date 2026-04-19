@@ -1,7 +1,7 @@
 
 import DepthUtils from "../../../utils/depth";
 import { PositionManager } from "../../managers/view/PositionManager";
-import { Game } from "../../scenes/Game";
+import type { Game } from "../../scenes/Game";
 import { CombatEntity } from "../core/CombatEntity";
 import { ProjectileEntity } from "../entities/ProjectileEntity";
 import { Faction } from "../Enum";
@@ -11,7 +11,7 @@ export class LaserEntity extends ProjectileEntity<LaserModel> {
   public baseDepth: number;
 
   constructor(scene: Game, x1: number, y1: number, x2: number, y2: number, model: LaserModel,
-    row: number, cfg : LaserConfig) {
+    row: number, cfg: LaserConfig) {
     // 计算中点作为中心
     const centerX = (x1 + x2) / 2;
     const centerY = (y1 + y2) / 2;

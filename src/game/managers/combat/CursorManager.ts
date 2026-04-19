@@ -1,13 +1,11 @@
-import { Game } from "../../scenes/Game";
-import { PhaserEventBus } from "../../EventBus";
-import PlantFactoryMap, { PlantFactory } from '../../presets/plant';
-import PlantsManager from "./PlantsManager";
+import type { Game } from "../../scenes/Game";
 import DepthUtils from "../../../utils/depth";
 import { PositionManager } from "../view/PositionManager";
 import { BaseManager } from "../BaseManager";
 import CardpileManager from "./CardpileManager";
 import { EventBus } from "../../../utils/eventBus";
 import CombatManager from "../CombatManager";
+import { PlantLibrary } from "../library/PlantLibrary";
 
 type CursorManagerEvent = {
   // cursor只管有在某个格子有‘尝试种植’事件发生，具体种植什么 或 是否种植成功 由其他mangager负责
@@ -186,9 +184,9 @@ export default class CursorManager extends BaseManager {
     this.prevCol = col;
     this.prevRow = row;
     const pid = choice.prePlantPid[0];
-    const plantRecord = PlantFactory.GetPlantRecordByPid(pid);
+    const plantRecord = PlantLibrary.GetModel(pid);
     if (plantRecord) {
-      this.startHighlight(col, row, plantRecord.texture);
+      this.startHighlight(col, row, plantRecord.texturePath);
     }
   }
 

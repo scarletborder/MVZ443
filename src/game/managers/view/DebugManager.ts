@@ -1,5 +1,5 @@
 
-import { Game } from "../../scenes/Game";
+import type { Game } from "../../scenes/Game";
 import { BaseManager } from "../BaseManager";
 
 export default class DebugManager extends BaseManager {

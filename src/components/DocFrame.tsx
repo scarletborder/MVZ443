@@ -25,7 +25,7 @@ interface Props {
   gameStart: () => void,
 };
 
-export default function DocFrame({ width, height, sceneRef, setGameParams, gameStart }: Props) {
+export default function DocFrame({ width, height, setGameParams, gameStart }: Props) {
   if (height === undefined) {
     height = width * 3 / 4;
   }

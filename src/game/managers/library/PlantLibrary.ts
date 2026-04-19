@@ -1,4 +1,4 @@
-import { PlantModel } from "../../models/PlantModel";
+import type { PlantModel } from "../../models/PlantModel";
 import { Chapter1Plants } from "../../presets/plant/chapter1";
 
 export class PlantLibrary {
@@ -31,5 +31,9 @@ export class PlantLibrary {
   // 根据 pid 获取蓝图
   public static GetModel(pid: number): PlantModel | undefined {
     return this.models.get(pid);
+  }
+
+  public static GetAllModels(): PlantModel[] {
+    return Array.from(this.models.values());
   }
 }

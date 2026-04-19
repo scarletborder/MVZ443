@@ -1,5 +1,5 @@
-import { PresetMonsterModel } from "../common";
-import { BaseZombieArmorEntity } from "./shared";
+import { BaseZombieArmorEntity, PresetMonsterModel } from "../../../models/entities/MonsterEntity";
+
 
 export class TurtleZombieEntity extends BaseZombieArmorEntity {
   private buffApplied = false;

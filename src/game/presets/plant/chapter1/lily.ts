@@ -4,7 +4,7 @@ import GridManager from "../../../managers/combat/GridManager";
 import { PositionManager } from "../../../managers/view/PositionManager";
 import { PlantEntity } from "../../../models/entities/PlantEntity";
 import { PlantModel } from "../../../models/PlantModel";
-import { Game } from "../../../scenes/Game";
+import type { Game } from "../../../scenes/Game";
 import { PlantCmd } from "../../../utils/cmd/PlantCmd";
 
 

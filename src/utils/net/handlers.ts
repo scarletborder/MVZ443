@@ -156,11 +156,10 @@ export default class WSClientHandlers {
         });
         break;
       case 'allLoaded':
-        const allLoaded = roomResponse.payload.allLoaded;
         onlineStateManager.updateGameStage(EnumGameStage.InGame);
         // 通过EventBus发送给Game层处理游戏开始
         const roomInfo2 = onlineStateManager.getRoomInfo();
-        PhaserEventBus.emit(PhaserEvents.RoomGameStart, { seed: allLoaded.seed, myID: roomInfo2.myId });
+        PhaserEventBus.emit(PhaserEvents.RoomGameStart, { myID: roomInfo2.myId });
         break;
       case 'gameEnd':
         const gameEnd = roomResponse.payload.gameEnd;

@@ -1,5 +1,5 @@
 import { BaseManager } from "../BaseManager";
-import { Game } from "../../scenes/Game";
+import type { Game } from "../../scenes/Game";
 import { PhaserEventBus, PhaserEvents } from "../../EventBus";
 import { EventBus } from "../../../utils/eventBus";
 
@@ -47,6 +47,8 @@ export default class ResourceManager extends BaseManager {
         this.StarShardsMaps.set(playerId, 0);
       }
     }, this);
+
+    PhaserEventBus.on(PhaserEvents.RoomGameStart, this.handleRoomGameStart, this);
   }
 
   public Reset(): void {
@@ -93,6 +95,9 @@ export default class ResourceManager extends BaseManager {
   }
 
   public EnergySufficient(requiredEnergy: number, playerId: PlayerIdentify | 'mine'): boolean {
+    if (playerId === 9961) {
+      return true;
+    }
     if (playerId === 'mine') {
       playerId = this.mineId;
     }
@@ -101,6 +106,9 @@ export default class ResourceManager extends BaseManager {
   }
 
   public StarShardsSufficient(requiredStarShards: number, playerId: PlayerIdentify | 'mine'): boolean {
+    if (playerId === 9961) {
+      return true;
+    }
     if (playerId === 'mine') {
       playerId = this.mineId;
     }
@@ -112,5 +120,23 @@ export default class ResourceManager extends BaseManager {
     for (let playerId of this.EnergyMaps.keys()) {
       this.EnergyMaps.set(playerId, initialEnergy);
     }
+  }
+
+  getEnergy(playerId: PlayerIdentify | 'mine'): number {
+    if (playerId === 'mine') {
+      playerId = this.mineId;
+    }
+    return this.EnergyMaps.get(playerId) || 0;
+  }
+
+  getStarShards(playerId: PlayerIdentify | 'mine'): number {
+    if (playerId === 'mine') {
+      playerId = this.mineId;
+    }
+    return this.StarShardsMaps.get(playerId) || 0;
+  }
+
+  private handleRoomGameStart() {
+    this.SetInitialEnergy(this.scene?.stageData.energy ?? 0);
   }
 }

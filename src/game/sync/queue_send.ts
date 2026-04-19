@@ -1,166 +1,86 @@
 import Denque from "denque";
-import BackendWS from "../../utils/net/sync";
-import { gameStateManager } from "../../store/GameStateManager";
-import PlantFactoryMap from "../presets/plant";
 import {
+  Request,
   RequestBlank,
   RequestCardPlant,
-  RequestRemovePlant,
-  RequestStarShards,
-  RequestReady,
-  RequestLoaded,
   RequestEndGame,
-  RequestChooseMap,
   RequestGridOperation,
-  Request
+  RequestRemovePlant,
+  RequestStarShards
 } from "../../pb/request";
-import { PhaserEventBus } from "../EventBus";
-import { InGameOperation, InGameResponse, ResponseGridOperation } from "../../pb/response";
-
-// 单人游戏
-interface SingleParams {
-  mode: 'single';
-  recvQueue: Denque; // 单人游戏中先初始化接收队列
-}
-
-// 多人联机
-interface MultiParams {
-  mode: 'multi';
-}
+import { ResponseGridOperation } from "../../pb/response";
+import BackendWS from "../../utils/net/sync";
+import ResourceManager from "../managers/combat/ResourceManager";
 
 export default class QueueSend {
   queues: Denque<Request>;
-  singRecvQueue: Denque<InGameResponse> | null = null; // 仅singlePlayer,接收队列
-
-  // 仅单机有用
-  // 下一帧已经有了多少操作， 用于生成sequence
+  pendingFrames: Map<number, Map<string, Request>>;
   public operationCount: number = 1;
+  private readonly commandDelayFrames: number = 2;
+  private readonly resendIntervalMs: number = 50;
+  private lastTransmitAt: number = 0;
 
-  constructor(params: SingleParams | MultiParams) {
+  constructor() {
     this.queues = new Denque();
-    if (params.mode === 'single') {
-      this.singRecvQueue = params.recvQueue;
-    } else {
-      // 多人
-      this.singRecvQueue = null;
-    }
+    this.pendingFrames = new Map<number, Map<string, Request>>();
+  }
+
+  Reset() {
+    this.queues.clear();
+    this.pendingFrames.clear();
+    this.operationCount = 1;
+    this.lastTransmitAt = 0;
   }
 
   Consume() {
-    // 如果是单人游戏,直接返回
-    if (!BackendWS.isOnlineMode()) return;
-    else {
-      // 多人游戏
-      // 直接发送数据到服务器
-      BackendWS.consumeSendQueue();
+    if (!BackendWS.isRoomSessionMode()) {
+      return;
     }
+
+    let hasFreshRequests = false;
+    while (!this.queues.isEmpty()) {
+      const request = this.queues.shift();
+      if (!request) {
+        continue;
+      }
+      this.registerPendingRequest(request);
+      hasFreshRequests = true;
+    }
+
+    this.pruneAckedFrames();
+    if (this.pendingFrames.size === 0) {
+      return;
+    }
+
+    const now = Date.now();
+    if (!hasFreshRequests && now - this.lastTransmitAt < this.resendIntervalMs) {
+      return;
+    }
+
+    const sortedFrames = [...this.pendingFrames.keys()].sort((a, b) => a - b);
+    for (const frameId of sortedFrames) {
+      const frameRequests = this.pendingFrames.get(frameId);
+      if (!frameRequests) {
+        continue;
+      }
+      for (const request of frameRequests.values()) {
+        BackendWS.send(Request.toBinary(this.refreshAckFrameId(request)));
+      }
+    }
+    this.lastTransmitAt = now;
   }
 
-  // 单人模式下，只有在需要使用接受队列前，才会一次性把数据放入接收队列
-  // 这里模拟的是服务端的handle->广播的逻辑
   _extractBase(base?: RequestGridOperation): ResponseGridOperation | undefined {
-    if (!base) return undefined;
+    if (!base) {
+      return undefined;
+    }
     return {
       uid: BackendWS.my_id,
       col: base.col,
       row: base.row
     };
-  };
-
-  public DispatchSingleModeQueue() {
-    if (!this.singRecvQueue) {
-      console.error('singRecvQueue is null');
-      return;
-    }
-    const nextFrameID = BackendWS.GetNextFrameID(); // 下一渲染的帧
-    this.operationCount = 1; // 重置操作计数
-    const operations: InGameOperation[] = [];
-
-    while (!this.queues.isEmpty()) {
-      const data = this.queues.shift();
-      if (!data) continue;
-      // send queue 应该只会发送InGame的消息
-      // 其他消息通过其他地方（比如room.ts或内嵌的send发送）
-      if (!this.singRecvQueue) {
-        console.error('singRecvQueue is null');
-        return;
-      }
-      this.operationCount++; // 增加操作计数
-      switch (data.payload.oneofKind) {
-        case 'blank':
-          // 单人游戏开始发空帧由game.load函数结束后调用
-          operations.push({
-            processFrameId: data.payload.blank.frameId + 1,
-            operationIndex: this.operationCount,
-            payload: {
-              gameEvent: {
-                eventType: 0x4000, // 空白帧
-                message: ''
-              },
-              oneofKind: 'gameEvent'
-            }
-          })
-          break;
-        case 'plant':
-          operations.push({
-            processFrameId: Math.max(data.payload.plant.base?.processFrameId || 0, nextFrameID),
-            operationIndex: this.operationCount,
-            payload: {
-              cardPlant: {
-                pid: data.payload.plant.pid,
-                level: data.payload.plant.level,
-                cost: data.payload.plant.cost,
-                base: this._extractBase(data.payload.plant.base),
-              },
-              oneofKind: 'cardPlant'
-            }
-          });
-          break;
-        case 'removePlant':
-          operations.push({
-            processFrameId: Math.max(data.payload.removePlant.base?.processFrameId || 0, nextFrameID),
-            operationIndex: this.operationCount,
-            payload: {
-              removePlant: {
-                base: this._extractBase(data.payload.removePlant.base),
-                pid: data.payload.removePlant.pid,
-              },
-              oneofKind: 'removePlant'
-            }
-          })
-          break;
-        case 'starShards':
-          operations.push({
-            processFrameId: Math.max(data.payload.starShards.base?.processFrameId || 0, nextFrameID),
-            operationIndex: this.operationCount,
-            payload: {
-              useStarShards: {
-                base: this._extractBase(data.payload.starShards.base),
-                pid: data.payload.starShards.pid,
-                cost: data.payload.starShards.cost,
-              },
-              oneofKind: 'useStarShards'
-            }
-          })
-          break;
-        default:
-          break;
-      }
-    }
-    this.singRecvQueue.push({
-      frameId: nextFrameID,
-      operations: operations,
-    });
   }
 
-  // Onlinemode发送消息
-  // Deprecated 的东西放到 utils/net/room.ts 中
-
-  /**
-   * Deprecated: 应该在react组件中进行发送， 而不是这里
-   * 发送游戏结束的信息,该信息具有最高的等级,无视frameID(因为处理队列会处理最先传来的数据)
-   * @param result 0-失败, 1-胜利
-   */
   public sendGameEnd(result: number) {
     const request: RequestEndGame = {
       gameResult: result
@@ -168,129 +88,197 @@ export default class QueueSend {
     this.queues.push({
       payload: {
         endGame: request,
-        oneofKind: 'endGame'
+        oneofKind: "endGame"
       }
     });
   }
 
-  // 根据ack和frameId， 计算最佳的processFrameId
-  // 减少预测失败的可能
-  public EstimateProcessFrameId(base: RequestGridOperation) {
-    // 上一次的服务器帧
-    const ackFrameId = BackendWS.AckFrameID;
-
+  private createOperationBase(col: number, row: number): RequestGridOperation {
+    return {
+      base: {
+        frameId: BackendWS.GetFrameID(),
+        ackFrameId: BackendWS.AckFrameID
+      },
+      col,
+      row,
+      // Match deterministic-lockstep-demo: schedule local input
+      // to a fixed future frame instead of estimating server drift.
+      processFrameId: BackendWS.GetFrameID() + this.commandDelayFrames
+    };
   }
 
-  public sendCardPlant(pid: number, col: number, row: number, level: number) {
-    // 创建 RequestBlank 基础消息
-    const blankBase: RequestBlank = {
-      frameId: BackendWS.GetFrameID(),
-      ackFrameId: BackendWS.AckFrameID
-    };
-
-    // 创建 RequestGridOperation
-    const base: RequestGridOperation = {
-      base: blankBase,
-      col: col,
-      row: row,
-      processFrameId: BackendWS.GetFrameID() + BackendWS.calculateServerFrameDiff()
-    };
-
-    // 从PlantFactoryMap获取实际消耗
-    const plantRecord = PlantFactoryMap[pid];
-    const cost = plantRecord ? plantRecord.cost(level) : 0;
+  public sendCardPlant(pid: number, col: number, row: number, level: number, cost: number) {
+    const base = this.createOperationBase(col, row);
 
     const request: RequestCardPlant = {
-      base: base,
-      pid: pid,
-      level: level,
-      cost: cost,
-      energySum: gameStateManager.getCurrentEnergy(),
-      starShardsSum: gameStateManager.getCurrentStarShards()
+      base,
+      pid,
+      level,
+      cost,
+      energySum: ResourceManager.Instance.getEnergy('mine'),
+      starShardsSum: ResourceManager.Instance.getStarShards('mine'),
     };
     this.queues.push({
       payload: {
         plant: request,
-        oneofKind: 'plant'
+        oneofKind: "plant"
       }
     });
   }
 
   public sendRemovePlant(pid: number, col: number, row: number) {
-    // 创建 RequestBlank 基础消息
-    const blankBase: RequestBlank = {
-      frameId: BackendWS.GetFrameID(),
-      ackFrameId: BackendWS.AckFrameID
-    };
-
-    // 创建 RequestGridOperation
-    const base: RequestGridOperation = {
-      base: blankBase,
-      col: col,
-      row: row,
-      processFrameId: BackendWS.GetFrameID() + BackendWS.calculateServerFrameDiff()
-    };
+    const base = this.createOperationBase(col, row);
 
     const request: RequestRemovePlant = {
-      base: base,
-      pid: pid
+      base,
+      pid
     };
     this.queues.push({
       payload: {
         removePlant: request,
-        oneofKind: 'removePlant'
+        oneofKind: "removePlant"
       }
     });
   }
 
-  public sendStarShards(pid: number, col: number, row: number) {
-    // 创建 RequestBlank 基础消息
-    const blankBase: RequestBlank = {
-      frameId: BackendWS.GetFrameID(),
-      ackFrameId: BackendWS.AckFrameID
-    };
+  public sendStarShards(pid: number, col: number, row: number, cost: number) {
+    const base = this.createOperationBase(col, row);
 
-    // 创建 RequestGridOperation
-    const base: RequestGridOperation = {
-      base: blankBase,
-      col: col,
-      row: row,
-      processFrameId: BackendWS.GetFrameID() + BackendWS.calculateServerFrameDiff()
-    };
-
-    const currentStarShards = gameStateManager.getCurrentStarShards();
-    let cost = 1;
-    if (BackendWS.isOnlineMode()) {
-      if (currentStarShards > 1) {
-        cost = 2;
-      }
-    }
+    const currentStarShards = ResourceManager.Instance.getStarShards('mine');
 
     const request: RequestStarShards = {
-      base: base,
-      pid: pid,
-      cost: cost,
-      energySum: gameStateManager.getCurrentEnergy(),
+      base,
+      pid,
+      cost,
+      energySum: ResourceManager.Instance.getEnergy('mine'),
       starShardsSum: currentStarShards
     };
     this.queues.push({
       payload: {
         starShards: request,
-        oneofKind: 'starShards'
+        oneofKind: "starShards"
       }
     });
   }
 
   public sendBlankFrame(frameId: number) {
     const request: RequestBlank = {
-      frameId: frameId,
+      frameId,
       ackFrameId: BackendWS.AckFrameID
     };
     this.queues.push({
       payload: {
         blank: request,
-        oneofKind: 'blank'
+        oneofKind: "blank"
       }
     });
   }
+
+  private registerPendingRequest(request: Request) {
+    const frameId = this.getRequestFrameId(request);
+    if (frameId === undefined) {
+      return;
+    }
+    let frameRequests = this.pendingFrames.get(frameId);
+    if (!frameRequests) {
+      frameRequests = new Map<string, Request>();
+      this.pendingFrames.set(frameId, frameRequests);
+    }
+
+    const signature = this.getRequestSignature(request);
+    if (request.payload.oneofKind === "blank") {
+      if (frameRequests.size === 0) {
+        frameRequests.set(signature, request);
+      }
+      return;
+    }
+
+    frameRequests.delete(`blank:${frameId}`);
+    frameRequests.set(signature, request);
+  }
+
+  private pruneAckedFrames() {
+    const ackFrameId = BackendWS.AckFrameID;
+    for (const frameId of this.pendingFrames.keys()) {
+      if (frameId <= ackFrameId) {
+        this.pendingFrames.delete(frameId);
+      }
+    }
+  }
+
+  private getRequestFrameId(request: Request): number | undefined {
+    switch (request.payload.oneofKind) {
+      case "blank":
+        return request.payload.blank.frameId;
+      case "plant":
+        return request.payload.plant.base?.processFrameId;
+      case "removePlant":
+        return request.payload.removePlant.base?.processFrameId;
+      case "starShards":
+        return request.payload.starShards.base?.processFrameId;
+      default:
+        return undefined;
+    }
+  }
+
+  private getRequestSignature(request: Request): string {
+    switch (request.payload.oneofKind) {
+      case "blank":
+        return `blank:${request.payload.blank.frameId}`;
+      case "plant":
+        return [
+          "plant",
+          request.payload.plant.base?.processFrameId,
+          request.payload.plant.pid,
+          request.payload.plant.level,
+          request.payload.plant.base?.col,
+          request.payload.plant.base?.row
+        ].join(":");
+      case "removePlant":
+        return [
+          "removePlant",
+          request.payload.removePlant.base?.processFrameId,
+          request.payload.removePlant.pid,
+          request.payload.removePlant.base?.col,
+          request.payload.removePlant.base?.row
+        ].join(":");
+      case "starShards":
+        return [
+          "starShards",
+          request.payload.starShards.base?.processFrameId,
+          request.payload.starShards.pid,
+          request.payload.starShards.base?.col,
+          request.payload.starShards.base?.row
+        ].join(":");
+      default:
+        return request.payload.oneofKind ?? "unknown";
+    }
+  }
+
+  private refreshAckFrameId(request: Request): Request {
+    switch (request.payload.oneofKind) {
+      case "blank":
+        request.payload.blank.ackFrameId = BackendWS.AckFrameID;
+        break;
+      case "plant":
+        if (request.payload.plant.base?.base) {
+          request.payload.plant.base.base.ackFrameId = BackendWS.AckFrameID;
+        }
+        break;
+      case "removePlant":
+        if (request.payload.removePlant.base?.base) {
+          request.payload.removePlant.base.base.ackFrameId = BackendWS.AckFrameID;
+        }
+        break;
+      case "starShards":
+        if (request.payload.starShards.base?.base) {
+          request.payload.starShards.base.base.ackFrameId = BackendWS.AckFrameID;
+        }
+        break;
+      default:
+        break;
+    }
+    return request;
+  }
 }
+

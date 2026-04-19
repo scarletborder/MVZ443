@@ -4,7 +4,7 @@ import { GetDecValue, PlantStat } from "../../../../utils/numbervalue";
 import { PositionManager } from "../../../managers/view/PositionManager";
 import { PlantEntity } from "../../../models/entities/PlantEntity";
 import { PlantModel } from "../../../models/PlantModel";
-import { Game } from "../../../scenes/Game";
+import type { Game } from "../../../scenes/Game";
 import { StartArc } from "../../../utils/arc";
 import createDirtOut from "../../../sprite/dirt_out";
 import { ProjectileCmd } from "../../../utils/cmd/ProjectileCmd";

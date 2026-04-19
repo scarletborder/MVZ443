@@ -1,5 +1,5 @@
-import { PresetMonsterModel } from "../common";
-import { BaseVindicatorEntity } from "./shared";
+import { BaseVindicatorEntity, PresetMonsterModel } from "../../../models/entities/MonsterEntity";
+
 
 export class VindicatorEntity extends BaseVindicatorEntity { }
 

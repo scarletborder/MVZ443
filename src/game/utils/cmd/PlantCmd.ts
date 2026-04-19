@@ -2,7 +2,7 @@ import { DeferredManager } from "../../managers/DeferredManager";
 import { BaseEntity } from "../../models/core/BaseEntity";
 import { PlantEntity } from "../../models/entities/PlantEntity";
 import { PlantModel } from "../../models/PlantModel";
-import { Game } from "../../scenes/Game";
+import type { Game } from "../../scenes/Game";
 
 
 export namespace PlantCmd {

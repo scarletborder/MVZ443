@@ -1,7 +1,7 @@
-import { Game } from "../../../scenes/Game";
+import type { Game } from "../../../scenes/Game";
 import { PositionManager } from "../../../managers/view/PositionManager";
-import { addHandAttachment, PresetMonsterModel } from "../common";
-import { BaseZombieEntity } from "./shared";
+import { BaseZombieEntity, PresetMonsterModel, addHandAttachment } from "../../../models/entities/MonsterEntity";
+
 
 export class StickZombieEntity extends BaseZombieEntity {
   private hasStick = true;

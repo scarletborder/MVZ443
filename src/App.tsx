@@ -16,9 +16,6 @@ import SettingsPage from './pages/settings';
 import Docs from './pages/docs';
 import DocDetail from './pages/docDetail';
 import { publicUrl } from './utils/browser';
-import { PhaserEventBus } from './game/EventBus';
-import { OnlineStateManager } from './store/OnlineStateManager';
-import EnumGameStage from './utils/net/game_state';
 
 
 function App() {
@@ -33,7 +30,7 @@ function App() {
   //  References to the PhaserGame component (game and scene are exposed)
   const phaserRef = useRef<IRefPhaserGame | null>(null);
 
-  const { width, toggleLanguage } = useSettings();
+  const { width } = useSettings();
 
   const gameStart = useCallback(() => {
     setShowGameScreen(true);
@@ -58,6 +55,7 @@ function App() {
     // 结算
     setGameResult(result);
     setShowGameResult(true);
+    BackendWS.closeMockRoom();
     BackendWS.ResetGameData();
   }, [setShowGameScreen, setShowGameTool]);
 

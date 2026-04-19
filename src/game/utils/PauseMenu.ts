@@ -1,4 +1,5 @@
 import DepthUtils from "../../utils/depth";
+import CombatManager from "../managers/CombatManager";
 import { Game } from "../scenes/Game";
 
 export class PauseMenu {
@@ -93,7 +94,7 @@ export class PauseMenu {
       '#27ae60',
       '#2ecc71',
       () => {
-        this.game.handlePause({ paused: false });
+        CombatManager.Instance.isPaused = false;
       }
     );
 
@@ -105,7 +106,7 @@ export class PauseMenu {
       '#e74c3c',
       '#c0392b',
       () => {
-        this.game.handleExit(false);
+        CombatManager.Instance.EndGame(false);
       }
     );
 

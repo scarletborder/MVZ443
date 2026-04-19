@@ -1,5 +1,5 @@
 import uniqueId from "lodash/uniqueId";
-import { Game } from "../../scenes/Game";
+import type { Game } from "../../scenes/Game";
 import TickerManager, { TickerManagerProxy } from "../../managers/combat/TickerManager";
 import RAPIER, { Vector } from "@dimforge/rapier2d-deterministic-compat";
 import { CollisionContext } from "../../types";
@@ -31,8 +31,6 @@ export abstract class BaseEntity {
     this.viewGroup = scene.add.group();
     this.TimerKey = uniqueId('entity_');
     this.tickmanager = new TickerManagerProxy(this.TimerKey);
-
-    this.buildView();
   }
 
   public setVisible(visible: boolean) {

@@ -1,9 +1,9 @@
 import { FrameTimer } from "../../../managers/combat/TickerManager";
+import { BaseMonsterEntity, PresetMonsterModel } from "../../../models/entities/MonsterEntity";
 import { PlantEntity } from "../../../models/entities/PlantEntity";
 import { createMutantAnimController } from "../../../models/monster/anims/LegacyMonsterAnimControllers";
-import { Game } from "../../../scenes/Game";
+import type { Game } from "../../../scenes/Game";
 import MobCmd from "../../../utils/cmd/MobCmd";
-import { BaseMonsterEntity, PresetMonsterModel } from "../common";
 
 const mutantProps = {
   Species: "default_mutant",

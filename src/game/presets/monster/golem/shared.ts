@@ -1,19 +1,13 @@
 import seedrandom from "seedrandom";
 import { PhaserEventBus, PhaserEvents } from "../../../EventBus";
-import PlantsManager from "../../../managers/combat/PlantsManager";
 import { PositionManager } from "../../../managers/view/PositionManager";
-import { ObstacleEntity } from "../../../models/entities/ObstacleEntity";
 import { createGolemAnimController } from "../../../models/monster/anims/LegacyMonsterAnimControllers";
-import { Faction } from "../../../models/Enum";
-import { Game } from "../../../scenes/Game";
+import type { Game } from "../../../scenes/Game";
 import { GolemAnimProps } from "../../../sprite/golem";
-import { StartArc } from "../../../utils/arc";
 import MobCmd from "../../../utils/cmd/MobCmd";
-import ObstacleCmd from "../../../utils/cmd/ObstacleCmd";
-import { ProjectileCmd } from "../../../utils/cmd/ProjectileCmd";
 import StageHelper from "../../../utils/helper/StageHelper";
-import { BaseMonsterEntity, PresetMonsterModel } from "../common";
-import { SECKILL } from "../../../../../public/constants";
+import { BaseMonsterEntity, PresetMonsterModel } from "../../../models/entities/MonsterEntity";
+
 
 export abstract class BaseGolemEntity extends BaseMonsterEntity {
   protected readonly random: seedrandom.PRNG;

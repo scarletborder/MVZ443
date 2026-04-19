@@ -1,7 +1,6 @@
 import { EventBus } from "../../../utils/eventBus";
 import BackendWS from "../../../utils/net/sync";
-import { PhaserEventBus, PhaserEvents } from "../../EventBus";
-import { Game } from "../../scenes/Game";
+import type { Game } from "../../scenes/Game";
 import { BaseManager } from "../BaseManager";
 import CombatManager from "../CombatManager";
 import { PlantLibrary } from "../library/PlantLibrary";

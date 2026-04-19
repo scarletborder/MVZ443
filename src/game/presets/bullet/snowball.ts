@@ -1,6 +1,6 @@
 import { BulletEntity } from "../../models/projectiles/BulletEntity";
 import { BulletConfig, BulletModel } from "../../models/projectiles/ProjectileModels";
-import { Game } from "../../scenes/Game";
+import type { Game } from "../../scenes/Game";
 import ProjectileDamage from "../../../constants/damage";
 import { ProjectileCmd } from "../../utils/cmd/ProjectileCmd";
 import { PositionManager } from "../../managers/view/PositionManager";

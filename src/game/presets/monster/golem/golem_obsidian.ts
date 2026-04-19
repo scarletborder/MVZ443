@@ -2,6 +2,7 @@ import { SECKILL } from "../../../../../public/constants";
 import ObstacleManager from "../../../managers/combat/ObstacleManager";
 import PlantsManager from "../../../managers/combat/PlantsManager";
 import { PositionManager } from "../../../managers/view/PositionManager";
+import { PresetMonsterModel } from "../../../models/entities/MonsterEntity";
 import { Faction } from "../../../models/Enum";
 import { ObsidianGolemAnimProps } from "../../../sprite/normal_golem";
 import { StartArc } from "../../../utils/arc";
@@ -9,7 +10,6 @@ import MobCmd from "../../../utils/cmd/MobCmd";
 import ObstacleCmd from "../../../utils/cmd/ObstacleCmd";
 import { PlantCmd } from "../../../utils/cmd/PlantCmd";
 import { ObsidianObstacleData } from "../../obstacle";
-import { PresetMonsterModel } from "../common";
 import { BaseGolemEntity } from "./shared";
 
 export function createObsidianColumnBurst(entity: BaseGolemEntity, cols: number[]) {

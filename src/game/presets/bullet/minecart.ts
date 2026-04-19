@@ -2,7 +2,7 @@ import { SECKILL } from "../../../../public/constants";
 import { PositionManager } from "../../managers/view/PositionManager";
 import { BulletEntity } from "../../models/projectiles/BulletEntity";
 import { BulletConfig, BulletModel } from "../../models/projectiles/ProjectileModels";
-import { Game } from "../../scenes/Game";
+import type { Game } from "../../scenes/Game";
 import { CombatEntity } from "../../models/core/CombatEntity";
 import { Faction } from "../../models/Enum";
 

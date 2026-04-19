@@ -1,5 +1,5 @@
-import { Game } from "../../../scenes/Game";
-import { addHandAttachment, PresetMonsterModel } from "../common";
+import { PresetMonsterModel, addHandAttachment } from "../../../models/entities/MonsterEntity";
+import type { Game } from "../../../scenes/Game";
 import { HelmetZombieEntity } from "./helmet_zombie";
 
 export class MinerHelmetZombieEntity extends HelmetZombieEntity {

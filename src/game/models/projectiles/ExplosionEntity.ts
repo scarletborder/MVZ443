@@ -1,7 +1,7 @@
 
 import { defaultRandom } from "../../../utils/random";
 import DepthUtils from "../../../utils/depth";
-import { Game } from "../../scenes/Game";
+import type { Game } from "../../scenes/Game";
 import { CombatEntity } from "../core/CombatEntity";
 import { ProjectileEntity } from "../entities/ProjectileEntity";
 import { ExplosionConfig, ExplosionModel } from "./ProjectileModels";

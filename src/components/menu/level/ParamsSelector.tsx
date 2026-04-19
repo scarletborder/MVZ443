@@ -12,6 +12,8 @@ import {
   PhaserEvents,
 } from '../../../game/EventBus';
 import { PlantLibrary } from '../../../game/managers/library/PlantLibrary';
+import BackendWS from '../../../utils/net/sync';
+import { Request, RequestChooseMap, RequestReady } from '../../../pb/request';
 import { SendReady } from '../../../utils/net/room';
 
 interface ParamsSelectorProps {
@@ -39,9 +41,10 @@ interface PlantElem {
 }
 
 const ParamsSelector: React.FC<ParamsSelectorProps> = ({
+  chapterId,
   stageId,
   setGameParams,
-  startGame,
+  startGame: _startGame,
   onBack,
   clearLevelSelection,
   // 联机模式相关属性
@@ -244,7 +247,13 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({
     clearLevelSelection();
 
     setGameParams(params);
-    startGame();
+    setTimeout(() => {
+      BackendWS.startSinglePlayerRoom();
+      const chooseMapRequest: RequestChooseMap = { chapterId, stageId };
+      BackendWS.send(Request.toBinary({ payload: { chooseMap: chooseMapRequest, oneofKind: 'chooseMap' } }));
+      const readyRequest: RequestReady = { isReady: true };
+      BackendWS.send(Request.toBinary({ payload: { ready: readyRequest, oneofKind: 'ready' } }));
+    }, 0);
   });
 
   return (

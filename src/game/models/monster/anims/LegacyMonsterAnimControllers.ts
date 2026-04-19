@@ -1,8 +1,8 @@
 import GolemAnim, { GolemAnimProps } from "../../../sprite/golem";
 import { newNormalEvokerAnim, newNormalSkeletonAnim, newNormalVindicatorAnim, newNormalZombieAnim } from "../../../sprite/normal_zombie";
 import IMutantAnim, { MutantAnimProps } from "../../../sprite/zombie_mutant";
-import { Game } from "../../../scenes/Game";
-import { IMonsterAnimController } from "./IMonsterAnimController";
+import type { Game } from "../../../scenes/Game";
+import type { IMonsterAnimController } from "./IMonsterAnimController";
 
 type LegacyAnimLike = {
   updatePosition(x: number, y: number): void;

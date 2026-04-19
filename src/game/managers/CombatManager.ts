@@ -7,17 +7,12 @@ import { EventBus } from "../../utils/eventBus";
 import SyncManager from "./combat/SyncManager";
 import TickerManager from "./combat/TickerManager";
 import { BaseEntity } from "../models/core/BaseEntity";
-import ResourceManager from "./combat/ResourceManager";
-import MobManager from "./combat/MobManager";
-import AddMapFunction from "../game_events/mapfun";
 import { SendEndGame } from "../../utils/net/room";
 import { DeferredManager } from "./DeferredManager";
 
 export type CombatStatus = {
   dayOrNight: boolean; // day = true
 }
-
-type combatSnapshot = any; // TODO: 定义战斗快照类型
 
 type CombatManagerEventType = {
   onCombatPause: () => void;
@@ -38,7 +33,7 @@ export default class CombatManager extends BaseManager {
     dayOrNight: true,
   };
 
-  isPaused = true; // 是否暂停
+  private _isPaused = true; // 是否暂停
   isGameEnd: boolean = true;
 
   // 游戏事件
@@ -48,6 +43,24 @@ export default class CombatManager extends BaseManager {
     super();
     this.Eventbus = new EventBus<CombatManagerEventType>();
   }
+
+  get isPaused(): boolean {
+    return this._isPaused;
+  }
+
+
+  public set isPaused(value: boolean) {
+    if (this._isPaused === value) {
+      return; // 状态未改变，无需处理
+    }
+    if (value) {
+      this.Eventbus.emit('onCombatPause');
+    } else {
+      this.Eventbus.emit('onCombatResume');
+    }
+    this._isPaused = value;
+  }
+
 
   Load(): void {
     // 监听 toggle-pause 事件来切换暂停状态
@@ -89,10 +102,10 @@ export default class CombatManager extends BaseManager {
 
   private handleTogglePause() {
     if (this.isGameEnd) return; // 游戏结束后不允许切换暂停状态
-    this.isPaused = !this.isPaused;
-    if (this.isPaused) {
+    this._isPaused = !this._isPaused;
+    if (this._isPaused) {
       this.Eventbus.emit('onCombatPause');
-    } else if (!this.isPaused) {
+    } else if (!this._isPaused) {
       this.Eventbus.emit('onCombatResume');
     }
   }
@@ -104,15 +117,8 @@ export default class CombatManager extends BaseManager {
       console.error("No stage data found for the game start event.");
       return;
     }
+    this.isPaused = false;
     this.isGameEnd = false;
-
-    // 控制MobManager开始工作
-    MobManager.Instance.setRandomSeed(this.seed);
-    MobManager.Instance.startFirstWave();
-
-    ResourceManager.Instance.SetInitialEnergy(stageData.energy);
-
-    AddMapFunction(this.scene!);
   }
 
   private handleRoomGameEnd({ isWin }: { isWin: boolean }) {
@@ -121,14 +127,22 @@ export default class CombatManager extends BaseManager {
     this.Eventbus.emit('onCombatEnd', isWin);
   }
 
-  public update(time: number, delta: number) {
+  public update(_time: number, delta: number) {
     // TODO: 如果倍速，那么这里delta还要乘以倍速系数,以让物理世界和scene视觉同步倍速
     // 自增属性
     this.elapsedFrameTime += delta;
 
     // 物理帧更新
     while (this.elapsedFrameTime >= SyncManager.Instance.FrameInterval) {
+
+      const frameReady = SyncManager.Instance.update();
+
+      if (!frameReady) {
+        break;
+      }
+      console.log(`CombatManager Update - Time: ${_time}, Delta: ${delta}`);
       this.elapsedFrameTime -= SyncManager.Instance.FrameInterval;
+      console.log(this.isPaused)
       // 更新tick-时间相关
       if (!this.isPaused) {
         TickerManager.Instance.Update();
@@ -158,13 +172,14 @@ export default class CombatManager extends BaseManager {
       }
 
       // 消费服务器帧-时间无关
-      SyncManager.Instance.update();
 
       // Post-update -时间无关
       DeferredManager.Instance.flush();
 
       // 存储状态-仅在非暂停时存储
-      // TODO: 存储当前状态到帧id对应的快照 
+      if (!this.isPaused) {
+        SyncManager.Instance.DumpFrame(SyncManager.Instance.GetFrameID());
+      }
     }
 
     // 常规

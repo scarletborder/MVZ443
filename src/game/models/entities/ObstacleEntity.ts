@@ -2,7 +2,7 @@ import RAPIER, { Vector } from "@dimforge/rapier2d-deterministic-compat";
 import DepthUtils from "../../../utils/depth";
 import ObstacleManager from "../../managers/combat/ObstacleManager";
 import { PositionManager } from "../../managers/view/PositionManager";
-import { Game } from "../../scenes/Game";
+import type { Game } from "../../scenes/Game";
 import { CollisionContext } from "../../types/CollisionTypes";
 import { CombatEntity } from "../core/CombatEntity";
 import { BaseEntity } from "../core/BaseEntity";

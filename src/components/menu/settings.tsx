@@ -129,7 +129,7 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
                         descriptionKey: "menu_settings_general_fullscreen_t",
                         controlType: "switcher",
                         controlProps: {
-                            value: isFullscreen, onToggle: (val) => {
+                            value: isFullscreen, onToggle: (_val) => {
                                 if (!document.fullscreenElement) {
                                     document.documentElement.requestFullscreen().then(() => setIsFullscreen(true));
                                 } else {
@@ -270,7 +270,7 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
                                 function checkAndOpenUrl(url: string) {
                                     // 发起一个 fetch 请求来检测证书
                                     fetch(url, { method: 'HEAD' })
-                                        .then(response => {
+                                        .then(_response => {
                                             // 如果响应成功，不是自签证书
                                             alert('有效并且证书已被信任');
                                         })

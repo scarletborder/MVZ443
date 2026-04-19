@@ -1,6 +1,6 @@
 import { ProjectileEntity } from "../../models/entities/ProjectileEntity";
 import { ProjectileModel, BulletModel, BulletConfig, ExplosionModel, ExplosionConfig, LaserModel, LaserConfig } from "../../models/projectiles/ProjectileModels";
-import { Game } from "../../scenes/Game";
+import type { Game } from "../../scenes/Game";
 import { DeferredManager } from "../../managers/DeferredManager";
 
 export namespace ProjectileCmd {

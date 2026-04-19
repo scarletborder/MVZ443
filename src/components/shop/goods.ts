@@ -71,7 +71,7 @@ class Cp1Kit implements IGoods {
     ) { }
 
     description = () => "Chapter 1 Kit\n随机获得第一章普通关卡的升级材料(leather or iron)3件\n解锁chapter1-3";
-    hasBought = (id: number, progress: GameProgress) => {
+    hasBought = (_id: number, _progress: GameProgress) => {
         return false;
     };
     afterBought = (id: number, save: GameManager) => {
@@ -105,7 +105,7 @@ class ScarletborderCrystal implements IGoods {
     ) { }
 
     description = () => "体验版专属物品\n用于升级器械\n体验版限制了升级器械的等级上限，使用黯绯结晶可以解除这一限制\n注意:升级后的器械严重超出体验版设计的强度\n解锁stage1-5";
-    hasBought = (id: number, progress: GameProgress) => {
+    hasBought = (_id: number, _progress: GameProgress) => {
         return false;
     };
     afterBought = (id: number, save: GameManager) => {

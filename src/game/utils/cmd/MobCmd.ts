@@ -1,10 +1,11 @@
 import { PhaserEventBus, PhaserEvents } from "../../EventBus";
 import { DeferredManager } from "../../managers/DeferredManager";
+import MobManager from "../../managers/combat/MobManager";
 import { MonsterLibrary } from "../../managers/library/MonsterLibrary";
 import PlantsManager from "../../managers/combat/PlantsManager";
 import { PositionManager } from "../../managers/view/PositionManager";
 import { MonsterEntity } from "../../models/entities/MonsterEntity";
-import { Game } from "../../scenes/Game";
+import type { Game } from "../../scenes/Game";
 
 namespace MobCmd {
   export function Spawn(mid: number, scene: Game, col: number, row: number, waveID: number,
@@ -14,6 +15,8 @@ namespace MobCmd {
       if (!model) return;
       const finalRow = Phaser.Math.Clamp(row, 0, PositionManager.Instance.Row_Number - 1);
       const en = model.createEntity(scene, col, finalRow, waveID);
+      MobManager.Instance.registerMonster(en);
+      en.addDestroyListener((entity) => MobManager.Instance.registerDestroy(entity));
       if (callback) callback(en);
     });
   }

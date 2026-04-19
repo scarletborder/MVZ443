@@ -19,15 +19,10 @@ export class OnlineStateManager {
     private connectionKey: string = "";
     private roomPeers: string = ""; // 房间内玩家情况的JSON字符串
 
-    // 帧相关状态
-    private frameId: number = 0;
-    private ackFrameId: number = 0;
-
     // 状态更新回调
     private gameStageUpdateCallbacks: ((gameStage: number) => void)[] = [];
     private onlineModeUpdateCallbacks: ((isOnline: boolean) => void)[] = [];
     private roomInfoUpdateCallbacks: ((roomInfo: { roomId: number; myId: number; lordId: number; peers: string }) => void)[] = [];
-    private frameIdUpdateCallbacks: ((frameId: number) => void)[] = [];
 
     private constructor() { }
 
@@ -160,50 +155,6 @@ export class OnlineStateManager {
     }
 
     /**
-     * 获取当前帧ID
-     */
-    public getFrameId(): number {
-        return this.frameId;
-    }
-
-    /**
-     * 获取下一帧ID
-     */
-    public getNextFrameId(): number {
-        return this.frameId + 1;
-    }
-
-    /**
-     * 更新帧ID
-     */
-    public updateFrameId(frameId: number): void {
-        this.frameId = frameId;
-        // 通知所有监听器
-        this.frameIdUpdateCallbacks.forEach(callback => callback(frameId));
-    }
-
-    /**
-     * 跳转到指定帧ID
-     */
-    public goToFrameId(target: number = this.frameId + 1): void {
-        this.updateFrameId(target);
-    }
-
-    /**
-     * 获取确认帧ID
-     */
-    public getAckFrameId(): number {
-        return this.ackFrameId;
-    }
-
-    /**
-     * 更新确认帧ID
-     */
-    public updateAckFrameId(ackFrameId: number): void {
-        this.ackFrameId = ackFrameId;
-    }
-
-    /**
      * 判断是否为房主
      */
     public isLord(): boolean {
@@ -270,8 +221,6 @@ export class OnlineStateManager {
      * 在游戏结束后/刚加入房间时/退出房间时调用
      */
     public resetGameData(): void {
-        this.frameId = 0;
-        this.ackFrameId = 0;
         this.currentGameStage = EnumGameStage.InLobby;
     }
 
@@ -341,22 +290,6 @@ export class OnlineStateManager {
         }
     }
 
-    /**
-     * 注册帧ID更新监听器
-     */
-    public onFrameIdUpdate(callback: (frameId: number) => void): void {
-        this.frameIdUpdateCallbacks.push(callback);
-    }
-
-    /**
-     * 移除帧ID更新监听器
-     */
-    public removeFrameIdUpdateListener(callback: (frameId: number) => void): void {
-        const index = this.frameIdUpdateCallbacks.indexOf(callback);
-        if (index > -1) {
-            this.frameIdUpdateCallbacks.splice(index, 1);
-        }
-    }
 }
 
 // 导出单例实例

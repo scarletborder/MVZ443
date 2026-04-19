@@ -1,8 +1,7 @@
 import { _Typedebuffs } from "../../../constants/game";
 import { FrameTimer } from "../../managers/combat/TickerManager";
 import { PositionManager } from "../../managers/view/PositionManager";
-import { Game } from "../../scenes/Game";
-import { MonsterEntity } from "../entities/MonsterEntity";
+import type { Game } from "../../scenes/Game";
 import { Faction } from "../Enum";
 import { IDamageable } from "../Interface";
 import { BaseEntity } from "./BaseEntity";
@@ -17,7 +16,8 @@ export abstract class CombatEntity extends BaseEntity implements IDamageable {
 
   public ExtraData: Record<string, any> = {}; // 用于存储额外数据，供子类使用
 
-  public underAttackBy: Set<MonsterEntity> = new Set<MonsterEntity>(); // alias attackingZombie
+  // 正在被这些东西（应该是monster）攻击
+  public underAttackBy: Set<CombatEntity> = new Set<CombatEntity>(); // alias attackingZombie
 
   // 额外状态
   public isTiny = false; // 是否为小型单位，可能会被某些效果忽略
@@ -68,7 +68,7 @@ export abstract class CombatEntity extends BaseEntity implements IDamageable {
   }
 
   // --- 泛用的 Debuff 逻辑 ---
-  public addDebuff(debuff: _Typedebuffs, durationMs: number) {
+  public addDebuff(_debuff: _Typedebuffs, _durationMs: number) {
     // TODO: 具体实现类似你写的 updateDebuffTime 逻辑...
   }
 

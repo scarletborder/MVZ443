@@ -1,6 +1,6 @@
-import { Game } from "../../../scenes/Game";
-import { PresetMonsterModel } from "../common";
-import { BaseSkeletonEntity } from "./shared";
+import { BaseSkeletonEntity, PresetMonsterModel } from "../../../models/entities/MonsterEntity";
+import type { Game } from "../../../scenes/Game";
+
 
 export class SkeletonEntity extends BaseSkeletonEntity {
   public constructor(scene: Game, col: number, row: number, model: PresetMonsterModel, waveID: number) {

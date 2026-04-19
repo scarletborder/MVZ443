@@ -10,12 +10,13 @@ import {
 } from "../../EventBus";
 import { GroundOnlyZombie, SkyOnlyZombie, WaterOnlyZombie } from "../../utils/helper/PlantHelper";
 import { BaseManager } from "../BaseManager";
-import { Game } from "../../scenes/Game";
+import type { Game } from "../../scenes/Game";
 import TickerManager, { FrameTimer } from "./TickerManager";
 import { EventBus } from "../../../utils/eventBus";
 import CombatManager from "../CombatManager";
 import { MonsterLibrary } from "../library/MonsterLibrary";
 import { DeferredManager } from "../DeferredManager";
+import { MonsterEntity } from "../../models/entities/MonsterEntity";
 
 type Mob = CombatEntity;
 
@@ -59,6 +60,7 @@ export default class MobManager extends BaseManager {
   protected scene: Game | null = null;
 
   public EventBus: EventBus<MobManagerEvent>;
+  private seed: number = 0;
 
   // 存活的怪物列表
   public MobsByLane: Map<number, Mob[]> = new Map(); // 按行分的怪物列表
@@ -87,7 +89,13 @@ export default class MobManager extends BaseManager {
     this.EventBus = new EventBus<MobManagerEvent>();
     // Initialize MobManager
   }
-  public Load(): void { }
+  public Load(): void {
+    PhaserEventBus.on(PhaserEvents.RoomAllReady,
+      (data: { allPlayerCount: number, seed: number, myId: number, playerIds: number }) => {
+        this.seed = data.seed;
+      }, this);
+    PhaserEventBus.on(PhaserEvents.RoomGameStart, this.handleRoomGameStart, this);
+  }
 
   public setScene(scene: Game) {
     this.scene = scene;
@@ -329,6 +337,7 @@ export default class MobManager extends BaseManager {
         DeferredManager.Instance.defer(() => {
           if (!this.scene) return;
           const zomb = model.createEntity(this.scene, colMax, row, wave.waveId);
+          this.attachLifecycle(zomb);
 
           // 2. 如果当前怪物索引在carryingMonsters中，则设置携带starShards
           if (zomb && carryingMonsters.has(monsterIndex) && model.couldCarryStarShards) {
@@ -459,6 +468,11 @@ export default class MobManager extends BaseManager {
     }
   }
 
+  private attachLifecycle(monster: MonsterEntity) {
+    this.registerMonster(monster);
+    monster.addDestroyListener((entity) => this.registerDestroy(entity));
+  }
+
   onKilledCountUpdate(m_waveID: number = -10) {
     if (CombatManager.Instance.isGameEnd) return; // 结束了,避免结束杀人
     console.log('kill', this.killed_count, '/', this.total_count);
@@ -532,5 +546,10 @@ export default class MobManager extends BaseManager {
         // TODO : fatal error exit
       }
     }
+  }
+
+  private handleRoomGameStart() {
+    this.setRandomSeed(this.seed);
+    this.startFirstWave();
   }
 }

@@ -2,9 +2,9 @@ import { ProjectileCmd } from "../../../utils/cmd/ProjectileCmd";
 import { ArrowData } from "../../bullet/arrow";
 import { PositionManager } from "../../../managers/view/PositionManager";
 import { Faction } from "../../../models/Enum";
-import { Game } from "../../../scenes/Game";
-import { PresetMonsterModel } from "../common";
-import { BaseSkeletonBowEntity } from "./shared";
+import type { Game } from "../../../scenes/Game";
+import { PresetMonsterModel } from "../../../models/entities/MonsterEntity";
+import { BaseSkeletonBowEntity } from "../../../models/entities/BaseSkeletonBowEntity";
 
 export class TurtleSkeletonBowEntity extends BaseSkeletonBowEntity {
   private shellHealth = 375;
