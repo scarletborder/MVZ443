@@ -5,9 +5,7 @@ import RAPIER, { Vector } from "@dimforge/rapier2d-deterministic-compat";
 import { CollisionContext } from "../../types";
 import { DeferredManager } from "../../managers/DeferredManager";
 
-
-
-// 无论是有血量的植物，还是没血量的子弹，它们都有位置、都有画面、都要在场景中被销毁
+// All entities share world position, visual state, and destruction lifecycle.
 export abstract class BaseEntity {
   public scene: Game;
   public x: number;
@@ -15,13 +13,13 @@ export abstract class BaseEntity {
 
   public abstract baseDepth: number;
 
-  // 计时器key
+  // Timer key
   private TimerKey: string;
-  // 定时器代理
+  // Timer proxy
   public tickmanager: TickerManagerProxy;
 
   public rigidBody: RAPIER.RigidBody | null = null;
-  // 统一的渲染容器
+  // Shared render container
   public viewGroup: Phaser.GameObjects.Group;
 
   constructor(scene: Game, x: number, y: number) {
@@ -29,16 +27,16 @@ export abstract class BaseEntity {
     this.x = x;
     this.y = y;
     this.viewGroup = scene.add.group();
-    this.TimerKey = uniqueId('entity_');
+    this.TimerKey = uniqueId("entity_");
     this.tickmanager = new TickerManagerProxy(this.TimerKey);
   }
 
   public setVisible(visible: boolean) {
-    // 设置可见性
+    // Toggle visibility for the whole entity view.
     this.viewGroup.setVisible(visible);
   }
 
-  // 抽象方法：强制子类自己实现怎么画 自己 和 物理体
+  // Subclasses decide how to build their own visuals and physics.
   protected abstract buildView(): void;
 
   public updateView(vec: Vector, rotation?: number): void {
@@ -58,11 +56,13 @@ export abstract class BaseEntity {
     });
   }
 
-  // 可以在每逻辑帧调用
-  // 建议用来判断游戏相关的逻辑
+  // Logic-step hook.
   public stepUpdate(): void { }
 
-  // 统一的销毁逻辑
+  // Render-step hook for interpolation.
+  public stepMove(_alpha: number): void { }
+
+  // Shared destruction flow.
   public destroy(): void {
     DeferredManager.Instance.defer(() => {
       if (this.rigidBody) {

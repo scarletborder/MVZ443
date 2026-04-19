@@ -10,23 +10,27 @@ import { PlantEntity } from "../entities/PlantEntity";
 import { ProjectileEntity } from "../entities/ProjectileEntity";
 import { BulletConfig, BulletModel } from "./ProjectileModels";
 
-
 export class BulletEntity extends ProjectileEntity<BulletModel> {
   public baseDepth: number;
   public currentPenetrate: number;
   public penetratePower: number;
   public penetratedPunish: number;
-  hasPenetrated: Set<CombatEntity> = new Set(); // 记录已经穿透过的实体，避免重复穿透同一实体
+  hasPenetrated: Set<CombatEntity> = new Set(); // Track pierced targets to avoid duplicate hits.
   public sprite!: Phaser.GameObjects.Sprite;
 
-  private prevX = 0; // 上一帧的x坐标，用于计算飞行距离
-  private traveledDistanceX: number = 0; // 已经飞行的x距离
-  private maxDistanceX: number; // 最大飞行x坐标距离
+  private prevRenderX: number;
+  private prevRenderY: number;
+  private currentRenderX: number;
+  private currentRenderY: number;
 
-  bounceable: boolean = true; // 是否可以被反弹
-  speed: number
+  private prevX = 0; // Previous logical x for travel distance checks.
+  private traveledDistanceX: number = 0; // Total traveled logical x distance.
+  private maxDistanceX: number; // Max logical travel distance.
 
-  skipTiny: boolean; // 是否跳过小型单位，默认为true
+  bounceable: boolean = true; // Whether the bullet can bounce.
+  speed: number;
+
+  skipTiny: boolean; // Whether tiny units should be ignored.
 
   constructor(scene: Game, x: number, row: number, model: BulletModel, cfg: BulletConfig) {
     const y = PositionManager.Instance.getRowCenterY(row);
@@ -36,8 +40,13 @@ export class BulletEntity extends ProjectileEntity<BulletModel> {
 
     this.traveledDistanceX = 0;
     this.prevX = x;
-    this.maxDistanceX = (cfg.maxDistance ?? 128) * PositionManager.Instance.GRID_SIZEX; // 默认无限飞行
+    this.maxDistanceX = (cfg.maxDistance ?? 128) * PositionManager.Instance.GRID_SIZEX;
     this.speed = cfg.speed ?? model.speed;
+
+    this.prevRenderX = x;
+    this.prevRenderY = y;
+    this.currentRenderX = x;
+    this.currentRenderY = y;
 
     this.currentPenetrate = 0;
     this.hasPenetrated = new Set<CombatEntity>();
@@ -46,29 +55,44 @@ export class BulletEntity extends ProjectileEntity<BulletModel> {
 
     this.skipTiny = cfg.skipTiny ?? true;
 
-    // 视觉
+    // Visuals
     const col = PositionManager.Instance.getColByX(x);
-    this.baseDepth = DepthUtils.getProjectileDepth('bullet', col);
+    this.baseDepth = DepthUtils.getProjectileDepth("bullet", col);
     this.sprite = scene.add.sprite(this.x, this.y, model.texture);
     const size = PositionManager.Instance.getBulletDisplaySize();
     this.sprite.setDisplaySize(size.sizeX, size.sizeY);
     this.sprite.setDepth(this.baseDepth);
     this.viewGroup.add(this.sprite);
 
-    // 物理
+    // Physics
     const bodySize = PositionManager.Instance.getBulletBodySize();
     this.createSensor(bodySize.sizeX, bodySize.sizeY);
 
-    // 赋予速度
+    // Initial velocity
     this.rigidBody?.setLinvel({ x: this.speed, y: 0 }, true);
   }
 
   buildView() { }
 
+  public override updateView(vec: { x: number; y: number }, rotation?: number): void {
+    this.prevRenderX = this.currentRenderX;
+    this.prevRenderY = this.currentRenderY;
+    this.currentRenderX = vec.x;
+    this.currentRenderY = vec.y;
+
+    this.x = vec.x;
+    this.y = vec.y;
+    this.sprite.setPosition(this.x, this.y);
+
+    if (rotation !== undefined) {
+      this.sprite.setRotation(rotation);
+    }
+  }
+
   stepUpdate() {
     super.stepUpdate();
 
-    // 超出屏幕销毁
+    // Destroy if it leaves the world bounds.
     const bounds = PositionManager.Instance.getWorldBounds();
     if (this.x > bounds.right || this.x < bounds.left ||
       this.y > bounds.bottom || this.y < bounds.top) {
@@ -76,7 +100,7 @@ export class BulletEntity extends ProjectileEntity<BulletModel> {
       return;
     }
 
-    // 超出最大飞行距离销毁
+    // Destroy if it exceeds the max travel distance.
     const deltaX = Math.abs(this.x - this.prevX);
     this.traveledDistanceX += deltaX;
     this.prevX = this.x;
@@ -85,72 +109,74 @@ export class BulletEntity extends ProjectileEntity<BulletModel> {
       return;
     }
 
-    // 根据速度反转贴图
+    // Flip sprite based on horizontal velocity.
     if (this.rigidBody) {
       const vx = this.rigidBody.linvel().x;
       this.sprite.setFlipX(vx < 0);
     }
   }
 
-  // 被反弹的方法
+  public override stepMove(alpha: number): void {
+    const x = Phaser.Math.Linear(this.prevRenderX, this.currentRenderX, alpha);
+    const y = Phaser.Math.Linear(this.prevRenderY, this.currentRenderY, alpha);
+    this.sprite.setPosition(x, y);
+  }
+
+  // Reverse horizontal velocity after a bounce.
   public reverseVelocityX(): void {
-    if (!this.bounceable) return; // 不可反弹的子弹直接返回
+    if (!this.bounceable) return;
     if (this.rigidBody) {
       const vel = this.rigidBody.linvel();
       this.rigidBody.setLinvel({ x: -vel.x, y: vel.y }, true);
     }
   }
 
-  // 重载碰撞分发器，实现穿透和优先级逻辑
+  // Override collision handling to support piercing and priority logic.
   override onCollision(ctx: CollisionContext): void {
     console.log(`BulletEntity collided with entity at (${ctx.targetEntity.x.toFixed(2)}, ${ctx.targetEntity.y.toFixed(2)})`);
-    // 判断是否为战斗实体
+    // Only combat entities can be hit.
     if (!(ctx.targetEntity instanceof CombatEntity)) return;
 
-    // 基本条件过滤
-    if (!ctx.targetEntity.takeDamage) return; // 不是可受击对象
-    if (this.hasAttacked.has(ctx.targetEntity)) return; // 已经攻击过
-    if (ctx.targetEntity.faction === this.faction) return; // 阵营不符
+    // Basic filtering.
+    if (!ctx.targetEntity.takeDamage) return;
+    if (this.hasAttacked.has(ctx.targetEntity)) return;
+    if (ctx.targetEntity.faction === this.faction) return;
 
-    // 高度/飞行逻辑判断
-    if (this.skipTiny && ctx.targetEntity.isTiny) return; // 跳过小型单位
+    // Height / flying filters.
+    if (this.skipTiny && ctx.targetEntity.isTiny) return;
     if (this.couldAttackFlying === false) {
       if (ctx.targetEntity instanceof MonsterEntity &&
-        ctx.targetEntity.isFlying) return; // 地面子弹打不到天上
+        ctx.targetEntity.isFlying) return;
     }
 
-    // 虚空/黑夜逻辑
+    // Void filter.
     if (ctx.targetEntity instanceof MonsterEntity && ctx.targetEntity.isInVoid) return;
 
-    // 只能说明可能可以攻击，还要看穿透逻辑
+    // Piercing rules.
     const target = ctx.targetEntity as CombatEntity;
     if (this.hasPenetrated.has(target) ||
-      this.currentPenetrate > this.penetratePower) return; // 已经穿透过了
-    // 递归地穿透最高优先级的植物
+      this.currentPenetrate > this.penetratePower) return;
+
+    // Recursively pierce the highest-priority plant in the same cell.
     const penetrateHighestPriorityPlant = (plants: PlantEntity[], currentTarget: PlantEntity): void => {
-      // 递归退出条件：已穿透此目标，或穿透力已用尽
       if (this.hasPenetrated.has(currentTarget) ||
         this.currentPenetrate > this.penetratePower) {
         return;
       }
 
-      // 对当前植物造成伤害
       this.applyEffect(currentTarget);
 
-      // 穿透力已用尽，销毁子弹
       if (this.currentPenetrate > this.penetratePower) {
         this.destroy();
         return;
       }
 
-      // 查找比当前植物优先级更高的未穿透植物
       const nextTarget = plants.find(
         plant => plant !== currentTarget &&
           !this.hasPenetrated.has(plant) &&
-          PlantHelper.IsMorePriorityPlant(plant, currentTarget)
+          PlantHelper.IsMorePriorityPlant(plant, currentTarget),
       );
 
-      // 如果找到更高优先级的植物，继续递归穿透
       if (nextTarget) {
         penetrateHighestPriorityPlant(plants, nextTarget);
       }
@@ -161,7 +187,6 @@ export class BulletEntity extends ProjectileEntity<BulletModel> {
       const col = target.col;
       const plants = [...PlantHelper.GetPlantsInGrid(col, row)];
 
-      // 递归穿透最高优先级的植物
       penetrateHighestPriorityPlant(plants, target);
       return;
     }
@@ -170,12 +195,12 @@ export class BulletEntity extends ProjectileEntity<BulletModel> {
     return;
   }
 
-  // 尝试对碰撞体造成伤害
+  // Apply bullet hit effects to the target.
   protected applyEffect(t: CombatEntity): void {
     this.currentPenetrate++;
     this.hasPenetrated.add(t);
 
-    // 造成伤害
+    // Damage
     this.hasAttacked.add(t);
     t.takeDamage(this.currentDamage, this.dealer, this);
 
@@ -184,7 +209,7 @@ export class BulletEntity extends ProjectileEntity<BulletModel> {
       t.addDebuff(this.debuff, this.debuffDuration);
     }
 
-    // 穿透衰减
+    // Damage decay after piercing.
     if (this.currentPenetrate <= this.penetratePower) {
       this.currentDamage = Math.floor(this.currentDamage * this.penetratedPunish);
     } else {
