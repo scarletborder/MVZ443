@@ -39,6 +39,11 @@ export default class CardpileManager extends BaseManager {
     leftMs: number; // 剩余冷却时间，单位毫秒
     totalMs: number; // 总冷却时间，单位毫秒
   }> = new Map();
+  private readonly handlePointerUp = (pointer: Phaser.Input.Pointer) => {
+    if (pointer.rightButtonReleased()) {
+      this.handleRightClick();
+    }
+  };
 
   constructor() {
     super();
@@ -68,12 +73,7 @@ export default class CardpileManager extends BaseManager {
 
 
     // 监听右键取消选择以取消高亮
-    const handleRightClick = (pointer: Phaser.Input.Pointer) => {
-      if (pointer.rightButtonReleased()) {
-        this.handleRightClick();
-      }
-    };
-    this.scene?.input.on('pointerup', handleRightClick);
+    this.scene?.input.on('pointerup', this.handlePointerUp);
   }
 
   public setScene(scene: Game) {
@@ -88,8 +88,13 @@ export default class CardpileManager extends BaseManager {
   }
 
   public Reset() {
-    // 重置状态
+    this.scene?.input.off('pointerup', this.handlePointerUp);
+    this.prePlantPid = null;
+    this.useStarShards = false;
+    this.usePickaxe = false;
+    this.cardpileStatus.clear();
     this.EventBus.removeAllListeners();
+    this.scene = null;
   }
 
   stepUpdate() {

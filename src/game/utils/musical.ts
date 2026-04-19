@@ -102,23 +102,29 @@ export default class Musical {
     }
 
     public pause() {
-        if (!this.isBgm) {
+        if (!this.isBgm || !this.music) {
             return;
         }
         this.music.pause();
     }
 
     public resume() {
-        if (!this.isBgm) {
+        if (!this.isBgm || !this.music) {
             return;
         }
-        this.music.resume();
+        try {
+            this.music.resume();
+        } catch (error) {
+            console.warn('[Musical] resume skipped because sound manager is no longer available.', error);
+        }
     }
 
     public destroy() {
-        if (this.isBgm) {
+        if (this.isBgm && this.music) {
             this.music.stop();
         }
+        this.dumpMusic?.stop();
+        this.dumpMusic = null;
     }
 }
 

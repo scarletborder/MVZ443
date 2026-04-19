@@ -45,8 +45,15 @@ export default class PlantsManager extends BaseManager {
   }
 
   public Reset() {
+    CursorManager.Instance.EventBus.off('onAttemptPlant', this.handleAttemptPlant);
+    CursorManager.Instance.EventBus.off('onAttemptUseStarShards', this.handleAttemptUseStarShards);
+    CursorManager.Instance.EventBus.off('onAttemptRemovePlant', this.handleAttemptRemovePlant);
+    SyncManager.Instance.Eventbus.off('onRequestPlant', this.PlantCard);
+    SyncManager.Instance.Eventbus.off('onRequestUseStarShards', this.LaunchStarShards);
+    SyncManager.Instance.Eventbus.off('onRequestRemovePlant', this.UprootPlant);
     this.PlantsMap.clear();
     this.EventBus.removeAllListeners();
+    this.scene = null;
   }
 
   public static get Instance(): PlantsManager {
@@ -222,4 +229,3 @@ export default class PlantsManager extends BaseManager {
     this.EventBus.emit('onDeterminePlant', pid, level, col, row, cost);
   }
 }
-

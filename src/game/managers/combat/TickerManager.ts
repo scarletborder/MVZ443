@@ -284,9 +284,11 @@ export default class TickerManager extends BaseManager {
    * 清空所有计时器
    */
   public Reset(): void {
+    PhaserEventBus.off(PhaserEvents.RoomGameStart, this.handleRoomGameStart, this);
     this.timers.clear();
     this.nextTimerId = 1;
     this.currentFrame = 0;
+    this.startTime = 0;
   }
 }
 

@@ -35,6 +35,9 @@ export default class CombatManager extends BaseManager {
 
   private _isPaused = true; // 是否暂停
   isGameEnd: boolean = true;
+  private readonly handleRoomAllReady = (data: { allPlayerCount: number, seed: number, myId: number, playerIds: number }) => {
+    this.seed = data.seed;
+  };
 
   // 游戏事件
   elapsedFrameTime: number = 0; // 统计时间，用于递增服务器刻
@@ -69,10 +72,7 @@ export default class CombatManager extends BaseManager {
     PhaserEventBus.on(PhaserEvents.RoomGameStart, this.handleRoomGameStart, this);
     PhaserEventBus.on(PhaserEvents.RoomGameEnd, this.handleRoomGameEnd, this);
 
-    PhaserEventBus.on(PhaserEvents.RoomAllReady,
-      (data: { allPlayerCount: number, seed: number, myId: number, playerIds: number }) => {
-        this.seed = data.seed;
-      }, this);
+    PhaserEventBus.on(PhaserEvents.RoomAllReady, this.handleRoomAllReady, this);
   }
 
   public static get Instance(): CombatManager {
@@ -83,12 +83,19 @@ export default class CombatManager extends BaseManager {
   }
 
   public Reset() {
+    PhaserEventBus.off(PhaserEvents.TogglePause, this.handleTogglePause, this);
+    PhaserEventBus.off(PhaserEvents.RoomGameStart, this.handleRoomGameStart, this);
+    PhaserEventBus.off(PhaserEvents.RoomGameEnd, this.handleRoomGameEnd, this);
+    PhaserEventBus.off(PhaserEvents.RoomAllReady, this.handleRoomAllReady, this);
+
     this.scene = null;
     this.params = null;
     this.seed = 0;
     this.stageData = null;
+    this.elapsedFrameTime = 0;
     this.isPaused = true;
     this.isGameEnd = true;
+    this.Eventbus.removeAllListeners();
     this.combatStatus = {
       dayOrNight: true,
     }
@@ -140,9 +147,7 @@ export default class CombatManager extends BaseManager {
       if (!frameReady) {
         break;
       }
-      console.log(`CombatManager Update - Time: ${_time}, Delta: ${delta}`);
       this.elapsedFrameTime -= SyncManager.Instance.FrameInterval;
-      console.log(this.isPaused)
       // 更新tick-时间相关
       if (!this.isPaused) {
         TickerManager.Instance.Update();

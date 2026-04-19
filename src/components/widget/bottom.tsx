@@ -79,10 +79,10 @@ export default function BottomTools({ width, chapterID }: Props) {
     let progress = 0;
     if (totalWaves > 1) {
       if (currentWave <= 0) progress = 0;
-      else if (currentWave >= totalWaves - 1) progress = 100;
-      else progress = (currentWave / (totalWaves - 1)) * 100;
+      else if (currentWave >= totalWaves) progress = 100;
+      else progress = (currentWave / totalWaves) * 100;
     } else {
-      progress = currentWave >= 0 ? 100 : 0;
+      progress = currentWave > 0 ? 100 : 0;
     }
 
     return (

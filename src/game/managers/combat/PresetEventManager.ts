@@ -75,6 +75,7 @@ export class PresetEventManager extends BaseManager {
       MobManager.Instance.EventBus.off('onNewWave', this.onNewWaveHandler);
       this.onNewWaveHandler = null;
     }
+    this.scene = null;
   }
 
 

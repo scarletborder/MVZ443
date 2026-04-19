@@ -83,6 +83,9 @@ export default class MobManager extends BaseManager {
 
   private bossObj: CombatEntity | null = null; // boss对象,如果有最后一波boss,监听boss存活,
   // BOSS死亡自动emit游戏胜利,不再做胜利判断
+  private readonly handleRoomAllReady = (data: { allPlayerCount: number, seed: number, myId: number, playerIds: number }) => {
+    this.seed = data.seed;
+  };
 
   constructor() {
     super();
@@ -90,10 +93,7 @@ export default class MobManager extends BaseManager {
     // Initialize MobManager
   }
   public Load(): void {
-    PhaserEventBus.on(PhaserEvents.RoomAllReady,
-      (data: { allPlayerCount: number, seed: number, myId: number, playerIds: number }) => {
-        this.seed = data.seed;
-      }, this);
+    PhaserEventBus.on(PhaserEvents.RoomAllReady, this.handleRoomAllReady, this);
     PhaserEventBus.on(PhaserEvents.RoomGameStart, this.handleRoomGameStart, this);
   }
 
@@ -118,6 +118,20 @@ export default class MobManager extends BaseManager {
   }
 
   public Reset() {
+    PhaserEventBus.off(PhaserEvents.RoomAllReady, this.handleRoomAllReady, this);
+    PhaserEventBus.off(PhaserEvents.RoomGameStart, this.handleRoomGameStart, this);
+    this.Timer?.remove();
+    this.Timer = null;
+    this.SpawnTimer?.remove();
+    this.MobsByLane.clear();
+    this.progress = 0;
+    this.current_wave_idx = 0;
+    this.prev_wave_frame = 0;
+    this.tmpKilled_count = 0;
+    this.killed_count = 0;
+    this.total_count = 0;
+    this.bossObj = null;
+    this.EventBus.removeAllListeners();
     this.scene = null;
   }
 

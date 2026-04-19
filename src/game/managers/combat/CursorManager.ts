@@ -30,6 +30,14 @@ export default class CursorManager extends BaseManager {
   prevRow: number = -1;
   prevMovementTime = 0;
   UPDATE_INTERVAL = 50;
+  private readonly handlePointerMove = (pointer: Phaser.Input.Pointer) => {
+    this.onMouseMoveEvent(pointer);
+  };
+  private readonly handlePointerUp = (pointer: Phaser.Input.Pointer) => {
+    if (pointer.leftButtonReleased()) {
+      this.onClickUp(pointer);
+    }
+  };
 
   constructor() {
     super();
@@ -37,15 +45,8 @@ export default class CursorManager extends BaseManager {
   }
 
   public Load(): void {
-    this.scene?.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
-      this.onMouseMoveEvent(pointer);
-    });
-
-    this.scene?.input.on('pointerup', (pointer: Phaser.Input.Pointer) => {
-      if (pointer.leftButtonReleased()) {
-        this.onClickUp(pointer);
-      }
-    });
+    this.scene?.input.on('pointermove', this.handlePointerMove);
+    this.scene?.input.on('pointerup', this.handlePointerUp);
 
     CardpileManager.Instance.EventBus.on('onChosenCard', this.handleChosenCard);
     CardpileManager.Instance.EventBus.on('onChosenPickaxe', this.handleChosenPickaxe);
@@ -75,6 +76,12 @@ export default class CursorManager extends BaseManager {
   }
 
   public Reset() {
+    this.scene?.input.off('pointermove', this.handlePointerMove);
+    this.scene?.input.off('pointerup', this.handlePointerUp);
+    CardpileManager.Instance.EventBus.off('onChosenCard', this.handleChosenCard);
+    CardpileManager.Instance.EventBus.off('onChosenPickaxe', this.handleChosenPickaxe);
+    CardpileManager.Instance.EventBus.off('onChosenStarShards', this.handleChosenStarShards);
+    CardpileManager.Instance.EventBus.off('onCancelChosen', this.handleChosenCancel);
     this.EventBus.removeAllListeners();
     this.stopHighlight();
     if (this.pickaxeSprite) {

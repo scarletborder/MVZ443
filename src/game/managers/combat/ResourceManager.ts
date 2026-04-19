@@ -21,6 +21,15 @@ export default class ResourceManager extends BaseManager {
   Eventbus: EventBus<ResourceManagerEvents>;
 
   mineId: number = 101;
+  private readonly handleRoomAllReady = (data: { allPlayerCount: number, seed: number, myId: number, playerIds: number[] }) => {
+    this.mineId = data.myId;
+    this.EnergyMaps.clear();
+    this.StarShardsMaps.clear();
+    for (const playerId of data.playerIds) {
+      this.EnergyMaps.set(playerId, 0);
+      this.StarShardsMaps.set(playerId, 0);
+    }
+  };
 
   private EnergyMaps: Map<PlayerIdentify, number> = new Map();
   private StarShardsMaps: Map<PlayerIdentify, number> = new Map();
@@ -38,20 +47,14 @@ export default class ResourceManager extends BaseManager {
   }
 
   public Load(): void {
-    PhaserEventBus.on(PhaserEvents.RoomAllReady, (data: { allPlayerCount: number, seed: number, myId: number, playerIds: number[] }) => {
-      this.mineId = data.myId;
-      this.EnergyMaps.clear();
-      this.StarShardsMaps.clear();
-      for (let playerId of data.playerIds) {
-        this.EnergyMaps.set(playerId, 0);
-        this.StarShardsMaps.set(playerId, 0);
-      }
-    }, this);
+    PhaserEventBus.on(PhaserEvents.RoomAllReady, this.handleRoomAllReady, this);
 
     PhaserEventBus.on(PhaserEvents.RoomGameStart, this.handleRoomGameStart, this);
   }
 
   public Reset(): void {
+    PhaserEventBus.off(PhaserEvents.RoomAllReady, this.handleRoomAllReady, this);
+    PhaserEventBus.off(PhaserEvents.RoomGameStart, this.handleRoomGameStart, this);
     this.scene = null;
     this.Eventbus.removeAllListeners();
     this.EnergyMaps.clear();

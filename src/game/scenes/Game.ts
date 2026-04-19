@@ -55,6 +55,12 @@ export class Game extends Scene {
   public stageData: StageData;
 
   musical: Musical;
+  private readonly onCombatPauseHandler = () => {
+    this.handlePause({ paused: true });
+  };
+  private readonly onCombatResumeHandler = () => {
+    this.handlePause({ paused: false });
+  };
 
 
   constructor() {
@@ -150,12 +156,8 @@ export class Game extends Scene {
     }
 
     PhaserEventBus.on(PhaserEvents.RoomGameEnd, this.handleRoomGameEnd, this);
-    CombatManager.Instance.Eventbus.on('onCombatPause', () => {
-      this.handlePause({ paused: true });
-    });
-    CombatManager.Instance.Eventbus.on('onCombatResume', () => {
-      this.handlePause({ paused: false });
-    });
+    CombatManager.Instance.Eventbus.on('onCombatPause', this.onCombatPauseHandler);
+    CombatManager.Instance.Eventbus.on('onCombatResume', this.onCombatResumeHandler);
 
     this.musical = new Musical(this, this.params.gameSettings.isBgm, this.params.gameSettings.isSoundAudio);
 
@@ -245,7 +247,7 @@ export class Game extends Scene {
     this.anims?.pauseAll();
     this.tweens?.pauseAll();
     this.time.paused = true;
-    this.musical.pause();
+    this.musical?.pause();
   }
 
   // 恢复game scene
@@ -253,12 +255,16 @@ export class Game extends Scene {
     this.anims?.resumeAll();
     this.tweens?.resumeAll();
     this.time.paused = false;
-    this.musical.resume();
+    this.musical?.resume();
   }
 
   // 游戏退出真实入口, 由消息队列调用
-  private handleRoomGameEnd(isWin: boolean = false) {
-    this.musical.destroy();
+  private handleRoomGameEnd({ isWin = false }: { isWin?: boolean } = {}) {
+    PhaserEventBus.off(PhaserEvents.RoomGameEnd, this.handleRoomGameEnd, this);
+    CombatManager.Instance.Eventbus.off('onCombatPause', this.onCombatPauseHandler);
+    CombatManager.Instance.Eventbus.off('onCombatResume', this.onCombatResumeHandler);
+
+    this.musical?.destroy();
 
     // 销毁暂停菜单
     const pauseMenu = (this as any).pauseMenu;
