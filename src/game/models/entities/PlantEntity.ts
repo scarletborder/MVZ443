@@ -31,6 +31,7 @@ export abstract class PlantEntity extends CombatEntity {
   // 睡眠特效
   private sleepingText: Phaser.GameObjects.Text | null = null;
   private sleepingTween: Phaser.Tweens.Tween | null = null;
+  private initialized = false;
 
   constructor(scene: Game, col: number, row: number, model: PlantModel, level: number) {
     const { x, y } = PositionManager.Instance.getPlantBottomCenter(col, row);
@@ -44,19 +45,6 @@ export abstract class PlantEntity extends CombatEntity {
     this.col = col;
     this.row = row;
     this.level = level;
-
-    this.buildView(); // 构建表现层
-
-    this.buildPhysics();
-
-    // 注册
-    PlantsManager.Instance.RegisterPlant(this);
-
-    this.isTiny = model.isTiny;
-    if (this.model.isNightPlant && CombatManager.Instance.combatStatus.dayOrNight === true) {
-      this.setSleeping(true);
-    }
-    this.model.onCreate(this);
   }
 
   public get pid() {
@@ -65,11 +53,12 @@ export abstract class PlantEntity extends CombatEntity {
 
   private buildPhysics() {
     const physicBodySize = PositionManager.Instance.getPlantBodySize();
-    const hitbox = this.scene.add.zone(this.x, this.y, physicBodySize.sizeX, physicBodySize.sizeY).setOrigin(0.5, 1);
+    const physicsCenter = PositionManager.Instance.getPlantBodyCenterByBottom(this.x, this.y);
+    const hitbox = this.scene.add.zone(physicsCenter.x, physicsCenter.y, physicBodySize.sizeX, physicBodySize.sizeY).setOrigin(0.5, 0.5);
     this.viewGroup.add(hitbox);
     // 配置 Rapier 物理描述
     const rigidBodyDesc = RAPIER.RigidBodyDesc.dynamic() // 或 kinematicPositionBased()
-      .setTranslation(this.x, this.y);
+      .setTranslation(physicsCenter.x, physicsCenter.y);
 
     rigidBodyDesc.setUserData(this);
 
@@ -85,6 +74,23 @@ export abstract class PlantEntity extends CombatEntity {
 
   // 由具体子类覆盖，或者根据 Model 决定如何构建图像
   protected abstract buildView(): void;
+
+  public initializeEntity(): this {
+    if (this.initialized) return this;
+    this.initialized = true;
+
+    this.buildView();
+    this.buildPhysics();
+
+    PlantsManager.Instance.RegisterPlant(this);
+
+    this.isTiny = this.model.isTiny;
+    if (this.model.isNightPlant && CombatManager.Instance.combatStatus.dayOrNight === true) {
+      this.setSleeping(true);
+    }
+    this.model.onCreate(this);
+    return this;
+  }
 
   public takeDamage(amount: number, dealer?: BaseEntity, source?: BaseEntity) {
     this.scene.musical.plantAudio.play('plantHit');
@@ -110,15 +116,16 @@ export abstract class PlantEntity extends CombatEntity {
 
   public updateView(vec: Vector) {
     // 计算物理引擎带来的坐标位移量 (Delta)
-    const dx = vec.x - this.x;
-    const dy = vec.y - this.y;
+    const nextPosition = PositionManager.Instance.getPlantBottomCenterByBody(vec.x, vec.y);
+    const dx = nextPosition.x - this.x;
+    const dy = nextPosition.y - this.y;
 
     // 如果没有发生移动，则直接跳过，节省性能
     if (dx === 0 && dy === 0) return;
 
     // 更新基类当前的绝对坐标
-    this.x = vec.x;
-    this.y = vec.y;
+    this.x = nextPosition.x;
+    this.y = nextPosition.y;
 
     // 遍历所有部件，并给它们加上偏移量
     const children = this.viewGroup.getChildren();

@@ -5,18 +5,21 @@ import { AUTO, Game } from 'phaser';
 import { Preloader } from './scenes/Preloader';
 import { GameParams } from './models/GameParams';
 
+const LOGICAL_GAME_WIDTH = 800;
+const LOGICAL_GAME_HEIGHT = 600;
+
 //  Find out more information about the Game Config at:
 //  https://newdocs.phaser.io/docs/3.70.0/Phaser.Types.Core.GameConfig
 const config: Phaser.Types.Core.GameConfig = {
   type: AUTO,
-  width: 1024,
-  height: 768,
+  width: LOGICAL_GAME_WIDTH,
+  height: LOGICAL_GAME_HEIGHT,
   fps: {
     target: 60,
   },
   scale: {
     mode: Phaser.Scale.FIT,
-    autoCenter: Phaser.Scale.CENTER_BOTH,
+    autoCenter: Phaser.Scale.CENTER_HORIZONTALLY,
 
     // Minimum size
     min: {
@@ -42,8 +45,9 @@ const config: Phaser.Types.Core.GameConfig = {
 };
 
 const StartGame = (parent: string, width: number, GameParams: GameParams) => {
-  config.width = width;
-  config.height = width * 3 / 4;
+  void width;
+  config.width = LOGICAL_GAME_WIDTH;
+  config.height = LOGICAL_GAME_HEIGHT;
   let game = new Game({ ...config, parent })
   game.registry.set('gameParams', GameParams);
   return game;

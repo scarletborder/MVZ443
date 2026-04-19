@@ -192,7 +192,7 @@ export class PumpkinWanModel extends PlantModel {
       }
     }
 
-    const entity = new PumpkinWanEntity(scene, col, row, level);
+    const entity = this.initializeEntity(new PumpkinWanEntity(scene, col, row, level));
     PlantCmd.SetSleeping(entity, isSleeping); // 继承睡眠状态
     return entity;
   }
@@ -204,7 +204,6 @@ export class PumpkinWanModel extends PlantModel {
 export class PumpkinWanEntity extends PlantEntity {
   constructor(scene: Game, col: number, row: number, level: number) {
     super(scene, col, row, PumpkinWanData, level);
-    this.buildView();
   }
 
   protected buildView(): void {

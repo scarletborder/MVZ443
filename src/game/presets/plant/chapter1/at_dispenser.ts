@@ -88,7 +88,7 @@ export class ATDispenserModel extends PlantModel {
         break;
       }
     }
-    return new ATDispenserEntity(scene, col, row, level);
+    return this.initializeEntity(new ATDispenserEntity(scene, col, row, level));
   }
 
   public override onCreate(entity: ATDispenserEntity): void {
@@ -139,8 +139,8 @@ export class ATDispenserModel extends PlantModel {
 export const ATDispenserData = new ATDispenserModel();
 
 export class ATDispenserEntity extends PlantEntity {
-  private headX: number = 0;
-  private head!: Phaser.GameObjects.Sprite;
+  private declare headX: number;
+  private declare head: Phaser.GameObjects.Sprite;
 
   constructor(scene: Game, col: number, row: number, level: number) {
     super(scene, col, row, ATDispenserData, level);

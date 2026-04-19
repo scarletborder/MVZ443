@@ -28,8 +28,8 @@ export class BulletEntity extends ProjectileEntity<BulletModel> {
 
   skipTiny: boolean; // 是否跳过小型单位，默认为true
 
-  constructor(scene: Game, col: number, row: number, model: BulletModel, cfg: BulletConfig) {
-    const { x, y } = PositionManager.Instance.getBulletCenter(col, row);
+  constructor(scene: Game, x: number, row: number, model: BulletModel, cfg: BulletConfig) {
+    const y = PositionManager.Instance.getRowCenterY(row);
     super(scene, x, y, model, cfg);
     this.currentDamage = cfg.damage;
     this.bounceable = cfg.bounceable ?? true;
@@ -47,6 +47,7 @@ export class BulletEntity extends ProjectileEntity<BulletModel> {
     this.skipTiny = cfg.skipTiny ?? true;
 
     // 视觉
+    const col = PositionManager.Instance.getColByX(x);
     this.baseDepth = DepthUtils.getProjectileDepth('bullet', col);
     this.sprite = scene.add.sprite(this.x, this.y, model.texture);
     const size = PositionManager.Instance.getBulletDisplaySize();
@@ -68,11 +69,9 @@ export class BulletEntity extends ProjectileEntity<BulletModel> {
     super.stepUpdate();
 
     // 超出屏幕销毁
-    const screenWidth = this.scene.sys.canvas.width;
-    const screenHeight = this.scene.sys.canvas.height;
-    if (this.x > screenWidth * 2 || this.x < -screenWidth * 1 ||
-      this.y > screenHeight * 2 || this.y < -screenHeight * 1
-    ) {
+    const bounds = PositionManager.Instance.getWorldBounds();
+    if (this.x > bounds.right || this.x < bounds.left ||
+      this.y > bounds.bottom || this.y < bounds.top) {
       this.destroy();
       return;
     }
@@ -104,6 +103,7 @@ export class BulletEntity extends ProjectileEntity<BulletModel> {
 
   // 重载碰撞分发器，实现穿透和优先级逻辑
   override onCollision(ctx: CollisionContext): void {
+    console.log(`BulletEntity collided with entity at (${ctx.targetEntity.x.toFixed(2)}, ${ctx.targetEntity.y.toFixed(2)})`);
     // 判断是否为战斗实体
     if (!(ctx.targetEntity instanceof CombatEntity)) return;
 

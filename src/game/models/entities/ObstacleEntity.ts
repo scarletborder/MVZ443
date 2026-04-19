@@ -25,6 +25,7 @@ export abstract class ObstacleEntity extends CombatEntity {
 
   public summoner?: BaseEntity;
   public health: number;
+  private initialized = false;
 
   constructor(scene: Game, col: number, row: number, model: ObstacleModel, config: ObstacleConfig) {
     const { x, y } = PositionManager.Instance.getPlantBottomCenter(col, row);
@@ -37,11 +38,6 @@ export abstract class ObstacleEntity extends CombatEntity {
 
     this.summoner = config.summoner;
     this.health = config.hp;
-
-    this.buildView();
-    this.buildPhysics();
-    ObstacleManager.Instance.RegisterObstacle(this);
-    this.model.onCreate(this);
   }
 
   public get oid() {
@@ -50,7 +46,8 @@ export abstract class ObstacleEntity extends CombatEntity {
 
   private buildPhysics() {
     const physicBodySize = PositionManager.Instance.getPlantBodySize();
-    const rigidBodyDesc = RAPIER.RigidBodyDesc.dynamic().setTranslation(this.x, this.y);
+    const physicsCenter = PositionManager.Instance.getPlantBodyCenterByBottom(this.x, this.y);
+    const rigidBodyDesc = RAPIER.RigidBodyDesc.dynamic().setTranslation(physicsCenter.x, physicsCenter.y);
 
     rigidBodyDesc.setUserData(this);
 
@@ -63,6 +60,17 @@ export abstract class ObstacleEntity extends CombatEntity {
   }
 
   protected abstract buildView(): void;
+
+  public initializeEntity(): this {
+    if (this.initialized) return this;
+    this.initialized = true;
+
+    this.buildView();
+    this.buildPhysics();
+    ObstacleManager.Instance.RegisterObstacle(this);
+    this.model.onCreate(this);
+    return this;
+  }
 
   public override takeDamage(amount: number, dealer?: BaseEntity, source?: BaseEntity): void {
     super.takeDamage(amount, dealer, source);
@@ -82,13 +90,14 @@ export abstract class ObstacleEntity extends CombatEntity {
   }
 
   public override updateView(vec: Vector) {
-    const dx = vec.x - this.x;
-    const dy = vec.y - this.y;
+    const nextPosition = PositionManager.Instance.getPlantBottomCenterByBody(vec.x, vec.y);
+    const dx = nextPosition.x - this.x;
+    const dy = nextPosition.y - this.y;
 
     if (dx === 0 && dy === 0) return;
 
-    this.x = vec.x;
-    this.y = vec.y;
+    this.x = nextPosition.x;
+    this.y = nextPosition.y;
 
     const children = this.viewGroup.getChildren();
     for (let i = 0; i < children.length; i++) {

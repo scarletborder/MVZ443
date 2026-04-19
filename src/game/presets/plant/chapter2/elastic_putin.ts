@@ -25,7 +25,7 @@ export class ElasticPutinModel extends PlantModel {
   public isNightPlant = true;
 
   public override createEntity(scene: Game, col: number, row: number, level: number): ElasticPutinEntity {
-    return new ElasticPutinEntity(scene, col, row, level);
+    return this.initializeEntity(new ElasticPutinEntity(scene, col, row, level));
   }
 
   public override onCreate(entity: ElasticPutinEntity): void {

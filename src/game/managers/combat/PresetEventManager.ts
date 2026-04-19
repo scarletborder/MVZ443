@@ -89,11 +89,7 @@ export class PresetEventManager extends BaseManager {
     }
 
     if (stageId === 1) {
-      debugger;
-      PlantsManager.Instance.PlantCard(9961, DispenserData.pid, 1, 1, 1);
-      PlantsManager.Instance.PlantCard(9961, DispenserData.pid, 1, 1, 2);
-      PlantsManager.Instance.PlantCard(9961, DispenserData.pid, 1, 1, 3);
-      PlantsManager.Instance.PlantCard(9961, DispenserData.pid, 1, 1, 4);
+      PlantsManager.Instance.PlantCard(9961, DispenserData.pid, 1, 1, 0);
       PlantsManager.Instance.PlantCard(9961, DispenserData.pid, 1, 1, 5);
     }
 

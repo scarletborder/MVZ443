@@ -147,7 +147,7 @@ export class PumpkinModel extends PlantModel {
   }
 
   public createEntity(scene: Game, col: number, row: number, level: number): PumpkinEntity {
-    return new PumpkinEntity(scene, col, row, level);
+    return this.initializeEntity(new PumpkinEntity(scene, col, row, level));
   }
 }
 
@@ -157,7 +157,6 @@ export class PumpkinModel extends PlantModel {
 export class PumpkinEntity extends PlantEntity {
   constructor(scene: Game, col: number, row: number, level: number) {
     super(scene, col, row, PumpkinData, level);
-    this.buildView();
   }
 
   protected buildView(): void {

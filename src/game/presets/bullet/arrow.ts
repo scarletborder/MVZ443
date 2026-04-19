@@ -24,8 +24,8 @@ export class ArrowEntity extends BulletEntity {
   private enhancement: _TypeArrowEnhancement = 'none';
   private trail: Phaser.GameObjects.Sprite | null = null;
 
-  constructor(scene: Game, col: number, row: number, model: ArrowModel, cfg: ArrowConfig) {
-    super(scene, col, row, model, cfg);
+  constructor(scene: Game, x: number, row: number, model: ArrowModel, cfg: ArrowConfig) {
+    super(scene, x, row, model, cfg);
 
     // 1. 覆盖默认的视觉缩放 (宽度翻倍，高度减半)
     const size = PositionManager.Instance.getBulletDisplaySize();
@@ -243,22 +243,18 @@ export class MutantYAxisArrowEntity extends ArrowEntity {
    */
   private lowerOrUpper: boolean;
 
-  constructor(scene: Game, col: number, row: number, model: MutantYAxisArrowModel, cfg: MutantYAxisArrowConfig) {
-    super(scene, col, row, model, cfg);
+  constructor(scene: Game, x: number, row: number, model: MutantYAxisArrowModel, cfg: MutantYAxisArrowConfig) {
+    super(scene, x, row, model, cfg);
 
     // 初始化目标行
     this.targetRow = cfg.targetRow ?? row;
-    const { y } = PositionManager.Instance.getBulletCenter(col, this.targetRow);
-    this.targetY = y;
+    this.targetY = PositionManager.Instance.getRowCenterY(this.targetRow);
 
     // 确定方向：是否向上
     this.lowerOrUpper = this.targetRow < row;
 
     // 设置 Y 方向速度
     this.ySpeed = cfg.ySpeed ?? 200;
-    if (this.ySpeed > 0) {
-      this.ySpeed = this.ySpeed * PositionManager.Instance.scaleFactor;
-    }
 
     // 设置初始 Y 速度
     if (this.rigidBody) {

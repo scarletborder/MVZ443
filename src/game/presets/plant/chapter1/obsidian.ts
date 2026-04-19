@@ -70,7 +70,7 @@ export class ObsidianModel extends PlantModel {
   }
 
   public createEntity(scene: Game, col: number, row: number, level: number): ObsidianEntity {
-    return new ObsidianEntity(scene, col, row, level);
+    return this.initializeEntity(new ObsidianEntity(scene, col, row, level));
   }
 }
 

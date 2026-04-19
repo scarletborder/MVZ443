@@ -78,6 +78,10 @@ export abstract class ProjectileEntity<T extends ProjectileModel<any, any>> exte
     const colliderDesc = RAPIER.ColliderDesc.cuboid(width / 2, height / 2);
     colliderDesc.setSensor(true); // 设为传感器，不产生物理碰撞体积
     colliderDesc.setActiveEvents(RAPIER.ActiveEvents.COLLISION_EVENTS);
+    colliderDesc.setActiveCollisionTypes(
+      RAPIER.ActiveCollisionTypes.DEFAULT |
+      RAPIER.ActiveCollisionTypes.KINEMATIC_KINEMATIC
+    );
 
     this.scene.rapierWorld.createCollider(colliderDesc, this.rigidBody);
   }

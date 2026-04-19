@@ -9,7 +9,7 @@ export class ObsidianObstacleModel extends ObstacleModel {
   public readonly texturePath = "zombie/mob_obsidian";
 
   public createEntity(scene: Game, col: number, row: number, config: ObstacleConfig): ObstacleEntity {
-    return new ObsidianObstacleEntity(scene, col, row, this, config);
+    return this.initializeEntity(new ObsidianObstacleEntity(scene, col, row, this, config));
   }
 }
 

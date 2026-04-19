@@ -80,11 +80,12 @@ export class ObsidianGolemEntity extends BaseGolemEntity {
       delay: 1200,
       callback: () => {
         const newRow = Phaser.Math.Between(0, PositionManager.Instance.Row_Number - 1);
-        const pos = PositionManager.Instance.getZombieBottomCenter(8, newRow);
+        const bodyPos = PositionManager.Instance.getZombieBodyCenter(8, newRow);
+        const viewPos = PositionManager.Instance.getZombieBottomCenter(8, newRow);
         this.col = 8;
         this.row = newRow;
-        this.rigidBody?.setTranslation(pos, true);
-        this.animController.updatePosition(pos.x + this.offsetX, pos.y + this.offsetY);
+        this.rigidBody?.setTranslation(bodyPos, true);
+        this.animController.updatePosition(viewPos.x + this.offsetX, viewPos.y + this.offsetY);
         this.getLegacyController()?.raw.land?.();
         done();
       }

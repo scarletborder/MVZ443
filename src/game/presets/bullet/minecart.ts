@@ -20,8 +20,8 @@ export class MineCartModel extends BulletModel<BulletConfig, MineCartEntity> {
 export const MineCartData = new MineCartModel();
 
 export class MineCartEntity extends BulletEntity {
-  constructor(scene: Game, col: number, row: number, model: MineCartModel, cfg: BulletConfig) {
-    super(scene, col, row, model, cfg);
+  constructor(scene: Game, x: number, row: number, model: MineCartModel, cfg: BulletConfig) {
+    super(scene, x, row, model, cfg);
 
     // 设置初始伤害
     this.currentDamage = SECKILL;
@@ -38,7 +38,7 @@ export class MineCartEntity extends BulletEntity {
     if (this.rigidBody) {
       const currentVel = this.rigidBody.linvel();
       if (Math.abs(currentVel.x) < 1) {
-        const velX = 200 * PositionManager.Instance.scaleFactor;
+        const velX = 200;
         const direction = this.faction === Faction.PLANT ? 1 : -1;
         this.rigidBody.setLinvel({ x: velX * direction, y: currentVel.y }, true);
       }
@@ -49,8 +49,7 @@ export class MineCartEntity extends BulletEntity {
     super.stepUpdate();
 
     // 超过屏幕边界销毁
-    const screenWidth = this.scene.sys.canvas.width;
-    if (this.x > screenWidth * 1.2) {
+    if (this.x > PositionManager.Instance.getWorldBounds().right) {
       console.log('minecart out of screen');
       this.destroy();
     }

@@ -158,6 +158,7 @@ export default class CombatManager extends BaseManager {
         this.scene?.rapierWorld?.step(this.scene.rapierEventQueue);
         // 处理相交事件
         this.scene?.rapierEventQueue.drainCollisionEvents((handle1: number, handle2: number, started: boolean) => {
+          console.log(`Collision event: handle1=${handle1}, handle2=${handle2}, started=${started}`);
           // started 为 true 表示两个物体开始接触 (Enter)
           // started 为 false 表示两个物体分开了 (Leave)
           if (started) {

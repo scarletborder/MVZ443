@@ -69,7 +69,7 @@ export class LilyModel extends PlantModel {
   }
 
   public createEntity(scene: Game, col: number, row: number, level: number) {
-    return new LilyEntity(scene, col, row, level);
+    return this.initializeEntity(new LilyEntity(scene, col, row, level));
   }
 }
 

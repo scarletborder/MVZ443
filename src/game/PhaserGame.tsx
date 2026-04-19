@@ -30,6 +30,7 @@ export const PhaserGame = forwardRef<IRefPhaserGame, IProps>(function PhaserGame
 
   const { width } = useSettings();
   const game = useRef<Phaser.Game | null>(null!);
+  const gameHeight = width * 3 / 4;
 
   useLayoutEffect(() => {
     if (game.current === null) {
@@ -75,6 +76,12 @@ export const PhaserGame = forwardRef<IRefPhaserGame, IProps>(function PhaserGame
   return (
     <div id="game-container" style={{
       visibility: isVisibility ? 'visible' : 'hidden',
+      width,
+      height: gameHeight,
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'flex-start',
+      overflow: 'hidden',
     }}></div>
   );
 

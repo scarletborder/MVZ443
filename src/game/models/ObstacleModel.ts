@@ -13,5 +13,9 @@ export abstract class ObstacleModel {
 
   public onDeath(_entity: ObstacleEntity) { }
 
+  protected initializeEntity<TEntity extends ObstacleEntity>(entity: TEntity): TEntity {
+    return entity.initializeEntity();
+  }
+
   public abstract createEntity(scene: Game, col: number, row: number, config: ObstacleConfig): ObstacleEntity;
 }

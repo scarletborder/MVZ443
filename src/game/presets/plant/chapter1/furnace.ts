@@ -48,7 +48,7 @@ export class FurnaceModel extends PlantModel {
   }
 
   public createEntity(scene: Game, col: number, row: number, level: number) {
-    return new FurnaceEntity(scene, col, row, level);
+    return this.initializeEntity(new FurnaceEntity(scene, col, row, level));
   }
 }
 

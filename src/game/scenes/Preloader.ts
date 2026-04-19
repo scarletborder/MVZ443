@@ -4,6 +4,8 @@ import { preloadData, StageData } from '../models/IRecord';
 import { PlantLibrary } from '../managers/library/PlantLibrary';
 
 export class Preloader extends Scene {
+  private loaderDebugBound = false;
+
   constructor() {
     super('Preloader');
   }
@@ -39,6 +41,7 @@ export class Preloader extends Scene {
 
   preload() {
     const params = this.game.registry.get('gameParams') as GameParams;
+    this.bindLoaderDebugLogs();
     //  Load the assets for the game - Replace with your own assets
     this.load.setPath('assets');
     this.loadStage(params);
@@ -231,5 +234,45 @@ export class Preloader extends Scene {
         });
       }
     }
+  }
+
+  private bindLoaderDebugLogs() {
+    if (this.loaderDebugBound) return;
+    this.loaderDebugBound = true;
+
+    this.load.on('start', () => {
+      console.log('[Preloader] load start');
+    });
+
+    this.load.on('addfile', (_key: string, type: string, key: string, url: string) => {
+      console.log(`[Preloader] queue ${type}:${key} <- ${url}`);
+    });
+
+    this.load.on('progress', (progress: number) => {
+      console.log(`[Preloader] total progress ${(progress * 100).toFixed(2)}%`);
+    });
+
+    this.load.on('fileprogress', (file: { type?: string; key?: string; src?: string }, progress: number) => {
+      console.log(
+        `[Preloader] file progress ${file.type ?? 'unknown'}:${file.key ?? 'unknown'} ${(progress * 100).toFixed(2)}% <- ${file.src ?? 'unknown'}`
+      );
+    });
+
+    this.load.on('filecomplete', (key: string, type: string, data: unknown) => {
+      const size =
+        typeof data === 'string' ? data.length :
+          ArrayBuffer.isView(data) ? data.byteLength :
+            data instanceof ArrayBuffer ? data.byteLength :
+              'n/a';
+      console.log(`[Preloader] file complete ${type}:${key} size=${size}`);
+    });
+
+    this.load.on('loaderror', (file: { type?: string; key?: string; src?: string }) => {
+      console.error(`[Preloader] load error ${file.type ?? 'unknown'}:${file.key ?? 'unknown'} <- ${file.src ?? 'unknown'}`);
+    });
+
+    this.load.on('complete', (totalComplete: number, totalFailed: number) => {
+      console.log(`[Preloader] load complete success=${totalComplete} failed=${totalFailed}`);
+    });
   }
 }

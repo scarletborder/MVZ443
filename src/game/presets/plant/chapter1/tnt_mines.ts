@@ -30,7 +30,7 @@ export class TntMinesModel extends PlantModel {
   public isTiny = true;
 
   public override createEntity(scene: Game, col: number, row: number, level: number): TntMinesEntity {
-    return new TntMinesEntity(scene, col, row, level);
+    return this.initializeEntity(new TntMinesEntity(scene, col, row, level));
   }
 
   public override onCreate(entity: TntMinesEntity): void {
@@ -123,8 +123,8 @@ export class TntMinesEntity extends PlantEntity {
   public hasExploded: boolean = false;
   public random: seedrandom.PRNG;
 
-  private buriedSprite!: Phaser.GameObjects.Sprite;
-  private mainSprite!: Phaser.GameObjects.Sprite;
+  private declare buriedSprite: Phaser.GameObjects.Sprite;
+  private declare mainSprite: Phaser.GameObjects.Sprite;
   private colliderZombie: Phaser.Physics.Arcade.Collider | null = null;
   public game: Game;
 

@@ -7,7 +7,7 @@ import type { Game } from "../../../scenes/Game";
 import createShootBurstAnim from "../../../sprite/shoot_anim";
 import { ProjectileCmd } from "../../../utils/cmd/ProjectileCmd";
 import CombatHelper from "../../../utils/helper/CombatHelper";
-import { ArrowConfig, ArrowData, ArrowEntity, ArrowModel } from "../../bullet/arrow";
+import {ArrowData, ArrowEntity, ArrowModel } from "../../bullet/arrow";
 
 
 export class DispenserModel extends PlantModel {
@@ -94,13 +94,13 @@ export class DispenserModel extends PlantModel {
   }
 
   public createEntity(scene: Game, col: number, row: number, level: number) {
-    return new DispenserEntity(scene, col, row, level);
+    return this.initializeEntity(new DispenserEntity(scene, col, row, level));
   }
 }
 
 export class DispenserEntity extends PlantEntity {
-  private headX: number = 0;
-  private head!: Phaser.GameObjects.Sprite;
+  private declare headX: number;
+  private declare head: Phaser.GameObjects.Sprite;
 
   inBruteShoot: boolean = false; // 是否处于暴力发射状态
 
@@ -123,6 +123,8 @@ export class DispenserEntity extends PlantEntity {
   }
 
   public playShootAnimation() {
+    if (this.currentHealth <= 0) return;
+
     const head = this.head;
     const moveDistance = head.displayWidth * 0.15;
     const originalX = this.headX;
@@ -140,6 +142,8 @@ export class DispenserEntity extends PlantEntity {
   }
 
   public playBruteShootAnimation(totalArrows: number) {
+    if (this.currentHealth <= 0) return;
+
     const head = this.head;
     const moveDistance = head.displayWidth * 0.15;
     const originalX = this.head.x;

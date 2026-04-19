@@ -68,11 +68,12 @@ export class WardenEntity extends BaseGolemEntity {
       callback: () => {
         const newRow = Phaser.Math.Between(0, PositionManager.Instance.Row_Number - 1);
         const newCol = this.random() > 0.5 ? 8 : 3;
-        const pos = PositionManager.Instance.getZombieBottomCenter(newCol, newRow);
+        const bodyPos = PositionManager.Instance.getZombieBodyCenter(newCol, newRow);
+        const viewPos = PositionManager.Instance.getZombieBottomCenter(newCol, newRow);
         this.col = newCol;
         this.row = newRow;
-        this.rigidBody?.setTranslation(pos, true);
-        this.animController.updatePosition(pos.x + this.offsetX, pos.y + this.offsetY);
+        this.rigidBody?.setTranslation(bodyPos, true);
+        this.animController.updatePosition(viewPos.x + this.offsetX, viewPos.y + this.offsetY);
         this.getLegacyController()?.raw.getOut?.();
         done();
       }
@@ -93,4 +94,3 @@ export const WardenData = new PresetMonsterModel({
   attackInterval: 1200,
   createEntity: (scene, col, row, model, waveID) => new WardenEntity(scene, col, row, model, waveID),
 });
-

@@ -32,5 +32,9 @@ export abstract class MonsterModel {
 
   public onDeath(_entity: MonsterEntity) { }
 
+  protected initializeEntity<TEntity extends MonsterEntity>(entity: TEntity): TEntity {
+    return entity.initializeEntity();
+  }
+
   public abstract createEntity(scene: Game, col: number, row: number, waveID: number): MonsterEntity;
 }

@@ -74,7 +74,7 @@ export class MagicPowderModel extends PlantModel {
   }
 
   public createEntity(scene: Game, col: number, row: number, level: number): MagicPowderEntity {
-    return new MagicPowderEntity(scene, col, row, level);
+    return this.initializeEntity(new MagicPowderEntity(scene, col, row, level));
   }
 }
 

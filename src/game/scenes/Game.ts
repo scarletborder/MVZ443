@@ -84,8 +84,8 @@ export class Game extends Scene {
       MobManager.Instance,
       ObstacleManager.Instance,
       PlantsManager.Instance,
-      PresetEventManager.Instance,
       ResourceManager.Instance,
+      PresetEventManager.Instance,
       SyncManager.Instance,
       TickerManager.Instance,
       DebugManager.Instance,
@@ -97,7 +97,7 @@ export class Game extends Scene {
     // read external data
     // TODO : 根据type具体判断放置那张背景图
     this.params = this.game.registry.get('gameParams') as GameParams;
-    this.scaleFactor = this.scale.displaySize.width / 800;
+    this.scaleFactor = this.scale.gameSize.width / 800;
 
     // 初始化各个Manager
     for (const manager of this.ManagerGroup) {
@@ -170,6 +170,7 @@ export class Game extends Scene {
 
   update(time: number, delta: number): void {
     CombatManager.Instance.update(time, delta);
+    DebugManager.Instance.update();
   }
 
   changeScene() {

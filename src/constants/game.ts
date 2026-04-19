@@ -1,6 +1,8 @@
 export type _Typedebuffs = 'slow' | 'frozen' | null;
 
 export type _TypeArrowEnhancement = 'none' | 'fire' | 'ice' | 'lightning';
+export const DEBUG_TOGGLE_KEY = 'D';
+
 export function EnhancementPriority(new_en: _TypeArrowEnhancement, old_en: _TypeArrowEnhancement): boolean {
     const priority = {
         'none': 0,

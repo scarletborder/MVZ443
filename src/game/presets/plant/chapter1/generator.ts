@@ -85,7 +85,7 @@ export class GeneratorModel extends PlantModel {
   }
 
   public createEntity(scene: Game, col: number, row: number, level: number) {
-    return new GeneratorEntity(scene, col, row, level);
+    return this.initializeEntity(new GeneratorEntity(scene, col, row, level));
   }
 }
 

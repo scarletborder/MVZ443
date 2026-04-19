@@ -16,7 +16,9 @@ import SettingsPage from './pages/settings';
 import Docs from './pages/docs';
 import DocDetail from './pages/docDetail';
 import { publicUrl } from './utils/browser';
+import { initializeGameLibraries } from './game/managers/library/initializeGameLibraries';
 
+initializeGameLibraries();
 
 function App() {
   // State to control the visibility of the game tool

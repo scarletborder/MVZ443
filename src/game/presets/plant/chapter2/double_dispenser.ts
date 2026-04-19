@@ -31,7 +31,7 @@ export class DoubleDispenserModel extends PlantModel {
   public isNightPlant = false;
 
   public override createEntity(scene: Game, col: number, row: number, level: number): DoubleDispenserEntity {
-    return new DoubleDispenserEntity(scene, col, row, level);
+    return this.initializeEntity(new DoubleDispenserEntity(scene, col, row, level));
   }
 
   public override onCreate(entity: DoubleDispenserEntity): void {
@@ -198,9 +198,9 @@ export class DoubleDispenserModel extends PlantModel {
 export const DoubleDispenserData = new DoubleDispenserModel();
 
 export class DoubleDispenserEntity extends PlantEntity {
-  private base!: Phaser.GameObjects.Sprite;
-  private head!: Phaser.GameObjects.Sprite;
-  private headX: number = 0;
+  private declare base: Phaser.GameObjects.Sprite;
+  private declare head: Phaser.GameObjects.Sprite;
+  private declare headX: number;
 
   constructor(scene: Game, col: number, row: number, level: number) {
     super(scene, col, row, DoubleDispenserData, level);

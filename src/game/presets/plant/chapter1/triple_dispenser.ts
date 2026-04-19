@@ -25,7 +25,7 @@ export class TripleDispenserModel extends PlantModel {
   public isNightPlant = false;
 
   public override createEntity(scene: Game, col: number, row: number, level: number): TripleDispenserEntity {
-    return new TripleDispenserEntity(scene, col, row, level);
+    return this.initializeEntity(new TripleDispenserEntity(scene, col, row, level));
   }
 
   public override onCreate(entity: TripleDispenserEntity): void {
@@ -180,9 +180,9 @@ export class TripleDispenserModel extends PlantModel {
 export const TripleDispenserData = new TripleDispenserModel();
 
 export class TripleDispenserEntity extends PlantEntity {
-  private base!: Phaser.GameObjects.Sprite;
-  private head!: Phaser.GameObjects.Sprite;
-  private headX: number = 0;
+  private declare base: Phaser.GameObjects.Sprite;
+  private declare head: Phaser.GameObjects.Sprite;
+  private declare headX: number;
   public game: Game;
 
   constructor(scene: Game, col: number, row: number, level: number) {

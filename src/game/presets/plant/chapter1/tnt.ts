@@ -25,7 +25,7 @@ export class TntModel extends PlantModel {
   public isNightPlant = false;
 
   public override createEntity(scene: Game, col: number, row: number, level: number): TntEntity {
-    return new TntEntity(scene, col, row, level);
+    return this.initializeEntity(new TntEntity(scene, col, row, level));
   }
 
   public override onCreate(entity: TntEntity): void {
@@ -156,7 +156,7 @@ export class TntEntity extends PlantEntity {
   public explosionDamage: number = 0;
   public random: seedrandom.PRNG;
   public game: Game;
-  public mainSprite!: Phaser.GameObjects.Sprite;
+  public declare mainSprite: Phaser.GameObjects.Sprite;
 
   constructor(scene: Game, col: number, row: number, level: number) {
     super(scene, col, row, TntData, level);

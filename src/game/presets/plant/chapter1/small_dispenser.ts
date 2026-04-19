@@ -33,7 +33,7 @@ export class SmallDispenserModel extends PlantModel {
   public isTiny = true;
 
   public override createEntity(scene: Game, col: number, row: number, level: number): SmallDispenserEntity {
-    return new SmallDispenserEntity(scene, col, row, level);
+    return this.initializeEntity(new SmallDispenserEntity(scene, col, row, level));
   }
 
   public override onCreate(entity: SmallDispenserEntity): void {
@@ -87,7 +87,7 @@ export class SmallDispenserModel extends PlantModel {
 export const SmallDispenserData = new SmallDispenserModel();
 
 export class SmallDispenserEntity extends PlantEntity {
-  private mainSprite!: Phaser.GameObjects.Sprite;
+  private declare mainSprite: Phaser.GameObjects.Sprite;
 
   constructor(scene: Game, col: number, row: number, level: number) {
     super(scene, col, row, SmallDispenserData, level);

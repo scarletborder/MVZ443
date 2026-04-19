@@ -45,6 +45,7 @@ export abstract class MonsterEntity extends CombatEntity {
   public viewGroup: Phaser.GameObjects.Group;
   public attachSprites: Map<string, Phaser.GameObjects.Sprite> = new Map();
   private destroyListeners: Array<(entity: MonsterEntity) => void> = [];
+  private initialized = false;
 
   public offsetX: number;
   public offsetY: number;
@@ -62,19 +63,11 @@ export abstract class MonsterEntity extends CombatEntity {
     this.baseDepth = DepthUtils.getZombieBasicDepth(row, this.offsetY);
 
     this.health = model.maxHealth;
-    this.originalSpeed = model.baseSpeed * PositionManager.Instance.scaleFactor * 0.9;
+    this.originalSpeed = model.baseSpeed * 0.9;
     this.speed = this.originalSpeed;
     this.isFlying = model.isDefaultFlying;
     this.isInVoid = model.isDefaultInVoid;
     this.viewGroup = scene.add.group();
-
-    this.buildView();
-    this.checkAndAddBoat();
-    this.buildPhysics();
-
-    this.playSpawnAudio();
-    this.startMove();
-    this.model.onCreate(this);
   }
 
   public addDestroyListener(listener: (entity: MonsterEntity) => void) {
@@ -83,22 +76,42 @@ export abstract class MonsterEntity extends CombatEntity {
 
   protected abstract buildView(): void;
 
+  public initializeEntity(): this {
+    if (this.initialized) return this;
+    this.initialized = true;
+
+    this.buildView();
+    this.checkAndAddBoat();
+    this.buildPhysics();
+
+    this.playSpawnAudio();
+    this.startMove();
+    this.model.onCreate(this);
+    return this;
+  }
+
   private buildPhysics() {
     const size = PositionManager.Instance.getZombieBodySize();
-    const rigidBodyDesc = RAPIER.RigidBodyDesc.kinematicVelocityBased().setTranslation(this.x, this.y);
+    const physicsCenter = PositionManager.Instance.getZombieBodyCenterByBottom(this.x, this.y);
+    const rigidBodyDesc = RAPIER.RigidBodyDesc.kinematicVelocityBased().setTranslation(physicsCenter.x, physicsCenter.y);
     rigidBodyDesc.setUserData(this);
     this.rigidBody = this.scene.rapierWorld.createRigidBody(rigidBodyDesc);
 
-    const colliderDesc = RAPIER.ColliderDesc.cuboid(size.sizeX / 2, (size.sizeY * 0.9) / 2);
+    const colliderDesc = RAPIER.ColliderDesc.cuboid(size.sizeX / 2, size.sizeY / 2);
     colliderDesc.setSensor(true);
     colliderDesc.setActiveEvents(RAPIER.ActiveEvents.COLLISION_EVENTS);
+    colliderDesc.setActiveCollisionTypes(
+      RAPIER.ActiveCollisionTypes.DEFAULT |
+      RAPIER.ActiveCollisionTypes.KINEMATIC_KINEMATIC
+    );
     this.scene.rapierWorld.createCollider(colliderDesc, this.rigidBody);
   }
 
   public override updateView(vec: { x: number, y: number }) {
     if (this.isDying) return;
-    this.x = vec.x;
-    this.y = vec.y;
+    const nextPosition = PositionManager.Instance.getZombieBottomCenterByBody(vec.x, vec.y);
+    this.x = nextPosition.x;
+    this.y = nextPosition.y;
 
     if (!this.animController.isInAnim) {
       this.animController.updatePosition(this.x + this.offsetX, this.y + this.offsetY);
@@ -110,7 +123,7 @@ export abstract class MonsterEntity extends CombatEntity {
   }
 
   public override stepUpdate() {
-    if (this.x < -PositionManager.Instance.GRID_SIZEX) {
+    if (this.x < PositionManager.Instance.getWorldBounds().left) {
       this.destroy();
       CombatManager.Instance.EndGame(false);
     }
@@ -343,7 +356,7 @@ export class PresetMonsterModel extends MonsterModel {
   }
 
   public createEntity(scene: Game, col: number, row: number, waveID: number): MonsterEntity {
-    return this.entityFactory(scene, col, row, this, waveID);
+    return this.initializeEntity(this.entityFactory(scene, col, row, this, waveID));
   }
 }
 

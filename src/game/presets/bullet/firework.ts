@@ -23,8 +23,8 @@ export class HFireWorkEntity extends BulletEntity {
   private explodeDamage: number;
   private smokeTimer: number = 0; // 限制产生烟雾的频率
 
-  constructor(scene: Game, col: number, row: number, model: HFireWorkModel, cfg: HFireWorkConfig) {
-    super(scene, col, row, model, cfg);
+  constructor(scene: Game, x: number, row: number, model: HFireWorkModel, cfg: HFireWorkConfig) {
+    super(scene, x, row, model, cfg);
     this.explodeDamage = cfg.explodeDamage ?? 0;
 
     const size = PositionManager.Instance.getBulletDisplaySize();

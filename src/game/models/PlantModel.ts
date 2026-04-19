@@ -38,5 +38,9 @@ export abstract class PlantModel {
 
   public onDeath(_entity: PlantEntity) { };
 
+  protected initializeEntity<TEntity extends PlantEntity>(entity: TEntity): TEntity {
+    return entity.initializeEntity();
+  }
+
   public abstract createEntity(scene: Game, col: number, row: number, level: number): PlantEntity;
 }

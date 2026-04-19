@@ -25,7 +25,7 @@ export class GlowPowderModel extends PlantModel {
   public isNightPlant = false;
 
   public override createEntity(scene: Game, col: number, row: number, level: number): GlowPowderEntity {
-    return new GlowPowderEntity(scene, col, row, level);
+    return this.initializeEntity(new GlowPowderEntity(scene, col, row, level));
   }
 
   public override onCreate(entity: GlowPowderEntity): void {
