@@ -271,10 +271,6 @@ export class DoubleDispenserEntity extends PlantEntity {
       this.head.x = this.headX;
     }
   }
-
-  public override destroy(): void {
-    super.destroy();
-  }
 }
 
 export default DoubleDispenserData;

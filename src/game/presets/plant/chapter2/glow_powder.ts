@@ -116,10 +116,6 @@ export class GlowPowderEntity extends PlantEntity {
       });
     }
   }
-
-  public override destroy(): void {
-    super.destroy();
-  }
 }
 
 export default GlowPowderData;

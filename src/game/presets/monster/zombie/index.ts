@@ -1,0 +1,13 @@
+export { ZombieData } from "./zombie";
+export { CapZombieData } from "./cap_zombie";
+export { HelmetZombieData } from "./helmet_zombie";
+export { MinerZombieData } from "./miner_zombie";
+export { MinerHelmetZombieData } from "./miner_helmet_zombie";
+export { SkeletonData } from "./skeleton";
+export { SkeletonBowData } from "./skeleton_bow";
+export { StickZombieData } from "./stick_zombie";
+export { EvokerData } from "./evoker";
+export { VindicatorData } from "./vindicator";
+export { VindicatorSoliderData } from "./vindicator_solider";
+export { TurtleZombieData } from "./turtle_zombie";
+export { TurtleSkeletonBowData } from "./turtle_skeleton_bow";

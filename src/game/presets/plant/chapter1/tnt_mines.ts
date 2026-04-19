@@ -197,13 +197,6 @@ export class TntMinesEntity extends PlantEntity {
 
     this.destroy();
   }
-
-  public override destroy(): void {
-    if (this.colliderZombie) {
-      this.colliderZombie.destroy();
-    }
-    super.destroy();
-  }
 }
 
 export default TntMinesData;

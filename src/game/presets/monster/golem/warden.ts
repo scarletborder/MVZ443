@@ -1,0 +1,73 @@
+import { PositionManager } from "../../../managers/view/PositionManager";
+import { WardenGolemAnimProps } from "../../../sprite/normal_golem";
+import { PresetMonsterModel } from "../common";
+import { BaseGolemEntity, createWardenLaser, createWardenSmash } from "./shared";
+
+export class WardenEntity extends BaseGolemEntity {
+  public constructor(scene: Phaser.Scene & any, col: number, row: number, model: PresetMonsterModel, waveID: number) {
+    super(scene, col, row, model, waveID, 19);
+  }
+
+  protected createProps() {
+    return WardenGolemAnimProps;
+  }
+
+  protected getCallBase() {
+    return 40;
+  }
+
+  protected getCastDelay() {
+    return 4000;
+  }
+
+  protected getRecoverDelay() {
+    return 3000;
+  }
+
+  protected skill1(): void {
+    createWardenLaser(this);
+  }
+
+  protected skill2(): void {
+    this.getLegacyController()?.raw.highJump?.();
+    this.tickmanager.delayedCall({
+      delay: 1000,
+      callback: () => {
+        this.getLegacyController()?.raw.land?.();
+        createWardenSmash(this);
+      }
+    });
+  }
+
+  protected reposition(done: () => void): void {
+    this.getLegacyController()?.raw.dig?.();
+    this.tickmanager.delayedCall({
+      delay: 1600,
+      callback: () => {
+        const newRow = Phaser.Math.Between(0, PositionManager.Instance.Row_Number - 1);
+        const newCol = this.random() > 0.5 ? 8 : 3;
+        const pos = PositionManager.Instance.getZombieBottomCenter(newCol, newRow);
+        this.col = newCol;
+        this.row = newRow;
+        this.rigidBody?.setTranslation(pos, true);
+        this.animController.updatePosition(pos.x + this.offsetX, pos.y + this.offsetY);
+        this.getLegacyController()?.raw.getOut?.();
+        done();
+      }
+    });
+  }
+}
+
+export const WardenData = new PresetMonsterModel({
+  mid: 13,
+  nameKey: "Warden",
+  level: 999,
+  weight: () => 0,
+  leastWaveID: 0,
+  rank: "elite",
+  maxHealth: 18000,
+  baseSpeed: 25,
+  attackDamage: 60,
+  attackInterval: 1200,
+  createEntity: (scene, col, row, model, waveID) => new WardenEntity(scene, col, row, model, waveID),
+});

@@ -294,10 +294,6 @@ export class TripleDispenserEntity extends PlantEntity {
       this.head.x = this.headX;
     }
   }
-
-  public override destroy(): void {
-    super.destroy();
-  }
 }
 
 export default TripleDispenserData;

@@ -1,0 +1,1 @@
+export { MutantData } from "./mutant";
