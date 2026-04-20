@@ -185,6 +185,12 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({
   });
 
   const handleStart = useMemoizedFn(() => {
+    const pidToLevel = new Map(state.availablePlants.map(p => [p.pid, p.level]));
+    const chosenPlants = state.selectedPlants.map(pid => ({
+      pid,
+      level: pidToLevel.get(pid) ?? 1,
+    }));
+
     // 联机模式下的特殊处理
     if (isOnlineMode) {
       // 标记用户已经点击了准备按钮
@@ -193,7 +199,7 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({
       // 在线模式下，房主和普通玩家都需要设置GameParams
       const params: GameParams = {
         level: stageId,
-        plants: state.selectedPlants,
+        plants: chosenPlants,
         gameExit: () => { console.log('no gameexit Implemented') },
         gameSettings: {
           isBluePrint: settings.isBluePrint,
@@ -227,7 +233,7 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({
     // 单机模式的原有逻辑
     const params: GameParams = {
       level: stageId,
-      plants: state.selectedPlants,
+      plants: chosenPlants,
       gameExit: () => { console.log('no gameexit Implemented') },
       gameSettings: {
         isBluePrint: settings.isBluePrint,

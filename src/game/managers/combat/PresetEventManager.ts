@@ -54,7 +54,6 @@ export class PresetEventManager extends BaseManager {
     GridManager.Instance.initGridProperties();
     const stageId = this.scene.params.level || 0;
     const chapterId = StageDataRecords[stageId].chapterID;
-    debugger;
     this.setInitialEnergy(this.scene.stageData.energy);
     // dispatch stage or chapter
     if (chapterId === 1) {

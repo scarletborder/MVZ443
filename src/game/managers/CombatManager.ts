@@ -12,6 +12,7 @@ import { DeferredManager } from "./DeferredManager";
 import { onlineStateManager } from "../../store/OnlineStateManager";
 import { RoomAllReadyEvent } from "../../types/online";
 import { HasConnected } from "../../utils/net/sync";
+import CardpileManager from "./combat/CardpileManager";
 
 export type CombatStatus = {
   dayOrNight: boolean; // day = true
@@ -174,6 +175,7 @@ export default class CombatManager extends BaseManager {
       // Tick-based systems.
       if (!this.isPaused) {
         TickerManager.Instance.Update();
+        CardpileManager.Instance.stepUpdate();
       }
 
       // Physics-step systems.

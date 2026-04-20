@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useMemoizedFn, useCreation } from 'ahooks';
-import { IRefPhaserGame } from '../../game/PhaserGame';
 import Card from './card';
-import { useSaveManager } from '../../context/save_ctx';
 import { GameParams } from '../../game/models/GameParams';
 import VCard from './vcard';
 import { useDeviceType } from '../../hooks/useDeviceType';
@@ -13,7 +11,6 @@ import { PlantModel } from '../../game/models/PlantModel';
 import { PlantLibrary } from '../../game/managers/library/PlantLibrary';
 
 interface slotProps {
-  sceneRef: React.MutableRefObject<IRefPhaserGame | null>;
   gameParams: GameParams | null;
 }
 
@@ -34,11 +31,10 @@ export function VerticalEnergySlot() {
   );
 }
 
-export function CardSlotHorizontal({ sceneRef, gameParams }: slotProps) {
+export function CardSlotHorizontal({ gameParams }: slotProps) {
   const isDarkMode = useDarkMode();
   // PC 用主要卡槽
   const MaxCardNumber = 10;
-  const { currentProgress } = useSaveManager();
 
   // 使用 useCreation 优化 Map 创建，避免每次渲染都创建新的 Map
   const [plants, setPlants] = useState<Array<PlantModel>>([]);
@@ -52,8 +48,8 @@ export function CardSlotHorizontal({ sceneRef, gameParams }: slotProps) {
       return;
     }
     const newPlants: Array<PlantModel> = [];
-    const chosenPids = gameParams.plants.slice(0, MaxCardNumber);
-    for (const pid of chosenPids) {
+    const chosenPlants = gameParams.plants.slice(0, MaxCardNumber);
+    for (const { pid } of chosenPlants) {
       const plantModel = PlantLibrary.GetModel(pid);
       if (!plantModel) {
         console.warn(`Plant model not found for pid ${pid}`);
@@ -65,18 +61,16 @@ export function CardSlotHorizontal({ sceneRef, gameParams }: slotProps) {
     setPlants(newPlants);
 
     const newPidToLevelMap = new Map<number, number>();
-    currentProgress.plants.forEach(plant => {
-      if (gameParams.plants.includes(plant.pid)) {
-        newPidToLevelMap.set(plant.pid, plant.level);
-      }
-    });
+    for (const { pid, level } of gameParams.plants) {
+      newPidToLevelMap.set(pid, level);
+    }
 
     setPidToLevelMap(newPidToLevelMap);
   });
 
   useEffect(() => {
     updatePlantsAndLevels();
-  }, [gameParams, currentProgress, updatePlantsAndLevels]);
+  }, [gameParams, updatePlantsAndLevels]);
 
   // 使用 useCreation 优化样式对象
   const containerStyle = useCreation(() => ({
@@ -94,7 +88,6 @@ export function CardSlotHorizontal({ sceneRef, gameParams }: slotProps) {
       {plants.map((plantModel, index) => (
         <Card
           key={`${plantModel.pid}-${index}`} // 更好的 key
-          sceneRef={sceneRef}
           level={pidToLevelMap.get(plantModel.pid) || 1}
           plantModel={plantModel}
         />
@@ -105,11 +98,10 @@ export function CardSlotHorizontal({ sceneRef, gameParams }: slotProps) {
 
 
 
-export function CardSlotVertical({ sceneRef, gameParams }: slotProps) {
+export function CardSlotVertical({ gameParams }: slotProps) {
   const isDarkMode = useDarkMode();
   // Mobile 用主要卡槽
   const MaxCardNumber = 9;
-  const { currentProgress } = useSaveManager();
   const [plants, setPlants] = useState<Array<PlantModel>>([]);
   const [pidToLevelMap, setPidToLevelMap] = useState(() => new Map<number, number>());
 
@@ -122,8 +114,8 @@ export function CardSlotVertical({ sceneRef, gameParams }: slotProps) {
     }
 
     const newPlants: Array<PlantModel> = [];
-    const chosenPids = gameParams.plants.slice(0, MaxCardNumber);
-    for (const pid of chosenPids) {
+    const chosenPlants = gameParams.plants.slice(0, MaxCardNumber);
+    for (const { pid } of chosenPlants) {
       const plantModel = PlantLibrary.GetModel(pid);
       if (!plantModel) {
         console.warn(`Plant model not found for pid ${pid}`);
@@ -135,18 +127,16 @@ export function CardSlotVertical({ sceneRef, gameParams }: slotProps) {
     setPlants(newPlants);
 
     const newPidToLevelMap = new Map<number, number>();
-    currentProgress.plants.forEach(plant => {
-      if (gameParams.plants.includes(plant.pid)) {
-        newPidToLevelMap.set(plant.pid, plant.level);
-      }
-    });
+    for (const { pid, level } of gameParams.plants) {
+      newPidToLevelMap.set(pid, level);
+    }
 
     setPidToLevelMap(newPidToLevelMap);
   });
 
   useEffect(() => {
     updatePlantsAndLevels();
-  }, [gameParams, currentProgress, updatePlantsAndLevels]);
+  }, [gameParams, updatePlantsAndLevels]);
 
   // 使用 useCreation 优化样式对象
   const containerStyle = useCreation(() => ({
@@ -164,7 +154,6 @@ export function CardSlotVertical({ sceneRef, gameParams }: slotProps) {
       {plants.map((plantModel, index) => (
         <VCard
           key={`${plantModel.pid}-${index}`} // 更好的 key
-          sceneRef={sceneRef}
           level={pidToLevelMap.get(plantModel.pid) || 1}
           plantModel={plantModel}
         />
@@ -175,11 +164,10 @@ export function CardSlotVertical({ sceneRef, gameParams }: slotProps) {
 
 
 // 永远竖向排列,有pickaxe和剩余的卡片
-export function ViceCardSlot({ sceneRef, gameParams }: slotProps) {
+export function ViceCardSlot({ gameParams }: slotProps) {
   const isDarkMode = useDarkMode();
   const deviceType = useDeviceType();
   const ExistedCards = deviceType === 'pc' ? 10 : 9;
-  const { currentProgress } = useSaveManager();
   const [plants, setPlants] = useState<Array<PlantModel>>([]);
   const [pidToLevelMap, setPidToLevelMap] = useState(() => new Map<number, number>());
 
@@ -193,8 +181,8 @@ export function ViceCardSlot({ sceneRef, gameParams }: slotProps) {
 
     if (gameParams.plants.length > ExistedCards) {
       const newPlants: Array<PlantModel> = [];
-      const chosenPids = gameParams.plants.slice(ExistedCards);
-      for (const pid of chosenPids) {
+      const chosenPlants = gameParams.plants.slice(ExistedCards);
+      for (const { pid } of chosenPlants) {
         const plantModel = PlantLibrary.GetModel(pid);
         if (!plantModel) {
           console.warn(`Plant model not found for pid ${pid}`);
@@ -206,11 +194,9 @@ export function ViceCardSlot({ sceneRef, gameParams }: slotProps) {
       setPlants(newPlants);
 
       const newPidToLevelMap = new Map<number, number>();
-      currentProgress.plants.forEach(plant => {
-        if (gameParams.plants.includes(plant.pid)) {
-          newPidToLevelMap.set(plant.pid, plant.level);
-        }
-      });
+      for (const { pid, level } of gameParams.plants) {
+        newPidToLevelMap.set(pid, level);
+      }
 
       setPidToLevelMap(newPidToLevelMap);
     } else {
@@ -221,7 +207,7 @@ export function ViceCardSlot({ sceneRef, gameParams }: slotProps) {
 
   useEffect(() => {
     updatePlantsAndLevels();
-  }, [gameParams, currentProgress, ExistedCards, updatePlantsAndLevels]);
+  }, [gameParams, ExistedCards, updatePlantsAndLevels]);
 
   // 使用 useCreation 优化样式对象
   const containerStyle = useCreation(() => ({
@@ -235,11 +221,10 @@ export function ViceCardSlot({ sceneRef, gameParams }: slotProps) {
 
   return (
     <div style={containerStyle}>
-      <Pickaxe sceneRef={sceneRef} />
+      <Pickaxe />
       {plants.map((plantModel, index) => (
         <Card
           key={`${plantModel.pid}-${index}`} // 更好的 key
-          sceneRef={sceneRef}
           level={pidToLevelMap.get(plantModel.pid) || 1}
           plantModel={plantModel}
         />

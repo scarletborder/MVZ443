@@ -2,9 +2,14 @@
 
 import { StageResult } from "./IRecord";
 
+export type PlantSelection = {
+  pid: number;
+  level: number;
+};
+
 export interface GameParams {
   level: number; // 关卡号, 拼接字符串
-  plants: Array<number>; // 携带的植物pids,获得植物的等级交给cardSlot做,种植runtime等级交给信号做
+  plants: Array<PlantSelection>; // 携带的植物以及其等级
   gameExit: (result: StageResult) => void;
   gameSettings: GameSettings;
   [key: string]: any; // 允许动态扩展其他参数

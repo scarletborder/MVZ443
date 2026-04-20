@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useMemoizedFn } from 'ahooks';
-import { IRefPhaserGame } from '../../game/PhaserGame';
-import { Game } from '../../game/scenes/Game';
 import { publicUrl } from '../../utils/browser';
 import { useLocaleMessages } from '../../hooks/useLocaleMessages';
 import CardpileManager from '../../game/managers/combat/CardpileManager';
@@ -9,7 +7,7 @@ import ResourceManager from '../../game/managers/combat/ResourceManager';
 import PlantsManager from '../../game/managers/combat/PlantsManager';
 import { CardProps } from './card';
 
-export default function VCard({ plantModel, level, sceneRef }: CardProps) {
+export default function VCard({ plantModel, level }: CardProps) {
   const { pid, texturePath, nameKey, cost: costStat } = plantModel;
   const cost = costStat.getValueAt(level);
   const [leftCooldownPercent, setLeftCooldownPercent] = useState(1);
@@ -81,13 +79,6 @@ export default function VCard({ plantModel, level, sceneRef }: CardProps) {
   }, [handleDeselect]); // 依赖于 memoized 函数
 
   const handleClick = useMemoizedFn(() => {
-    if (!sceneRef.current) return;
-    const scene = sceneRef.current.scene as Game;
-    if (!scene || scene.scene.key !== 'Game') {
-      console.error('当前场景不是Game');
-      return;
-    }
-
     if (energy < cost) {
       console.log('Not enough energy');
       PlantsManager.Instance.EventBus.emit('onEnergyInsufficient');

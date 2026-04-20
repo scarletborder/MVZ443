@@ -57,7 +57,7 @@ export class Preloader extends Scene {
   }
 
   // 加载全部器械
-  loadAllPlant(ids: number[]) {
+  loadAllPlant(_plants: GameParams['plants']) {
     // if (HasConnected()) {
     // 联机模式全部加载
     const allRecords = PlantLibrary.GetAllModels();

@@ -112,7 +112,7 @@ function App() {
           "flexDirection": "row"
         }}>
           <EnergySlot />
-          <CardSlotHorizontal sceneRef={phaserRef} gameParams={gameParams} />
+          <CardSlotHorizontal gameParams={gameParams} />
         </div>}
 
         <div style={{
@@ -132,7 +132,6 @@ function App() {
             }}>
               <VerticalEnergySlot />
               <CardSlotVertical
-                sceneRef={phaserRef}
                 gameParams={gameParams}
               />
             </div>
@@ -192,7 +191,6 @@ function App() {
           marginRight: "10px",
         }}>
           <ViceCardSlot
-            sceneRef={phaserRef}
             gameParams={gameParams} />
         </div>}
     </div>);

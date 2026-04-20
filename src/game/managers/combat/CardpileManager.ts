@@ -56,17 +56,15 @@ export default class CardpileManager extends BaseManager {
 
     // 获取本用户选择的卡组并更新
     const chosenPlants = this.scene?.params.plants || [];
-    chosenPlants.forEach((pid, index) => {
-      // TODO: 改写GameParams，从而能够传递卡片等级
-      const level = 1;
+    chosenPlants.forEach(({ pid, level }) => {
       const plantModel = PlantLibrary.GetModel(pid);
       if (plantModel) {
         const totalMs = plantModel.cooldown.getValueAt(level);
         const leftMs = plantModel.cooldownStartAtRatio * totalMs;
-        this.cardpileStatus.set(index, {
-          level: 1, // 默认等级
-          leftMs: leftMs, // 默认剩余冷却时间
-          totalMs: totalMs, // 默认总冷却时间
+        this.cardpileStatus.set(pid, {
+          level,
+          leftMs,
+          totalMs,
         });
       }
     });
