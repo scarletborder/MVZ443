@@ -52,8 +52,10 @@ export class PresetEventManager extends BaseManager {
     console.log('Combat start event triggered at wave 0');
     // 实现游戏开始时的预设事件处理逻辑
     GridManager.Instance.initGridProperties();
-    const stageId = this.scene?.params.level || 0;
+    const stageId = this.scene.params.level || 0;
     const chapterId = StageDataRecords[stageId].chapterID;
+    debugger;
+    this.setInitialEnergy(this.scene.stageData.energy);
     // dispatch stage or chapter
     if (chapterId === 1) {
       this.Chapter1Dispatch(this.scene, stageId);
@@ -92,6 +94,10 @@ export class PresetEventManager extends BaseManager {
     })
   }
 
+  private setInitialEnergy(initialEnergy: number) {
+    ResourceManager.Instance.UpdateEnergy(+initialEnergy, 'all');
+  }
+
   Chapter1Dispatch(game: Game, stageId: number) {
     // 第一章的
     const { width, height } = game.scale;
@@ -99,14 +105,15 @@ export class PresetEventManager extends BaseManager {
     if (stageId === 1 || stageId === 2) {
       // 白天关卡，能量增加逻辑现在由React组件处理
       CombatManager.Instance.combatStatus.dayOrNight = true;
+      this.setAutoGenerateEnergy(17000, 25000, 25);
     }
 
     if (stageId === 1) {
       PlantsManager.Instance.PlantCard(9961, DispenserData.pid, 1, 1, 0);
-      PlantsManager.Instance.PlantCard(9961, DispenserData.pid, 1, 1, 5);
+      PlantsManager.Instance.PlantCard(9961, DispenserData.pid, 1, 1, 4);
     }
 
-    if (stageId === 7) {
+    if (stageId === 7 || stageId === 3) {
       PlantsManager.Instance.PlantCard(9961, FurnaceData.pid, 1, 1, 1);
       PlantsManager.Instance.PlantCard(9961, FurnaceData.pid, 1, 1, 2);
       PlantsManager.Instance.PlantCard(9961, FurnaceData.pid, 1, 1, 3);

@@ -128,19 +128,19 @@ export default class CursorManager extends BaseManager {
     }
   }
 
-  handleChosenCard(pid: number, _level: number) {
+  handleChosenCard = (pid: number, _level: number) => {
     this.changeCursorMode({ mode: 'plant', pid });
   }
 
-  handleChosenPickaxe() {
+  handleChosenPickaxe = () => {
     this.changeCursorMode({ mode: 'pickaxe' });
   }
 
-  handleChosenStarShards() {
+  handleChosenStarShards = () => {
     this.changeCursorMode({ mode: 'starshards' });
   }
 
-  handleChosenCancel() {
+  handleChosenCancel = () => {
     this.changeCursorMode({ mode: 'default' });
   }
 

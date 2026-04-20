@@ -17,6 +17,7 @@ import CombatManager from "../CombatManager";
 import { MonsterLibrary } from "../library/MonsterLibrary";
 import { DeferredManager } from "../DeferredManager";
 import { MonsterEntity } from "../../models/entities/MonsterEntity";
+import { onlineStateManager } from "../../../store/OnlineStateManager";
 
 type Mob = CombatEntity;
 
@@ -95,6 +96,10 @@ export default class MobManager extends BaseManager {
   public Load(): void {
     PhaserEventBus.on(PhaserEvents.RoomAllReady, this.handleRoomAllReady, this);
     PhaserEventBus.on(PhaserEvents.RoomGameStart, this.handleRoomGameStart, this);
+    const roomAllReady = onlineStateManager.getRoomAllReady();
+    if (roomAllReady) {
+      this.seed = roomAllReady.seed;
+    }
   }
 
   public setScene(scene: Game) {
@@ -563,6 +568,9 @@ export default class MobManager extends BaseManager {
   }
 
   private handleRoomGameStart() {
+    if (!this.seed) {
+      this.seed = CombatManager.Instance.seed;
+    }
     this.setRandomSeed(this.seed);
     this.startFirstWave();
   }

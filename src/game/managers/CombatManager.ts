@@ -9,6 +9,8 @@ import TickerManager from "./combat/TickerManager";
 import { BaseEntity } from "../models/core/BaseEntity";
 import { SendEndGame } from "../../utils/net/room";
 import { DeferredManager } from "./DeferredManager";
+import { onlineStateManager } from "../../store/OnlineStateManager";
+import { RoomAllReadyEvent } from "../../types/online";
 
 export type CombatStatus = {
   dayOrNight: boolean; // day = true
@@ -35,7 +37,7 @@ export default class CombatManager extends BaseManager {
 
   private _isPaused = true; // Whether combat is paused.
   isGameEnd: boolean = true;
-  private readonly handleRoomAllReady = (data: { allPlayerCount: number, seed: number, myId: number, playerIds: number }) => {
+  private readonly handleRoomAllReady = (data: RoomAllReadyEvent) => {
     this.seed = data.seed;
   };
 
@@ -71,6 +73,10 @@ export default class CombatManager extends BaseManager {
     PhaserEventBus.on(PhaserEvents.RoomGameEnd, this.handleRoomGameEnd, this);
 
     PhaserEventBus.on(PhaserEvents.RoomAllReady, this.handleRoomAllReady, this);
+    const roomAllReady = onlineStateManager.getRoomAllReady();
+    if (roomAllReady) {
+      this.handleRoomAllReady(roomAllReady);
+    }
   }
 
   public static get Instance(): CombatManager {

@@ -1,28 +1,15 @@
-// Request Sender
-// 关于选关，准备，结束游戏等发送消息的操作
-/**
- * RequestChooseMap choose_map = 6;
- * RequestLeaveChooseMap leave_choose_map = 9;
- * 
- * RequestReady ready = 5;
- * RequestLoaded loaded = 8;
- * RequestEndGame end_game = 7;
- */
-import {
-  PhaserEventBus,
-  PhaserEvents,
-} from "../../game/EventBus";
+// Request sender for room lifecycle operations.
 import { Request, RequestChooseMap, RequestEndGame, RequestLeaveChooseMap, RequestLoaded, RequestReady } from "../../pb/request";
 import BackendWS from "./sync";
 
 function SendChooseMap(chapterId: number, stageId: number) {
-  // 只在多人游戏中发送ChooseMap消息，且只有房主可以发送
-  if (!BackendWS.isOnlineMode() || !BackendWS.isLord()) {
+  if (!BackendWS.isRoomSessionMode() || !BackendWS.isLord()) {
     return;
   }
+
   const request: RequestChooseMap = {
-    chapterId: chapterId,
-    stageId: stageId
+    chapterId,
+    stageId
   };
   BackendWS.send(Request.toBinary({ payload: { chooseMap: request, oneofKind: 'chooseMap' } }));
 }
@@ -34,8 +21,8 @@ function SendLeaveChooseMap() {
 
 function SendReady(isReady: boolean) {
   const request: RequestReady = {
-    isReady: isReady
-  }
+    isReady
+  };
   BackendWS.send(Request.toBinary({ payload: { ready: request, oneofKind: 'ready' } }));
 }
 
@@ -43,25 +30,22 @@ function SendLoaded(isLoaded: boolean = true) {
   if (!isLoaded) {
     return;
   }
-  // 只在多人游戏中发送Loaded消息
-  // TODO: 单人游戏也要发送，但是分支Mock server
-  if (!BackendWS.isOnlineMode()) {
-    // 单人游戏直接开始
-    PhaserEventBus.emit(PhaserEvents.RoomGameStart, { seed: Math.random(), myID: BackendWS.my_id }); // 单人
+
+  if (!BackendWS.isRoomSessionMode()) {
+    console.error("SendLoaded requires an active room session. Single-player must use the mock room flow.");
     return;
-  } else {
-    // 发送服务端应该在 Stage_Loading 等待的消息， 让服务端知道本客户端已经加载
-    const request: RequestLoaded = {
-      isLoaded: true
-    };
-    BackendWS.send(Request.toBinary({ payload: { loaded: request, oneofKind: 'loaded' } }));
   }
+
+  const request: RequestLoaded = {
+    isLoaded: true
+  };
+  BackendWS.send(Request.toBinary({ payload: { loaded: request, oneofKind: 'loaded' } }));
 }
 
 function SendEndGame(isWin: boolean) {
   const request: RequestEndGame = {
     gameResult: isWin ? 1 : 0
-  }
+  };
   BackendWS.send(Request.toBinary({ payload: { endGame: request, oneofKind: 'endGame' } }));
 }
 

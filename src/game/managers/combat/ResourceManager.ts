@@ -2,6 +2,8 @@ import { BaseManager } from "../BaseManager";
 import type { Game } from "../../scenes/Game";
 import { PhaserEventBus, PhaserEvents } from "../../EventBus";
 import { EventBus } from "../../../utils/eventBus";
+import { onlineStateManager } from "../../../store/OnlineStateManager";
+import { RoomAllReadyEvent } from "../../../types/online";
 
 export type PlayerIdentify = number;
 
@@ -21,7 +23,7 @@ export default class ResourceManager extends BaseManager {
   Eventbus: EventBus<ResourceManagerEvents>;
 
   mineId: number = 101;
-  private readonly handleRoomAllReady = (data: { allPlayerCount: number, seed: number, myId: number, playerIds: number[] }) => {
+  private readonly handleRoomAllReady = (data: RoomAllReadyEvent) => {
     this.mineId = data.myId;
     this.EnergyMaps.clear();
     this.StarShardsMaps.clear();
@@ -50,6 +52,10 @@ export default class ResourceManager extends BaseManager {
     PhaserEventBus.on(PhaserEvents.RoomAllReady, this.handleRoomAllReady, this);
 
     PhaserEventBus.on(PhaserEvents.RoomGameStart, this.handleRoomGameStart, this);
+    const roomAllReady = onlineStateManager.getRoomAllReady();
+    if (roomAllReady) {
+      this.handleRoomAllReady(roomAllReady);
+    }
   }
 
   public Reset(): void {

@@ -49,6 +49,9 @@ export interface RoomUpdateReadyCountEvent {
 
 export interface RoomAllReadyEvent {
     allPlayerCount: number;
+    seed: number;
+    myId: number;
+    playerIds: number[];
 }
 
 export interface RoomGameStartEvent {

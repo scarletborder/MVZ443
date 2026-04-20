@@ -143,7 +143,6 @@ export class BulletEntity extends ProjectileEntity<BulletModel> {
     if (ctx.targetEntity.faction === this.faction) return;
 
     // Height / flying filters.
-    debugger;
     if (this.skipTiny && ctx.targetEntity.isTiny) return;
     if (this.couldAttackFlying === false) {
       if (ctx.targetEntity instanceof MonsterEntity &&

@@ -91,7 +91,7 @@ export default class PlantsManager extends BaseManager {
   }
 
   // 种植植物
-  PlantCard(playerId: PlayerIdentify, pid: number, level: number, col: number, row: number) {
+  PlantCard = (playerId: PlayerIdentify, pid: number, level: number, col: number, row: number) => {
     if (!this.scene) return;
     // 种植
     const model = PlantLibrary.GetModel(pid);
@@ -136,7 +136,7 @@ export default class PlantsManager extends BaseManager {
   }
 
   // 铲子移除植物
-  private UprootPlant(pid: number, col: number, row: number) {
+  private UprootPlant = (pid: number, col: number, row: number) => {
     const key = `${col}-${row}`;
     if (this.PlantsMap.has(key)) {
       const list = this.PlantsMap.get(key);
@@ -155,7 +155,7 @@ export default class PlantsManager extends BaseManager {
   }
 
   // 启动星之碎片效果
-  private LaunchStarShards(playerId: PlayerIdentify, pid: number, col: number, row: number): boolean {
+  private LaunchStarShards = (playerId: PlayerIdentify, pid: number, col: number, row: number): boolean => {
     if (!ResourceManager.Instance.StarShardsSufficient(1, playerId)) {
       return false;
     }
@@ -180,7 +180,7 @@ export default class PlantsManager extends BaseManager {
     return false;
   }
 
-  handleAttemptUseStarShards(col: number, row: number, aspect: 'up' | 'down') {
+  handleAttemptUseStarShards = (col: number, row: number, aspect: 'up' | 'down') => {
     const plants = this.PlantsMap.get(`${col}-${row}`) || [];
     const targetPlant = PlantHelper.GetHighestPriorityPlant(plants, aspect);
     if (!targetPlant) return;
@@ -190,14 +190,14 @@ export default class PlantsManager extends BaseManager {
     }
   }
 
-  handleAttemptRemovePlant(col: number, row: number, aspect: 'up' | 'down') {
+  handleAttemptRemovePlant = (col: number, row: number, aspect: 'up' | 'down') => {
     const plants = this.PlantsMap.get(`${col}-${row}`) || [];
     const targetPlant = PlantHelper.GetHighestPriorityPlant(plants, aspect);
     if (!targetPlant) return;
     this.EventBus.emit('onDetermineRemovePlant', targetPlant.pid, col, row);
   }
 
-  handleAttemptPlant(col: number, row: number) {
+  handleAttemptPlant = (col: number, row: number) => {
     const [pid, level] = CardpileManager.Instance.prePlantPid || [];
     if (pid === undefined || level === undefined) return;
     // cardpile是否有这张牌，以及是否正在冷却
