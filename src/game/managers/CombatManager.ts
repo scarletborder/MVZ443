@@ -11,6 +11,7 @@ import { SendEndGame } from "../../utils/net/room";
 import { DeferredManager } from "./DeferredManager";
 import { onlineStateManager } from "../../store/OnlineStateManager";
 import { RoomAllReadyEvent } from "../../types/online";
+import { HasConnected } from "../../utils/net/sync";
 
 export type CombatStatus = {
   dayOrNight: boolean; // day = true
@@ -68,6 +69,7 @@ export default class CombatManager extends BaseManager {
   Load(): void {
     // Listen for pause toggles.
     PhaserEventBus.on(PhaserEvents.TogglePause, this.handleTogglePause, this);
+    PhaserEventBus.on(PhaserEvents.TimespeedToggle, this.handleTimespeedToggle, this);
 
     PhaserEventBus.on(PhaserEvents.RoomGameStart, this.handleRoomGameStart, this);
     PhaserEventBus.on(PhaserEvents.RoomGameEnd, this.handleRoomGameEnd, this);
@@ -88,6 +90,7 @@ export default class CombatManager extends BaseManager {
 
   public Reset() {
     PhaserEventBus.off(PhaserEvents.TogglePause, this.handleTogglePause, this);
+    PhaserEventBus.off(PhaserEvents.TimespeedToggle, this.handleTimespeedToggle, this);
     PhaserEventBus.off(PhaserEvents.RoomGameStart, this.handleRoomGameStart, this);
     PhaserEventBus.off(PhaserEvents.RoomGameEnd, this.handleRoomGameEnd, this);
     PhaserEventBus.off(PhaserEvents.RoomAllReady, this.handleRoomAllReady, this);
@@ -138,9 +141,27 @@ export default class CombatManager extends BaseManager {
     this.Eventbus.emit("onCombatEnd", isWin);
   }
 
-  public update(_time: number, delta: number) {
-    // TODO: If time scale changes, delta may need to be scaled too.
-    this.elapsedFrameTime += delta;
+  // 切换游戏速度（1速/2速）
+  public handleTimespeedToggle(): boolean {
+    // 多人游戏无效 / 暂停时无效 / 结束时无效
+    if (HasConnected() || this.isPaused || this.isGameEnd) return false;
+    if (!this.scene) return false;
+
+    const previousTimeScale = this.scene.time.timeScale;
+    const nextTimeScale = previousTimeScale > 1 ? 1 : 2; // 只在 1 速 / 2 速间切换
+    const didToggle = previousTimeScale !== nextTimeScale;
+    if (!didToggle) return false;
+
+    // 修改 GameScene 时钟快慢，驱动 update 里的 elapsedFrameTime 增长速度
+    this.scene.time.timeScale = nextTimeScale;
+    PhaserEventBus.emit(PhaserEvents.TimespeedChanged, { timeScale: nextTimeScale });
+    return true;
+  }
+
+  public update(time: number, delta: number) {
+    // 物理与逻辑推进只依赖 update 的 delta，这里用 GameScene 的时钟倍率驱动时间流速。
+    const timeScale = this.scene?.time?.timeScale ?? 1;
+    this.elapsedFrameTime += delta * timeScale;
 
     // Fixed-step physics update.
     while (this.elapsedFrameTime >= SyncManager.Instance.FrameInterval) {

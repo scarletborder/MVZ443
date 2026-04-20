@@ -15,6 +15,7 @@ export default class KeybindManager extends BaseManager {
     'pause': Phaser.Input.Keyboard.KeyCodes.ESC,
     'pickaxe': Phaser.Input.Keyboard.KeyCodes.Q,
     'starshards': Phaser.Input.Keyboard.KeyCodes.W,
+    'timescale': Phaser.Input.Keyboard.KeyCodes.T,
   };
 
   public KeyMap: Record<string, number> = { ...KeybindManager.defaultKeyMap };
@@ -52,6 +53,9 @@ export default class KeybindManager extends BaseManager {
           case 'starshards':
             this.handleStarshards();
             break;
+          case 'timescale':
+            this.handleTimescale();
+            break;
         }
       });
     }
@@ -76,5 +80,9 @@ export default class KeybindManager extends BaseManager {
 
   private handleStarshards(): void {
     CardpileManager.Instance.ClickStarShards();
+  }
+
+  private handleTimescale(): void {
+    PhaserEventBus.emit(PhaserEvents.TimespeedToggle);
   }
 }

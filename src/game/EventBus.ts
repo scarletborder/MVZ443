@@ -21,6 +21,21 @@ export namespace PhaserEvents {
   export const TogglePause = 'toggle-pause';
 
   /**
+   * 切换游戏速度（1速/2速）
+   * @param 无参数
+   * 触发时机：点击右上角速度按钮或按下快捷键时触发
+   * 说明：该事件仅作为“请求切换”的命令，由CombatManager处理具体变速逻辑
+   */
+  export const TimespeedToggle = 'timespeed-toggle';
+
+  /**
+   * 游戏速度已更新
+   * @param { timeScale: number } - 当前GameScene的timeScale（仅 1 或 2）
+   * 触发时机：CombatManager成功切换速度后触发
+   */
+  export const TimespeedChanged = 'timespeed-changed';
+
+  /**
    * @deprecated 使用TogglePause代替
    * 设置游戏暂停状态
    * @param { paused: boolean } - true表示暂停，false表示继续

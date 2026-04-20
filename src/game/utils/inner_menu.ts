@@ -105,10 +105,11 @@ export default function CreateInnerMenu(game: Game) {
   const buildSpeedButtonState = (): InGameButtonState => {
     const isPaused = CombatManager.Instance.isPaused;
     const isDoubleSpeed = game.time.timeScale > 1;
+    const speedLabel = isDoubleSpeed ? "2速" : "1速";
 
     if (isPaused) {
       return {
-        text: `${game.time.timeScale}速`,
+        text: speedLabel,
         color: "#e3e8ef",
         backgroundColor: "#5f6974",
         borderColor: "#b8c1cb",
@@ -120,7 +121,7 @@ export default function CreateInnerMenu(game: Game) {
 
     if (isDoubleSpeed) {
       return {
-        text: "2速",
+        text: speedLabel,
         color: "#fff9ef",
         backgroundColor: speedHovered ? "#d57a2e" : "#b85c16",
         borderColor: "#ffd393",
@@ -131,7 +132,7 @@ export default function CreateInnerMenu(game: Game) {
     }
 
     return {
-      text: "1速",
+      text: speedLabel,
       color: "#f1fbff",
       backgroundColor: speedHovered ? "#2d9ab2" : "#237d95",
       borderColor: "#a9edf5",
@@ -220,34 +221,30 @@ export default function CreateInnerMenu(game: Game) {
   const tryToggleSpeed = () => {
     if (!game.speedText.input?.enabled) {
       refreshButtons();
-      return;
+      return false;
     }
 
-    const didToggle = game.handleSpeedUp();
-    refreshButtons();
-
-    if (didToggle) {
-      playSpeedToggleEffect();
-    }
+    PhaserEventBus.emit(PhaserEvents.TimespeedToggle);
+    return true;
   };
 
   game.speedText.on("pointerup", () => {
     tryToggleSpeed();
   });
 
-  const keyT = game.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.T);
-  if (keyT) {
-    keyT.on("down", () => {
-      tryToggleSpeed();
-    });
-  }
-
   CombatManager.Instance.Eventbus.on("onCombatPause", refreshButtons);
   CombatManager.Instance.Eventbus.on("onCombatResume", refreshButtons);
+
+  const onTimespeedChanged = () => {
+    refreshButtons();
+    playSpeedToggleEffect();
+  };
+  PhaserEventBus.on(PhaserEvents.TimespeedChanged, onTimespeedChanged);
 
   game.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
     CombatManager.Instance.Eventbus.off("onCombatPause", refreshButtons);
     CombatManager.Instance.Eventbus.off("onCombatResume", refreshButtons);
+    PhaserEventBus.off(PhaserEvents.TimespeedChanged, onTimespeedChanged);
   });
 
   refreshButtons();
