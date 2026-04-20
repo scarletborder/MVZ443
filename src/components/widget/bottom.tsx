@@ -1,5 +1,5 @@
 // BottomTools.jsx
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   PhaserEventBus,
   PhaserEvents,
@@ -15,6 +15,7 @@ import CardpileManager from "../../game/managers/combat/CardpileManager";
 import CombatManager from "../../game/managers/CombatManager";
 import { ProgressMode, ProgressUpdateEvent } from "../../game/managers/combat/MobManager";
 import ResourceManager from "../../game/managers/combat/ResourceManager";
+import PlantsManager from "../../game/managers/combat/PlantsManager";
 
 type Props = {
   width: number
@@ -34,6 +35,8 @@ export default function BottomTools({ width, chapterID }: Props) {
   });
 
   const [starShards, setStarShards] = useState<number>(0);
+  const [starshardsInsufficientFlash, setStarshardsInsufficientFlash] = useState(false);
+  const flashTimeoutRef = useRef<number | null>(null);
 
   // 监听星之碎片变化
   useEffect(() => {
@@ -49,8 +52,40 @@ export default function BottomTools({ width, chapterID }: Props) {
     };
   }, []);
 
+  const triggerStarshardsInsufficientFlash = useMemoizedFn(() => {
+    if (flashTimeoutRef.current !== null) {
+      window.clearTimeout(flashTimeoutRef.current);
+    }
+
+    setStarshardsInsufficientFlash(false);
+    window.requestAnimationFrame(() => {
+      setStarshardsInsufficientFlash(true);
+    });
+
+    flashTimeoutRef.current = window.setTimeout(() => {
+      setStarshardsInsufficientFlash(false);
+      flashTimeoutRef.current = null;
+    }, 450);
+  });
+
+  useEffect(() => {
+    const offListen = PlantsManager.Instance.EventBus.on('onStarshardsInsufficient', () => {
+      triggerStarshardsInsufficientFlash();
+    });
+
+    return () => {
+      offListen();
+      if (flashTimeoutRef.current !== null) {
+        window.clearTimeout(flashTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const handleStarClick = useMemoizedFn(() => {
-    if (starShards <= 0) return;
+    if (starShards <= 0) {
+      PlantsManager.Instance.EventBus.emit('onStarshardsInsufficient');
+      return;
+    }
     CardpileManager.Instance.ClickStarShards();
   });
 
@@ -127,7 +162,7 @@ export default function BottomTools({ width, chapterID }: Props) {
       height: width / 32,
     }}>
       <div className="money">{savectx.currentProgress.items.get(1) ? savectx.currentProgress.items.get(1)?.count : '0'} $</div>
-      <div className={"stars"} onClick={handleStarClick}>
+      <div className={`stars ${starshardsInsufficientFlash ? 'insufficient-flash' : ''}`} onClick={handleStarClick}>
         {Array.from({ length: starShards }).map((_, index) => (
           <img
             draggable={false}

@@ -18,6 +18,7 @@ type PlantsManagerEvent = {
 
   // sfx 反馈，没能量但是想种植高昂植物
   onEnergyInsufficient: () => void;
+  onStarshardsInsufficient: () => void;
 }
 
 export default class PlantsManager extends BaseManager {

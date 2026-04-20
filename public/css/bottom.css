@@ -28,6 +28,29 @@
     cursor: pointer;
 }
 
+.stars.insufficient-flash {
+    border-radius: 6px;
+    animation: starshards-insufficient-flash 450ms ease-in-out;
+}
+
+@keyframes starshards-insufficient-flash {
+    0% {
+        box-shadow: 0 0 0 0 rgba(255, 60, 60, 0);
+    }
+
+    20% {
+        box-shadow: 0 0 0 2px rgba(255, 60, 60, 0.95);
+    }
+
+    60% {
+        box-shadow: 0 0 0 2px rgba(255, 60, 60, 0.95);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(255, 60, 60, 0);
+    }
+}
+
 .stars.paused {
     cursor: not-allowed;
 }

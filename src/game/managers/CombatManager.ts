@@ -209,16 +209,18 @@ export default class CombatManager extends BaseManager {
       }
     }
 
-    const interpolationAlpha = Math.min(
-      this.elapsedFrameTime / SyncManager.Instance.FrameInterval,
-      1,
-    );
-    this.scene?.rapierWorld?.bodies.forEach(rigidBody => {
-      const gameObject = rigidBody.userData;
-      if (gameObject instanceof BaseEntity) {
-        gameObject.stepMove(interpolationAlpha);
-      }
-    });
+    if (!this.isPaused) {
+      const interpolationAlpha = Math.min(
+        this.elapsedFrameTime / SyncManager.Instance.FrameInterval,
+        1,
+      );
+      this.scene?.rapierWorld?.bodies.forEach(rigidBody => {
+        const gameObject = rigidBody.userData;
+        if (gameObject instanceof BaseEntity) {
+          gameObject.stepMove(interpolationAlpha);
+        }
+      });
+    }
 
     // Regular per-render work.
     SyncManager.Instance.sendQueue.Consume();

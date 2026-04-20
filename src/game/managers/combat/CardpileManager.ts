@@ -4,6 +4,8 @@ import type { Game } from "../../scenes/Game";
 import { BaseManager } from "../BaseManager";
 import CombatManager from "../CombatManager";
 import { PlantLibrary } from "../library/PlantLibrary";
+import PlantsManager from "./PlantsManager";
+import ResourceManager from "./ResourceManager";
 import SyncManager from "./SyncManager";
 
 type CardpileManagerEvent = {
@@ -158,15 +160,18 @@ export default class CardpileManager extends BaseManager {
 
   cancelSelection() {
     // 取消选择
+    const hadSelection = this.prePlantPid !== null || this.useStarShards || this.usePickaxe;
     this.prePlantPid = null;
     this.useStarShards = false;
     this.usePickaxe = false;
+    if (hadSelection) {
+      this.EventBus.emit('onCancelChosen');
+    }
   }
 
   private handleRightClick() {
     // 取消选择
     this.cancelSelection();
-    this.EventBus.emit('onCancelChosen');
   }
 
   ClickCard(pid: number, level: number) {
@@ -177,11 +182,13 @@ export default class CardpileManager extends BaseManager {
     // 如果点击的是相同的卡片，那么取消选择
     if (this.prePlantPid && this.prePlantPid[0] === pid) {
       this.cancelSelection();
-      this.EventBus.emit('onCancelChosen');
       return;
     }
     // 选择卡片
-    this.cancelSelection();
+    // 切换选择时不需要发出 cancel（避免 UI 闪烁），这里只做状态清理
+    this.prePlantPid = null;
+    this.useStarShards = false;
+    this.usePickaxe = false;
     this.prePlantPid = [pid, level];
     this.EventBus.emit('onChosenCard', pid, level);
   }
@@ -193,12 +200,13 @@ export default class CardpileManager extends BaseManager {
     // 如果已经选中，那么再次点击镐子会取消选择
     if (this.usePickaxe) {
       this.cancelSelection();
-      this.EventBus.emit('onCancelChosen');
       return;
     }
 
     // 选择镐
-    this.cancelSelection();
+    this.prePlantPid = null;
+    this.useStarShards = false;
+    this.usePickaxe = false;
     this.usePickaxe = true;
     this.EventBus.emit('onChosenPickaxe');
   }
@@ -210,11 +218,20 @@ export default class CardpileManager extends BaseManager {
     // 如果已经选中，那么再次点击星碎会取消选择
     if (this.useStarShards) {
       this.cancelSelection();
-      this.EventBus.emit('onCancelChosen');
       return;
     }
+    
     // 选择星星碎片
-    this.cancelSelection();
+    this.prePlantPid = null;
+    this.useStarShards = false;
+    this.usePickaxe = false;
+
+    // 如果自己有多余的星之碎片，那么才允许选择
+    if (!ResourceManager.Instance.StarShardsSufficient(1, 'mine')) {
+      PlantsManager.Instance.EventBus.emit('onStarshardsInsufficient');
+      return;
+    }
+
     this.useStarShards = true;
     this.EventBus.emit('onChosenStarShards');
   }

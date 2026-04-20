@@ -111,7 +111,7 @@ export default function Card({ plantModel, level }: CardProps) {
                 ${isChosen ? 'chosen' : ''} 
                 ${(energy < cost) ? 'expensive' : ''}`}
       onClick={handleClick}
-      disabled={!reloaded || (energy < cost)}
+      disabled={!reloaded}
     >
       <div className="card-content">
         <div className="plant-name">{translate(nameKey)}</div>
