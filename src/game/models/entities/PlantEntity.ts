@@ -150,6 +150,13 @@ export abstract class PlantEntity extends CombatEntity {
   }
 
   public destroy() {
+    this.currentHealth = 0;
+    for (const attacker of [...this.underAttackBy]) {
+      if (typeof (attacker as { stopAttacking?: () => void }).stopAttacking === "function") {
+        attacker.stopAttacking?.();
+      }
+    }
+    this.underAttackBy.clear();
     this.model.onDeath(this);
     // 清理所有绑定的事件和定时器
 

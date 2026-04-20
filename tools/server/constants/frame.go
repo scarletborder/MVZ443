@@ -5,3 +5,4 @@ package constants
 const FrameIntervalMs = 50
 
 const MaxDelayFrames uint32 = 10 // 最大延迟帧数
+const CommandLeadFrames uint32 = 4

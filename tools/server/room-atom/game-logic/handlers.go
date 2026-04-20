@@ -5,7 +5,7 @@ import (
 	messages "mvzserver/messages/pb"
 )
 
-func (g *GameLogic) PlantCard(player *clients.Player, request *messages.RequestCardPlant) {
+func (g *GameLogic) PlantCard(player *clients.Player, request *messages.RequestCardPlant) *messages.InGameOperation {
 	gridOp := &messages.ResponseGridOperation{
 		Uid: uint32(player.GetID()),
 		Col: request.Base.Col,
@@ -21,18 +21,19 @@ func (g *GameLogic) PlantCard(player *clients.Player, request *messages.RequestC
 	if request.Base.Col < 0 || request.Base.Col >= MAXCOLS ||
 		request.Base.Row < 0 || request.Base.Row >= MAXROWS {
 		// 无效的grid
-		return
+		return nil
 	}
+	grid := g.getFrameGrid(request.Base.ProcessFrameId)
 	// 判断这个grid有没有做过操作
-	if g.cards[request.Base.Row][request.Base.Col] {
+	if grid[request.Base.Row][request.Base.Col] {
 		// true=> 有操作
-		return
+		return nil
 	}
 
 	// 成功
-	g.cards[request.Base.Row][request.Base.Col] = true
+	grid[request.Base.Row][request.Base.Col] = true
 
-	g.operationChan <- &messages.InGameOperation{
+	return &messages.InGameOperation{
 		Payload: &messages.InGameOperation_CardPlant{
 			CardPlant: plantOp,
 		},
@@ -40,7 +41,7 @@ func (g *GameLogic) PlantCard(player *clients.Player, request *messages.RequestC
 	}
 }
 
-func (g *GameLogic) RemoveCard(player *clients.Player, request *messages.RequestRemovePlant) {
+func (g *GameLogic) RemoveCard(player *clients.Player, request *messages.RequestRemovePlant) *messages.InGameOperation {
 	gridOp := &messages.ResponseGridOperation{
 		Uid: uint32(player.GetID()),
 		Col: request.Base.Col,
@@ -54,18 +55,19 @@ func (g *GameLogic) RemoveCard(player *clients.Player, request *messages.Request
 	if request.Base.Col < 0 || request.Base.Col >= MAXCOLS ||
 		request.Base.Row < 0 || request.Base.Row >= MAXROWS {
 		// 铲除失败不会有回复
-		return
+		return nil
 	}
 
+	grid := g.getFrameGrid(request.Base.ProcessFrameId)
 	// 判断这个grid有没有做过操作
-	if g.cards[request.Base.Row][request.Base.Col] {
+	if grid[request.Base.Row][request.Base.Col] {
 		// true=> 有操作
 		// 铲除失败不会有回复
-		return
+		return nil
 	}
 
-	g.cards[request.Base.Row][request.Base.Col] = true
-	g.operationChan <- &messages.InGameOperation{
+	grid[request.Base.Row][request.Base.Col] = true
+	return &messages.InGameOperation{
 		Payload: &messages.InGameOperation_RemovePlant{
 			RemovePlant: removeOp,
 		},
@@ -73,7 +75,7 @@ func (g *GameLogic) RemoveCard(player *clients.Player, request *messages.Request
 	}
 }
 
-func (g *GameLogic) UseStarShards(player *clients.Player, request *messages.RequestStarShards) {
+func (g *GameLogic) UseStarShards(player *clients.Player, request *messages.RequestStarShards) *messages.InGameOperation {
 	gridOp := &messages.ResponseGridOperation{
 		Uid: uint32(player.GetID()),
 		Col: request.Base.Col,
@@ -87,18 +89,19 @@ func (g *GameLogic) UseStarShards(player *clients.Player, request *messages.Requ
 
 	if request.Base.Col < 0 || request.Base.Col >= MAXCOLS ||
 		request.Base.Row < 0 || request.Base.Row >= MAXROWS {
-		return
+		return nil
 	}
 
+	grid := g.getFrameGrid(request.Base.ProcessFrameId)
 	// 判断这个grid有没有做过操作
-	if g.cards[request.Base.Row][request.Base.Col] {
+	if grid[request.Base.Row][request.Base.Col] {
 		// true=> 有操作
-		return
+		return nil
 	}
 	// 成功
-	g.cards[request.Base.Row][request.Base.Col] = true
+	grid[request.Base.Row][request.Base.Col] = true
 
-	g.operationChan <- &messages.InGameOperation{
+	return &messages.InGameOperation{
 		Payload: &messages.InGameOperation_UseStarShards{
 			UseStarShards: starshardsOp,
 		},

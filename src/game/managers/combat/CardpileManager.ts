@@ -38,7 +38,8 @@ export default class CardpileManager extends BaseManager {
   // 卡槽状态
   cardpileStatus: Map<number, {
     level: number; // 卡片等级
-    leftMs: number; // 剩余冷却时间，单位毫秒
+    leftMs: number; // 正式剩余冷却时间，单位毫秒
+    previewLeftMs: number; // 表现层预演剩余冷却时间，单位毫秒
     totalMs: number; // 总冷却时间，单位毫秒
   }> = new Map();
   private readonly handlePointerUp = (pointer: Phaser.Input.Pointer) => {
@@ -66,6 +67,7 @@ export default class CardpileManager extends BaseManager {
         this.cardpileStatus.set(pid, {
           level,
           leftMs,
+          previewLeftMs: 0,
           totalMs,
         });
       }
@@ -109,13 +111,16 @@ export default class CardpileManager extends BaseManager {
       if (status) {
         const { leftMs, totalMs } = status;
         const newLeftMs = Math.max(0, leftMs - elasp);
+        const newPreviewLeftMs = Math.max(0, status.previewLeftMs - elasp);
+        const displayLeftMs = Math.max(newLeftMs, newPreviewLeftMs);
         this.cardpileStatus.set(pid, {
           ...status,
           leftMs: newLeftMs,
+          previewLeftMs: newPreviewLeftMs,
         });
         newStatus.set(pid, {
-          hasReloaded: newLeftMs === 0,
-          leftPercent: totalMs > 0 ? newLeftMs / totalMs : 0,
+          hasReloaded: displayLeftMs === 0,
+          leftPercent: totalMs > 0 ? displayLeftMs / totalMs : 0,
         });
       }
     }
@@ -129,6 +134,30 @@ export default class CardpileManager extends BaseManager {
       status.leftMs = status.totalMs;
       this.cardpileStatus.set(pid, status);
     }
+  }
+
+  previewReloadCard(pid: number) {
+    const status = this.cardpileStatus.get(pid);
+    if (status) {
+      status.previewLeftMs = Math.max(status.previewLeftMs, status.totalMs);
+      this.cardpileStatus.set(pid, status);
+    }
+  }
+
+  isCardDisplayReloaded(pid: number): boolean {
+    const status = this.cardpileStatus.get(pid);
+    if (!status) {
+      return false;
+    }
+    return Math.max(status.leftMs, status.previewLeftMs) <= 0;
+  }
+
+  isCardActuallyReloaded(pid: number): boolean {
+    const status = this.cardpileStatus.get(pid);
+    if (!status) {
+      return false;
+    }
+    return status.leftMs <= 0;
   }
 
   // 获得当前选择的对象，用于左键后执行

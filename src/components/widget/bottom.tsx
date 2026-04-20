@@ -90,6 +90,9 @@ export default function BottomTools({ width, chapterID }: Props) {
   });
 
   const handleSetPause = useMemoizedFn(() => {
+    if (BackendWS.isOnlineMode()) {
+      return;
+    }
     PhaserEventBus.emit(PhaserEvents.TogglePause);
   });
 

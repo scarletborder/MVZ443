@@ -8,77 +8,56 @@ import {
   RequestRemovePlant,
   RequestStarShards
 } from "../../pb/request";
-import { ResponseGridOperation } from "../../pb/response";
 import BackendWS from "../../utils/net/sync";
 import ResourceManager from "../managers/combat/ResourceManager";
+import { CommandLeadFrames, FrameInterval } from "../../../public/constants";
 
 export default class QueueSend {
   queues: Denque<Request>;
-  pendingFrames: Map<number, Map<string, Request>>;
-  public operationCount: number = 1;
-  private readonly commandDelayFrames: number = 2;
-  private readonly resendIntervalMs: number = 50;
-  private lastTransmitAt: number = 0;
+  private readonly commandDelayFrames: number = CommandLeadFrames;
+  private readonly blankPollIntervalMs: number = FrameInterval;
+  private lastBlankAckFrameIdSent: number = -1;
+  private lastBlankAckFrameIdQueued: number = -1;
+  private lastBlankSentAt: number = 0;
+  private lastBlankQueuedAt: number = 0;
 
   constructor() {
     this.queues = new Denque();
-    this.pendingFrames = new Map<number, Map<string, Request>>();
   }
 
   Reset() {
     this.queues.clear();
-    this.pendingFrames.clear();
-    this.operationCount = 1;
-    this.lastTransmitAt = 0;
+    this.lastBlankAckFrameIdSent = -1;
+    this.lastBlankAckFrameIdQueued = -1;
+    this.lastBlankSentAt = 0;
+    this.lastBlankQueuedAt = 0;
   }
 
   Consume() {
     if (!BackendWS.isRoomSessionMode()) {
       return;
     }
-
-    let hasFreshRequests = false;
     while (!this.queues.isEmpty()) {
       const request = this.queues.shift();
-      if (!request) {
-        continue;
-      }
-      this.registerPendingRequest(request);
-      hasFreshRequests = true;
-    }
-
-    this.pruneAckedFrames();
-    if (this.pendingFrames.size === 0) {
-      return;
-    }
-
-    const now = Date.now();
-    if (!hasFreshRequests && now - this.lastTransmitAt < this.resendIntervalMs) {
-      return;
-    }
-
-    const sortedFrames = [...this.pendingFrames.keys()].sort((a, b) => a - b);
-    for (const frameId of sortedFrames) {
-      const frameRequests = this.pendingFrames.get(frameId);
-      if (!frameRequests) {
-        continue;
-      }
-      for (const request of frameRequests.values()) {
-        BackendWS.send(Request.toBinary(this.refreshAckFrameId(request)));
+      if (request) {
+        const refreshedRequest = this.refreshAckFrameId(request);
+        console.log("[QueueSend] send request", {
+          type: refreshedRequest.payload.oneofKind,
+          ackFrameId: refreshedRequest.payload.oneofKind === "blank"
+            ? refreshedRequest.payload.blank.ackFrameId
+            : BackendWS.AckFrameID,
+          currentFrameId: BackendWS.GetFrameID(),
+          queueLengthAfterShift: this.queues.length
+        });
+        if (refreshedRequest.payload.oneofKind === "blank") {
+          this.lastBlankAckFrameIdQueued = -1;
+          this.lastBlankAckFrameIdSent = refreshedRequest.payload.blank.ackFrameId;
+          this.lastBlankQueuedAt = 0;
+          this.lastBlankSentAt = Date.now();
+        }
+        BackendWS.send(Request.toBinary(refreshedRequest));
       }
     }
-    this.lastTransmitAt = now;
-  }
-
-  _extractBase(base?: RequestGridOperation): ResponseGridOperation | undefined {
-    if (!base) {
-      return undefined;
-    }
-    return {
-      uid: BackendWS.my_id,
-      col: base.col,
-      row: base.row
-    };
   }
 
   public sendGameEnd(result: number) {
@@ -162,97 +141,52 @@ export default class QueueSend {
   }
 
   public sendBlankFrame(frameId: number) {
+    const now = Date.now();
     const request: RequestBlank = {
       frameId,
       ackFrameId: BackendWS.AckFrameID
     };
+    console.log("[QueueSend] queue blank frame", {
+      frameId,
+      ackFrameId: request.ackFrameId,
+      lastBlankAckFrameIdSent: this.lastBlankAckFrameIdSent,
+      lastBlankAckFrameIdQueued: this.lastBlankAckFrameIdQueued
+    });
     this.queues.push({
       payload: {
         blank: request,
         oneofKind: "blank"
       }
     });
+    this.lastBlankAckFrameIdQueued = request.ackFrameId;
+    this.lastBlankQueuedAt = now;
   }
 
-  private registerPendingRequest(request: Request) {
-    const frameId = this.getRequestFrameId(request);
-    if (frameId === undefined) {
-      return;
-    }
-    let frameRequests = this.pendingFrames.get(frameId);
-    if (!frameRequests) {
-      frameRequests = new Map<string, Request>();
-      this.pendingFrames.set(frameId, frameRequests);
-    }
-
-    const signature = this.getRequestSignature(request);
-    if (request.payload.oneofKind === "blank") {
-      if (frameRequests.size === 0) {
-        frameRequests.set(signature, request);
-      }
-      return;
-    }
-
-    frameRequests.delete(`blank:${frameId}`);
-    frameRequests.set(signature, request);
-  }
-
-  private pruneAckedFrames() {
+  public ensureBlankFrame(frameId: number) {
+    const now = Date.now();
     const ackFrameId = BackendWS.AckFrameID;
-    for (const frameId of this.pendingFrames.keys()) {
-      if (frameId <= ackFrameId) {
-        this.pendingFrames.delete(frameId);
-      }
-    }
-  }
+    const hasQueuedSameAck = ackFrameId === this.lastBlankAckFrameIdQueued;
+    const hasSentSameAckRecently = ackFrameId === this.lastBlankAckFrameIdSent
+      && now - this.lastBlankSentAt < this.blankPollIntervalMs;
+    const hasQueuedSameAckRecently = hasQueuedSameAck
+      && now - this.lastBlankQueuedAt < this.blankPollIntervalMs;
 
-  private getRequestFrameId(request: Request): number | undefined {
-    switch (request.payload.oneofKind) {
-      case "blank":
-        return request.payload.blank.frameId;
-      case "plant":
-        return request.payload.plant.base?.processFrameId;
-      case "removePlant":
-        return request.payload.removePlant.base?.processFrameId;
-      case "starShards":
-        return request.payload.starShards.base?.processFrameId;
-      default:
-        return undefined;
+    if (hasSentSameAckRecently || hasQueuedSameAckRecently) {
+      console.log("[QueueSend] skip duplicate blank", {
+        frameId,
+        ackFrameId,
+        lastBlankAckFrameIdSent: this.lastBlankAckFrameIdSent,
+        lastBlankAckFrameIdQueued: this.lastBlankAckFrameIdQueued,
+        msSinceLastBlankSent: now - this.lastBlankSentAt,
+        msSinceLastBlankQueued: now - this.lastBlankQueuedAt
+      });
+      return;
     }
-  }
-
-  private getRequestSignature(request: Request): string {
-    switch (request.payload.oneofKind) {
-      case "blank":
-        return `blank:${request.payload.blank.frameId}`;
-      case "plant":
-        return [
-          "plant",
-          request.payload.plant.base?.processFrameId,
-          request.payload.plant.pid,
-          request.payload.plant.level,
-          request.payload.plant.base?.col,
-          request.payload.plant.base?.row
-        ].join(":");
-      case "removePlant":
-        return [
-          "removePlant",
-          request.payload.removePlant.base?.processFrameId,
-          request.payload.removePlant.pid,
-          request.payload.removePlant.base?.col,
-          request.payload.removePlant.base?.row
-        ].join(":");
-      case "starShards":
-        return [
-          "starShards",
-          request.payload.starShards.base?.processFrameId,
-          request.payload.starShards.pid,
-          request.payload.starShards.base?.col,
-          request.payload.starShards.base?.row
-        ].join(":");
-      default:
-        return request.payload.oneofKind ?? "unknown";
-    }
+    console.log("[QueueSend] ensure blank frame", {
+      frameId,
+      ackFrameId
+    });
+    this.sendBlankFrame(frameId);
   }
 
   private refreshAckFrameId(request: Request): Request {
@@ -281,4 +215,3 @@ export default class QueueSend {
     return request;
   }
 }
-

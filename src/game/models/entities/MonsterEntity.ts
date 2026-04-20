@@ -183,14 +183,23 @@ export abstract class MonsterEntity extends CombatEntity {
   }
 
   protected hurtTarget() {
-    if (this.attacking && this.attacking.currentHealth > 0) {
-      this.attacking.takeDamage(this.model.attackDamage, this);
-      if (this.attacking.currentHealth <= 0) {
-        this.stopAttacking();
-      }
+    const target = this.attacking;
+    if (!target || target.currentHealth <= 0) {
+      this.stopAttacking();
       return;
     }
-    this.stopAttacking();
+
+    target.takeDamage(this.model.attackDamage, this);
+
+    // `takeDamage` 可能在致死流程中触发 destroy，
+    // 并通过 underAttackBy / stopAttacking 把 this.attacking 置空。
+    if (this.attacking !== target) {
+      return;
+    }
+
+    if (target.currentHealth <= 0) {
+      this.stopAttacking();
+    }
   }
 
   protected notifyTargetStopAttacked() {

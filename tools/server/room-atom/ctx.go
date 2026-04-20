@@ -81,6 +81,9 @@ func NewRoomCtx() *RoomCtx {
 // 重置状态以允许下场游戏
 func (m *RoomCtx) Reset() {
 	m.NextFrameID.Store(1) // 重置帧ID为1
+	m.OperationMutex.Lock()
+	m.OperationID = make(map[uint32]uint32)
+	m.OperationMutex.Unlock()
 	if m.GameTicker != nil {
 		m.GameTicker.Stop()
 	}

@@ -35,6 +35,8 @@ export default class ResourceManager extends BaseManager {
 
   private EnergyMaps: Map<PlayerIdentify, number> = new Map();
   private StarShardsMaps: Map<PlayerIdentify, number> = new Map();
+  private previewEnergyDeltaMaps: Map<PlayerIdentify, number> = new Map();
+  private previewStarShardsDeltaMaps: Map<PlayerIdentify, number> = new Map();
 
   constructor() {
     super();
@@ -65,6 +67,8 @@ export default class ResourceManager extends BaseManager {
     this.Eventbus.removeAllListeners();
     this.EnergyMaps.clear();
     this.StarShardsMaps.clear();
+    this.previewEnergyDeltaMaps.clear();
+    this.previewStarShardsDeltaMaps.clear();
   }
 
   public setScene(scene: Game): void {
@@ -84,7 +88,8 @@ export default class ResourceManager extends BaseManager {
     const currentEnergy = this.EnergyMaps.get(playerId) || 0;
     const newEnergy = currentEnergy + energyDelta;
     this.EnergyMaps.set(playerId, newEnergy);
-    this.Eventbus.emit('onEnergyUpdate', newEnergy, playerId);
+    this.reconcilePreviewDelta(this.previewEnergyDeltaMaps, energyDelta, playerId);
+    this.Eventbus.emit('onEnergyUpdate', this.getDisplayEnergy(playerId), playerId);
   }
 
   public UpdateStarShards(starShardsDelta: number, playerId: PlayerIdentify | 'mine' | 'all') {
@@ -100,7 +105,8 @@ export default class ResourceManager extends BaseManager {
     const currentStarShards = this.StarShardsMaps.get(playerId) || 0;
     const newStarShards = currentStarShards + starShardsDelta;
     this.StarShardsMaps.set(playerId, newStarShards);
-    this.Eventbus.emit('onStarShardsUpdate', newStarShards, playerId);
+    this.reconcilePreviewDelta(this.previewStarShardsDeltaMaps, starShardsDelta, playerId);
+    this.Eventbus.emit('onStarShardsUpdate', this.getDisplayStarShards(playerId), playerId);
   }
 
   public EnergySufficient(requiredEnergy: number, playerId: PlayerIdentify | 'mine'): boolean {
@@ -110,8 +116,7 @@ export default class ResourceManager extends BaseManager {
     if (playerId === 'mine') {
       playerId = this.mineId;
     }
-    const currentEnergy = this.EnergyMaps.get(playerId) || 0;
-    return currentEnergy >= requiredEnergy;
+    return this.getDisplayEnergy(playerId) >= requiredEnergy;
   }
 
   public StarShardsSufficient(requiredStarShards: number, playerId: PlayerIdentify | 'mine'): boolean {
@@ -121,8 +126,7 @@ export default class ResourceManager extends BaseManager {
     if (playerId === 'mine') {
       playerId = this.mineId;
     }
-    const currentStarShards = this.StarShardsMaps.get(playerId) || 0;
-    return currentStarShards >= requiredStarShards;
+    return this.getDisplayStarShards(playerId) >= requiredStarShards;
   }
 
   public SetInitialEnergy(initialEnergy: number): void {
@@ -143,6 +147,78 @@ export default class ResourceManager extends BaseManager {
       playerId = this.mineId;
     }
     return this.StarShardsMaps.get(playerId) || 0;
+  }
+
+  getDisplayEnergy(playerId: PlayerIdentify | 'mine'): number {
+    if (playerId === 'mine') {
+      playerId = this.mineId;
+    }
+    return (this.EnergyMaps.get(playerId) || 0) + (this.previewEnergyDeltaMaps.get(playerId) || 0);
+  }
+
+  getDisplayStarShards(playerId: PlayerIdentify | 'mine'): number {
+    if (playerId === 'mine') {
+      playerId = this.mineId;
+    }
+    return (this.StarShardsMaps.get(playerId) || 0) + (this.previewStarShardsDeltaMaps.get(playerId) || 0);
+  }
+
+  public ActualEnergySufficient(requiredEnergy: number, playerId: PlayerIdentify | 'mine'): boolean {
+    return this.getEnergy(playerId) >= requiredEnergy;
+  }
+
+  public ActualStarShardsSufficient(requiredStarShards: number, playerId: PlayerIdentify | 'mine'): boolean {
+    return this.getStarShards(playerId) >= requiredStarShards;
+  }
+
+  public ApplyPreviewEnergy(energyDelta: number, playerId: PlayerIdentify | 'mine') {
+    if (playerId === 'mine') {
+      playerId = this.mineId;
+    }
+    const nextDelta = (this.previewEnergyDeltaMaps.get(playerId) || 0) + energyDelta;
+    this.previewEnergyDeltaMaps.set(playerId, nextDelta);
+    this.Eventbus.emit('onEnergyUpdate', this.getDisplayEnergy(playerId), playerId);
+  }
+
+  public ApplyPreviewStarShards(starShardsDelta: number, playerId: PlayerIdentify | 'mine') {
+    if (playerId === 'mine') {
+      playerId = this.mineId;
+    }
+    const nextDelta = (this.previewStarShardsDeltaMaps.get(playerId) || 0) + starShardsDelta;
+    this.previewStarShardsDeltaMaps.set(playerId, nextDelta);
+    this.Eventbus.emit('onStarShardsUpdate', this.getDisplayStarShards(playerId), playerId);
+  }
+
+  private reconcilePreviewDelta(
+    previewMap: Map<PlayerIdentify, number>,
+    actualDelta: number,
+    playerId: PlayerIdentify
+  ) {
+    const previewDelta = previewMap.get(playerId) || 0;
+    if (previewDelta === 0) {
+      return;
+    }
+
+    // When the authoritative update arrives, consume the matching preview
+    // so the HUD doesn't apply the same cost twice.
+    if (previewDelta < 0 && actualDelta < 0) {
+      const nextPreviewDelta = Math.min(0, previewDelta - actualDelta);
+      if (nextPreviewDelta === 0) {
+        previewMap.delete(playerId);
+      } else {
+        previewMap.set(playerId, nextPreviewDelta);
+      }
+      return;
+    }
+
+    if (previewDelta > 0 && actualDelta > 0) {
+      const nextPreviewDelta = Math.max(0, previewDelta - actualDelta);
+      if (nextPreviewDelta === 0) {
+        previewMap.delete(playerId);
+      } else {
+        previewMap.set(playerId, nextPreviewDelta);
+      }
+    }
   }
 
   private handleRoomGameStart() {

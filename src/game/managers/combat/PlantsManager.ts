@@ -103,12 +103,11 @@ export default class PlantsManager extends BaseManager {
 
     // 如果playerId为我，cardpile是否有这张牌，以及是否正在冷却
     if (playerId === ResourceManager.Instance.mineId) {
-      const reloadStatus = CardpileManager.Instance.cardpileStatus.get(pid);
-      if (!reloadStatus || reloadStatus.leftMs > 0) return;
+      if (!CardpileManager.Instance.isCardActuallyReloaded(pid)) return;
     }
 
     const cost = model.cost.getValueAt(level);
-    if (!ResourceManager.Instance.EnergySufficient(cost, playerId)) {
+    if (!ResourceManager.Instance.ActualEnergySufficient(cost, playerId)) {
       if (playerId === ResourceManager.Instance.mineId) {
         this.EventBus.emit('onEnergyInsufficient');
       }
@@ -138,26 +137,28 @@ export default class PlantsManager extends BaseManager {
 
   // 铲子移除植物
   private UprootPlant = (pid: number, col: number, row: number) => {
-    const key = `${col}-${row}`;
-    if (this.PlantsMap.has(key)) {
-      const list = this.PlantsMap.get(key);
-      if (list) {
-        const index = list.findIndex(plant => plant.model.pid === pid);
-        if (index >= 0) {
-          const plantObj = list[index];
-          plantObj.destroy();
-          list.splice(index, 1);
-        }
-        if (list.length === 0) {
-          this.PlantsMap.delete(key);
+    DeferredManager.Instance.defer(() => {
+      const key = `${col}-${row}`;
+      if (this.PlantsMap.has(key)) {
+        const list = this.PlantsMap.get(key);
+        if (list) {
+          const index = list.findIndex(plant => plant.model.pid === pid);
+          if (index >= 0) {
+            const plantObj = list[index];
+            plantObj.destroy();
+            list.splice(index, 1);
+          }
+          if (list.length === 0) {
+            this.PlantsMap.delete(key);
+          }
         }
       }
-    }
+    });
   }
 
   // 启动星之碎片效果
   private LaunchStarShards = (playerId: PlayerIdentify, pid: number, col: number, row: number): boolean => {
-    if (!ResourceManager.Instance.StarShardsSufficient(1, playerId)) {
+    if (!ResourceManager.Instance.ActualStarShardsSufficient(1, playerId)) {
       return false;
     }
 
@@ -187,6 +188,7 @@ export default class PlantsManager extends BaseManager {
     if (!targetPlant) return;
     // 如果星之碎片余量充足,则发动效果
     if (ResourceManager.Instance.StarShardsSufficient(1, 'mine')) {
+      ResourceManager.Instance.ApplyPreviewStarShards(-1, 'mine');
       this.EventBus.emit('onDetermineUseStarShards', targetPlant.pid, col, row, 1);
     }
   }
@@ -202,8 +204,7 @@ export default class PlantsManager extends BaseManager {
     const [pid, level] = CardpileManager.Instance.prePlantPid || [];
     if (pid === undefined || level === undefined) return;
     // cardpile是否有这张牌，以及是否正在冷却
-    const reloadStatus = CardpileManager.Instance.cardpileStatus.get(pid);
-    if (!reloadStatus || reloadStatus.leftMs > 0) return;
+    if (!CardpileManager.Instance.isCardDisplayReloaded(pid)) return;
 
     // 阳光是否存在
     const model = PlantLibrary.GetModel(pid);
@@ -225,6 +226,9 @@ export default class PlantsManager extends BaseManager {
 
     // 格子允许种植
     if (!PlantHelper.CanPlantInGrid(existedPlants, pid, targetGridProperty)) return;
+
+    ResourceManager.Instance.ApplyPreviewEnergy(-cost, 'mine');
+    CardpileManager.Instance.previewReloadCard(pid);
 
     // 种植
     this.EventBus.emit('onDeterminePlant', pid, level, col, row, cost);

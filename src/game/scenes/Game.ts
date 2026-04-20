@@ -49,6 +49,8 @@ export class Game extends Scene {
   pauseBtn: Phaser.GameObjects.Text;
   waitText: Phaser.GameObjects.Text;
   speedText: Phaser.GameObjects.Text;
+  debugFrameText: Phaser.GameObjects.Text | null = null;
+  private waitTextVisibleTarget: boolean = false;
 
   params: GameParams;
 
@@ -133,15 +135,29 @@ export class Game extends Scene {
     // 创建一个waiting text
     this.waitText = this.add.text(
       this.cameras.main.width / 2,
-      this.cameras.main.height / 2,
+      18 * this.scaleFactor,
       '等待中...',
       {
-        fontSize: this.scale.displaySize.width / 20,
+        fontSize: `${Math.max(12, Math.round(this.scale.displaySize.width / 45))}px`,
         color: '#ffffff',
         backgroundColor: 'rgba(0, 0, 0, 0.35)',
-        padding: { x: 10, y: 5 },
+        padding: { x: 8, y: 3 },
       }
-    ).setOrigin(0.5).setDepth(DepthUtils.getMenuDepth()).setVisible(false);
+    ).setOrigin(0.5, 0).setDepth(DepthUtils.getInGameUIElementDepth(60)).setVisible(false).setAlpha(0);
+
+    if (this.innerSettings.isDebug) {
+      this.debugFrameText = this.add.text(
+        8,
+        this.cameras.main.height - 8,
+        'frameId: 0\nackFrameId: 0',
+        {
+          fontSize: '12px',
+          color: '#b8ffb5',
+          backgroundColor: 'rgba(0, 0, 0, 0.45)',
+          padding: { x: 6, y: 4 },
+        }
+      ).setOrigin(0, 1).setDepth(DepthUtils.getInGameUIElementDepth(61));
+    }
 
     // 初始化物理世界
     await RAPIER.init();
@@ -171,6 +187,38 @@ export class Game extends Scene {
   update(time: number, delta: number): void {
     CombatManager.Instance.update(time, delta);
     DebugManager.Instance.update();
+    this.updateWaitText(delta);
+    if (this.debugFrameText && this.innerSettings.isDebug) {
+      this.debugFrameText.setText(`frameId: ${BackendWS.FrameID}\nackFrameId: ${BackendWS.AckFrameID}`);
+    }
+  }
+
+  public setWaitTextVisibleTarget(visible: boolean) {
+    this.waitTextVisibleTarget = visible;
+    if (visible) {
+      this.waitText.setVisible(true);
+    }
+  }
+
+  private updateWaitText(delta: number) {
+    if (!this.waitText) {
+      return;
+    }
+
+    const targetAlpha = this.waitTextVisibleTarget ? 0.92 : 0;
+    const fadeSpeed = Math.min(1, delta / 180);
+    const nextAlpha = Phaser.Math.Linear(this.waitText.alpha, targetAlpha, fadeSpeed);
+    this.waitText.setAlpha(nextAlpha);
+
+    if (!this.waitTextVisibleTarget && nextAlpha <= 0.03) {
+      this.waitText.setVisible(false);
+      this.waitText.setAlpha(0);
+      return;
+    }
+
+    if (this.waitTextVisibleTarget) {
+      this.waitText.setVisible(true);
+    }
   }
 
   changeScene() {
@@ -268,6 +316,8 @@ export class Game extends Scene {
     CombatManager.Instance.Eventbus.off('onCombatResume', this.onCombatResumeHandler);
 
     this.musical?.destroy();
+    this.debugFrameText?.destroy();
+    this.debugFrameText = null;
 
     // 销毁暂停菜单
     const pauseMenu = (this as any).pauseMenu;

@@ -2,15 +2,14 @@
 package gamelogic
 
 import (
-	"mvzserver/clients"
 	messages "mvzserver/messages/pb"
 )
-
-type ClientCtx = clients.ClientCtx
 
 const MAXROWS = 6
 const MAXCOLS = 9
 const MAXCARDS = 8 // max cards allowed to plant per server loop in one grid
+
+type frameGrid [MAXROWS][MAXCOLS]bool
 
 // 游戏的纯逻辑
 // 只和游戏状态无关,和房间,玩家等无关
@@ -18,24 +17,31 @@ const MAXCARDS = 8 // max cards allowed to plant per server loop in one grid
 // 所有副作用影响因为完全的帧编排,保证不会出现任何逻辑错误
 // TCP+WS暂时不考虑校验(room-atom和client在发送自己的消息时候都要进行校验码)
 type GameLogic struct {
-	// 与房间进行通信管道
-	operationChan chan<- *messages.InGameOperation
-
-	// 本循环中将要放置的card
-	cards [MAXROWS][MAXCOLS]bool // 每一个frame只能做一次操作
+	// 每一逻辑帧中的格子占用情况
+	cards map[uint32]*frameGrid
 }
 
-func NewGameLogic(operationChan chan<- *messages.InGameOperation) *GameLogic {
+func NewGameLogic(_ chan<- *messages.InGameOperation) *GameLogic {
 	return &GameLogic{
-		operationChan: operationChan,
+		cards: make(map[uint32]*frameGrid),
 	}
 }
 
 func (g *GameLogic) Reset() {
-	for i := 0; i < MAXROWS; i++ {
-		for j := 0; j < MAXCOLS; j++ {
-			g.cards[i][j] = false
-		}
+	g.cards = make(map[uint32]*frameGrid)
+}
+
+func (g *GameLogic) ReleaseFrame(frameID uint32) {
+	delete(g.cards, frameID)
+}
+
+func (g *GameLogic) getFrameGrid(frameID uint32) *frameGrid {
+	grid, ok := g.cards[frameID]
+	if ok {
+		return grid
 	}
-	// 清空消息管道由服务器在每次tick广播后，自己清空chan
+
+	grid = &frameGrid{}
+	g.cards[frameID] = grid
+	return grid
 }

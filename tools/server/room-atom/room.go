@@ -16,6 +16,11 @@ import (
 	"time"
 )
 
+type FrameSubmission struct {
+	Operations          []*messages.InGameOperation
+	OperationSignatures map[string]struct{}
+}
+
 type Room struct {
 	// 基础属性
 	ID      int
@@ -29,6 +34,8 @@ type Room struct {
 	incomingMessages chan *PlayerMessage
 	// 游戏逻辑操作管道
 	ingameOperations chan *messages.InGameOperation
+	scheduledFrames  map[uint32]*FrameSubmission
+	frameHistory     map[uint32]*messages.InGameResponse
 
 	// 安全
 	key string // 房间密钥
@@ -71,6 +78,8 @@ func NewRoom(id int, stopChan chan int) *Room {
 		reconnect:        make(chan clients.ReconnectRequest),
 		incomingMessages: make(chan *PlayerMessage, 128),
 		ingameOperations: gameOperationChan,
+		scheduledFrames:  make(map[uint32]*FrameSubmission),
+		frameHistory:     make(map[uint32]*messages.InGameResponse),
 	}
 }
 
@@ -88,6 +97,8 @@ func (room *Room) Reset() {
 	for len(room.ingameOperations) > 0 {
 		<-room.ingameOperations // 清空管道
 	}
+	room.scheduledFrames = make(map[uint32]*FrameSubmission)
+	room.frameHistory = make(map[uint32]*messages.InGameResponse)
 }
 
 // 摧毁房间(直接入口)

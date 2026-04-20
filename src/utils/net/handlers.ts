@@ -149,11 +149,16 @@ export default class WSClientHandlers {
 
   public handleInGameResponse(response: Uint8Array) {
     const inGameResponse = InGameResponse.fromBinary(response);
+    console.log("[WSClientHandlers] handleInGameResponse", {
+      frameId: inGameResponse.frameId,
+      operationCount: inGameResponse.operations.length,
+      hasReceiveQueue: Boolean(this.ws.getReceiveQueue())
+    });
     const receiveQueue = this.ws.getReceiveQueue();
     if (receiveQueue) {
       receiveQueue.handleInGameResponse(inGameResponse);
     } else {
-      console.warn('Receive queue not available, cannot handle InGame response');
+      this.ws.enqueuePendingInGameResponse(inGameResponse);
     }
   }
 }

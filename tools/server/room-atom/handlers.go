@@ -9,6 +9,7 @@ import (
 	"mvzserver/utils"
 
 	"runtime/debug"
+	"sort"
 
 	"github.com/gofiber/websocket/v2"
 	"google.golang.org/protobuf/proto"
@@ -274,16 +275,33 @@ func (room *Room) HandleRequestReady(player *Player, req *messages.RequestReady)
 		log.Printf("🟢 All players ready! Starting loading phase...")
 		// 如果所有玩家都准备好了，开始加载
 		room.GameStage.Store(constants.STAGE_Loading)
-		// 广播
-		payload := messages.ResponseAllReady{
-			AllPlayerCount: room.GetPlayerCount(),
-		}
-		resp := &messages.RoomResponse{
-			Payload: &messages.RoomResponse_AllReady{
-				AllReady: &payload,
-			},
-		}
-		room.RoomCtx.BroadcastMessage(resp, nil)
+		playerIDs := make([]uint32, 0, totalPlayers)
+		room.RoomCtx.Players.Range(func(_ int, value *clients.Player) bool {
+			if value != nil && value.Ctx != nil {
+				playerIDs = append(playerIDs, uint32(value.Ctx.Id))
+			}
+			return true
+		})
+		sort.Slice(playerIDs, func(i, j int) bool { return playerIDs[i] < playerIDs[j] })
+
+		room.RoomCtx.Players.Range(func(_ int, value *clients.Player) bool {
+			if value == nil || value.Ctx == nil {
+				return true
+			}
+			payload := messages.ResponseAllReady{
+				AllPlayerCount: room.GetPlayerCount(),
+				Seed:           room.Seed,
+				MyId:           uint32(value.Ctx.Id),
+				PlayerIds:      playerIDs,
+			}
+			resp := &messages.RoomResponse{
+				Payload: &messages.RoomResponse_AllReady{
+					AllReady: &payload,
+				},
+			}
+			room.RoomCtx.SendMessageToUserByPlayer(resp, value)
+			return true
+		})
 		log.Printf("🟢 AllReady message sent")
 	} else {
 		log.Printf("🟡 Not all players ready yet, sending ready count update...")
@@ -388,11 +406,10 @@ func (room *Room) HandleRequestLoaded(player *Player, req *messages.RequestLoade
 	if room.HasAllPlayerLoaded() {
 		log.Printf("🟢 All players loaded! Starting game...")
 		// 如果所有玩家都加载完毕，开始游戏
+		room.resetInGameState()
 		room.GameStage.Store(constants.STAGE_InGame)
 		// 发送游戏开始广播帧
-		payload := messages.ResponseAllLoaded{
-			Seed: room.Seed,
-		}
+		payload := messages.ResponseAllLoaded{}
 		resp := &messages.RoomResponse{
 			Payload: &messages.RoomResponse_AllLoaded{
 				AllLoaded: &payload,
@@ -411,25 +428,11 @@ func (room *Room) HandleRequestLoaded(player *Player, req *messages.RequestLoade
 // 判断游戏中的客户端发来帧是否可以采用以及更新frame状态
 // Return: 这个帧是否可以采用（没有迟到）
 func (room *Room) HandleRequestBlank(player *Player, req *messages.RequestBlank) bool {
-	// 检查 player 和 player.Ctx 是否为 nil
-	if player == nil || player.Ctx == nil {
+	if !room.acceptInGameBase(player, req) {
 		return false
 	}
-	// 检查 req 是否为 nil
-	if req == nil {
-		log.Printf("🔴 HandleRequestBlank: req is nil for player %d", player.GetID())
-		return false
-	}
-	// 只能在 STAGE_InGame 阶段处理
-	if !room.GameStage.EqualTo(constants.STAGE_InGame) {
-		return false
-	}
-
-	// 迟到的帧也要处理
-
-	// 空帧请求
-	// 维护该玩家的帧ID和ack ID
-	player.Ctx.UpdatePlayerFrame(req.FrameId, req.AckFrameId)
+	room.pruneFrameHistory()
+	room.syncAllClients()
 	return true
 }
 
@@ -448,7 +451,7 @@ func (room *Room) HandleRequestCardPlant(player *Player, req *messages.RequestCa
 		return
 	}
 
-	if !room.HandleRequestBlank(player, req.Base.Base) {
+	if !room.acceptInGameBase(player, req.Base.Base) {
 		return
 	}
 
@@ -457,14 +460,16 @@ func (room *Room) HandleRequestCardPlant(player *Player, req *messages.RequestCa
 	lastAckFrameID := player.Ctx.LatestAckFrameID.Load()
 
 	// 此帧想要发生的时机晚于下一帧序号
-	nextFrameID := room.RoomCtx.NextFrameID.Load()
-	req.Base.ProcessFrameId = max(nextFrameID, req.Base.ProcessFrameId)
+	req.Base.ProcessFrameId = room.resolveProcessFrameID(req.Base)
 
 	if !room.CouldAffordable(player, req.Base.Base, req.Cost, 0, req.EnergySum, req.StarShardsSum, lastFrameID, lastAckFrameID) {
 		// 无法负担
 		return
 	}
-	room.Logic.PlantCard(player, req)
+	operation := room.Logic.PlantCard(player, req)
+	room.recordOperationSubmission(req.Base.ProcessFrameId, operation)
+	room.pruneFrameHistory()
+	room.syncAllClients()
 }
 
 func (room *Room) HandleRequestRemovePlant(player *Player, req *messages.RequestRemovePlant) {
@@ -482,14 +487,16 @@ func (room *Room) HandleRequestRemovePlant(player *Player, req *messages.Request
 		return
 	}
 
-	if !room.HandleRequestBlank(player, req.Base.Base) {
+	if !room.acceptInGameBase(player, req.Base.Base) {
 		return
 	}
 	// 此帧想要发生的时机晚于下一帧序号
-	nextFrameID := room.RoomCtx.NextFrameID.Load()
-	req.Base.ProcessFrameId = max(nextFrameID, req.Base.ProcessFrameId)
+	req.Base.ProcessFrameId = room.resolveProcessFrameID(req.Base)
 
-	room.Logic.RemoveCard(player, req)
+	operation := room.Logic.RemoveCard(player, req)
+	room.recordOperationSubmission(req.Base.ProcessFrameId, operation)
+	room.pruneFrameHistory()
+	room.syncAllClients()
 }
 
 func (room *Room) HandleRequestStarShards(player *Player, req *messages.RequestStarShards) {
@@ -507,7 +514,7 @@ func (room *Room) HandleRequestStarShards(player *Player, req *messages.RequestS
 		return
 	}
 
-	if !room.HandleRequestBlank(player, req.Base.Base) {
+	if !room.acceptInGameBase(player, req.Base.Base) {
 		return
 	}
 
@@ -516,14 +523,16 @@ func (room *Room) HandleRequestStarShards(player *Player, req *messages.RequestS
 	lastAckFrameID := player.Ctx.LatestAckFrameID.Load()
 
 	// 此帧想要发生的时机晚于下一帧序号
-	nextFrameID := room.RoomCtx.NextFrameID.Load()
-	req.Base.ProcessFrameId = max(nextFrameID, req.Base.ProcessFrameId)
+	req.Base.ProcessFrameId = room.resolveProcessFrameID(req.Base)
 
 	if !room.CouldAffordable(player, req.Base.Base, 0, req.Cost, req.EnergySum, req.StarShardsSum, lastFrameID, lastAckFrameID) {
 		// 无法负担
 		return
 	}
-	room.Logic.UseStarShards(player, req)
+	operation := room.Logic.UseStarShards(player, req)
+	room.recordOperationSubmission(req.Base.ProcessFrameId, operation)
+	room.pruneFrameHistory()
+	room.syncAllClients()
 }
 
 func (room *Room) HandleRequestEndGame(player *Player, req *messages.RequestEndGame) {
@@ -534,6 +543,11 @@ func (room *Room) HandleRequestEndGame(player *Player, req *messages.RequestEndG
 
 	// 之后进入 PostGame 阶段
 	room.GameStage.Store(constants.STAGE_PostGame)
+	if room.RoomCtx.GameTicker != nil {
+		room.RoomCtx.GameTicker.Stop()
+		room.RoomCtx.GameTicker = nil
+	}
+	room.resetInGameState()
 	// 广播game end
 	payload := messages.ResponseGameEnd{
 		GameResult: req.GameResult,

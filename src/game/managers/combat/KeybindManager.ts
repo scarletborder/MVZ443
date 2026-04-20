@@ -1,6 +1,7 @@
 import { BaseManager } from "../BaseManager";
 import type { Game } from "../../scenes/Game";
 import { PhaserEventBus, PhaserEvents } from "../../EventBus";
+import BackendWS from "../../../utils/net/sync";
 import CardpileManager from "./CardpileManager";
 
 /**
@@ -71,6 +72,9 @@ export default class KeybindManager extends BaseManager {
   }
 
   private handlePause(): void {
+    if (BackendWS.isOnlineMode()) {
+      return;
+    }
     PhaserEventBus.emit(PhaserEvents.TogglePause);
   }
 
@@ -83,6 +87,9 @@ export default class KeybindManager extends BaseManager {
   }
 
   private handleTimescale(): void {
+    if (BackendWS.isOnlineMode()) {
+      return;
+    }
     PhaserEventBus.emit(PhaserEvents.TimespeedToggle);
   }
 }

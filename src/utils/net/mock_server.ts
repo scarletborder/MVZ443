@@ -36,6 +36,8 @@ class MockServer {
   private readonly clientTimeoutMs: number = 15000;
   private readonly maxResendPerPull: number = 32;
   private readonly maxHistoryFrames: number = 600;
+  private readonly estimatedLeadFrames: number = 8;
+  private readonly baseDeltaFrames: number = 2;
 
   private isRunning: boolean = false;
   private roomId: number = 1;
@@ -44,10 +46,19 @@ class MockServer {
   private seed: number = 1;
   private serverFrameId: number = 0;
   private operationSerial: number = 0;
+  private gameStartedAt: number = 0;
 
   private clients: Map<number, ClientSession> = new Map<number, ClientSession>();
-  private frameSubmissions: Map<number, Map<number, FrameSubmission>> = new Map<number, Map<number, FrameSubmission>>();
+  private scheduledFrames: Map<number, FrameSubmission> = new Map<number, FrameSubmission>();
   private frameHistory: Map<number, InGameResponse> = new Map<number, InGameResponse>();
+
+  private trace(message: string, details?: unknown) {
+    if (details !== undefined) {
+      console.log(`[MockServer] ${message}`, details);
+      return;
+    }
+    console.log(`[MockServer] ${message}`);
+  }
 
   startSingleRoom(): MockPacket[] {
     const now = Date.now();
@@ -55,10 +66,16 @@ class MockServer {
     this.seed = Math.floor(Math.random() * 2147483647);
     this.serverFrameId = 0;
     this.operationSerial = 0;
+    this.gameStartedAt = 0;
     this.clients.clear();
-    this.frameSubmissions.clear();
+    this.scheduledFrames.clear();
     this.frameHistory.clear();
     this.ensureClient(this.myId, now);
+    this.trace("startSingleRoom", {
+      roomId: this.roomId,
+      myId: this.myId,
+      seed: this.seed
+    });
 
     return [
       {
@@ -80,8 +97,9 @@ class MockServer {
 
   stop() {
     this.isRunning = false;
+    this.gameStartedAt = 0;
     this.clients.clear();
-    this.frameSubmissions.clear();
+    this.scheduledFrames.clear();
     this.frameHistory.clear();
   }
 
@@ -99,6 +117,9 @@ class MockServer {
       this.cleanupTimedOutClients(now);
 
       const request = Request.fromBinary(message);
+      this.trace("handleMessage", {
+        type: request.payload.oneofKind
+      });
       switch (request.payload.oneofKind) {
         case "chooseMap":
           return [this.makeChooseMapPacket(request.payload.chooseMap.chapterId, request.payload.chooseMap.stageId)];
@@ -131,6 +152,12 @@ class MockServer {
 
     const readyCount = this.getReadyCount();
     const packets: MockPacket[] = [this.makeUpdateReadyCountPacket(readyCount, this.clients.size)];
+    this.trace("handleReadyRequest", {
+      clientId,
+      isReady,
+      readyCount,
+      clientCount: this.clients.size
+    });
     if (this.areAllClientsReady()) {
       packets.push(this.makeAllReadyPacket());
     }
@@ -141,10 +168,20 @@ class MockServer {
     const client = this.ensureClient(clientId, now);
     client.lastSeenAt = now;
     client.isLoaded = isLoaded;
+    this.trace("handleLoadedRequest", {
+      clientId,
+      isLoaded,
+      allClientsLoaded: this.areAllClientsLoaded(),
+      serverFrameIdBeforeAdvance: this.serverFrameId
+    });
     if (!this.areAllClientsLoaded()) {
       return [];
     }
-    return [this.makeAllLoadedPacket()];
+    if (this.gameStartedAt === 0) {
+      this.gameStartedAt = now;
+    }
+    this.advanceFrames(now);
+    return [this.makeAllLoadedPacket(), ...this.collectPacketsForClient(client.id)];
   }
 
   private handleInGameRequest(request: Request, now: number): MockPacket[] {
@@ -159,14 +196,24 @@ class MockServer {
     if (ackFrameId !== undefined) {
       client.ackFrameId = Math.max(client.ackFrameId, ackFrameId);
     }
+    this.trace("handleInGameRequest", {
+      type: request.payload.oneofKind,
+      clientId: client.id,
+      ackFrameId,
+      clientAckFrameId: client.ackFrameId,
+      serverFrameId: this.serverFrameId,
+      highestSubmittedFrame: client.highestSubmittedFrame
+    });
 
-    const targetFrameId = this.extractTargetFrameId(request);
-    if (targetFrameId !== undefined) {
-      this.recordSubmission(targetFrameId, client.id, request);
-      client.highestSubmittedFrame = Math.max(client.highestSubmittedFrame, targetFrameId);
-      this.finalizeReadyFrames();
+    if (request.payload.oneofKind !== "blank") {
+      const targetFrameId = this.extractTargetFrameId(request);
+      if (targetFrameId !== undefined) {
+        this.recordSubmission(targetFrameId, client.id, request);
+        client.highestSubmittedFrame = Math.max(client.highestSubmittedFrame, targetFrameId);
+      }
     }
 
+    this.advanceFrames(now);
     this.pruneHistories();
     return this.collectPacketsForClient(client.id);
   }
@@ -213,8 +260,6 @@ class MockServer {
 
   private extractTargetFrameId(request: Request): number | undefined {
     switch (request.payload.oneofKind) {
-      case "blank":
-        return request.payload.blank.frameId;
       case "plant":
         return this.resolveOperationFrame(request.payload.plant.base);
       case "removePlant":
@@ -227,28 +272,60 @@ class MockServer {
   }
 
   private resolveOperationFrame(base: RequestGridOperation | undefined): number {
-    return Math.max(base?.processFrameId ?? 0, (base?.base?.frameId ?? 0) + 1);
+    const reportedCurrentFrame = Math.max(
+      base?.base?.frameId ?? 0,
+      base?.base?.ackFrameId ?? 0
+    );
+    const earliestServerFrame = reportedCurrentFrame + this.getCurrentLeadFrames();
+    const requestedFrame = base?.processFrameId ?? 0;
+    return Math.max(requestedFrame, earliestServerFrame);
+  }
+
+  private getCurrentLeadFrames(): number {
+    return this.estimatedLeadFrames + this.baseDeltaFrames;
+  }
+
+  private getMaxClientAckFrameId(): number {
+    let maxAckFrameId = 0;
+    for (const client of this.clients.values()) {
+      maxAckFrameId = Math.max(maxAckFrameId, client.ackFrameId);
+    }
+    return maxAckFrameId;
   }
 
   private recordSubmission(frameId: number, clientId: number, request: Request) {
-    let frameEntry = this.frameSubmissions.get(frameId);
-    if (!frameEntry) {
-      frameEntry = new Map<number, FrameSubmission>();
-      this.frameSubmissions.set(frameId, frameEntry);
+    const operation = this.buildOperationForFrame(frameId, request, clientId);
+    if (!operation) {
+      return;
     }
 
-    let submission = frameEntry.get(clientId);
+    const existingFrame = this.frameHistory.get(frameId);
+    if (existingFrame) {
+      const signature = this.getOperationSignature(operation);
+      const hasDuplicate = existingFrame.operations.some(
+        existingOperation => this.getOperationSignature(existingOperation) === signature
+      );
+      if (hasDuplicate) {
+        return;
+      }
+      existingFrame.operations.push(operation);
+      existingFrame.operations.sort((a, b) => a.operationIndex - b.operationIndex);
+      this.frameHistory.set(frameId, existingFrame);
+      this.trace("recordSubmission appended to existing frameHistory", {
+        frameId,
+        operationKind: operation.payload.oneofKind,
+        operationCount: existingFrame.operations.length
+      });
+      return;
+    }
+
+    let submission = this.scheduledFrames.get(frameId);
     if (!submission) {
       submission = {
         operations: [],
         operationSignatures: new Set<string>()
       };
-      frameEntry.set(clientId, submission);
-    }
-
-    const operation = this.buildOperationForFrame(frameId, request, clientId);
-    if (!operation) {
-      return;
+      this.scheduledFrames.set(frameId, submission);
     }
 
     const signature = this.getOperationSignature(operation);
@@ -257,42 +334,45 @@ class MockServer {
     }
     submission.operationSignatures.add(signature);
     submission.operations.push(operation);
+    this.trace("recordSubmission queued for future frame", {
+      frameId,
+      operationKind: operation.payload.oneofKind,
+      operationCount: submission.operations.length
+    });
   }
 
-  private finalizeReadyFrames() {
-    while (this.isFrameReady(this.serverFrameId + 1)) {
+  private advanceFrames(now: number) {
+    if (this.gameStartedAt === 0) {
+      this.gameStartedAt = now;
+    }
+    const realTimeFrameId = Math.max(1, Math.floor((now - this.gameStartedAt) / 50) + 1);
+    const bufferedTargetFrameId = this.getMaxClientAckFrameId() + this.getCurrentLeadFrames();
+    const targetServerFrameId = Math.max(realTimeFrameId, bufferedTargetFrameId);
+    this.trace("advanceFrames", {
+      now,
+      gameStartedAt: this.gameStartedAt,
+      serverFrameIdBefore: this.serverFrameId,
+      realTimeFrameId,
+      bufferedTargetFrameId,
+      targetServerFrameId
+    });
+    while (this.serverFrameId < targetServerFrameId) {
       const frameId = this.serverFrameId + 1;
-      const frameEntry = this.frameSubmissions.get(frameId);
-      const operations = frameEntry
-        ? [...frameEntry.entries()]
-            .sort((a, b) => a[0] - b[0])
-            .flatMap(([, submission]) => submission.operations)
-            .sort((a, b) => a.operationIndex - b.operationIndex)
+      const scheduled = this.scheduledFrames.get(frameId);
+      const operations = scheduled
+        ? [...scheduled.operations].sort((a, b) => a.operationIndex - b.operationIndex)
         : [];
-
       this.serverFrameId = frameId;
       this.frameHistory.set(frameId, {
         frameId,
         operations
       });
-      this.frameSubmissions.delete(frameId);
+      this.trace("generated frame", {
+        frameId,
+        operationCount: operations.length
+      });
+      this.scheduledFrames.delete(frameId);
     }
-  }
-
-  private isFrameReady(frameId: number): boolean {
-    if (this.clients.size === 0) {
-      return false;
-    }
-    const frameEntry = this.frameSubmissions.get(frameId);
-    if (!frameEntry) {
-      return false;
-    }
-    for (const client of this.clients.values()) {
-      if (!frameEntry.has(client.id)) {
-        return false;
-      }
-    }
-    return true;
   }
 
   private getReadyCount(): number {
@@ -330,6 +410,14 @@ class MockServer {
     const packets: MockPacket[] = [];
     const fromFrameId = Math.max(client.ackFrameId + 1, this.getEarliestHistoryFrame());
     const toFrameId = Math.min(this.serverFrameId, fromFrameId + this.maxResendPerPull - 1);
+    this.trace("collectPacketsForClient", {
+      clientId,
+      clientAckFrameId: client.ackFrameId,
+      serverFrameId: this.serverFrameId,
+      fromFrameId,
+      toFrameId,
+      historySize: this.frameHistory.size
+    });
     for (let frameId = fromFrameId; frameId <= toFrameId; frameId++) {
       const frame = this.frameHistory.get(frameId);
       if (!frame) {
@@ -340,6 +428,11 @@ class MockServer {
         data: InGameResponse.toBinary(frame)
       });
     }
+    this.trace("collectPacketsForClient result", {
+      clientId,
+      packetCount: packets.length,
+      frameIds: packets.map(packet => InGameResponse.fromBinary(packet.data).frameId)
+    });
     return packets;
   }
 

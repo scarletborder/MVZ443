@@ -144,7 +144,7 @@ export default function CreateInnerMenu(game: Game) {
 
   const refreshButtons = () => {
     const isSpeedEnabled = !CombatManager.Instance.isPaused && !HasConnected();
-    const isPauseEnabled = !pauseMenu.isBlockingInput();
+    const isPauseEnabled = !pauseMenu.isBlockingInput() && !HasConnected();
 
     applyButtonState(game.pauseBtn, pauseFontSize, pausePaddingX, pausePaddingY, buildPauseButtonState());
     applyButtonState(game.speedText, speedFontSize, speedPaddingX, speedPaddingY, buildSpeedButtonState());

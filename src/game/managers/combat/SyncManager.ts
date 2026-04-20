@@ -1,4 +1,3 @@
-import RAPIER from "@dimforge/rapier2d-deterministic-compat";
 import { FrameInterval } from "../../../../public/constants";
 import { EventBus } from "../../../utils/eventBus";
 import BackendWS from "../../../utils/net/sync";
@@ -6,6 +5,7 @@ import type { Game } from "../../scenes/Game";
 import QueueReceive from "../../sync/queue_receive";
 import QueueSend from "../../sync/queue_send";
 import { BaseManager } from "../BaseManager";
+import CombatManager from "../CombatManager";
 import PlantsManager from "./PlantsManager";
 import { PlayerIdentify } from "./ResourceManager";
 
@@ -20,9 +20,7 @@ export default class SyncManager extends BaseManager {
   protected scene: Game | null = null;
 
   Eventbus: EventBus<SyncManagerEvent>;
-  private frameSnapshots: Map<number, Uint8Array> = new Map<number, Uint8Array>();
   private queueBound: boolean = false;
-  private readonly snapshotRetainFrames: number = 120;
 
   public FrameInterval: number = FrameInterval;
 
@@ -104,8 +102,11 @@ export default class SyncManager extends BaseManager {
 
   public update(): boolean {
     const frameReady = this.recvQueue.Consume();
+    if (!frameReady && BackendWS.isRoomSessionMode() && !CombatManager.Instance.isPaused) {
+      this.sendQueue.ensureBlankFrame(this.recvQueue.currentFrameId);
+    }
     if (this.scene?.waitText) {
-      this.scene.waitText.setVisible(BackendWS.isRoomSessionMode() && !frameReady);
+      this.scene.setWaitTextVisibleTarget(BackendWS.isRoomSessionMode() && !frameReady && !CombatManager.Instance.isPaused);
     }
     return frameReady;
   }
@@ -118,43 +119,6 @@ export default class SyncManager extends BaseManager {
     return this.GetFrameID() + 1;
   }
 
-  public BacktrackToFrame(frameId: number) {
-    const snapshot = this.frameSnapshots.get(frameId);
-    if (!this.scene || !snapshot) {
-      console.warn("Backtrack failed. Missing scene or snapshot for frame:", frameId);
-      return;
-    }
-
-    const world = RAPIER.World.restoreSnapshot(snapshot);
-    this.scene.rapierWorld = world;
-
-    const currentFrameId = this.GetFrameID();
-    for (let replayFrameId = frameId + 1; replayFrameId <= currentFrameId; replayFrameId++) {
-      const operations = this.recvQueue.backupOperations.get(replayFrameId) || [];
-      for (const operation of operations) {
-        this.recvQueue.ConsumeInGameOperation(operation);
-      }
-    }
-  }
-
-  public DumpFrame(frameId: number) {
-    const rapierSnapshot = this.scene?.rapierWorld.takeSnapshot();
-    if (!rapierSnapshot) {
-      return;
-    }
-
-    this.frameSnapshots.set(frameId, rapierSnapshot);
-
-    const lastAckFrameId = this.recvQueue.lastAckFrameId;
-    for (const snapshotFrameId of this.frameSnapshots.keys()) {
-      const outOfAckWindow = snapshotFrameId < lastAckFrameId;
-      const outOfHistoryWindow = snapshotFrameId < frameId - this.snapshotRetainFrames;
-      if (outOfAckWindow || outOfHistoryWindow) {
-        this.frameSnapshots.delete(snapshotFrameId);
-      }
-    }
-  }
-
   public Reset() {
     this.unbindQueueAndPlantEvents();
     this.scene = null;
@@ -164,7 +128,6 @@ export default class SyncManager extends BaseManager {
     if (this.sendQueue) {
       this.sendQueue.Reset();
     }
-    this.frameSnapshots.clear();
     BackendWS.disconnectQueues();
   }
 }

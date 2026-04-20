@@ -25,6 +25,7 @@ interface SettingItem {
         onToggle?: (value: boolean) => void; // for switcher
 
         placeholder?: string; // for input
+        value?: string; // for input
         onChange?: (value: string) => void; // for input
 
         options?: string[]; // for selections
@@ -55,6 +56,8 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
     const [noRoomFlag, setNoRoomFlag] = useState(false);
 
     const [linkStatus, setLinkStatus] = useState(false);
+    const [sendLatencyInput, setSendLatencyInput] = useState(String(BackendWS.getDebugLatencyConfig().sendLatencyMs));
+    const [receiveLatencyInput, setReceiveLatencyInput] = useState(String(BackendWS.getDebugLatencyConfig().receiveLatencyMs));
     const { translate } = useLocaleMessages();
 
     useEffect(() => {
@@ -72,6 +75,14 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
         } catch (error) {
             console.error('保存失败:', error);
         }
+    };
+
+    const sanitizeLatencyInput = (value: string): string => {
+        const digits = value.replace(/[^\d]/g, '');
+        if (!digits) {
+            return "0";
+        }
+        return String(Math.min(60000, Number(digits)));
     };
 
     // 处理导入存档
@@ -359,6 +370,34 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
                                 BackendWS.closeConnection();
                             }
                         }
+                    },
+                    {
+                        titleKey: "发送延迟(ms)",
+                        descriptionKey: "仅本次页面打开期间生效，用于本地调试发送慢链路",
+                        controlType: "input",
+                        controlProps: {
+                            placeholder: "0",
+                            value: sendLatencyInput,
+                            onChange: (val) => {
+                                const nextValue = sanitizeLatencyInput(val);
+                                setSendLatencyInput(nextValue);
+                                BackendWS.setDebugSendLatencyMs(Number(nextValue));
+                            }
+                        }
+                    },
+                    {
+                        titleKey: "接收延迟(ms)",
+                        descriptionKey: "仅本次页面打开期间生效，用于本地调试接收慢链路",
+                        controlType: "input",
+                        controlProps: {
+                            placeholder: "0",
+                            value: receiveLatencyInput,
+                            onChange: (val) => {
+                                const nextValue = sanitizeLatencyInput(val);
+                                setReceiveLatencyInput(nextValue);
+                                BackendWS.setDebugReceiveLatencyMs(Number(nextValue));
+                            }
+                        }
                     }
                 ]
             },
@@ -565,6 +604,7 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
                                         <input
                                             type="text"
                                             placeholder={item.controlProps?.placeholder}
+                                            value={item.controlProps?.value ?? ''}
                                             onChange={(e) => item.controlProps?.onChange?.(e.target.value)}
                                             style={{
                                                 padding: "5px",

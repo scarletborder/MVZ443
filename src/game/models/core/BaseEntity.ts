@@ -21,6 +21,8 @@ export abstract class BaseEntity {
   public rigidBody: RAPIER.RigidBody | null = null;
   // Shared render container
   public viewGroup: Phaser.GameObjects.Group;
+  private isDestroyQueued = false;
+  private isDestroyed = false;
 
   constructor(scene: Game, x: number, y: number) {
     this.scene = scene;
@@ -64,12 +66,21 @@ export abstract class BaseEntity {
 
   // Shared destruction flow.
   public destroy(): void {
+    if (this.isDestroyQueued || this.isDestroyed) {
+      return;
+    }
+    this.isDestroyQueued = true;
     DeferredManager.Instance.defer(() => {
+      if (this.isDestroyed) {
+        return;
+      }
       if (this.rigidBody) {
         this.scene.rapierWorld.removeRigidBody(this.rigidBody);
+        this.rigidBody = null;
       }
       this.viewGroup.destroy(true, true);
       TickerManager.Instance.RemoveGroup(this.TimerKey);
+      this.isDestroyed = true;
     });
   }
 

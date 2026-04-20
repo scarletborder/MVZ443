@@ -6,51 +6,249 @@ package roomatom
 import (
 	"mvzserver/constants"
 	messages "mvzserver/messages/pb"
+	"sort"
+	"strconv"
+	"strings"
 	"time"
 )
 
-// 定时器触发的广播转发游戏操作帧
-func (room *Room) runGameTick() {
-	if !room.HasAllPlayerSync() {
-		// 如果没有所有玩家同步，则跳过此次逻辑帧
+const (
+	maxResendPerSync uint32 = 32
+	maxHistoryFrames uint32 = 600
+)
+
+func (room *Room) currentServerFrameID() uint32 {
+	nextFrameID := room.RoomCtx.NextFrameID.Load()
+	if nextFrameID == 0 {
+		return 0
+	}
+	return nextFrameID - 1
+}
+
+func (room *Room) resetInGameState() {
+	room.RoomCtx.NextFrameID.Store(1)
+	room.scheduledFrames = make(map[uint32]*FrameSubmission)
+	room.frameHistory = make(map[uint32]*messages.InGameResponse)
+	room.Logic.Reset()
+	for len(room.ingameOperations) > 0 {
+		<-room.ingameOperations
+	}
+}
+
+func (room *Room) ensureFrameSubmission(frameID uint32) *FrameSubmission {
+	submission, ok := room.scheduledFrames[frameID]
+	if ok {
+		return submission
+	}
+
+	submission = &FrameSubmission{
+		Operations:          make([]*messages.InGameOperation, 0, 2),
+		OperationSignatures: make(map[string]struct{}),
+	}
+	room.scheduledFrames[frameID] = submission
+	return submission
+}
+
+func (room *Room) recordOperationSubmission(frameID uint32, operation *messages.InGameOperation) {
+	if operation == nil {
 		return
 	}
-	room.LastActiveTime = time.Now() // 更新最后活动时间
-	var NextRenderFrame = room.RoomCtx.NextFrameID.Load()
 
-	// 本次要发送的
-	var Operations []*messages.InGameOperation
+	submission := room.ensureFrameSubmission(frameID)
+	signature := room.operationSignature(operation)
+	if _, exists := submission.OperationSignatures[signature]; exists {
+		return
+	}
 
-	defer func() {
-		// 步进
-		room.RoomCtx.NextFrameID.Add(1)
-		// 删除本帧的操作ID记录
-		room.RoomCtx.DeleteOperationID(NextRenderFrame)
-		// 更新游戏逻辑
-		room.Logic.Reset()
-	}()
+	submission.OperationSignatures[signature] = struct{}{}
+	submission.Operations = append(submission.Operations, operation)
+}
 
-	// 读取operation chan
-ReadChan:
-	for {
-		select {
-		case op := <-room.ingameOperations:
-			// 忠实加入
-			// 即使是以后游戏逻辑才会process的帧，也会因为帧同步游戏的性质加入
-			// 让客户端知道未来会做哪些操作
-			op.OperationIndex = room.RoomCtx.GetNextOperationID(op.ProcessFrameId)
-			Operations = append(Operations, op)
-		default:
-			break ReadChan // 没有更多操作了
+func (room *Room) operationSignature(operation *messages.InGameOperation) string {
+	if operation == nil || operation.Payload == nil {
+		return ""
+	}
+
+	switch payload := operation.Payload.(type) {
+	case *messages.InGameOperation_CardPlant:
+		return strings.Join([]string{
+			strconv.FormatUint(uint64(operation.ProcessFrameId), 10),
+			"cardPlant",
+			strconv.FormatUint(uint64(payload.CardPlant.Pid), 10),
+			strconv.FormatUint(uint64(payload.CardPlant.Level), 10),
+			strconv.FormatUint(uint64(payload.CardPlant.Base.Uid), 10),
+			strconv.FormatUint(uint64(payload.CardPlant.Base.Col), 10),
+			strconv.FormatUint(uint64(payload.CardPlant.Base.Row), 10),
+		}, ":")
+	case *messages.InGameOperation_RemovePlant:
+		return strings.Join([]string{
+			strconv.FormatUint(uint64(operation.ProcessFrameId), 10),
+			"removePlant",
+			strconv.FormatUint(uint64(payload.RemovePlant.Pid), 10),
+			strconv.FormatUint(uint64(payload.RemovePlant.Base.Uid), 10),
+			strconv.FormatUint(uint64(payload.RemovePlant.Base.Col), 10),
+			strconv.FormatUint(uint64(payload.RemovePlant.Base.Row), 10),
+		}, ":")
+	case *messages.InGameOperation_UseStarShards:
+		return strings.Join([]string{
+			strconv.FormatUint(uint64(operation.ProcessFrameId), 10),
+			"useStarShards",
+			strconv.FormatUint(uint64(payload.UseStarShards.Pid), 10),
+			strconv.FormatUint(uint64(payload.UseStarShards.Base.Uid), 10),
+			strconv.FormatUint(uint64(payload.UseStarShards.Base.Col), 10),
+			strconv.FormatUint(uint64(payload.UseStarShards.Base.Row), 10),
+		}, ":")
+	default:
+		return strings.Join([]string{
+			strconv.FormatUint(uint64(operation.ProcessFrameId), 10),
+			strconv.FormatUint(uint64(operation.OperationIndex), 10),
+		}, ":")
+	}
+}
+
+func (room *Room) advanceOneFrame() {
+	frameID := room.currentServerFrameID() + 1
+	submission := room.scheduledFrames[frameID]
+	operations := make([]*messages.InGameOperation, 0)
+	if submission != nil {
+		operations = append(operations, submission.Operations...)
+		sort.SliceStable(operations, func(i, j int) bool {
+			if operations[i].ProcessFrameId != operations[j].ProcessFrameId {
+				return operations[i].ProcessFrameId < operations[j].ProcessFrameId
+			}
+			return room.operationSignature(operations[i]) < room.operationSignature(operations[j])
+		})
+	}
+
+	for index, operation := range operations {
+		operation.OperationIndex = uint32(index + 1)
+		operation.ProcessFrameId = frameID
+	}
+
+	room.frameHistory[frameID] = &messages.InGameResponse{
+		FrameId:    frameID,
+		Operations: operations,
+	}
+	delete(room.scheduledFrames, frameID)
+	room.Logic.ReleaseFrame(frameID)
+	room.RoomCtx.NextFrameID.Store(frameID + 1)
+}
+
+func (room *Room) earliestHistoryFrameID() uint32 {
+	if len(room.frameHistory) == 0 {
+		return room.RoomCtx.NextFrameID.Load()
+	}
+
+	minFrameID := ^uint32(0)
+	for frameID := range room.frameHistory {
+		if frameID < minFrameID {
+			minFrameID = frameID
 		}
 	}
+	return minFrameID
+}
 
-	// 广播
-	resp := messages.InGameResponse{
-		FrameId:    NextRenderFrame,
-		Operations: Operations,
+func (room *Room) syncClientFrames(player *Player) {
+	if player == nil || player.Ctx == nil || !player.Ctx.IsConnected() {
+		return
 	}
-	room.RoomCtx.BroadcastMessage(&resp, nil)
+
+	serverFrameID := room.currentServerFrameID()
+	if serverFrameID == 0 || len(room.frameHistory) == 0 {
+		return
+	}
+
+	fromFrameID := player.Ctx.LatestAckFrameID.Load() + 1
+	earliestFrameID := room.earliestHistoryFrameID()
+	if fromFrameID < earliestFrameID {
+		fromFrameID = earliestFrameID
+	}
+	if fromFrameID > serverFrameID {
+		return
+	}
+
+	toFrameID := serverFrameID
+	if delta := toFrameID - fromFrameID; delta >= maxResendPerSync {
+		toFrameID = fromFrameID + maxResendPerSync - 1
+	}
+
+	for frameID := fromFrameID; frameID <= toFrameID; frameID++ {
+		response, ok := room.frameHistory[frameID]
+		if !ok {
+			continue
+		}
+		room.RoomCtx.SendMessageToUserByPlayer(response, player)
+	}
+}
+
+func (room *Room) syncAllClients() {
+	room.RoomCtx.Players.Range(func(_ int, player *Player) bool {
+		room.syncClientFrames(player)
+		return true
+	})
+}
+
+func (room *Room) pruneFrameHistory() {
+	if len(room.frameHistory) == 0 {
+		return
+	}
+
+	serverFrameID := room.currentServerFrameID()
+	minAckFrameID := serverFrameID
+	if room.GetPlayerCount() > 0 {
+		minAckFrameID = ^uint32(0)
+		room.RoomCtx.Players.Range(func(_ int, player *Player) bool {
+			if player == nil || player.Ctx == nil {
+				return true
+			}
+			ackFrameID := player.Ctx.LatestAckFrameID.Load()
+			if ackFrameID < minAckFrameID {
+				minAckFrameID = ackFrameID
+			}
+			return true
+		})
+	}
+
+	for frameID := range room.frameHistory {
+		tooOldForAck := frameID <= minAckFrameID
+		tooOldForWindow := serverFrameID > maxHistoryFrames && frameID <= serverFrameID-maxHistoryFrames
+		if tooOldForAck || tooOldForWindow {
+			delete(room.frameHistory, frameID)
+			room.Logic.ReleaseFrame(frameID)
+		}
+	}
+}
+
+func (room *Room) resolveProcessFrameID(baseReq *messages.RequestGridOperation) uint32 {
+	frameID := room.currentServerFrameID() + constants.CommandLeadFrames
+	if baseReq != nil && baseReq.ProcessFrameId > frameID {
+		frameID = baseReq.ProcessFrameId
+	}
+	return frameID
+}
+
+func (room *Room) acceptInGameBase(player *Player, req *messages.RequestBlank) bool {
+	if player == nil || player.Ctx == nil || req == nil {
+		return false
+	}
+	if !room.GameStage.EqualTo(constants.STAGE_InGame) {
+		return false
+	}
+
+	player.Ctx.UpdatePlayerFrame(req.FrameId, req.AckFrameId)
+	return true
+}
+
+// 定时器触发的广播转发游戏操作帧
+func (room *Room) runGameTick() {
+	if !room.GameStage.EqualTo(constants.STAGE_InGame) {
+		return
+	}
+
+	room.LastActiveTime = time.Now() // 更新最后活动时间
+	room.advanceOneFrame()
+	room.pruneFrameHistory()
+	room.syncAllClients()
 }
 
 func (room *Room) HasAllPlayerSync() bool {

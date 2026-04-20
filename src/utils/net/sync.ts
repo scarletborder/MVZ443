@@ -1,6 +1,7 @@
 import QueueReceive from "../../game/sync/queue_receive";
 import QueueSend from "../../game/sync/queue_send";
 import { Request } from "../../pb/request";
+import { InGameResponse } from "../../pb/response";
 import EnumGameStage from "./game_state";
 import WSClientHandlers from "./handlers";
 import { onlineStateManager } from "../../store/OnlineStateManager";
@@ -16,14 +17,54 @@ class WebSocketClient {
   public url: string = "";
 
   private messageCounter: number = 0;
+  private debugLatencyConfig = {
+    sendLatencyMs: 0,
+    receiveLatencyMs: 0
+  };
+  private pendingSendTimers: Set<number> = new Set();
+  private pendingReceiveTimers: Set<number> = new Set();
+  private pendingInGameResponses: InGameResponse[] = [];
+
+  private trace(message: string, details?: unknown) {
+    if (details !== undefined) {
+      console.log(`[BackendWS] ${message}`, details);
+      return;
+    }
+    console.log(`[BackendWS] ${message}`);
+  }
 
   setQueue(receiveQueue: QueueReceive, sendQueue: QueueSend) {
     this.receiveQueue = receiveQueue;
     this.sendQueue = sendQueue;
+    this.trace("setQueue bound", {
+      pendingInGameResponses: this.pendingInGameResponses.length
+    });
+    this.flushPendingInGameResponses();
   }
 
   getReceiveQueue() {
     return this.receiveQueue;
+  }
+
+  enqueuePendingInGameResponse(response: InGameResponse) {
+    this.pendingInGameResponses.push(response);
+    this.trace("buffered ingame response before queue binding", {
+      frameId: response.frameId,
+      bufferedCount: this.pendingInGameResponses.length
+    });
+    this.flushPendingInGameResponses();
+  }
+
+  getDebugLatencyConfig() {
+    return { ...this.debugLatencyConfig };
+  }
+
+  setDebugSendLatencyMs(latencyMs: number) {
+    this.debugLatencyConfig.sendLatencyMs = Math.max(0, Math.floor(latencyMs));
+  }
+
+  setDebugReceiveLatencyMs(latencyMs: number) {
+    this.debugLatencyConfig.receiveLatencyMs = Math.max(0, Math.floor(latencyMs));
   }
 
   isLord() {
@@ -46,6 +87,7 @@ class WebSocketClient {
 
   public ResetGameData() {
     onlineStateManager.resetGameData();
+    this.pendingInGameResponses = [];
     if (this.receiveQueue) {
       this.receiveQueue.currentFrameId = 0;
       this.receiveQueue.lastAckFrameId = 0;
@@ -53,16 +95,20 @@ class WebSocketClient {
   }
 
   private dispatchMockPackets(packets: MockPacket[]) {
+    this.trace("dispatchMockPackets", {
+      packetCount: packets.length,
+      channels: packets.map(packet => packet.channel)
+    });
     for (const packet of packets) {
       switch (packet.channel) {
         case 'lobby':
-          this.handlers.handleLobbyResponse(packet.data);
+          this.scheduleIncomingPacket(() => this.handlers.handleLobbyResponse(packet.data));
           break;
         case 'room':
-          this.handlers.handleRoomResponse(packet.data);
+          this.scheduleIncomingPacket(() => this.handlers.handleRoomResponse(packet.data));
           break;
         case 'ingame':
-          this.handlers.handleInGameResponse(packet.data);
+          this.scheduleIncomingPacket(() => this.handlers.handleInGameResponse(packet.data));
           break;
         default:
           break;
@@ -70,10 +116,75 @@ class WebSocketClient {
     }
   }
 
+  private trackTimer(timerSet: Set<number>, callback: () => void, delayMs: number) {
+    const timerId = window.setTimeout(() => {
+      timerSet.delete(timerId);
+      callback();
+    }, delayMs);
+    timerSet.add(timerId);
+  }
+
+  private scheduleIncomingPacket(handler: () => void) {
+    const delayMs = this.debugLatencyConfig.receiveLatencyMs;
+    if (delayMs <= 0) {
+      handler();
+      return;
+    }
+    this.trace("schedule incoming packet", { delayMs });
+    this.trackTimer(this.pendingReceiveTimers, handler, delayMs);
+  }
+
+  private clearPendingTimers() {
+    for (const timerId of this.pendingSendTimers) {
+      window.clearTimeout(timerId);
+    }
+    this.pendingSendTimers.clear();
+
+    for (const timerId of this.pendingReceiveTimers) {
+      window.clearTimeout(timerId);
+    }
+    this.pendingReceiveTimers.clear();
+  }
+
+  private flushPendingInGameResponses() {
+    if (!this.receiveQueue || this.pendingInGameResponses.length === 0) {
+      return;
+    }
+    this.trace("flush pending ingame responses", {
+      count: this.pendingInGameResponses.length
+    });
+    for (const response of this.pendingInGameResponses) {
+      this.receiveQueue.handleInGameResponse(response);
+    }
+    this.pendingInGameResponses = [];
+  }
+
+  private dispatchBinaryMessage(message: Uint8Array<ArrayBufferLike>) {
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+      this.trace("send binary via websocket", {
+        byteLength: message.byteLength
+      });
+      this.ws.send(message.buffer as ArrayBuffer);
+      return;
+    }
+
+    if (this.mockRoomMode && mockServer.isActive()) {
+      this.trace("send binary to mock server", {
+        byteLength: message.byteLength
+      });
+      const packets = mockServer.handleMessage(message);
+      this.dispatchMockPackets(packets);
+      return;
+    }
+
+    console.error("No active transport. Cannot send message.");
+  }
+
   public startSinglePlayerRoom() {
     if (this.mockRoomMode) {
       return;
     }
+    this.trace("startSinglePlayerRoom");
     this.ResetGameData();
     this.mockRoomMode = true;
     this.dispatchMockPackets(mockServer.startSingleRoom());
@@ -83,6 +194,7 @@ class WebSocketClient {
     if (!this.mockRoomMode) {
       return;
     }
+    this.clearPendingTimers();
     this.mockRoomMode = false;
     mockServer.stop();
     this.ResetGameData();
@@ -120,31 +232,33 @@ class WebSocketClient {
       }
 
       const data = new Uint8Array(event.data);
-      try {
-        if (!onlineStateManager.getIsOnlineMode()) {
-          this.handlers.handleLobbyResponse(data);
-        } else {
-          switch (onlineStateManager.getCurrentGameStage()) {
-            case EnumGameStage.InLobby:
-            case EnumGameStage.Preparing:
-            case EnumGameStage.Loading:
-              this.handlers.handleRoomResponse(data);
-              break;
-            case EnumGameStage.InGame:
-              this.handlers.handleInGameResponse(data);
-              break;
-            case EnumGameStage.PostGame:
-              break;
-            default:
-              console.error("Unknown game stage:", onlineStateManager.getCurrentGameStage());
-              break;
+      this.scheduleIncomingPacket(() => {
+        try {
+          if (!onlineStateManager.getIsOnlineMode()) {
+            this.handlers.handleLobbyResponse(data);
+          } else {
+            switch (onlineStateManager.getCurrentGameStage()) {
+              case EnumGameStage.InLobby:
+              case EnumGameStage.Preparing:
+              case EnumGameStage.Loading:
+                this.handlers.handleRoomResponse(data);
+                break;
+              case EnumGameStage.InGame:
+                this.handlers.handleInGameResponse(data);
+                break;
+              case EnumGameStage.PostGame:
+                break;
+              default:
+                console.error("Unknown game stage:", onlineStateManager.getCurrentGameStage());
+                break;
+            }
           }
+        } catch (e) {
+          console.error("Failed to parse Protobuf message:", e);
+          alert("发生错误,请检查网络或服务器: " + (e instanceof Error ? e.message : String(e)));
+          this.closeConnection();
         }
-      } catch (e) {
-        console.error("Failed to parse Protobuf message:", e);
-        alert("发生错误,请检查网络或服务器: " + (e instanceof Error ? e.message : String(e)));
-        this.closeConnection();
-      }
+      });
     };
 
     this.ws.onerror = (error: Event) => {
@@ -152,6 +266,8 @@ class WebSocketClient {
     };
 
     this.ws.onclose = (event: CloseEvent) => {
+      this.clearPendingTimers();
+      this.ws = null;
       console.log("WebSocket connection closed:", {
         code: event.code,
         reason: event.reason,
@@ -183,18 +299,19 @@ class WebSocketClient {
   }
 
   send(message: Uint8Array<ArrayBufferLike>) {
-    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-      this.ws.send(message.buffer as ArrayBuffer);
+    const sendNow = () => this.dispatchBinaryMessage(message);
+
+    const delayMs = this.debugLatencyConfig.sendLatencyMs;
+    if (delayMs <= 0) {
+      sendNow();
       return;
     }
 
-    if (this.mockRoomMode && mockServer.isActive()) {
-      const packets = mockServer.handleMessage(message);
-      this.dispatchMockPackets(packets);
-      return;
-    }
-
-    console.error("No active transport. Cannot send message.");
+    this.trace("schedule outgoing message", {
+      delayMs,
+      byteLength: message.byteLength
+    });
+    this.trackTimer(this.pendingSendTimers, sendNow, delayMs);
   }
 
   consumeSendQueue() {
@@ -216,6 +333,8 @@ class WebSocketClient {
   }
 
   closeConnection() {
+    this.clearPendingTimers();
+
     if (this.mockRoomMode) {
       this.closeMockRoom();
       return;
@@ -234,6 +353,7 @@ class WebSocketClient {
   disconnectQueues() {
     this.receiveQueue = null;
     this.sendQueue = null;
+    this.pendingInGameResponses = [];
   }
 
   hasConnected() {

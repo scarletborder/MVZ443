@@ -11,7 +11,7 @@ import { SendEndGame } from "../../utils/net/room";
 import { DeferredManager } from "./DeferredManager";
 import { onlineStateManager } from "../../store/OnlineStateManager";
 import { RoomAllReadyEvent } from "../../types/online";
-import { HasConnected } from "../../utils/net/sync";
+import BackendWS, { HasConnected } from "../../utils/net/sync";
 import CardpileManager from "./combat/CardpileManager";
 
 export type CombatStatus = {
@@ -96,6 +96,9 @@ export default class CombatManager extends BaseManager {
     PhaserEventBus.off(PhaserEvents.RoomGameEnd, this.handleRoomGameEnd, this);
     PhaserEventBus.off(PhaserEvents.RoomAllReady, this.handleRoomAllReady, this);
 
+    if (this.scene) {
+      this.scene.time.timeScale = 1;
+    }
     this.scene = null;
     this.params = null;
     this.seed = 0;
@@ -116,8 +119,12 @@ export default class CombatManager extends BaseManager {
   }
 
   private handleTogglePause() {
+    if (BackendWS.isOnlineMode()) return;
     if (this.isGameEnd) return;
     this._isPaused = !this._isPaused;
+    if (this._isPaused) {
+      this.elapsedFrameTime = 0;
+    }
     if (this._isPaused) {
       this.Eventbus.emit("onCombatPause");
     } else if (!this._isPaused) {
@@ -132,6 +139,10 @@ export default class CombatManager extends BaseManager {
       console.error("No stage data found for the game start event.");
       return;
     }
+    if (this.scene) {
+      this.scene.time.timeScale = 1;
+    }
+    this.elapsedFrameTime = 0;
     this.isPaused = false;
     this.isGameEnd = false;
   }
@@ -160,12 +171,21 @@ export default class CombatManager extends BaseManager {
   }
 
   public update(time: number, delta: number) {
+    if (this.isPaused) {
+      this.elapsedFrameTime = 0;
+      return;
+    }
+
     // 物理与逻辑推进只依赖 update 的 delta，这里用 GameScene 的时钟倍率驱动时间流速。
     const timeScale = this.scene?.time?.timeScale ?? 1;
     this.elapsedFrameTime += delta * timeScale;
 
     // Fixed-step physics update.
     while (this.elapsedFrameTime >= SyncManager.Instance.FrameInterval) {
+      // 在进入下一次 Rapier step 前再执行延迟创建/销毁，
+      // 避免在 world.step / bodies.forEach 相关借用期间修改物理世界。
+      DeferredManager.Instance.flush();
+
       const frameReady = SyncManager.Instance.update();
 
       if (!frameReady) {
@@ -200,13 +220,6 @@ export default class CombatManager extends BaseManager {
         });
       }
 
-      // Post-update systems.
-      DeferredManager.Instance.flush();
-
-      // Store snapshots only while running.
-      if (!this.isPaused) {
-        SyncManager.Instance.DumpFrame(SyncManager.Instance.GetFrameID());
-      }
     }
 
     if (!this.isPaused) {

@@ -22,19 +22,16 @@ export default class QueueReceive {
   currentFrameId: number = 0;
   lastAckFrameId: number = 0;
 
-  backupOperations: Map<number, InGameOperation[]> = new Map<number, InGameOperation[]>();
   consumedResponseFrames: Set<number> = new Set<number>();
   bufferedResponses: Map<number, InGameResponse> = new Map<number, InGameResponse>();
 
   constructor() {
     this.queues = new Denque();
-    this.backupOperations = new Map();
     this.InGameEventBus = new EventBus<InGameEvent>();
   }
 
   Reset() {
     this.queues.clear();
-    this.backupOperations.clear();
     this.bufferedResponses.clear();
     this.currentFrameId = 0;
     this.lastAckFrameId = 0;
@@ -42,6 +39,14 @@ export default class QueueReceive {
   }
 
   handleInGameResponse(response: InGameResponse) {
+    console.log("[QueueReceive] enqueue response", {
+      frameId: response.frameId,
+      operationCount: response.operations.length,
+      queueLengthBefore: this.queues.length,
+      bufferedCount: this.bufferedResponses.size,
+      currentFrameId: this.currentFrameId,
+      lastAckFrameId: this.lastAckFrameId
+    });
     this.queues.push(response);
   }
 
@@ -118,6 +123,11 @@ export default class QueueReceive {
         continue;
       }
       if (response.frameId <= this.lastAckFrameId || this.consumedResponseFrames.has(response.frameId)) {
+        console.log("[QueueReceive] drop stale response", {
+          frameId: response.frameId,
+          lastAckFrameId: this.lastAckFrameId,
+          alreadyConsumed: this.consumedResponseFrames.has(response.frameId)
+        });
         continue;
       }
       this.bufferedResponses.set(response.frameId, response);
@@ -126,7 +136,12 @@ export default class QueueReceive {
     const nextFrameID = this.currentFrameId + 1;
     const response = this.bufferedResponses.get(nextFrameID);
     if (!response) {
-      BackendWS.sendBlankFrame(nextFrameID);
+      console.log("[QueueReceive] waiting for next frame", {
+        nextFrameID,
+        currentFrameId: this.currentFrameId,
+        lastAckFrameId: this.lastAckFrameId,
+        bufferedFrameIds: [...this.bufferedResponses.keys()].slice(0, 10)
+      });
       return false;
     }
 
@@ -139,13 +154,6 @@ export default class QueueReceive {
       }
       return a.operationIndex - b.operationIndex;
     });
-
-    this.backupOperations.set(nextFrameID, operations);
-    for (const frameId of this.backupOperations.keys()) {
-      if (frameId < this.lastAckFrameId || frameId < nextFrameID - this.backupRetainFrames) {
-        this.backupOperations.delete(frameId);
-      }
-    }
 
     for (const operation of operations) {
       if (operation.processFrameId !== nextFrameID) {
@@ -161,7 +169,12 @@ export default class QueueReceive {
 
     this.currentFrameId = nextFrameID;
     this.lastAckFrameId = nextFrameID;
-    BackendWS.sendBlankFrame(nextFrameID + 1);
+    console.log("[QueueReceive] consumed frame", {
+      frameId: nextFrameID,
+      operationCount: operations.length,
+      bufferedRemaining: this.bufferedResponses.size
+    });
+    BackendWS.sendBlankFrame(nextFrameID);
     return true;
   }
 }
