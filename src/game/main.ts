@@ -14,6 +14,8 @@ const config: Phaser.Types.Core.GameConfig = {
   type: AUTO,
   width: LOGICAL_GAME_WIDTH,
   height: LOGICAL_GAME_HEIGHT,
+
+  autoRound: true,
   fps: {
     target: 60,
   },

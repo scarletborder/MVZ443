@@ -2,41 +2,56 @@ import DepthUtils from "../../utils/depth";
 import CombatManager from "../managers/CombatManager";
 import { Game } from "../scenes/Game";
 
+type PauseMenuShowOptions = {
+  bluePrintMode?: boolean;
+};
+
 export class PauseMenu {
   private game: Game;
   private pauseText: Phaser.GameObjects.Text;
   private menuBackground: Phaser.GameObjects.Graphics;
   private menuContainer: Phaser.GameObjects.Container;
+  private bluePrintPauseText: Phaser.GameObjects.Text;
   private isVisible: boolean = false;
+  private isBluePrintMode: boolean = false;
 
   constructor(game: Game) {
     this.game = game;
     this.createMenu();
+    this.createBluePrintPauseText();
   }
 
   private createMenu() {
-    // 创建容器来管理所有暂停菜单元素
     this.menuContainer = this.game.add.container(0, 0);
     this.menuContainer.setDepth(DepthUtils.getPauseMenuDepth());
     this.menuContainer.setVisible(false);
 
-
-    // 创建半透明背景遮罩
     const overlay = this.game.add.graphics();
     overlay.fillStyle(0x000000, 0.6);
     overlay.fillRect(0, 0, this.game.cameras.main.width, this.game.cameras.main.height);
     this.menuContainer.add(overlay);
 
-    // 计算菜单位置 - 从上往下15%开始
     const centerX = this.game.cameras.main.width / 2;
     const startY = this.game.cameras.main.height * 0.15;
     const menuWidth = Math.min(this.game.scale.displaySize.width * 0.6, 400);
     const menuHeight = Math.min(this.game.scale.displaySize.height * 0.5, 300);
 
-    // 创建菜单背景 - 带圆角和渐变效果
-    this.menuBackground = this.game.add.graphics();
+    const buttonFontSize = Math.min(this.game.scale.displaySize.width / 25, 24);
+    const buttonPaddingY = 10;
+    const continueButtonHeightH = buttonFontSize + buttonPaddingY * 2;
+    const exitButtonHeightH = continueButtonHeightH;
 
-    // 绘制带圆角的矩形背景
+    const continueButtonTopY = startY + menuHeight * 0.49;
+    const continueToExitButtonGap = menuHeight * 0.06;
+    const continueButtonBottomY = continueButtonTopY + continueButtonHeightH;
+    const exitButtonTopY = continueButtonBottomY + continueToExitButtonGap;
+
+    const pauseIconWidth = this.game.scale.displaySize.width / 40;
+    const pauseIconHeight = pauseIconWidth * 1.4;
+    const pauseIconToContinueButtonGap = menuHeight * 0.06;
+    const pauseIconTopY = continueButtonTopY - pauseIconToContinueButtonGap - pauseIconHeight;
+
+    this.menuBackground = this.game.add.graphics();
     this.menuBackground.fillStyle(0x2c3e50, 0.95);
     this.menuBackground.fillRoundedRect(
       centerX - menuWidth / 2,
@@ -46,7 +61,6 @@ export class PauseMenu {
       20
     );
 
-    // 添加边框
     this.menuBackground.lineStyle(4, 0xecf0f1, 1);
     this.menuBackground.strokeRoundedRect(
       centerX - menuWidth / 2,
@@ -56,7 +70,6 @@ export class PauseMenu {
       20
     );
 
-    // 添加装饰性渐变条
     this.menuBackground.fillGradientStyle(0xe74c3c, 0xc0392b, 0xe74c3c, 0xc0392b, 1);
     this.menuBackground.fillRoundedRect(
       centerX - menuWidth / 2 + 10,
@@ -68,50 +81,70 @@ export class PauseMenu {
 
     this.menuContainer.add(this.menuBackground);
 
-    // 创建"游戏已暂停"标题
     this.pauseText = this.game.add.text(
       centerX,
       startY + menuHeight * 0.2,
-      '游戏已暂停',
+      "游戏已暂停",
       {
         fontSize: `${Math.min(this.game.scale.displaySize.width / 18, 32)}px`,
-        color: '#ecf0f1',
-        fontFamily: 'Arial, sans-serif',
-        fontStyle: 'bold',
-        align: 'center'
+        color: "#ecf0f1",
+        fontFamily: "Arial, sans-serif",
+        fontStyle: "bold",
+        align: "center",
       }
     ).setOrigin(0.5);
 
-    // 添加文字阴影效果
-    this.pauseText.setShadow(2, 2, '#2c3e50', 4);
+    this.pauseText.setShadow(2, 2, "#2c3e50", 4);
     this.menuContainer.add(this.pauseText);
 
-    // 创建继续游戏按钮
     this.createButton(
       centerX,
-      startY + menuHeight * 0.45,
-      '继续游戏',
-      '#27ae60',
-      '#2ecc71',
+      continueButtonTopY + continueButtonHeightH / 2,
+      "继续游戏",
+      "#27ae60",
+      "#2ecc71",
+      buttonFontSize,
+      buttonPaddingY,
       () => {
         CombatManager.Instance.isPaused = false;
       }
     );
 
-    // 创建退出游戏按钮
     this.createButton(
       centerX,
-      startY + menuHeight * 0.7,
-      '退出游戏',
-      '#e74c3c',
-      '#c0392b',
+      exitButtonTopY + exitButtonHeightH / 2,
+      "退出游戏",
+      "#e74c3c",
+      "#c0392b",
+      buttonFontSize,
+      buttonPaddingY,
       () => {
         CombatManager.Instance.EndGame(false);
       }
     );
 
-    // 添加一个装饰性图标或动画（可选）
-    this.addDecorativeElements(centerX, startY + menuHeight * 0.32);
+    this.addDecorativeElements(centerX, pauseIconTopY, pauseIconWidth, pauseIconHeight);
+  }
+
+  private createBluePrintPauseText() {
+    this.bluePrintPauseText = this.game.add.text(
+      this.game.cameras.main.width / 2,
+      this.game.cameras.main.height * 0.18,
+      "游戏已暂停",
+      {
+        fontSize: `${Math.min(this.game.scale.displaySize.width / 18, 30)}px`,
+        color: "#f4f7fb",
+        fontFamily: "Arial, sans-serif",
+        fontStyle: "bold",
+        align: "center",
+      }
+    ).setOrigin(0.5);
+
+    this.bluePrintPauseText
+      .setDepth(DepthUtils.getPauseMenuDepth())
+      .setAlpha(0.45)
+      .setVisible(false)
+      .setShadow(2, 2, "#1f2937", 6);
   }
 
   private createButton(
@@ -120,26 +153,24 @@ export class PauseMenu {
     text: string,
     normalColor: string,
     hoverColor: string,
+    fontSize: number,
+    paddingY: number,
     onClick: () => void
   ): Phaser.GameObjects.Text {
     const button = this.game.add.text(x, y, text, {
-      fontSize: `${Math.min(this.game.scale.displaySize.width / 25, 24)}px`,
-      color: '#ffffff',
-      fontFamily: 'Arial, sans-serif',
-      fontStyle: 'bold',
-      align: 'center',
+      fontSize: `${fontSize}px`,
+      color: "#ffffff",
+      fontFamily: "Arial, sans-serif",
+      fontStyle: "bold",
+      align: "center",
       backgroundColor: normalColor,
-      padding: { x: 20, y: 10 }
+      padding: { x: 20, y: paddingY },
     }).setOrigin(0.5);
 
-    // 添加按钮样式
-    button.setShadow(2, 2, '#2c3e50', 3);
-
-    // 设置交互效果
+    button.setShadow(2, 2, "#2c3e50", 3);
     button.setInteractive({ useHandCursor: true });
 
-    // 鼠标悬停效果
-    button.on('pointerover', () => {
+    button.on("pointerover", () => {
       button.setStyle({ backgroundColor: hoverColor });
       button.setScale(1.05);
       this.game.tweens.add({
@@ -147,27 +178,26 @@ export class PauseMenu {
         scaleX: 1.05,
         scaleY: 1.05,
         duration: 100,
-        ease: 'Power2'
+        ease: "Power2",
       });
     });
 
-    button.on('pointerout', () => {
+    button.on("pointerout", () => {
       button.setStyle({ backgroundColor: normalColor });
       this.game.tweens.add({
         targets: button,
         scaleX: 1,
         scaleY: 1,
         duration: 100,
-        ease: 'Power2'
+        ease: "Power2",
       });
     });
 
-    // 点击效果
-    button.on('pointerdown', () => {
+    button.on("pointerdown", () => {
       button.setScale(0.95);
     });
 
-    button.on('pointerup', () => {
+    button.on("pointerup", () => {
       button.setScale(1.05);
       onClick();
     });
@@ -176,65 +206,97 @@ export class PauseMenu {
     return button;
   }
 
-  private addDecorativeElements(centerX: number, centerY: number) {
-    // 添加暂停图标（两个竖线）
+  private addDecorativeElements(
+    centerX: number,
+    pauseIconTopY: number,
+    pauseIconWidth: number,
+    pauseIconHeight: number
+  ) {
     const pauseIcon = this.game.add.graphics();
     pauseIcon.fillStyle(0xecf0f1, 0.8);
 
-    const iconSize = Math.min(this.game.scale.displaySize.width / 40, 20);
-    // 左竖线
-    pauseIcon.fillRect(centerX - iconSize * 0.6, centerY - iconSize * 0.5, iconSize * 0.3, iconSize);
-    // 右竖线
-    pauseIcon.fillRect(centerX + iconSize * 0.3, centerY - iconSize * 0.5, iconSize * 0.3, iconSize);
+    pauseIcon.fillRect(
+      centerX - pauseIconWidth * 0.6,
+      pauseIconTopY,
+      pauseIconWidth * 0.3,
+      pauseIconHeight
+    );
+    pauseIcon.fillRect(
+      centerX + pauseIconWidth * 0.3,
+      pauseIconTopY,
+      pauseIconWidth * 0.3,
+      pauseIconHeight
+    );
 
     this.menuContainer.add(pauseIcon);
 
-    // 添加呼吸动画效果
     this.game.tweens.add({
       targets: pauseIcon,
       alpha: 0.5,
       duration: 1000,
       yoyo: true,
       repeat: -1,
-      ease: 'Sine.easeInOut'
+      ease: "Sine.easeInOut",
     });
   }
 
-  public show() {
-    // 强制设置一个极高的深度，确保在所有其他元素之上
+  public show(options: PauseMenuShowOptions = {}) {
+    const { bluePrintMode = false } = options;
+
+    this.isVisible = true;
+    this.isBluePrintMode = bluePrintMode;
+
     this.menuContainer.setDepth(DepthUtils.getPauseMenuDepth());
-    if (!this.isVisible) {
-      this.isVisible = true;
-      this.menuContainer.setVisible(true);
-      this.menuContainer.setAlpha(1);
-      this.menuContainer.setScale(1);
+    this.bluePrintPauseText.setDepth(DepthUtils.getPauseMenuDepth());
+
+    if (bluePrintMode) {
+      this.menuContainer.setVisible(false);
+      this.bluePrintPauseText.setVisible(true);
+      return;
     }
+
+    this.bluePrintPauseText.setVisible(false);
+    this.menuContainer.setVisible(true);
+    this.menuContainer.setAlpha(1);
+    this.menuContainer.setScale(1);
   }
 
   public hide() {
-    if (this.isVisible) {
-      this.isVisible = false;
+    this.bluePrintPauseText.setVisible(false);
 
-      // 添加退场动画
-      this.game.tweens.add({
-        targets: this.menuContainer,
-        alpha: 0,
-        scaleX: 0.8,
-        scaleY: 0.8,
-        duration: 200,
-        ease: 'Back.easeIn',
-        onComplete: () => {
-          this.menuContainer.setVisible(false);
-        }
-      });
+    if (!this.isVisible) {
+      return;
     }
+
+    this.isVisible = false;
+    this.isBluePrintMode = false;
+
+    if (!this.menuContainer.visible) {
+      return;
+    }
+
+    this.game.tweens.add({
+      targets: this.menuContainer,
+      alpha: 0,
+      scaleX: 0.8,
+      scaleY: 0.8,
+      duration: 200,
+      ease: "Back.easeIn",
+      onComplete: () => {
+        this.menuContainer.setVisible(false);
+        this.menuContainer.setAlpha(1);
+        this.menuContainer.setScale(1);
+      },
+    });
+  }
+
+  public isBlockingInput(): boolean {
+    return this.isVisible && !this.isBluePrintMode;
   }
 
   public destroy() {
-    // 销毁所有相关对象
-    if (this.menuContainer) {
-      this.menuContainer.destroy();
-    }
+    this.menuContainer?.destroy();
+    this.bluePrintPauseText?.destroy();
   }
 
   public getIsVisible(): boolean {

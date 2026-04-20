@@ -236,11 +236,13 @@ export class Game extends Scene {
 
     if (paused) {
       this.pauseGameScene();
-      pauseMenu.show();
+      pauseMenu.show({ bluePrintMode: this.innerSettings.isBluePrint });
     } else {
       this.resumeGameScene();
       pauseMenu.hide();
     }
+
+    (this as any).refreshInnerMenuButtons?.();
   }
 
   // 停止game scene
@@ -298,15 +300,17 @@ export class Game extends Scene {
   }
 
   // game->app 通知游戏的速率变化
-  handleSpeedUp() {
+  handleSpeedUp(): boolean {
     // 多人游戏无效
-    if (HasConnected()) return;
+    if (HasConnected() || CombatManager.Instance.isPaused) return false;
     const newTimeFlow = this.time.timeScale === 1 ? 2 : 1; // 切换速率
     this.time.timeScale = newTimeFlow; // 设置新的游戏速率
     // Deprecated: 现在物理由frame驱动,精准地控制了时间
     // const newPhysicsTimeFlow = this.physics.world.timeScale === 1 ? 0.5 : 1; // 切换物理速率
     // this.physics.world.timeScale = newPhysicsTimeFlow; // 设置新的物理速率
     this.speedText.setText(newTimeFlow + '速');
+    (this as any).refreshInnerMenuButtons?.();
+    return true;
   }
 
   handleCollision(handle1: number, handle2: number) {

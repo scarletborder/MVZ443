@@ -9,6 +9,8 @@ import { PositionManager } from "../view/PositionManager";
 import GridManager from "./GridManager";
 import MobManager from "./MobManager";
 import PlantsManager from "./PlantsManager";
+import ResourceManager from "./ResourceManager";
+import TickerManager from "./TickerManager";
 
 /**
  * 预设事件管理器
@@ -78,6 +80,17 @@ export class PresetEventManager extends BaseManager {
     this.scene = null;
   }
 
+  // 自动产能设置
+  private setAutoGenerateEnergy(startAtMs: number, intervalMs: number, delta: number) {
+    TickerManager.Instance.addEvent({
+      delay: intervalMs,
+      loop: true,
+      startAt: startAtMs,
+      callback: () => {
+        ResourceManager.Instance.UpdateEnergy(+delta, 'all');
+      }
+    })
+  }
 
   Chapter1Dispatch(game: Game, stageId: number) {
     // 第一章的
