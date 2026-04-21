@@ -59,12 +59,12 @@ export default class CombatManager extends BaseManager {
     if (this._isPaused === value) {
       return;
     }
+    this._isPaused = value;
     if (value) {
       this.Eventbus.emit("onCombatPause");
     } else {
       this.Eventbus.emit("onCombatResume");
     }
-    this._isPaused = value;
   }
 
   Load(): void {
@@ -143,8 +143,8 @@ export default class CombatManager extends BaseManager {
       this.scene.time.timeScale = 1;
     }
     this.elapsedFrameTime = 0;
-    this.isPaused = false;
     this.isGameEnd = false;
+    this.isPaused = false;
   }
 
   private handleRoomGameEnd({ isWin }: { isWin: boolean }) {

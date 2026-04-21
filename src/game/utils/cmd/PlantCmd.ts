@@ -47,7 +47,15 @@ export namespace PlantCmd {
    */
   export function SetHealth(plant: PlantEntity, newHealth: number) {
     DeferredManager.Instance.defer(() => {
-      plant.currentHealth = newHealth;
+      const nextHealth = Math.max(0, newHealth);
+      if (plant.currentHealth <= 0) {
+        return;
+      }
+
+      plant.currentHealth = nextHealth;
+      if (nextHealth <= 0) {
+        plant.die();
+      }
     });
   }
 

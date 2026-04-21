@@ -94,6 +94,7 @@ export default class PlantsManager extends BaseManager {
   // 种植植物
   PlantCard = (playerId: PlayerIdentify, pid: number, level: number, col: number, row: number) => {
     if (!this.scene) return;
+    const isGiftPlant = playerId === 9961;
     // 种植
     const model = PlantLibrary.GetModel(pid);
     if (!model) {
@@ -102,12 +103,12 @@ export default class PlantsManager extends BaseManager {
     }
 
     // 如果playerId为我，cardpile是否有这张牌，以及是否正在冷却
-    if (playerId === ResourceManager.Instance.mineId) {
+    if (!isGiftPlant && playerId === ResourceManager.Instance.mineId) {
       if (!CardpileManager.Instance.isCardActuallyReloaded(pid)) return;
     }
 
     const cost = model.cost.getValueAt(level);
-    if (!ResourceManager.Instance.ActualEnergySufficient(cost, playerId)) {
+    if (!isGiftPlant && !ResourceManager.Instance.ActualEnergySufficient(cost, playerId)) {
       if (playerId === ResourceManager.Instance.mineId) {
         this.EventBus.emit('onEnergyInsufficient');
       }
@@ -124,8 +125,10 @@ export default class PlantsManager extends BaseManager {
     if (!PlantHelper.CanPlantInGrid(existedPlants, pid, targetGridProperty)) return;
 
     // 扣除资源，冷却等
-    ResourceManager.Instance.UpdateEnergy(-cost, playerId);
-    if (playerId === ResourceManager.Instance.mineId) {
+    if (!isGiftPlant) {
+      ResourceManager.Instance.UpdateEnergy(-cost, playerId);
+    }
+    if (!isGiftPlant && playerId === ResourceManager.Instance.mineId) {
       CardpileManager.Instance.reloadCard(pid);
     }
 

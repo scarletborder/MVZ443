@@ -277,6 +277,7 @@ export class Game extends Scene {
     if (BackendWS.isOnlineMode()) {
       return;
     }
+    this.setWaitTextVisibleTarget(false);
     const pauseMenu = (this as any).pauseMenu;
     if (!pauseMenu) {
       return;

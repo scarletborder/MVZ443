@@ -93,8 +93,14 @@ export class PresetEventManager extends BaseManager {
     })
   }
 
+  // 初始能量
   private setInitialEnergy(initialEnergy: number) {
     ResourceManager.Instance.UpdateEnergy(+initialEnergy, 'all');
+  }
+
+  // 生成一排推车
+  private spawnRowOfCarts() {
+    const rows = PositionManager.Instance.Row_Number;
   }
 
   Chapter1Dispatch(game: Game, stageId: number) {

@@ -12,6 +12,8 @@ import { Faction } from "../../../models/Enum";
 import { CollisionContext } from "../../../types";
 import CombatManager from "../../../managers/CombatManager";
 import { DeferredManager } from "../../../managers/DeferredManager";
+import { CombatEntity } from "../../../models/core/CombatEntity";
+import { MonsterEntity } from "../../../models/entities/MonsterEntity";
 
 export class TntMinesModel extends PlantModel {
   public override pid = 4;
@@ -177,7 +179,14 @@ export class TntMinesEntity extends PlantEntity {
   public override onCollision(ctx: CollisionContext): void {
     // 出土后与僵尸接触立即爆炸
     if (!this.isBuried && this.currentHealth > 0 && !this.hasExploded) {
-      this.explode();
+      if (ctx.targetEntity instanceof CombatEntity &&
+        ctx.targetEntity.faction !== this.faction
+      ) {
+        if (!(ctx.targetEntity instanceof MonsterEntity) ||
+          (ctx.targetEntity.isFlying === false && ctx.targetEntity.isInVoid === false)) {
+          this.explode();
+        }
+      }
     }
   }
 

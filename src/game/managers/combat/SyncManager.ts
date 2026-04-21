@@ -106,7 +106,7 @@ export default class SyncManager extends BaseManager {
       this.sendQueue.ensureBlankFrame(this.recvQueue.currentFrameId);
     }
     if (this.scene?.waitText) {
-      this.scene.setWaitTextVisibleTarget(BackendWS.isRoomSessionMode() && !frameReady && !CombatManager.Instance.isPaused);
+      this.scene.setWaitTextVisibleTarget(BackendWS.isOnlineMode() && !frameReady && !CombatManager.Instance.isPaused);
     }
     return frameReady;
   }

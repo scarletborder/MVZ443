@@ -63,7 +63,7 @@ export abstract class MonsterEntity extends CombatEntity {
     this.baseDepth = DepthUtils.getZombieBasicDepth(row, this.offsetY);
 
     this.health = model.maxHealth;
-    this.originalSpeed = model.baseSpeed * 0.9;
+    this.originalSpeed = model.baseSpeed;
     this.speed = this.originalSpeed;
     this.isFlying = model.isDefaultFlying;
     this.isInVoid = model.isDefaultInVoid;

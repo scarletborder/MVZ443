@@ -9,11 +9,10 @@ import { publicUrl } from "../../utils/browser";
 import { useSaveManager } from "../../context/save_ctx";
 import BackendWS from "../../utils/net/sync";
 import { useLocaleMessages } from "../../hooks/useLocaleMessages";
-import { useMemoizedFn, useLatest, useSetState } from "ahooks";
+import { useMemoizedFn } from "ahooks";
 import OnlineStatus from "../OnlineStatus";
 import CardpileManager from "../../game/managers/combat/CardpileManager";
-import CombatManager from "../../game/managers/CombatManager";
-import { ProgressMode, ProgressUpdateEvent } from "../../game/managers/combat/MobManager";
+import MobManager, { ProgressMode, ProgressUpdateEvent } from "../../game/managers/combat/MobManager";
 import ResourceManager from "../../game/managers/combat/ResourceManager";
 import PlantsManager from "../../game/managers/combat/PlantsManager";
 
@@ -27,7 +26,7 @@ export default function BottomTools({ width, chapterID }: Props) {
   const { translate } = useLocaleMessages();
   const starUri = `${publicUrl}/assets/sprite/star.png`;
 
-  const [progressState, setProgressState] = useSetState<ProgressUpdateEvent>({
+  const [progressState, setProgressState] = useState<ProgressUpdateEvent>({
     mode: ProgressMode.Normal,
     totalWaves: 99,
     currentWave: 0,
@@ -80,6 +79,43 @@ export default function BottomTools({ width, chapterID }: Props) {
       }
     };
   }, []);
+
+  useEffect(() => {
+    const offProgressUpdate = MobManager.Instance.EventBus.on('onProgressUpdate', (progress) => {
+      setProgressState(progress);
+    });
+
+    const handleBossHealth = ({ health }: { health: number }) => {
+      if (health < 0) {
+        return;
+      }
+      setProgressState({
+        mode: ProgressMode.Boss,
+        bossHealthPercent: Math.max(0, Math.min(1, health / 100)),
+      });
+    };
+
+    const handleBossDead = () => {
+      setProgressState(prev => {
+        if (prev.mode !== ProgressMode.Boss) {
+          return prev;
+        }
+        return {
+          mode: ProgressMode.Boss,
+          bossHealthPercent: 0,
+        };
+      });
+    };
+
+    PhaserEventBus.on(PhaserEvents.BossHealth, handleBossHealth);
+    PhaserEventBus.on(PhaserEvents.BossDead, handleBossDead);
+
+    return () => {
+      offProgressUpdate();
+      PhaserEventBus.off(PhaserEvents.BossHealth, handleBossHealth);
+      PhaserEventBus.off(PhaserEvents.BossDead, handleBossDead);
+    };
+  }, [setProgressState]);
 
   const handleStarClick = useMemoizedFn(() => {
     if (starShards <= 0) {
