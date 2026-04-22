@@ -9,6 +9,7 @@ import { StartArc } from "../../../utils/arc";
 import MobCmd from "../../../utils/cmd/MobCmd";
 import ObstacleCmd from "../../../utils/cmd/ObstacleCmd";
 import { PlantCmd } from "../../../utils/cmd/PlantCmd";
+import { MonsterSpeed } from "../../../../constants/game";
 import { ObsidianObstacleData } from "../../obstacle";
 import { BaseGolemEntity } from "./shared";
 
@@ -103,7 +104,7 @@ export const ObsidianGolemData = new PresetMonsterModel({
   leastWaveID: 0,
   rank: "elite",
   maxHealth: 12000,
-  baseSpeed: 25,
+  baseSpeed: MonsterSpeed.ObsidianGolem,
   attackDamage: 50,
   attackInterval: 1200,
   createEntity: (scene, col, row, model, waveID) => new ObsidianGolemEntity(scene, col, row, model, waveID),

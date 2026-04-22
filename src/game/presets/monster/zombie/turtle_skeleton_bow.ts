@@ -5,6 +5,7 @@ import { Faction } from "../../../models/Enum";
 import type { Game } from "../../../scenes/Game";
 import { PresetMonsterModel } from "../../../models/entities/MonsterEntity";
 import { BaseSkeletonBowEntity } from "../../../models/entities/BaseSkeletonBowEntity";
+import { MonsterSpeed, ZombieAttackInterval } from "../../../../constants/game";
 
 export class TurtleSkeletonBowEntity extends BaseSkeletonBowEntity {
   private shellHealth = 375;
@@ -65,7 +66,8 @@ export const TurtleSkeletonBowData = new PresetMonsterModel({
   leastWaveID: 10,
   leastWaveIDByStageID: (stageID) => stageID >= 6 ? 6 : 10,
   maxHealth: 250,
-  baseSpeed: 20,
+  baseSpeed: MonsterSpeed.TurtleSkeletonBow,
   attackDamage: 40,
+  attackInterval: ZombieAttackInterval.TurtleSkeletonBow,
   createEntity: (scene, col, row, model, waveID) => new TurtleSkeletonBowEntity(scene, col, row, model, waveID),
 });

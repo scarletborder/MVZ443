@@ -1,4 +1,5 @@
 import { BaseZombieArmorEntity, PresetMonsterModel } from "../../../models/entities/MonsterEntity";
+import { MonsterSpeed, ZombieAttackInterval } from "../../../../constants/game";
 
 
 export class TurtleZombieEntity extends BaseZombieArmorEntity {
@@ -32,7 +33,8 @@ export const TurtleZombieData = new PresetMonsterModel({
   weight: () => 1200,
   leastWaveID: 4,
   maxHealth: 300,
-  baseSpeed: 18,
+  baseSpeed: MonsterSpeed.TurtleZombie,
   attackDamage: 20,
+  attackInterval: ZombieAttackInterval.TurtleZombie,
   createEntity: (scene, col, row, model, waveID) => new TurtleZombieEntity(scene, col, row, model, waveID),
 });

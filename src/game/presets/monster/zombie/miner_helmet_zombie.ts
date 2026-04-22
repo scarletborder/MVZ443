@@ -1,5 +1,6 @@
 import { PresetMonsterModel, addHandAttachment } from "../../../models/entities/MonsterEntity";
 import type { Game } from "../../../scenes/Game";
+import { MonsterSpeed, ZombieAttackInterval } from "../../../../constants/game";
 import { HelmetZombieEntity } from "./helmet_zombie";
 
 export class MinerHelmetZombieEntity extends HelmetZombieEntity {
@@ -42,7 +43,8 @@ export const MinerHelmetZombieData = new PresetMonsterModel({
   weight: () => 2000,
   leastWaveID: 13,
   maxHealth: 300,
-  baseSpeed: 20,
+  baseSpeed: MonsterSpeed.MinerHelmetZombie,
   attackDamage: 60,
+  attackInterval: ZombieAttackInterval.MinerHelmetZombie,
   createEntity: (scene, col, row, model, waveID) => new MinerHelmetZombieEntity(scene, col, row, model, waveID),
 });

@@ -4,6 +4,7 @@ import { PlantEntity } from "../../../models/entities/PlantEntity";
 import { createMutantAnimController } from "../../../models/monster/anims/LegacyMonsterAnimControllers";
 import type { Game } from "../../../scenes/Game";
 import MobCmd from "../../../utils/cmd/MobCmd";
+import { MonsterSpeed } from "../../../../constants/game";
 
 const mutantProps = {
   Species: "default_mutant",
@@ -171,7 +172,7 @@ export const MutantData = new MutantModel({
   weight: () => 1500,
   leastWaveID: 15,
   maxHealth: 3000,
-  baseSpeed: 18,
+  baseSpeed: MonsterSpeed.Mutant,
   attackDamage: 5500,
   attackInterval: 1500,
   createEntity: (scene, col, row, model, waveID) => new MutantEntity(scene, col, row, model as MutantModel, waveID),

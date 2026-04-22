@@ -2,6 +2,7 @@ import { PresetMonsterModel, BaseZombieEntity } from "../../../models/entities/M
 import { createZombieAnimController } from "../../../models/monster/anims/LegacyMonsterAnimControllers";
 import type { Game } from "../../../scenes/Game";
 import MobCmd from "../../../utils/cmd/MobCmd";
+import { MonsterSpeed, ZombieAttackInterval } from "../../../../constants/game";
 import { VindicatorData } from "./vindicator";
 
 export const EvokerData = new PresetMonsterModel({
@@ -11,8 +12,9 @@ export const EvokerData = new PresetMonsterModel({
   weight: () => 1000,
   leastWaveID: 10,
   maxHealth: 400,
-  baseSpeed: 25,
+  baseSpeed: MonsterSpeed.Evoker,
   attackDamage: 20,
+  attackInterval: ZombieAttackInterval.Evoker,
   createEntity: (scene, col, row, model, waveID) => new EvokerEntity(scene, col, row, model, waveID),
 });
 

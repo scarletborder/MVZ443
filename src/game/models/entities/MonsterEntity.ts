@@ -166,7 +166,7 @@ export abstract class MonsterEntity extends CombatEntity {
     this.animController.startArmSwing();
 
     this.attackTimer = this.tickmanager.addEvent({
-      startAt: this.model.attackInterval * 0.9,
+      startAt: this.model.attackInterval,
       delay: this.model.attackInterval,
       callback: () => this.hurtTarget(),
       loop: true,

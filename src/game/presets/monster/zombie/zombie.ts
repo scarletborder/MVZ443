@@ -1,5 +1,6 @@
 import { BaseZombieEntity, PresetMonsterModel } from "../../../models/entities/MonsterEntity";
 import type { Game } from "../../../scenes/Game";
+import { MonsterSpeed, ZombieAttackInterval } from "../../../../constants/game";
 
 
 export class ZombieEntity extends BaseZombieEntity {
@@ -15,7 +16,8 @@ export const ZombieData = new PresetMonsterModel({
   weight: (waveID) => Math.max(400, 4000 - (waveID - 4) * 180),
   leastWaveID: 0,
   maxHealth: 300,
-  baseSpeed: 20,
+  baseSpeed: MonsterSpeed.Zombie,
   attackDamage: 20,
+  attackInterval: ZombieAttackInterval.Zombie,
   createEntity: (scene, col, row, model, waveID) => new ZombieEntity(scene, col, row, model, waveID),
 });

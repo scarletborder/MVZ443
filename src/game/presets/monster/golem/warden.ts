@@ -4,6 +4,7 @@ import { Faction } from "../../../models/Enum";
 import { WardenGolemAnimProps } from "../../../sprite/normal_golem";
 import MobCmd from "../../../utils/cmd/MobCmd";
 import { ProjectileCmd } from "../../../utils/cmd/ProjectileCmd";
+import { MonsterSpeed } from "../../../../constants/game";
 import { BaseGolemEntity } from "./shared";
 
 function createWardenLaser(entity: BaseGolemEntity) {
@@ -89,7 +90,7 @@ export const WardenData = new PresetMonsterModel({
   leastWaveID: 0,
   rank: "elite",
   maxHealth: 18000,
-  baseSpeed: 25,
+  baseSpeed: MonsterSpeed.Warden,
   attackDamage: 60,
   attackInterval: 1200,
   createEntity: (scene, col, row, model, waveID) => new WardenEntity(scene, col, row, model, waveID),

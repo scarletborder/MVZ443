@@ -1,6 +1,7 @@
 import type { Game } from "../../../scenes/Game";
 import { PositionManager } from "../../../managers/view/PositionManager";
 import { BaseZombieEntity, PresetMonsterModel, addHandAttachment } from "../../../models/entities/MonsterEntity";
+import { MonsterSpeed, ZombieAttackInterval } from "../../../../constants/game";
 
 
 export class StickZombieEntity extends BaseZombieEntity {
@@ -52,7 +53,8 @@ export const StickZombieData = new PresetMonsterModel({
   weight: () => 2000,
   leastWaveID: 9,
   maxHealth: 300,
-  baseSpeed: 40,
+  baseSpeed: MonsterSpeed.StickZombie,
   attackDamage: 30,
+  attackInterval: ZombieAttackInterval.StickZombie,
   createEntity: (scene, col, row, model, waveID) => new StickZombieEntity(scene, col, row, model, waveID),
 });

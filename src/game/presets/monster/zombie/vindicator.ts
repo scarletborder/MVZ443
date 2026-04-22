@@ -1,4 +1,5 @@
 import { BaseVindicatorEntity, PresetMonsterModel } from "../../../models/entities/MonsterEntity";
+import { MonsterSpeed, ZombieAttackInterval } from "../../../../constants/game";
 
 
 export class VindicatorEntity extends BaseVindicatorEntity { }
@@ -10,7 +11,8 @@ export const VindicatorData = new PresetMonsterModel({
   weight: () => 0,
   leastWaveID: 9999,
   maxHealth: 360,
-  baseSpeed: 30,
+  baseSpeed: MonsterSpeed.Vindicator,
   attackDamage: 32,
+  attackInterval: ZombieAttackInterval.Vindicator,
   createEntity: (scene, col, row, model, waveID) => new VindicatorEntity(scene, col, row, model, waveID),
 });

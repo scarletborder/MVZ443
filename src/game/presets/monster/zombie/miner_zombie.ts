@@ -1,5 +1,6 @@
 import { BaseZombieEntity, PresetMonsterModel, addHandAttachment } from "../../../models/entities/MonsterEntity";
 import type { Game } from "../../../scenes/Game";
+import { MonsterSpeed, ZombieAttackInterval } from "../../../../constants/game";
 
 export class MinerZombieEntity extends BaseZombieEntity {
   private swingTween: Phaser.Tweens.Tween | null = null;
@@ -41,7 +42,8 @@ export const MinerZombieData = new PresetMonsterModel({
   weight: () => 2500,
   leastWaveID: 2,
   maxHealth: 300,
-  baseSpeed: 20,
+  baseSpeed: MonsterSpeed.MinerZombie,
   attackDamage: 60,
+  attackInterval: ZombieAttackInterval.MinerZombie,
   createEntity: (scene, col, row, model, waveID) => new MinerZombieEntity(scene, col, row, model, waveID),
 });
