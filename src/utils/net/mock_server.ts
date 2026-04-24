@@ -32,6 +32,14 @@ interface FrameSubmission {
   operationSignatures: Set<string>;
 }
 
+const inGameOperationTypePriority: Record<string, number> = {
+  removePlant: 0,
+  useStarShards: 1,
+  cardPlant: 2,
+  gameEvent: 3,
+  error: 4
+};
+
 class MockServer {
   private readonly clientTimeoutMs: number = 15000;
   private readonly maxResendPerPull: number = 32;
@@ -309,7 +317,7 @@ class MockServer {
         return;
       }
       existingFrame.operations.push(operation);
-      existingFrame.operations.sort((a, b) => a.operationIndex - b.operationIndex);
+      existingFrame.operations.sort((a, b) => this.compareInGameOperations(a, b));
       this.frameHistory.set(frameId, existingFrame);
       this.trace("recordSubmission appended to existing frameHistory", {
         frameId,
@@ -360,7 +368,7 @@ class MockServer {
       const frameId = this.serverFrameId + 1;
       const scheduled = this.scheduledFrames.get(frameId);
       const operations = scheduled
-        ? [...scheduled.operations].sort((a, b) => a.operationIndex - b.operationIndex)
+        ? [...scheduled.operations].sort((a, b) => this.compareInGameOperations(a, b))
         : [];
       this.serverFrameId = frameId;
       this.frameHistory.set(frameId, {
@@ -485,6 +493,39 @@ class MockServer {
   private nextOperationIndex(): number {
     this.operationSerial += 1;
     return this.operationSerial;
+  }
+
+  private getOperationUid(operation: InGameOperation): number {
+    switch (operation.payload.oneofKind) {
+      case "removePlant":
+        return operation.payload.removePlant.base?.uid ?? Number.MAX_SAFE_INTEGER;
+      case "useStarShards":
+        return operation.payload.useStarShards.base?.uid ?? Number.MAX_SAFE_INTEGER;
+      case "cardPlant":
+        return operation.payload.cardPlant.base?.uid ?? Number.MAX_SAFE_INTEGER;
+      default:
+        return Number.MAX_SAFE_INTEGER;
+    }
+  }
+
+  private compareInGameOperations(a: InGameOperation, b: InGameOperation): number {
+    if (a.processFrameId !== b.processFrameId) {
+      return a.processFrameId - b.processFrameId;
+    }
+
+    const aTypePriority = inGameOperationTypePriority[a.payload.oneofKind ?? ""] ?? Number.MAX_SAFE_INTEGER;
+    const bTypePriority = inGameOperationTypePriority[b.payload.oneofKind ?? ""] ?? Number.MAX_SAFE_INTEGER;
+    if (aTypePriority !== bTypePriority) {
+      return aTypePriority - bTypePriority;
+    }
+
+    const aUid = this.getOperationUid(a);
+    const bUid = this.getOperationUid(b);
+    if (aUid !== bUid) {
+      return aUid - bUid;
+    }
+
+    return a.operationIndex - b.operationIndex;
   }
 
   private buildCardPlantOperation(frameId: number, request: RequestCardPlant, clientId: number): InGameOperation | null {

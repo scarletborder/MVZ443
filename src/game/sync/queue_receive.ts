@@ -14,6 +14,14 @@ type InGameEvent = {
   onError: (message: string) => void;
 };
 
+const inGameOperationTypePriority: Record<string, number> = {
+  removePlant: 0,
+  useStarShards: 1,
+  cardPlant: 2,
+  gameEvent: 3,
+  error: 4
+};
+
 export default class QueueReceive {
   private readonly backupRetainFrames: number = 120;
   InGameEventBus: EventBus<InGameEvent>;
@@ -116,6 +124,39 @@ export default class QueueReceive {
     console.warn("No operation function defined for:", operation.payload.oneofKind);
   }
 
+  private getOperationUid(operation: InGameOperation): number {
+    switch (operation.payload.oneofKind) {
+      case "removePlant":
+        return operation.payload.removePlant.base?.uid ?? Number.MAX_SAFE_INTEGER;
+      case "useStarShards":
+        return operation.payload.useStarShards.base?.uid ?? Number.MAX_SAFE_INTEGER;
+      case "cardPlant":
+        return operation.payload.cardPlant.base?.uid ?? Number.MAX_SAFE_INTEGER;
+      default:
+        return Number.MAX_SAFE_INTEGER;
+    }
+  }
+
+  private compareInGameOperations(a: InGameOperation, b: InGameOperation): number {
+    if (a.processFrameId !== b.processFrameId) {
+      return a.processFrameId - b.processFrameId;
+    }
+
+    const aTypePriority = inGameOperationTypePriority[a.payload.oneofKind ?? ""] ?? Number.MAX_SAFE_INTEGER;
+    const bTypePriority = inGameOperationTypePriority[b.payload.oneofKind ?? ""] ?? Number.MAX_SAFE_INTEGER;
+    if (aTypePriority !== bTypePriority) {
+      return aTypePriority - bTypePriority;
+    }
+
+    const aUid = this.getOperationUid(a);
+    const bUid = this.getOperationUid(b);
+    if (aUid !== bUid) {
+      return aUid - bUid;
+    }
+
+    return a.operationIndex - b.operationIndex;
+  }
+
   Consume(): boolean {
     while (!this.queues.isEmpty()) {
       const response = this.queues.shift();
@@ -148,12 +189,7 @@ export default class QueueReceive {
     this.bufferedResponses.delete(nextFrameID);
     this.consumedResponseFrames.add(nextFrameID);
 
-    const operations = [...response.operations].sort((a, b) => {
-      if (a.processFrameId !== b.processFrameId) {
-        return a.processFrameId - b.processFrameId;
-      }
-      return a.operationIndex - b.operationIndex;
-    });
+    const operations = [...response.operations].sort((a, b) => this.compareInGameOperations(a, b));
 
     for (const operation of operations) {
       if (operation.processFrameId !== nextFrameID) {

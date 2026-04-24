@@ -17,6 +17,52 @@ const (
 	maxHistoryFrames uint32 = 600
 )
 
+const maxOperationUID uint32 = ^uint32(0)
+
+func inGameOperationTypePriority(operation *messages.InGameOperation) int {
+	if operation == nil || operation.Payload == nil {
+		return 99
+	}
+
+	switch operation.Payload.(type) {
+	case *messages.InGameOperation_RemovePlant:
+		return 0
+	case *messages.InGameOperation_UseStarShards:
+		return 1
+	case *messages.InGameOperation_CardPlant:
+		return 2
+	case *messages.InGameOperation_GameEvent:
+		return 3
+	case *messages.InGameOperation_Error:
+		return 4
+	default:
+		return 99
+	}
+}
+
+func inGameOperationUID(operation *messages.InGameOperation) uint32 {
+	if operation == nil || operation.Payload == nil {
+		return maxOperationUID
+	}
+
+	switch payload := operation.Payload.(type) {
+	case *messages.InGameOperation_RemovePlant:
+		if payload.RemovePlant != nil && payload.RemovePlant.Base != nil {
+			return payload.RemovePlant.Base.Uid
+		}
+	case *messages.InGameOperation_UseStarShards:
+		if payload.UseStarShards != nil && payload.UseStarShards.Base != nil {
+			return payload.UseStarShards.Base.Uid
+		}
+	case *messages.InGameOperation_CardPlant:
+		if payload.CardPlant != nil && payload.CardPlant.Base != nil {
+			return payload.CardPlant.Base.Uid
+		}
+	}
+
+	return maxOperationUID
+}
+
 func (room *Room) currentServerFrameID() uint32 {
 	nextFrameID := room.RoomCtx.NextFrameID.Load()
 	if nextFrameID == 0 {
@@ -106,6 +152,26 @@ func (room *Room) operationSignature(operation *messages.InGameOperation) string
 	}
 }
 
+func (room *Room) lessInGameOperation(a *messages.InGameOperation, b *messages.InGameOperation) bool {
+	if a.ProcessFrameId != b.ProcessFrameId {
+		return a.ProcessFrameId < b.ProcessFrameId
+	}
+
+	aTypePriority := inGameOperationTypePriority(a)
+	bTypePriority := inGameOperationTypePriority(b)
+	if aTypePriority != bTypePriority {
+		return aTypePriority < bTypePriority
+	}
+
+	aUID := inGameOperationUID(a)
+	bUID := inGameOperationUID(b)
+	if aUID != bUID {
+		return aUID < bUID
+	}
+
+	return room.operationSignature(a) < room.operationSignature(b)
+}
+
 func (room *Room) advanceOneFrame() {
 	frameID := room.currentServerFrameID() + 1
 	submission := room.scheduledFrames[frameID]
@@ -113,10 +179,7 @@ func (room *Room) advanceOneFrame() {
 	if submission != nil {
 		operations = append(operations, submission.Operations...)
 		sort.SliceStable(operations, func(i, j int) bool {
-			if operations[i].ProcessFrameId != operations[j].ProcessFrameId {
-				return operations[i].ProcessFrameId < operations[j].ProcessFrameId
-			}
-			return room.operationSignature(operations[i]) < room.operationSignature(operations[j])
+			return room.lessInGameOperation(operations[i], operations[j])
 		})
 	}
 
