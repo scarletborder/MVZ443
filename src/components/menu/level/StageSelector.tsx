@@ -4,6 +4,7 @@ import { ChapterDataRecords, StageDataRecords } from '../../../game/utils/loader
 import { useSaveManager } from '../../../context/save_ctx';
 import { publicUrl } from '../../../utils/browser';
 import { useLocaleMessages } from '../../../hooks/useLocaleMessages';
+import { stageKey } from '../../../i18n/keys';
 import { useSetState, useLocalStorageState, useMount, useMemoizedFn } from 'ahooks';
 
 interface StageSelectorProps {
@@ -102,7 +103,7 @@ const StageSelector: React.FC<StageSelectorProps> = ({ chapterId, onSelect, onBa
                     }}
                     onClick={onBack}
                 >
-                    {translate('menu_back')}
+                    {translate('menu.back')}
                 </button>
                 {state.stagesIds.map((stageId) => (
                     <button
@@ -128,7 +129,7 @@ const StageSelector: React.FC<StageSelectorProps> = ({ chapterId, onSelect, onBa
                         }}
                         onClick={() => handleStageSelect(stageId)}
                     >
-                        {translate(StageDataRecords[stageId].nameKey)}
+                        {translate(stageKey(StageDataRecords[stageId].nameKey))}
                     </button>
                 ))}
             </div>
@@ -154,7 +155,7 @@ const StageSelector: React.FC<StageSelectorProps> = ({ chapterId, onSelect, onBa
                         marginBottom: '20px',
                     }}
                 /> : null}
-                {state.selectedStage ? translate(StageDataRecords[state.selectedStage].descriptionKey) : translate('menu_level_choose_level_tip')}
+                {state.selectedStage ? translate(stageKey(StageDataRecords[state.selectedStage].descriptionKey)) : translate('menu.level_choose_level_tip')}
                 {/* 下一步按钮 */}
                 <br />
                 <button
@@ -171,7 +172,7 @@ const StageSelector: React.FC<StageSelectorProps> = ({ chapterId, onSelect, onBa
                     disabled={!state.selectedStage}
                     onClick={handleNext}
                 >
-                    {translate('menu_next')}
+                    {translate('menu.next')}
                 </button>
             </div>
         </div>

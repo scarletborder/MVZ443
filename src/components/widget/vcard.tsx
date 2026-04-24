@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useMemoizedFn } from 'ahooks';
 import { publicUrl } from '../../utils/browser';
 import { useLocaleMessages } from '../../hooks/useLocaleMessages';
+import { cardKey } from '../../i18n/keys';
 import CardpileManager from '../../game/managers/combat/CardpileManager';
 import ResourceManager from '../../game/managers/combat/ResourceManager';
 import PlantsManager from '../../game/managers/combat/PlantsManager';
@@ -111,7 +112,7 @@ export default function VCard({ plantModel, level }: CardProps) {
           {texturePath && texturePath !== "" && (
             <img
               src={`${publicUrl}/assets/card/${texturePath}.png`}
-              alt={translate(nameKey)}
+              alt={translate(cardKey(nameKey))}
               style={{
                 width: "100%",
                 height: "100%",

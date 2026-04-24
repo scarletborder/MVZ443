@@ -11,6 +11,7 @@ import { SendChooseMap, SendLeaveChooseMap } from '../../utils/net/room';
 import EnumGameStage from '../../utils/net/game_state';
 import { useSetState, useLocalStorageState, useMount } from 'ahooks';
 import { useLocaleMessages } from '../../hooks/useLocaleMessages';
+import { commonKey } from '../../i18n/keys';
 
 interface LevelSelectorProps {
     width: number;
@@ -217,16 +218,16 @@ const LevelSelector: React.FC<LevelSelectorProps> = ({
     // 鑾峰彇鎸夐挳鏄剧ず鏂囨湰
     const getButtonText = () => {
         if (state.isLoading) {
-            return translate('loading') || '鍔犺浇涓?..';
+            return translate(commonKey('loading')) || '鍔犺浇涓?..';
         }
 
         if (isOnlineMode && state.gameStage === EnumGameStage.Preparing) {
             if (state.currentStep === 'params') {
-                return islord ? (translate('confirm') || '纭') : (translate('ready') || '鍑嗗');
+                return islord ? (translate(commonKey('confirm')) || '纭') : (translate(commonKey('ready')) || '鍑嗗');
             }
         }
 
-        return translate('next') || '涓嬩竴姝?';
+        return translate(commonKey('next')) || '涓嬩竴姝?';
     };
 
     // 鑾峰彇鎸夐挳鐘舵€佹牱寮?

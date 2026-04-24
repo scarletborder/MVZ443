@@ -6,6 +6,7 @@ import { item } from '../shop/types';
 import StuffList from '../shop/stuff_list';
 import { getUpgradeMaterials, MaterialRequirement } from '../../game/utils/sqlite/materials';
 import { useLocaleMessages } from '../../hooks/useLocaleMessages';
+import { cardKey } from '../../i18n/keys';
 import { PlantLibrary } from '../../game/managers/library/PlantLibrary';
 
 interface Props {
@@ -256,7 +257,7 @@ export default function Pokedex({ width, height, onBack }: Props) {
           }}
           onClick={onBack}
         >
-          {translate('menu_back')}
+          {translate('menu.back')}
         </button>
         <p style={{
           position: "absolute",
@@ -302,14 +303,14 @@ export default function Pokedex({ width, height, onBack }: Props) {
                   {pokedexItems.get(pid) && (
                     <img
                       src={pokedexItems.get(pid)!.image}
-                      alt={translate(pokedexItems.get(pid)!.nameKey)}
+                      alt={translate(cardKey(pokedexItems.get(pid)!.nameKey))}
                       style={{ display: "block" }}
                       draggable="false"
                     />
                   )}
                 </div>
                 <div style={{ color: "#ddd", fontSize: "14px" }}>
-                  {pokedexItems.get(pid) ? `${translate(pokedexItems.get(pid)!.nameKey)} LV.${pokedexItems.get(pid)!.level}` : ""}
+                  {pokedexItems.get(pid) ? `${translate(cardKey(pokedexItems.get(pid)!.nameKey))} LV.${pokedexItems.get(pid)!.level}` : ""}
                 </div>
               </div>
             ))}
@@ -336,13 +337,13 @@ export default function Pokedex({ width, height, onBack }: Props) {
           width: "103%"
         }}>
           <h2 style={{ marginBottom: '8px' }}>
-            {state.selectedItem ? `${translate(state.selectedItem.nameKey)} LV.${state.selectedItem.level}` : '未选择'}
+            {state.selectedItem ? `${translate(cardKey(state.selectedItem.nameKey))} LV.${state.selectedItem.level}` : '未选择'}
           </h2>
 
           {state.selectedItem ? (
             <>
               <div style={{ whiteSpace: 'pre-wrap', marginBottom: '16px' }}>
-                {translate(state.selectedItem.descriptionKey)}
+                {translate(cardKey(state.selectedItem.descriptionKey))}
               </div>
               <hr style={{ borderColor: '#666', margin: '16px 0' }} />
               <div>

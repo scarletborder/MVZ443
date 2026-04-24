@@ -1,3 +1,4 @@
+﻿import { translate } from "../../../i18n";
 import type { Game } from "../../scenes/Game";
 import { DEBUG_TOGGLE_KEY } from "../../../constants/game";
 import DepthUtils from "../../../utils/depth";
@@ -24,7 +25,7 @@ export default class DebugManager extends BaseManager {
     this.debugGraphics = this.scene.add.graphics();
     this.debugGraphics.setDepth(baseDepth);
 
-    this.debugHintText = this.scene.add.text(10, 10, `Press ${DEBUG_TOGGLE_KEY} to toggle Rapier debug`, {
+    this.debugHintText = this.scene.add.text(10, 10, translate("game.debugHint", { key: DEBUG_TOGGLE_KEY }), {
       fontSize: '16px',
       color: '#00ff00',
       backgroundColor: 'rgba(0, 0, 0, 0.45)',
@@ -97,3 +98,4 @@ export default class DebugManager extends BaseManager {
     this.debugEnabled = !this.debugEnabled;
   }
 }
+

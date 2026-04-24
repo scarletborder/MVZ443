@@ -3,6 +3,7 @@ import React from 'react';
 import { ChapterDataRecords, StageDataRecords } from '../../../game/utils/loader';
 import { useSaveManager } from '../../../context/save_ctx';
 import { useLocaleMessages } from '../../../hooks/useLocaleMessages';
+import { stageKey } from '../../../i18n/keys';
 import { useSetState, useLocalStorageState, useMount, useMemoizedFn } from 'ahooks';
 
 interface ChapterSelectorProps {
@@ -86,7 +87,7 @@ const ChapterSelector: React.FC<ChapterSelectorProps> = ({ onSelect, onBack }) =
                     className='backbutton'
                     onClick={onBack}
                 >
-                    {translate('menu_back')}
+                    {translate('menu.back')}
                 </button>
 
                 {state.availableChapters.map((chapter) => (
@@ -113,7 +114,7 @@ const ChapterSelector: React.FC<ChapterSelectorProps> = ({ onSelect, onBack }) =
                         }}
                         onClick={() => handleChapterSelect(chapter)}
                     >
-                        {translate(ChapterDataRecords[chapter].nameKey)}
+                        {translate(stageKey(ChapterDataRecords[chapter].nameKey))}
                     </button>
                 ))}
             </div>
@@ -131,7 +132,7 @@ const ChapterSelector: React.FC<ChapterSelectorProps> = ({ onSelect, onBack }) =
                 background: 'rgba(30, 30, 30, 0.9)',
                 scrollbarColor: '#666 #333',
             }}>
-                {state.selectedChapter ? translate(ChapterDataRecords[state.selectedChapter].descriptionKey) : translate('menu_level_choose_chapter_tip')}
+                {state.selectedChapter ? translate(stageKey(ChapterDataRecords[state.selectedChapter].descriptionKey)) : translate('menu.level_choose_chapter_tip')}
                 {/* 下一步按钮 */}
                 <button
                     style={{
@@ -149,7 +150,7 @@ const ChapterSelector: React.FC<ChapterSelectorProps> = ({ onSelect, onBack }) =
                     disabled={!state.selectedChapter}
                     onClick={handleNext}
                 >
-                    {translate('menu_next')}
+                    {translate('menu.next')}
                 </button>
             </div>
         </div>

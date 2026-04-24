@@ -133,11 +133,11 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
     const settingsData: { [key: string]: (SettingPanel | null)[] } = {
         general: [
             {
-                title: "menu_settings_general_display",
+                title: "menu.settings_general_display",
                 items: [
                     {
-                        titleKey: "menu_settings_general_fullscreen",
-                        descriptionKey: "menu_settings_general_fullscreen_t",
+                        titleKey: "menu.settings_general_fullscreen",
+                        descriptionKey: "menu.settings_general_fullscreen_t",
                         controlType: "switcher",
                         controlProps: {
                             value: isFullscreen, onToggle: (_val) => {
@@ -150,8 +150,8 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
                         }
                     },
                     {
-                        titleKey: "menu_settings_general_resolution",
-                        descriptionKey: "menu_settings_general_resolution_t",
+                        titleKey: "menu.settings_general_resolution",
+                        descriptionKey: "menu.settings_general_resolution_t",
                         controlType: "selections",
                         controlProps: {
                             options: ["800x600", "924x693", "1024x768", "1200x900"], selected: `${width}x${width / 4 * 3}`, onSelect: (val) => {
@@ -161,8 +161,8 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
                         }
                     },
                     {
-                        titleKey: "menu_settings_general_language",
-                        descriptionKey: "menu_settings_general_language_t",
+                        titleKey: "menu.settings_general_language",
+                        descriptionKey: "menu.settings_general_language_t",
                         controlType: "selections",
                         controlProps: {
                             options: ["zh_CN", "en_US"], selected: settingManager.language, onSelect: (val) => {
@@ -174,8 +174,8 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
                         }
                     },
                     {
-                        titleKey: "menu_settings_general_debug",
-                        descriptionKey: "menu_settings_general_debug_t",
+                        titleKey: "menu.settings_general_debug",
+                        descriptionKey: "menu.settings_general_debug_t",
                         controlType: "switcher",
                         controlProps: {
                             value: settingManager.isDebug, onToggle: (val) => {
@@ -186,11 +186,11 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
                 ],
             },
             {
-                title: "menu_settings_general_saves",
+                title: "menu.settings_general_saves",
                 items: [
                     {
-                        titleKey: "menu_settings_general_save_progress",
-                        descriptionKey: "menu_settings_general_save_progress_t",
+                        titleKey: "menu.settings_general_save_progress",
+                        descriptionKey: "menu.settings_general_save_progress_t",
                         controlType: "button",
                         controlProps: {
                             onClick: async () => {
@@ -200,30 +200,30 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
                                     console.error('保存失败:', error);
                                 }
                             },
-                            btnText: "menu_settings_save"
+                            btnText: "menu.settings_save"
                         }
                     },
                     {
-                        titleKey: "menu_settings_general_import_save",
-                        descriptionKey: "menu_settings_general_import_save_t",
+                        titleKey: "menu.settings_general_import_save",
+                        descriptionKey: "menu.settings_general_import_save_t",
                         controlType: "button",
-                        controlProps: { onClick: handleImportSave, btnText: "menu_settings_import" }
+                        controlProps: { onClick: handleImportSave, btnText: "menu.settings_import" }
                     },
                     {
-                        titleKey: "menu_settings_general_export_save",
-                        descriptionKey: "menu_settings_general_export_save_t",
+                        titleKey: "menu.settings_general_export_save",
+                        descriptionKey: "menu.settings_general_export_save_t",
                         controlType: "button",
-                        controlProps: { onClick: handleExportSave, btnText: "menu_settings_export" }
+                        controlProps: { onClick: handleExportSave, btnText: "menu.settings_export" }
                     }
                 ]
             }
         ], game: [
             {
-                title: "menu_settings_gaming_gamesettings",
+                title: "menu.settings_gaming_gamesettings",
                 items: [
                     {
-                        titleKey: "menu_settings_gaming_private_blueprints",
-                        descriptionKey: "menu_settings_gaming_private_blueprints_t",
+                        titleKey: "menu.settings_gaming_private_blueprints",
+                        descriptionKey: "menu.settings_gaming_private_blueprints_t",
                         controlType: "switcher",
                         controlProps: {
                             value: settingManager.isBluePrint, onToggle: (val) => {
@@ -232,8 +232,8 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
                         }
                     },
                     {
-                        titleKey: "menu_settings_gaming_background_music",
-                        descriptionKey: "menu_settings_gaming_background_music_t",
+                        titleKey: "menu.settings_gaming_background_music",
+                        descriptionKey: "menu.settings_gaming_background_music_t",
                         controlType: "switcher",
                         controlProps: {
                             value: settingManager.isBgm, onToggle: (val) => {
@@ -242,8 +242,8 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
                         }
                     },
                     {
-                        titleKey: "menu_settings_gaming_sound_effects",
-                        descriptionKey: "menu_settings_gaming_sound_effects_t",
+                        titleKey: "menu.settings_gaming_sound_effects",
+                        descriptionKey: "menu.settings_gaming_sound_effects_t",
                         controlType: "switcher",
                         controlProps: {
                             value: settingManager.isSoundAudio, onToggle: (val) => {
@@ -259,8 +259,8 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
                 title: `Online Settings${linkStatus ? `-Connected->id: ${BackendWS.room_id}` : "-Disconnected"}`,
                 items: [
                     {
-                        titleKey: "menu_settings_server_address",
-                        descriptionKey: "menu_settings_server_address_t",
+                        titleKey: "menu.settings_server_address",
+                        descriptionKey: "menu.settings_server_address_t",
                         controlType: "input",
                         controlProps: {
                             placeholder: settingManager.linkOptions.baseUrl, onChange: (val) => {
@@ -273,8 +273,8 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
                         }
                     },
                     {
-                        titleKey: 'menu_settings_try_connectivity',
-                        descriptionKey: 'menu_settings_try_connectivity_t',
+                        titleKey: 'menu.settings_try_connectivity',
+                        descriptionKey: 'menu.settings_try_connectivity_t',
                         controlType: 'button',
                         controlProps: {
                             onClick: () => {
@@ -306,12 +306,12 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
                                 }
                                 checkAndOpenUrl(`https://${settingManager.linkOptions.baseUrl}/list`);
                             },
-                            btnText: 'menu_settings_try_connectivity',
+                            btnText: 'menu.settings_try_connectivity',
                         }
                     },
                     {
-                        titleKey: "menu_settings_refresh_room_list",
-                        descriptionKey: "menu_settings_refresh_room_list_t",
+                        titleKey: "menu.settings_refresh_room_list",
+                        descriptionKey: "menu.settings_refresh_room_list_t",
                         controlType: "button",
                         controlProps: {
                             onClick: () => {
@@ -333,23 +333,23 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
                                     req();
                                 }, 50)();
                             },
-                            btnText: "menu_settings_refresh_room_list"
+                            btnText: "menu.settings_refresh_room_list"
                         }
                     },
                     {
-                        titleKey: "menu_settings_create_room",
-                        descriptionKey: "menu_settings_create_room_t",
+                        titleKey: "menu.settings_create_room",
+                        descriptionKey: "menu.settings_create_room_t",
                         controlType: "button",
                         controlProps: {
                             onClick: () => {
                                 createRoom(settingManager.linkOptions.baseUrl, settingManager.linkOptions.key);
                             },
-                            btnText: "menu_settings_create_room"
+                            btnText: "menu.settings_create_room"
                         }
                     },
                     {
-                        titleKey: "menu_settings_set_global_key",
-                        descriptionKey: "menu_settings_set_global_key_t",
+                        titleKey: "menu.settings_set_global_key",
+                        descriptionKey: "menu.settings_set_global_key_t",
                         controlType: "input",
                         controlProps: {
                             placeholder: settingManager.linkOptions.key, onChange: (val) => {
@@ -362,8 +362,8 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
                         }
                     },
                     {
-                        titleKey: "menu_settings_disconnect",
-                        descriptionKey: "menu_settings_disconnect_t",
+                        titleKey: "menu.settings_disconnect",
+                        descriptionKey: "menu.settings_disconnect_t",
                         controlType: "button",
                         controlProps: {
                             onClick: () => {
@@ -422,9 +422,9 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
     };
 
     const menuItems = [
-        { name: "menu_settings_general", key: "general" },
-        { name: "menu_settings_gaming", key: "game" },
-        { name: "menu_settings_online", key: "online" }
+        { name: "menu.settings_general", key: "general" },
+        { name: "menu.settings_gaming", key: "game" },
+        { name: "menu.settings_online", key: "online" }
     ];
     return (
         <div style={{
@@ -478,7 +478,7 @@ export default function Settings({ width, height, onBack: onBackOriginal }: Prop
                     }}
                     onClick={onBack}
                 >
-                    {translate("menu_back")}
+                    {translate("menu.back")}
                 </button>
                 {menuItems.map((item) => (
                     <button

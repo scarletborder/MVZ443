@@ -1,4 +1,5 @@
 import { SECKILL } from "../../public/constants";
+import { commonKey, stuffKey } from "../i18n/keys";
 
 
 const idToName = new Map<number, string>(
@@ -19,5 +20,6 @@ const idToName = new Map<number, string>(
 
 
 export default function Stuff(id: number, translate: (key: string, params?: Record<string, string>) => string) {
-    return translate(idToName.get(id) || 'unknown');
+    const key = idToName.get(id);
+    return translate(key ? stuffKey(key) : commonKey('unknown'));
 }

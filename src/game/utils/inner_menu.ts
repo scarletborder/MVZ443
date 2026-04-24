@@ -1,3 +1,4 @@
+import i18n, { translate } from "../../i18n";
 import { debounce } from "../../utils/debounce";
 import DepthUtils from "../../utils/depth";
 import { HasConnected } from "../../utils/net/sync";
@@ -59,18 +60,19 @@ export default function CreateInnerMenu(game: Game) {
   const pausePaddingY = 8;
   const speedPaddingX = 16;
   const speedPaddingY = 8;
+  const getSpeedLabel = () => translate("game.speed", { speed: game.time.timeScale > 1 ? 2 : 1 });
 
   game.pauseBtn = game.add.text(
     game.cameras.main.width - 10,
     game.cameras.main.height - 10,
-    "暂停",
+    translate("game.pause"),
     {}
   ).setOrigin(1, 1).setDepth(DepthUtils.getMenuDepth()).setInteractive({ useHandCursor: true });
 
   game.speedText = game.add.text(
     game.cameras.main.width - 10,
     12,
-    "1速",
+    getSpeedLabel(),
     {}
   ).setOrigin(1, 0).setVisible(true).setDepth(DepthUtils.getMenuDepth()).setInteractive({ useHandCursor: true });
 
@@ -81,7 +83,7 @@ export default function CreateInnerMenu(game: Game) {
     const isDisabled = pauseMenu.isBlockingInput();
     if (isDisabled) {
       return {
-        text: "暂停",
+        text: translate("game.pause"),
         color: "#d6dee8",
         backgroundColor: "#51606f",
         borderColor: "#aab7c4",
@@ -92,7 +94,7 @@ export default function CreateInnerMenu(game: Game) {
     }
 
     return {
-      text: "暂停",
+      text: translate("game.pause"),
       color: "#f8fbff",
       backgroundColor: pauseHovered ? "#52687f" : "#3f5164",
       borderColor: "#d5deea",
@@ -105,7 +107,7 @@ export default function CreateInnerMenu(game: Game) {
   const buildSpeedButtonState = (): InGameButtonState => {
     const isPaused = CombatManager.Instance.isPaused;
     const isDoubleSpeed = game.time.timeScale > 1;
-    const speedLabel = isDoubleSpeed ? "2速" : "1速";
+    const speedLabel = getSpeedLabel();
 
     if (isPaused) {
       return {
@@ -173,12 +175,7 @@ export default function CreateInnerMenu(game: Game) {
 
   game.pauseBtn.on("pointerup", () => {
     debounce(() => {
-      if (!game.pauseBtn.input?.enabled) {
-        refreshButtons();
-        return;
-      }
-
-      if (HasConnected()) {
+      if (!game.pauseBtn.input?.enabled || HasConnected()) {
         refreshButtons();
         return;
       }
@@ -234,6 +231,7 @@ export default function CreateInnerMenu(game: Game) {
 
   CombatManager.Instance.Eventbus.on("onCombatPause", refreshButtons);
   CombatManager.Instance.Eventbus.on("onCombatResume", refreshButtons);
+  i18n.on("languageChanged", refreshButtons);
 
   const onTimespeedChanged = () => {
     refreshButtons();
@@ -245,6 +243,7 @@ export default function CreateInnerMenu(game: Game) {
     CombatManager.Instance.Eventbus.off("onCombatPause", refreshButtons);
     CombatManager.Instance.Eventbus.off("onCombatResume", refreshButtons);
     PhaserEventBus.off(PhaserEvents.TimespeedChanged, onTimespeedChanged);
+    i18n.off("languageChanged", refreshButtons);
   });
 
   refreshButtons();

@@ -9,6 +9,7 @@ import { publicUrl } from "../../utils/browser";
 import { useSaveManager } from "../../context/save_ctx";
 import BackendWS from "../../utils/net/sync";
 import { useLocaleMessages } from "../../hooks/useLocaleMessages";
+import { commonKey, stageKey } from "../../i18n/keys";
 import { useMemoizedFn } from "ahooks";
 import OnlineStatus from "../OnlineStatus";
 import CardpileManager from "../../game/managers/combat/CardpileManager";
@@ -214,7 +215,7 @@ export default function BottomTools({ width, chapterID }: Props) {
       <ProgressBarComponent />
 
       <div className='stageDisplay' onClick={handleSetPause}>
-        {chapterID ? translate(StageDataRecords[chapterID].nameKey) : 'loading'}
+        {chapterID ? translate(stageKey(StageDataRecords[chapterID].nameKey)) : translate(commonKey('loading'))}
       </div>
 
       {/* 在游戏场景中显示在线状态，替换暂停按钮区域 */}

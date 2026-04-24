@@ -69,7 +69,7 @@ export default function GenericView({ width, height, title, items, onBack }: Pro
                     }}
                     onClick={onBack}
                 >
-                    {translate('menu_back')}
+                    {translate('menu.back')}
                 </button>
                 <p style={{
                     position: "absolute",

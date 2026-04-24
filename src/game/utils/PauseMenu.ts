@@ -1,3 +1,4 @@
+﻿import { translate } from "../../i18n";
 import DepthUtils from "../../utils/depth";
 import CombatManager from "../managers/CombatManager";
 import { Game } from "../scenes/Game";
@@ -84,7 +85,7 @@ export class PauseMenu {
     this.pauseText = this.game.add.text(
       centerX,
       startY + menuHeight * 0.2,
-      "游戏已暂停",
+      translate("game.paused"),
       {
         fontSize: `${Math.min(this.game.scale.displaySize.width / 18, 32)}px`,
         color: "#ecf0f1",
@@ -100,7 +101,7 @@ export class PauseMenu {
     this.createButton(
       centerX,
       continueButtonTopY + continueButtonHeightH / 2,
-      "继续游戏",
+      translate("game.continue"),
       "#27ae60",
       "#2ecc71",
       buttonFontSize,
@@ -113,7 +114,7 @@ export class PauseMenu {
     this.createButton(
       centerX,
       exitButtonTopY + exitButtonHeightH / 2,
-      "退出游戏",
+      translate("game.exit"),
       "#e74c3c",
       "#c0392b",
       buttonFontSize,
@@ -130,7 +131,7 @@ export class PauseMenu {
     this.bluePrintPauseText = this.game.add.text(
       this.game.cameras.main.width / 2,
       this.game.cameras.main.height * 0.18,
-      "游戏已暂停",
+      translate("game.paused"),
       {
         fontSize: `${Math.min(this.game.scale.displaySize.width / 18, 30)}px`,
         color: "#f4f7fb",
@@ -303,3 +304,4 @@ export class PauseMenu {
     return this.isVisible;
   }
 }
+

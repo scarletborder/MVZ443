@@ -33,14 +33,14 @@ export default function DocFrame({ width, height, setGameParams, gameStart }: Pr
   // 状态管理
   const [currentView, setCurrentView] = useState('main'); // main, levels, pokedex, shop, export, updates, about
   const menuItems = [
-    "menu_homepage",
-    "menu_choose_level",
-    "menu_pokedex",
-    "menu_shop",
-    "menu_settings",
-    "menu_updates",
-    "menu_docs",
-    "menu_about",
+    "menu.homepage",
+    "menu.choose_level",
+    "menu.pokedex",
+    "menu.shop",
+    "menu.settings",
+    "menu.updates",
+    "menu.docs",
+    "menu.about",
   ];
 
   const [skipToParams, setSkipToParams] = useState(false);
@@ -201,21 +201,21 @@ export default function DocFrame({ width, height, setGameParams, gameStart }: Pr
               target.style.color = "#ddd";
             }}
             onClick={() => {
-              if (item === "menu_choose_level") setCurrentView('levels');
-              else if (item === "menu_pokedex") setCurrentView('pokedex');
-              else if (item === "menu_shop") setCurrentView('shop');
-              else if (item === "menu_updates") {
+              if (item === "menu.choose_level") setCurrentView('levels');
+              else if (item === "menu.pokedex") setCurrentView('pokedex');
+              else if (item === "menu.shop") setCurrentView('shop');
+              else if (item === "menu.updates") {
                 // 跳转
                 navigate(`${publicUrl}/updates`);
               }
-              else if (item === "menu_settings") {
+              else if (item === "menu.settings") {
                 navigate(`${publicUrl}/settings`);
               }
-              else if (item === "menu_about") setCurrentView('about');
-              else if (item === "menu_docs") {
+              else if (item === "menu.about") setCurrentView('about');
+              else if (item === "menu.docs") {
                 navigate(`${publicUrl}/docs`);
               }
-              else if (item === "menu_homepage") setCurrentView('main')
+              else if (item === "menu.homepage") setCurrentView('main')
             }}
           >
             <span style={{
@@ -263,7 +263,7 @@ export default function DocFrame({ width, height, setGameParams, gameStart }: Pr
               fontWeight: "bold",
               textShadow: "2px 2px 4px rgba(0, 0, 0, 0.5)"
             }}>
-              {translate('menu_homepage_title')}
+              {translate('menu.homepage_title')}
             </div>
             <div style={{
               position: 'absolute',
@@ -275,7 +275,7 @@ export default function DocFrame({ width, height, setGameParams, gameStart }: Pr
               textShadow: "2px 2px 4px rgba(0, 0, 0, 0.5)",
               whiteSpace: "pre-wrap"
             }}>
-              {translate('menu_homepage_text')}
+              {translate('menu.homepage_text')}
             </div>
             <div style={{
               position: "absolute",
@@ -293,7 +293,7 @@ export default function DocFrame({ width, height, setGameParams, gameStart }: Pr
               color: "#888",
               fontSize: "12px"
             }}>
-              {translate('menu_homepage_version')}: v{VERSION} - COMMIT {commitVersion}
+              {translate('menu.homepage_version')}: v{VERSION} - COMMIT {commitVersion}
             </div>
           </>
         )}
@@ -313,7 +313,7 @@ export default function DocFrame({ width, height, setGameParams, gameStart }: Pr
             msUserSelect: "text", // 针对IE10及以上
             userSelect: "text", // 标准属性
           }}>
-            {translate('menu_about_text', {
+            {translate('menu.about_text', {
               VERSION: VERSION,
               commitVersion: commitVersion,
             })}

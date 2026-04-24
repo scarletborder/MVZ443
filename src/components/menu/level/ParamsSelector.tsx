@@ -6,6 +6,7 @@ import { StageDataRecords } from '../../../game/utils/loader';
 import { publicUrl } from '../../../utils/browser';
 import { useSettings } from '../../../context/settings_ctx';
 import { useLocaleMessages } from '../../../hooks/useLocaleMessages';
+import { cardKey, stageKey } from '../../../i18n/keys';
 import { useSetState, useLocalStorageState, useMount, useMemoizedFn } from 'ahooks';
 import {
   PhaserEventBus,
@@ -122,7 +123,7 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({
       }
       const newPlant: PlantElem = {
         pid: pid,
-        name: translate(plantModel.nameKey),
+        name: plantModel.nameKey,
         imgUrl: `${publicUrl}/assets/card/${plantModel.texturePath}.png`,
         level: plantProgress[i].level
       };
@@ -307,7 +308,7 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({
             }}
             onClick={onBack}
           >
-            {translate('menu_back')}
+            {translate('menu.back')}
           </button>
 
           {/* 联机模式状态显示 */}
@@ -336,7 +337,7 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({
             color: '#ddd',
             fontSize: '16px'
           }}>
-            {`stage ${stageId} - ${translate(StageDataRecords[stageId].nameKey)}`}
+            {`stage ${stageId} - ${translate(stageKey(StageDataRecords[stageId].nameKey))}`}
           </div>
         </div>
         <div style={{
@@ -386,7 +387,7 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({
                 fontSize: '12px',
                 marginTop: '5px'
               }}>
-                {translate(plant.name)}
+                {translate(cardKey(plant.name))}
               </span>
             </div>
           ))}
@@ -410,7 +411,7 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({
           marginBottom: '10px'
         }}>
           <h3>
-            {`${translate('menu_level_chosen_plants')} `}
+            {`${translate('menu.level_chosen_plants')} `}
             <span style={{
               color: state.isOverLimit ? 'red' : '#ddd',
               transition: 'color 0.3s ease'
@@ -482,7 +483,7 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({
                     draggable="false"
                   />
                 </div>
-                <span style={{ marginLeft: '10px' }}>{translate(plant.name)}</span>
+                <span style={{ marginLeft: '10px' }}>{translate(cardKey(plant.name))}</span>
               </div>
             );
           })}
@@ -506,7 +507,7 @@ const ParamsSelector: React.FC<ParamsSelectorProps> = ({
           )}
           {(isOnlineMode && state.hasUserClicked) ?
             `等待其他玩家 (${state.readyPlayerCount}/${state.totalPlayerCount})` :
-            (buttonText || translate('start'))
+            (buttonText || translate('common.start'))
           }
         </button>
       </div>

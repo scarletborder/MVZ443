@@ -5,6 +5,7 @@ import { OnWin, ProgressReward } from '../../game/models/IRecord';
 import { ChapterDataRecords, StageDataRecords } from '../../game/utils/loader';
 import Stuff from '../../constants/stuffs';
 import { useLocaleMessages } from '../../hooks/useLocaleMessages';
+import { cardKey, commonKey, stageKey } from '../../i18n/keys';
 import { PlantLibrary } from '../../game/managers/library/PlantLibrary';
 
 interface Props {
@@ -32,7 +33,7 @@ export default function GameResultView({ width, height, isWin, onWin, progressRe
         const computedLevels = onWin.unLock.map((cpid) => {
             const stage = StageDataRecords[cpid];
             const chapter = ChapterDataRecords[stage.chapterID];
-            return `${translate(chapter.nameKey)} - ${translate(stage.nameKey)}`;
+            return `${translate(stageKey(chapter.nameKey))} - ${translate(stageKey(stage.nameKey))}`;
         }).filter(item => item !== "");
         return computedLevels.length > 0 ? computedLevels.join(" ") : "无";
     }, [onWin, translate]);
@@ -42,7 +43,8 @@ export default function GameResultView({ width, height, isWin, onWin, progressRe
         if (!onWin.unLockPlant || onWin.unLockPlant.length === 0) return "无";
         
         const computedPlants = onWin.unLockPlant.map((pid) => {
-            return translate(PlantLibrary.GetModel(pid)?.nameKey ?? 'unknown plant');
+            const plantNameKey = PlantLibrary.GetModel(pid)?.nameKey;
+            return translate(plantNameKey ? cardKey(plantNameKey) : commonKey('unknown'));
         }).filter(item => item !== "");
         return computedPlants.length > 0 ? computedPlants.join(" ") : "无";
     }, [onWin, translate]);
@@ -117,7 +119,7 @@ export default function GameResultView({ width, height, isWin, onWin, progressRe
                 }}
                 onClick={onBack}
             >
-                {translate('menu_back')}
+                {translate('menu.back')}
             </button>
 
             {/* 左侧：游戏结果 */}
@@ -136,20 +138,20 @@ export default function GameResultView({ width, height, isWin, onWin, progressRe
                 color: "#ddd"
             }}>
                 <h2 style={{ fontSize: "24px", fontWeight: "bold", marginBottom: "20px" }}>
-                    {translate('menu_endding_result')}
+                    {translate('menu.endding_result')}
                 </h2>
                 {isWin ? (
                     <div>
-                        <p style={{ fontSize: "18px", marginBottom: "10px" }}>{translate('menu_endding_win')}</p>
+                        <p style={{ fontSize: "18px", marginBottom: "10px" }}>{translate('menu.endding_win')}</p>
                         {onWin && (
                             <>
-                                <p>{translate('menu_endding_unlocked_level')}: {unlockedLevelsStr}</p>
-                                <p>{translate('menu_endding_unlocked_plants')}: {unlockedPlantsStr}</p>
+                                <p>{translate('menu.endding_unlocked_level')}: {unlockedLevelsStr}</p>
+                                <p>{translate('menu.endding_unlocked_plants')}: {unlockedPlantsStr}</p>
                             </>
                         )}
                     </div>
                 ) : (
-                    <p style={{ fontSize: "18px" }}>{translate('menu_endding_fail')}</p>
+                    <p style={{ fontSize: "18px" }}>{translate('menu.endding_fail')}</p>
                 )}
             </div>
 
@@ -168,18 +170,18 @@ export default function GameResultView({ width, height, isWin, onWin, progressRe
                 background: "rgba(30, 30, 30, 0.9)"
             }}>
                 <h2 style={{ fontSize: "24px", fontWeight: "bold", marginBottom: "20px" }}>
-                    {`${translate('menu_endding_progress')}${translate('menu_endding_reward')} : ${myProgress}%`}
+                    {`${translate('menu.endding_progress')}${translate('menu.endding_reward')} : ${myProgress}%`}
                 </h2>
                 {(progressRewards !== undefined && progressRewards.length > 0) ? (
                     progressRewards.map((reward, index) => (
                         (myProgress >= reward.progress) &&
                         (<div key={index} style={{ marginBottom: "15px" }}>
-                            <p>{translate('menu_endding_progress')}: {reward.progress}%</p>
-                            <p>{translate('menu_endding_reward')}: {Stuff(reward.reward.type, translate)}: {reward.reward.count}</p>
+                            <p>{translate('menu.endding_progress')}: {reward.progress}%</p>
+                            <p>{translate('menu.endding_reward')}: {Stuff(reward.reward.type, translate)}: {reward.reward.count}</p>
                         </div>)
                     ))
                 ) : (
-                    <p>{translate('menu_endding_noreward')}</p>
+                    <p>{translate('menu.endding_noreward')}</p>
                 )}
             </div>
 

@@ -11,6 +11,7 @@ import CreateInnerMenu from '../utils/inner_menu';
 import { StageData } from '../models/IRecord';
 import BackendWS from '../../utils/net/sync';
 import seedrandom from 'seedrandom';
+import { translate } from '../../i18n';
 import DepthUtils from '../../utils/depth';
 import Musical from '../utils/musical';
 import RAPIER from '@dimforge/rapier2d-deterministic-compat';
@@ -137,7 +138,7 @@ export class Game extends Scene {
     this.waitText = this.add.text(
       this.cameras.main.width / 2,
       18 * this.scaleFactor,
-      '等待中...',
+      translate("game.waiting"),
       {
         fontSize: `${Math.max(12, Math.round(this.scale.displaySize.width / 45))}px`,
         color: '#ffffff',
@@ -239,7 +240,7 @@ export class Game extends Scene {
     const zombieText = this.add.text(
       this.cameras.main.width / 2,
       this.cameras.main.height * 0.3,
-      '一大波怪物即将登场',
+      translate("game.bigWave"),
       {
         fontSize: this.scale.displaySize.width / 20,
         color: 'rgb(187, 21, 21)', // 红色文本
@@ -253,7 +254,7 @@ export class Game extends Scene {
       delay: 4000,
       callback: () => {
         this.musical.unlimitAudio.play('wave2');
-        zombieText.setText('来袭!!');
+        zombieText.setText(translate("game.incoming"));
         // 3秒后销毁文本对象
         this.time.addEvent({
           delay: 3000,
@@ -389,4 +390,5 @@ export class Game extends Scene {
     });
   }
 }
+
 

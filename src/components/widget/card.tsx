@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useMemoizedFn } from 'ahooks';
 import { publicUrl } from '../../utils/browser';
 import { useLocaleMessages } from '../../hooks/useLocaleMessages';
+import { cardKey } from '../../i18n/keys';
 import CardpileManager from '../../game/managers/combat/CardpileManager';
 import ResourceManager from '../../game/managers/combat/ResourceManager';
 import PlantsManager from '../../game/managers/combat/PlantsManager';
@@ -114,7 +115,7 @@ export default function Card({ plantModel, level }: CardProps) {
       disabled={!reloaded}
     >
       <div className="card-content">
-        <div className="plant-name">{translate(nameKey)}</div>
+        <div className="plant-name">{translate(cardKey(nameKey))}</div>
         <div className="plant-image">
           {texturePath && texturePath !== "" && (
             <img

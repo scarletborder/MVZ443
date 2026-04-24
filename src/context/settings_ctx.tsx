@@ -1,6 +1,6 @@
 import React, { createContext, ReactNode, useCallback, useContext, useEffect, useState } from 'react';
 import { debounce } from '../utils/debounce';
-import { Locale } from '../hooks/useLocaleMessages';
+import { changeLocale, Locale } from '../i18n';
 
 const loadCookie = <T,>(key: string, defaultValue: T): T => {
     const value = document.cookie
@@ -115,6 +115,7 @@ export function SettingsProvider(props: Props) {
     const toggleLanguage = (lang: Locale) => {
         setLanguage(lang);
         storeCookie('language', lang);
+        changeLocale(lang);
     };
 
     const exportAsJson = useCallback(() => {
@@ -131,13 +132,16 @@ export function SettingsProvider(props: Props) {
         setIsFullScreen(data.isFullScreen);
         setWidth(data.width);
         setLanguage(data.language);
+        changeLocale(data.language);
         setIsBluePrintStatus(data.isBluePrint);
     };
 
     useEffect(() => {
+        const storedLanguage = loadCookie<Locale>('language', 'zh_CN');
         setIsFullScreen(loadCookie('isFullScreen', false));
         setWidth(loadCookie('width', 800));
-        setLanguage(loadCookie('language', 'zh_CN'));
+        setLanguage(storedLanguage);
+        changeLocale(storedLanguage);
         setIsBluePrintStatus(loadCookie('isBluePrint', false));
         setIsDebugStatus(loadCookie('isDebug', false));
         setIsBgmStatus(loadCookie('isBgm', true));
