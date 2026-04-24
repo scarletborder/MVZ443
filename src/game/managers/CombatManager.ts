@@ -38,6 +38,8 @@ export default class CombatManager extends BaseManager {
   };
 
   private _isPaused = true; // Whether combat is paused.
+  private isInFixedStep = false;
+  private pendingPausedState: boolean | null = null;
   isGameEnd: boolean = true;
   private readonly handleRoomAllReady = (data: RoomAllReadyEvent) => {
     this.seed = data.seed;
@@ -56,6 +58,17 @@ export default class CombatManager extends BaseManager {
   }
 
   public set isPaused(value: boolean) {
+    if (!value) {
+      this.pendingPausedState = null;
+    }
+    if (value && this.isInFixedStep) {
+      this.pendingPausedState = value;
+      return;
+    }
+    this.applyPausedState(value);
+  }
+
+  private applyPausedState(value: boolean) {
     if (this._isPaused === value) {
       return;
     }
@@ -65,6 +78,15 @@ export default class CombatManager extends BaseManager {
     } else {
       this.Eventbus.emit("onCombatResume");
     }
+  }
+
+  private commitPendingPausedState() {
+    if (this.pendingPausedState === null) {
+      return;
+    }
+    const pausedState = this.pendingPausedState;
+    this.pendingPausedState = null;
+    this.applyPausedState(pausedState);
   }
 
   Load(): void {
@@ -104,6 +126,8 @@ export default class CombatManager extends BaseManager {
     this.seed = 0;
     this.stageData = null;
     this.elapsedFrameTime = 0;
+    this.pendingPausedState = null;
+    this.isInFixedStep = false;
     this.isPaused = true;
     this.isGameEnd = true;
     this.Eventbus.removeAllListeners();
@@ -121,15 +145,7 @@ export default class CombatManager extends BaseManager {
   private handleTogglePause() {
     if (BackendWS.isOnlineMode()) return;
     if (this.isGameEnd) return;
-    this._isPaused = !this._isPaused;
-    if (this._isPaused) {
-      this.elapsedFrameTime = 0;
-    }
-    if (this._isPaused) {
-      this.Eventbus.emit("onCombatPause");
-    } else if (!this._isPaused) {
-      this.Eventbus.emit("onCombatResume");
-    }
+    this.isPaused = !this._isPaused;
   }
 
   // All players are ready.
@@ -182,6 +198,7 @@ export default class CombatManager extends BaseManager {
 
     // Fixed-step physics update.
     while (this.elapsedFrameTime >= SyncManager.Instance.FrameInterval) {
+      this.isInFixedStep = true;
       // 在进入下一次 Rapier step 前再执行延迟创建/销毁，
       // 避免在 world.step / bodies.forEach 相关借用期间修改物理世界。
       DeferredManager.Instance.flush();
@@ -189,6 +206,7 @@ export default class CombatManager extends BaseManager {
       const frameReady = SyncManager.Instance.update();
 
       if (!frameReady) {
+        this.isInFixedStep = false;
         break;
       }
       this.elapsedFrameTime -= SyncManager.Instance.FrameInterval;
@@ -220,6 +238,12 @@ export default class CombatManager extends BaseManager {
         });
       }
 
+      this.isInFixedStep = false;
+      this.commitPendingPausedState();
+      if (this.isPaused) {
+        this.elapsedFrameTime = 0;
+        break;
+      }
     }
 
     if (!this.isPaused) {
