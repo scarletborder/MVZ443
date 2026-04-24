@@ -245,6 +245,9 @@ class MockServer {
 
   private cleanupTimedOutClients(now: number) {
     for (const [clientId, client] of this.clients.entries()) {
+      if (clientId === this.myId && this.clients.size === 1) {
+        continue;
+      }
       if (now - client.lastSeenAt > this.clientTimeoutMs) {
         this.clients.delete(clientId);
       }
@@ -301,6 +304,14 @@ class MockServer {
     return maxAckFrameId;
   }
 
+  private getMaxScheduledFrameId(): number {
+    let maxScheduledFrameId = 0;
+    for (const frameId of this.scheduledFrames.keys()) {
+      maxScheduledFrameId = Math.max(maxScheduledFrameId, frameId);
+    }
+    return maxScheduledFrameId;
+  }
+
   private recordSubmission(frameId: number, clientId: number, request: Request) {
     const operation = this.buildOperationForFrame(frameId, request, clientId);
     if (!operation) {
@@ -353,14 +364,12 @@ class MockServer {
     if (this.gameStartedAt === 0) {
       this.gameStartedAt = now;
     }
-    const realTimeFrameId = Math.max(1, Math.floor((now - this.gameStartedAt) / 50) + 1);
     const bufferedTargetFrameId = this.getMaxClientAckFrameId() + this.getCurrentLeadFrames();
-    const targetServerFrameId = Math.max(realTimeFrameId, bufferedTargetFrameId);
+    const targetServerFrameId = Math.max(this.serverFrameId, bufferedTargetFrameId, this.getMaxScheduledFrameId());
     this.trace("advanceFrames", {
       now,
       gameStartedAt: this.gameStartedAt,
       serverFrameIdBefore: this.serverFrameId,
-      realTimeFrameId,
       bufferedTargetFrameId,
       targetServerFrameId
     });
