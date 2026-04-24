@@ -47,14 +47,14 @@ export default class QueueReceive {
   }
 
   handleInGameResponse(response: InGameResponse) {
-    console.log("[QueueReceive] enqueue response", {
-      frameId: response.frameId,
-      operationCount: response.operations.length,
-      queueLengthBefore: this.queues.length,
-      bufferedCount: this.bufferedResponses.size,
-      currentFrameId: this.currentFrameId,
-      lastAckFrameId: this.lastAckFrameId
-    });
+    // console.log("[QueueReceive] enqueue response", {
+    //   frameId: response.frameId,
+    //   operationCount: response.operations.length,
+    //   queueLengthBefore: this.queues.length,
+    //   bufferedCount: this.bufferedResponses.size,
+    //   currentFrameId: this.currentFrameId,
+    //   lastAckFrameId: this.lastAckFrameId
+    // });
     this.queues.push(response);
   }
 
@@ -205,11 +205,11 @@ export default class QueueReceive {
 
     this.currentFrameId = nextFrameID;
     this.lastAckFrameId = nextFrameID;
-    console.log("[QueueReceive] consumed frame", {
-      frameId: nextFrameID,
-      operationCount: operations.length,
-      bufferedRemaining: this.bufferedResponses.size
-    });
+    // console.log("[QueueReceive] consumed frame", {
+    //   frameId: nextFrameID,
+    //   operationCount: operations.length,
+    //   bufferedRemaining: this.bufferedResponses.size
+    // });
     BackendWS.sendBlankFrame(nextFrameID);
     return true;
   }

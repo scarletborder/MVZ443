@@ -30,6 +30,7 @@ import { DeferredManager } from '../managers/DeferredManager';
 import StageHelper from '../utils/helper/StageHelper';
 import { Request, RequestLoaded } from '../../pb/request';
 import { PresetEventManager } from '../managers/combat/PresetEventManager';
+import ConsoleCmd from '../utils/ConsoleCmd';
 
 
 export class Game extends Scene {
@@ -176,6 +177,7 @@ export class Game extends Scene {
     CombatManager.Instance.Eventbus.on('onCombatResume', this.onCombatResumeHandler);
 
     this.musical = new Musical(this, this.params.gameSettings.isBgm, this.params.gameSettings.isSoundAudio);
+    ConsoleCmd.install(this);
 
     console.log('load finish');
     if (BackendWS.isRoomSessionMode()) {
@@ -316,6 +318,7 @@ export class Game extends Scene {
     CombatManager.Instance.Eventbus.off('onCombatPause', this.onCombatPauseHandler);
     CombatManager.Instance.Eventbus.off('onCombatResume', this.onCombatResumeHandler);
 
+    ConsoleCmd.uninstall(this);
     this.musical?.destroy();
     this.debugFrameText?.destroy();
     this.debugFrameText = null;
@@ -386,3 +389,4 @@ export class Game extends Scene {
     });
   }
 }
+

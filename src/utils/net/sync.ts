@@ -27,10 +27,10 @@ class WebSocketClient {
 
   private trace(message: string, details?: unknown) {
     if (details !== undefined) {
-      console.log(`[BackendWS] ${message}`, details);
+      // console.log(`[BackendWS] ${message}`, details);
       return;
     }
-    console.log(`[BackendWS] ${message}`);
+    // console.log(`[BackendWS] ${message}`);
   }
 
   setQueue(receiveQueue: QueueReceive, sendQueue: QueueSend) {

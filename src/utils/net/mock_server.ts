@@ -62,7 +62,7 @@ class MockServer {
 
   private trace(message: string, details?: unknown) {
     if (details !== undefined) {
-      console.log(`[MockServer] ${message}`, details);
+      // console.log(`[MockServer] ${message}`, details);
       return;
     }
     console.log(`[MockServer] ${message}`);

@@ -9,6 +9,7 @@ import { ProjectileCmd } from "../../../utils/cmd/ProjectileCmd";
 import { Faction } from "../../../models/Enum";
 import { PumpkinData } from "./pumkin";
 import CombatHelper from "../../../utils/helper/CombatHelper";
+import ShootHeadAnimationHelper from "../../../utils/helper/ShootHeadAnimationHelper";
 import { ExplosionConfig, LaserConfig } from "../../../models/projectiles/ProjectileModels";
 import { PlantCmd } from "../../../utils/cmd/PlantCmd";
 
@@ -253,12 +254,7 @@ export class PumpkinWanEntity extends PlantEntity {
     const totalDuration = 1800 + 2000 * 4;
     this.scene.time.delayedCall(totalDuration, () => {
       if (sprite && this.currentHealth > 0) {
-        this.scene.tweens.add({
-          targets: sprite,
-          x: this.x,
-          duration: 200,
-          ease: 'Sine.easeIn'
-        });
+        ShootHeadAnimationHelper.recover(this.scene, sprite, this.x);
       }
     });
   }

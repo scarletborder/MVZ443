@@ -9,6 +9,7 @@ import type { Game } from "../../../scenes/Game";
 import createShootBurstAnim from "../../../sprite/shoot_anim";
 import { ProjectileCmd } from "../../../utils/cmd/ProjectileCmd";
 import CombatHelper from "../../../utils/helper/CombatHelper";
+import ShootHeadAnimationHelper from "../../../utils/helper/ShootHeadAnimationHelper";
 import { HFireWorkConfig, HFireWorkData, HFireWorkEntity, HFireWorkModel } from "../../bullet/firework";
 import { DispenserData } from "./dispenser";
 
@@ -171,21 +172,19 @@ export class ATDispenserEntity extends PlantEntity {
 
     const head = this.head;
     const moveDistance = head.displayWidth * 0.15;
-    const originalX = this.headX;
 
-    this.scene.tweens.add({
-      targets: head,
-      x: originalX - moveDistance,
-      duration: 200,
-      yoyo: true,
-      ease: 'Sine.easeInOut',
-      onYoyo: () => {
+    ShootHeadAnimationHelper.playRecoil(
+      this.scene,
+      head,
+      this.headX,
+      moveDistance,
+      () => {
         if (this.currentHealth <= 0) return;
 
         createShootBurstAnim(this.scene, head.x + head.displayWidth * 2 / 9, head.y - head.displayHeight * 2 / 3, 24, this.baseDepth + 2);
         createShootBurstAnim(this.scene, head.x + head.displayWidth * 3 / 9, head.y - head.displayHeight * 2 / 3, 24, this.baseDepth + 2);
         createShootBurstAnim(this.scene, head.x + head.displayWidth * 2 / 9, head.y - head.displayHeight * 1 / 3, 24, this.baseDepth + 2);
       }
-    });
+    );
   }
 }

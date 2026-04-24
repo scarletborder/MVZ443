@@ -7,6 +7,7 @@ import type { Game } from "../../../scenes/Game";
 import createShootBurstAnim from "../../../sprite/shoot_anim";
 import { ProjectileCmd } from "../../../utils/cmd/ProjectileCmd";
 import CombatHelper from "../../../utils/helper/CombatHelper";
+import ShootHeadAnimationHelper from "../../../utils/helper/ShootHeadAnimationHelper";
 import {ArrowData, ArrowEntity, ArrowModel } from "../../bullet/arrow";
 
 
@@ -88,6 +89,7 @@ export class DispenserModel extends PlantModel {
     entity.tickmanager.delayedCall({
       delay: overallDuration,
       callback: () => {
+        entity.recoverHeadPosition();
         callback();
       }
     });
@@ -127,35 +129,31 @@ export class DispenserEntity extends PlantEntity {
 
     const head = this.head;
     const moveDistance = head.displayWidth * 0.15;
-    const originalX = this.headX;
 
-    this.scene.tweens.add({
-      targets: head,
-      x: originalX - moveDistance,
-      duration: 200,
-      yoyo: true, // 完美替代手写的回弹
-      ease: 'Sine.easeInOut',
-      onYoyo: () => {
+    ShootHeadAnimationHelper.playRecoil(
+      this.scene,
+      head,
+      this.headX,
+      moveDistance,
+      () => {
+        if (this.currentHealth <= 0) return;
         createShootBurstAnim(this.scene, head.x + head.displayWidth * 4 / 9, head.y - head.displayHeight * 2 / 3, 24, this.baseDepth + 2);
       }
-    });
+    );
   }
 
-  public playBruteShootAnimation(totalArrows: number) {
+  public playBruteShootAnimation(_totalArrows: number) {
     if (this.currentHealth <= 0) return;
 
     const head = this.head;
     const moveDistance = head.displayWidth * 0.15;
-    const originalX = this.head.x;
 
-    // 头部向左缩进
-    this.scene.tweens.add({ targets: head, x: originalX - moveDistance, duration: 200, ease: 'Sine.easeOut' });
+    ShootHeadAnimationHelper.startHoldRecoil(this.scene, head, this.headX, moveDistance);
+  }
 
-    // 结束后恢复原位与普通攻击
-    this.scene.time.delayedCall(200 + 50 * (totalArrows - 1), () => {
-      if (this.currentHealth <= 0) return;
-      this.scene.tweens.add({ targets: head, x: originalX, duration: 200, ease: 'Sine.easeIn' });
-    });
+  public recoverHeadPosition() {
+    if (this.currentHealth <= 0) return;
+    ShootHeadAnimationHelper.recover(this.scene, this.head, this.headX);
   }
 }
 

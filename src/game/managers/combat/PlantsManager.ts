@@ -175,7 +175,7 @@ export default class PlantsManager extends BaseManager {
           // 扣除资源
           ResourceManager.Instance.UpdateStarShards(-1, playerId);
           DeferredManager.Instance.defer(() => {
-            plantObj.model.onStarShards(plantObj);
+            plantObj.useStarShards();
           });
 
           return true;

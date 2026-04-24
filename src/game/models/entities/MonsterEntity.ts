@@ -15,6 +15,7 @@ import PlantHelper from "../../utils/helper/PlantHelper";
 import { PlantEntity } from "./PlantEntity";
 import { BaseEntity } from "../core/BaseEntity";
 import { createZombieAnimController, LegacyMonsterAnimController } from "../monster/anims/LegacyMonsterAnimControllers";
+import ResourceCmd from "../../utils/cmd/ResourceCmd";
 
 export abstract class MonsterEntity extends CombatEntity {
   declare public scene: Game;
@@ -37,6 +38,11 @@ export abstract class MonsterEntity extends CombatEntity {
   public isStop = false;
 
   public carryStarShards = false;
+  private carriedStarShards = 0;
+  private starShardsDropped = false;
+  private starShardOrbitSprites: Phaser.GameObjects.Image[] = [];
+  private starShardOrbitTimer: FrameTimer | null = null;
+  private starShardOrbitAngle = 0;
   public attacking: CombatEntity | null = null;
   protected attackTimer: FrameTimer | null = null;
   protected debuffs: { [key: string]: { remaining: number, timer: FrameTimer } } = {};
@@ -72,6 +78,13 @@ export abstract class MonsterEntity extends CombatEntity {
 
   public addDestroyListener(listener: (entity: MonsterEntity) => void) {
     this.destroyListeners.push(listener);
+  }
+
+  public addStarShards(amount = 1) {
+    if (amount <= 0) return;
+    this.carryStarShards = true;
+    this.carriedStarShards += amount;
+    this.startStarShardsOrbitEffect();
   }
 
   protected abstract buildView(): void;
@@ -230,6 +243,7 @@ export abstract class MonsterEntity extends CombatEntity {
 
   public ZombieDie() {
     if (this.isDying) return;
+    this.dropCarriedStarShards();
     this.stopAttacking();
     this.playDeathAnimation();
     this.tickmanager.delayedCall({
@@ -240,6 +254,7 @@ export abstract class MonsterEntity extends CombatEntity {
 
   protected playDeathAnimation() {
     this.isDying = true;
+    this.stopStarShardsOrbitEffect();
     this.stopMove();
 
     if (this.rigidBody) {
@@ -288,7 +303,67 @@ export abstract class MonsterEntity extends CombatEntity {
     smoke.once("animationcomplete", () => smoke.destroy());
   }
 
+  private dropCarriedStarShards() {
+    if (this.starShardsDropped || !this.carryStarShards) return;
+    this.starShardsDropped = true;
+    ResourceCmd.AddStarshardToAll(Math.max(1, this.carriedStarShards));
+    this.carryStarShards = false;
+    this.carriedStarShards = 0;
+  }
+
+  private startStarShardsOrbitEffect() {
+    if (this.starShardOrbitSprites.length > 0) return;
+
+    const scale = PositionManager.Instance.scaleFactor;
+    const orbitCount = 3;
+    this.starShardOrbitSprites = Array.from({ length: orbitCount }, (_, index) => {
+      const star = this.scene.add.image(this.x, this.y, "starshards")
+        .setScale(0.28 * scale)
+        .setOrigin(0.5)
+        .setAlpha(0.95)
+        .setDepth(this.baseDepth + 20);
+      this.viewGroup.add(star);
+      star.setData("orbitOffset", index * Phaser.Math.PI2 / orbitCount);
+      return star;
+    });
+
+    this.starShardOrbitTimer = this.tickmanager.addEvent({
+      delay: 33,
+      loop: true,
+      callback: () => this.updateStarShardsOrbitEffect(),
+    });
+    this.updateStarShardsOrbitEffect();
+  }
+
+  private updateStarShardsOrbitEffect() {
+    if (this.isDying) return;
+    const scale = PositionManager.Instance.scaleFactor;
+    const centerX = this.x + this.offsetX;
+    const centerY = this.y + this.offsetY - PositionManager.Instance.GRID_SIZEY * 0.82;
+    const radiusX = PositionManager.Instance.GRID_SIZEX * 0.32;
+    const radiusY = PositionManager.Instance.GRID_SIZEY * 0.16;
+    this.starShardOrbitAngle += 0.12;
+
+    this.starShardOrbitSprites.forEach((star) => {
+      const angle = this.starShardOrbitAngle + (star.getData("orbitOffset") as number);
+      const depthRatio = (Math.sin(angle) + 1) / 2;
+      star.setPosition(centerX + Math.cos(angle) * radiusX, centerY + Math.sin(angle) * radiusY)
+        .setScale((0.22 + depthRatio * 0.12) * scale)
+        .setAlpha(0.55 + depthRatio * 0.4)
+        .setAngle(Phaser.Math.RadToDeg(angle))
+        .setDepth(this.baseDepth + 18 + Math.round(depthRatio * 4));
+    });
+  }
+
+  private stopStarShardsOrbitEffect() {
+    this.starShardOrbitTimer?.remove();
+    this.starShardOrbitTimer = null;
+    this.starShardOrbitSprites.forEach((star) => star.destroy());
+    this.starShardOrbitSprites = [];
+  }
+
   public override destroy() {
+    this.stopStarShardsOrbitEffect();
     this.model.onDeath(this);
     const listeners = [...this.destroyListeners];
     this.destroyListeners.length = 0;

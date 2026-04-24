@@ -136,6 +136,16 @@ export default class CardpileManager extends BaseManager {
     }
   }
 
+  cooldownCard(pid: number) {
+    // 立即冷却某张卡片
+    const status = this.cardpileStatus.get(pid);
+    if (status) {
+      status.leftMs = 0;
+      status.previewLeftMs = 0;
+      this.cardpileStatus.set(pid, status);
+    }
+  }
+
   previewReloadCard(pid: number) {
     const status = this.cardpileStatus.get(pid);
     if (status) {
@@ -249,7 +259,7 @@ export default class CardpileManager extends BaseManager {
       this.cancelSelection();
       return;
     }
-    
+
     // 选择星星碎片
     this.prePlantPid = null;
     this.useStarShards = false;

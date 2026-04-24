@@ -11,6 +11,7 @@ import type { Game } from "../../../scenes/Game";
 import createShootBurstAnim from "../../../sprite/shoot_anim";
 import { ProjectileCmd } from "../../../utils/cmd/ProjectileCmd";
 import CombatHelper from "../../../utils/helper/CombatHelper";
+import ShootHeadAnimationHelper from "../../../utils/helper/ShootHeadAnimationHelper";
 import { ArrowData, ArrowModel } from "../../bullet/arrow";
 import { HFireWorkData, HFireWorkModel } from "../../bullet/firework";
 
@@ -233,14 +234,13 @@ export class DoubleDispenserEntity extends PlantEntity {
     if (this.currentHealth <= 0 || !this.head) return;
 
     const moveDistance = this.head.displayWidth * 0.15;
-    const originalX = this.headX;
 
-    this.scene.tweens.add({
-      targets: this.head,
-      x: originalX - moveDistance,
-      duration: 200,
-      ease: 'Sine.easeOut',
-      onComplete: () => {
+    ShootHeadAnimationHelper.playRecoil(
+      this.scene,
+      this.head,
+      this.headX,
+      moveDistance,
+      () => {
         if (this.currentHealth <= 0 || !this.head) return;
 
         createShootBurstAnim(
@@ -250,25 +250,13 @@ export class DoubleDispenserEntity extends PlantEntity {
           24,
           this.baseDepth + 2
         );
-
-        this.scene.tweens.add({
-          targets: this.head,
-          x: originalX,
-          duration: 200,
-          ease: 'Sine.easeIn',
-          onComplete: () => {
-            if (this.head && this.currentHealth > 0) {
-              this.head.x = originalX;
-            }
-          }
-        });
       }
-    });
+    );
   }
 
   public resetHeadPosition() {
-    if (this.head) {
-      this.head.x = this.headX;
+    if (this.head && this.currentHealth > 0) {
+      ShootHeadAnimationHelper.recover(this.scene, this.head, this.headX);
     }
   }
 }

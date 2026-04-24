@@ -292,12 +292,16 @@ export default class MobManager extends BaseManager {
     // 1. 确定哪些怪物携带starShards
     totalMonsters = this.shuffleArray(totalMonsters);
     const carryingMonsters = new Set<number>();  // 存储携带starShards的怪物索引
-    const maxStars = Math.min(starNumber, totalMonsters.length);  // 确保不超过怪物总数
+    const starShardCandidateIndexes = totalMonsters
+      .map((monster, index) => ({ monster, index }))
+      .filter(({ monster }) => MonsterLibrary.GetModel(monster.mid)?.couldCarryStarShards)
+      .map(({ index }) => index);
+    const maxStars = Math.min(starNumber, starShardCandidateIndexes.length);  // 确保不超过可携带怪物总数
 
     // 随机选择starNumber数量的怪物
     while (carryingMonsters.size < maxStars) {
-      const randomIdx = Math.floor(this.SeedRandom() * totalMonsters.length);
-      carryingMonsters.add(randomIdx);
+      const randomIdx = Math.floor(this.SeedRandom() * starShardCandidateIndexes.length);
+      carryingMonsters.add(starShardCandidateIndexes[randomIdx]);
     }
 
     const duration = wave.duration * 1000;
@@ -360,7 +364,7 @@ export default class MobManager extends BaseManager {
 
           // 2. 如果当前怪物索引在carryingMonsters中，则设置携带starShards
           if (zomb && carryingMonsters.has(monsterIndex) && model.couldCarryStarShards) {
-            zomb.carryStarShards = true;
+            zomb.addStarShards();
           }
         });
 

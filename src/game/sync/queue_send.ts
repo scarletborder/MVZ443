@@ -41,14 +41,14 @@ export default class QueueSend {
       const request = this.queues.shift();
       if (request) {
         const refreshedRequest = this.refreshAckFrameId(request);
-        console.log("[QueueSend] send request", {
-          type: refreshedRequest.payload.oneofKind,
-          ackFrameId: refreshedRequest.payload.oneofKind === "blank"
-            ? refreshedRequest.payload.blank.ackFrameId
-            : BackendWS.AckFrameID,
-          currentFrameId: BackendWS.GetFrameID(),
-          queueLengthAfterShift: this.queues.length
-        });
+        // console.log("[QueueSend] send request", {
+        //   type: refreshedRequest.payload.oneofKind,
+        //   ackFrameId: refreshedRequest.payload.oneofKind === "blank"
+        //     ? refreshedRequest.payload.blank.ackFrameId
+        //     : BackendWS.AckFrameID,
+        //   currentFrameId: BackendWS.GetFrameID(),
+        //   queueLengthAfterShift: this.queues.length
+        // });
         if (refreshedRequest.payload.oneofKind === "blank") {
           this.lastBlankAckFrameIdQueued = -1;
           this.lastBlankAckFrameIdSent = refreshedRequest.payload.blank.ackFrameId;
@@ -146,12 +146,12 @@ export default class QueueSend {
       frameId,
       ackFrameId: BackendWS.AckFrameID
     };
-    console.log("[QueueSend] queue blank frame", {
-      frameId,
-      ackFrameId: request.ackFrameId,
-      lastBlankAckFrameIdSent: this.lastBlankAckFrameIdSent,
-      lastBlankAckFrameIdQueued: this.lastBlankAckFrameIdQueued
-    });
+    // console.log("[QueueSend] queue blank frame", {
+    //   frameId,
+    //   ackFrameId: request.ackFrameId,
+    //   lastBlankAckFrameIdSent: this.lastBlankAckFrameIdSent,
+    //   lastBlankAckFrameIdQueued: this.lastBlankAckFrameIdQueued
+    // });
     this.queues.push({
       payload: {
         blank: request,

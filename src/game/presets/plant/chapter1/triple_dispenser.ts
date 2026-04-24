@@ -7,6 +7,7 @@ import type { Game } from "../../../scenes/Game";
 import createShootBurstAnim from "../../../sprite/shoot_anim";
 import { ProjectileCmd } from "../../../utils/cmd/ProjectileCmd";
 import CombatHelper from "../../../utils/helper/CombatHelper";
+import ShootHeadAnimationHelper from "../../../utils/helper/ShootHeadAnimationHelper";
 import { ArrowData, ArrowModel, MutantYAxisArrowData, MutantYAxisArrowModel } from "../../bullet/arrow";
 
 export class TripleDispenserModel extends PlantModel {
@@ -217,14 +218,13 @@ export class TripleDispenserEntity extends PlantEntity {
     if (this.currentHealth <= 0 || !this.head) return;
 
     const moveDistance = this.head.displayWidth * 0.15;
-    const originalX = this.headX;
 
-    this.scene.tweens.add({
-      targets: this.head,
-      x: originalX - moveDistance,
-      duration: 200,
-      ease: 'Sine.easeOut',
-      onComplete: () => {
+    ShootHeadAnimationHelper.playRecoil(
+      this.scene,
+      this.head,
+      this.headX,
+      moveDistance,
+      () => {
         if (this.currentHealth <= 0 || !this.head) return;
 
         createShootBurstAnim(
@@ -234,37 +234,16 @@ export class TripleDispenserEntity extends PlantEntity {
           24,
           this.baseDepth + 2
         );
-
-        this.scene.tweens.add({
-          targets: this.head,
-          x: originalX,
-          duration: 200,
-          ease: 'Sine.easeIn',
-          onComplete: () => {
-            if (this.head && this.currentHealth > 0) {
-              this.head.x = originalX;
-            }
-          }
-        });
       }
-    });
+    );
   }
 
   public playBruteShootSequence(totalArrows: number) {
     if (this.currentHealth <= 0 || !this.head) return;
 
     const moveDistance = this.head.displayWidth * 0.15;
-    const originalX = this.headX;
+    ShootHeadAnimationHelper.startHoldRecoil(this.scene, this.head, this.headX, moveDistance);
 
-    // 头部向左移动
-    this.scene.tweens.add({
-      targets: this.head,
-      x: originalX - moveDistance,
-      duration: 200,
-      ease: 'Sine.easeOut'
-    });
-
-    // 定时发射箭
     this.tickmanager.addEvent({
       startAt: 200,
       delay: 80,
@@ -274,24 +253,11 @@ export class TripleDispenserEntity extends PlantEntity {
         (this.model as TripleDispenserModel)['shootArrows'](this, true);
       }
     });
-
-    // 发射结束后头部回弹
-    const overallDuration = 200 + 80 * (totalArrows - 1);
-    this.scene.time.delayedCall(overallDuration, () => {
-      if (this.currentHealth > 0 && this.head) {
-        this.scene.tweens.add({
-          targets: this.head,
-          x: originalX,
-          duration: 200,
-          ease: 'Sine.easeIn'
-        });
-      }
-    });
   }
 
   public resetHeadPosition() {
-    if (this.head) {
-      this.head.x = this.headX;
+    if (this.head && this.currentHealth > 0) {
+      ShootHeadAnimationHelper.recover(this.scene, this.head, this.headX);
     }
   }
 }
