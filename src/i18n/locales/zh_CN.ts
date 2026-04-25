@@ -55,7 +55,8 @@ const zhCN = {
     "level_sg6": "虹龙洞",
     "level_sg7": "矿道(elite)",
     "level_sg8": "矿洞深处(水elite)",
-    "level_sg9": "虹龙洞(BOSS)"
+    "level_sg9": "虹龙洞(BOSS)",
+    "chapter_cp1": "村庄之下"
   },
   "stuff": {
     "dragon_ball": "龙珠",
@@ -65,7 +66,6 @@ const zhCN = {
     "leather": "皮革",
     "obsidian_medal": "黑曜石残骸",
     "scb": "黯绯结晶Trailer Version Only",
-    "chapter_cp1": "村庄之下"
   },
   "menu": {
     "homepage": "主页",

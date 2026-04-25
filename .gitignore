@@ -25,3 +25,5 @@ dist-ssr
 
 # resources
 tools/resources/*
+
+.claude/*
