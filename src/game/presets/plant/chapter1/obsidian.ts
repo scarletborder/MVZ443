@@ -6,6 +6,8 @@ import { PlantModel } from "../../../models/PlantModel";
 import type { Game } from "../../../scenes/Game";
 import { BaseEntity } from "../../../models/core/BaseEntity";
 import { PlantCmd } from "../../../utils/cmd/PlantCmd";
+import { SfxCmd } from "../../../utils/cmd/SfxCmd";
+import { ShieldActivateSfx } from "../../../sfx/flash/ShieldActivateSfx";
 
 /**
  * 黑曜石 - 护盾植物
@@ -159,15 +161,9 @@ export class ObsidianEntity extends PlantEntity {
     const sprite = this.viewGroup.getChildren()[0] as Phaser.GameObjects.Sprite;
     if (!sprite) return;
 
-    // 简单的闪烁动画：快速闪烁表示护盾激活
-    sprite.setFrame(3);
-
-    this.scene.time.delayedCall(150, () => {
-      if (sprite) sprite.setFrame(4);
-    });
-
-    this.scene.time.delayedCall(300, () => {
-      if (sprite) sprite.setFrame(3);
+    SfxCmd.Create(ShieldActivateSfx, {
+      scene: this.scene,
+      sprite,
     });
   }
 }

@@ -1,11 +1,11 @@
 
-import { defaultRandom } from "../../../utils/random";
-import DepthUtils from "../../../utils/depth";
 import type { Game } from "../../scenes/Game";
 import { CombatEntity } from "../core/CombatEntity";
 import { ProjectileEntity } from "../entities/ProjectileEntity";
 import { ExplosionConfig, ExplosionModel } from "./ProjectileModels";
 import { PositionManager } from "../../managers/view/PositionManager";
+import { SfxCmd } from "../../utils/cmd/SfxCmd";
+import { ExplosionSfx } from "../../sfx/explosion/ExplosionSfx";
 
 export class ExplosionEntity extends ProjectileEntity<ExplosionModel> {
   public baseDepth: number;
@@ -79,56 +79,17 @@ export class ExplosionEntity extends ProjectileEntity<ExplosionModel> {
   private initVisuals() {
     // 播放表现层动画
     if (!this.model.disableAnime) {
-      this.playExplosionAnimations(
-        this._explosionWidth,
-        this._explosionHeight,
-        this._explosionLeftWidth,
-        this._explosionDownHeight,
-        this._gridSizeX
-      );
-    }
-  }
-
-  private playExplosionAnimations(totalW: number, totalH: number, offsetL: number, offsetD: number, baseSize: number) {
-    this.scene.musical.explodeAudio.play(`explode${Math.floor(Math.random() * 3) + 1}`);
-
-    const spriteBaseSize = baseSize * 0.6;
-    const cols = Math.ceil(totalW / spriteBaseSize);
-    const rows = Math.ceil(totalH / spriteBaseSize);
-
-    if (!this.scene.anims.exists('explosion')) {
-      this.scene.anims.create({
-        key: 'explosion',
-        frames: this.scene.anims.generateFrameNumbers("anime/explosion", { start: 0, end: 15 }),
-        frameRate: 30, repeat: 0
+      SfxCmd.Create(ExplosionSfx, {
+        scene: this.scene,
+        x: this.x,
+        y: this.y,
+        totalWidth: this._explosionWidth,
+        totalHeight: this._explosionHeight,
+        leftWidth: this._explosionLeftWidth,
+        downHeight: this._explosionDownHeight,
+        baseSize: this._gridSizeX,
+        viewGroup: this.viewGroup,
       });
-    }
-
-    for (let row = 0; row < rows; row++) {
-      for (let col = 0; col < cols; col++) {
-        const baseX = this.x - offsetL + (col + 0.5) * spriteBaseSize;
-        const baseY = this.y - offsetD + (row + 0.5) * spriteBaseSize;
-
-        // 为了密度，每个格子随机生成 1~2 个爆炸动画
-        for (let i = 0; i < (defaultRandom() < 0.5 ? 2 : 1); i++) {
-          const finalX = baseX + (defaultRandom() - 0.5) * spriteBaseSize * 0.8;
-          const finalY = baseY + (defaultRandom() - 0.5) * spriteBaseSize * 0.8;
-          const scale = 0.8 + defaultRandom() * 0.6;
-
-          const anime = this.scene.add.sprite(finalX, finalY, 'anime/explosion')
-            .setDisplaySize(spriteBaseSize * scale, spriteBaseSize * scale)
-            .setDepth(DepthUtils.getInGameUIElementDepth(-100))
-            .setRotation(defaultRandom() * Math.PI * 2);
-
-          this.viewGroup.add(anime);
-
-          this.scene.time.delayedCall(150 * defaultRandom(), () => {
-            if (!anime.scene) return;
-            anime.play('explosion');
-            anime.once('animationcomplete', () => anime.destroy());
-          });
-        }
-      }
     }
   }
 }

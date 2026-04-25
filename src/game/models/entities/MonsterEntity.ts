@@ -16,6 +16,10 @@ import { PlantEntity } from "./PlantEntity";
 import { BaseEntity } from "../core/BaseEntity";
 import { createZombieAnimController, LegacyMonsterAnimController } from "../monster/anims/LegacyMonsterAnimControllers";
 import ResourceCmd from "../../utils/cmd/ResourceCmd";
+import { SfxCmd } from "../../utils/cmd/SfxCmd";
+import { StarShardsOrbitSfx } from "../../sfx/star/StarShardsOrbitSfx";
+import { DeathRotateSfx } from "../../sfx/death/DeathRotateSfx";
+import { DeathSmokeSfx } from "../../sfx/death/DeathSmokeSfx";
 
 export abstract class MonsterEntity extends CombatEntity {
   declare public scene: Game;
@@ -40,9 +44,7 @@ export abstract class MonsterEntity extends CombatEntity {
   public carryStarShards = false;
   private carriedStarShards = 0;
   private starShardsDropped = false;
-  private starShardOrbitSprites: Phaser.GameObjects.Image[] = [];
-  private starShardOrbitTimer: FrameTimer | null = null;
-  private starShardOrbitAngle = 0;
+  private starOrbitSfx: StarShardsOrbitSfx | null = null;
   public attacking: CombatEntity | null = null;
   protected attackTimer: FrameTimer | null = null;
   protected debuffs: { [key: string]: { remaining: number, timer: FrameTimer } } = {};
@@ -262,11 +264,9 @@ export abstract class MonsterEntity extends CombatEntity {
       this.rigidBody = null;
     }
 
-    this.scene.tweens.add({
+    SfxCmd.Create(DeathRotateSfx, {
+      scene: this.scene,
       targets: this.viewGroup.getChildren(),
-      angle: 90,
-      duration: 400,
-      ease: "Linear",
       onComplete: () => this.playDeathSmokeAnimation(),
     });
   }
@@ -294,13 +294,12 @@ export abstract class MonsterEntity extends CombatEntity {
   }
 
   protected playDeathSmokeAnimation() {
-    this.scene.musical.zombieDeathPool.play();
-    const smoke = this.scene.add.sprite(this.x, this.y, "anime/death_smoke")
-      .setDisplaySize(100, 100)
-      .setOrigin(0.5, 1)
-      .setDepth(this.baseDepth + 15);
-    smoke.play("death_smoke");
-    smoke.once("animationcomplete", () => smoke.destroy());
+    SfxCmd.Create(DeathSmokeSfx, {
+      scene: this.scene,
+      x: this.x,
+      y: this.y,
+      depth: this.baseDepth + 15,
+    });
   }
 
   private dropCarriedStarShards() {
@@ -312,54 +311,22 @@ export abstract class MonsterEntity extends CombatEntity {
   }
 
   private startStarShardsOrbitEffect() {
-    if (this.starShardOrbitSprites.length > 0) return;
-
-    const scale = PositionManager.Instance.scaleFactor;
-    const orbitCount = 3;
-    this.starShardOrbitSprites = Array.from({ length: orbitCount }, (_, index) => {
-      const star = this.scene.add.image(this.x, this.y, "starshards")
-        .setScale(0.28 * scale)
-        .setOrigin(0.5)
-        .setAlpha(0.95)
-        .setDepth(this.baseDepth + 20);
-      this.viewGroup.add(star);
-      star.setData("orbitOffset", index * Phaser.Math.PI2 / orbitCount);
-      return star;
-    });
-
-    this.starShardOrbitTimer = this.tickmanager.addEvent({
-      delay: 33,
-      loop: true,
-      callback: () => this.updateStarShardsOrbitEffect(),
-    });
-    this.updateStarShardsOrbitEffect();
-  }
-
-  private updateStarShardsOrbitEffect() {
-    if (this.isDying) return;
-    const scale = PositionManager.Instance.scaleFactor;
-    const centerX = this.x + this.offsetX;
-    const centerY = this.y + this.offsetY - PositionManager.Instance.GRID_SIZEY * 0.82;
-    const radiusX = PositionManager.Instance.GRID_SIZEX * 0.32;
-    const radiusY = PositionManager.Instance.GRID_SIZEY * 0.16;
-    this.starShardOrbitAngle += 0.12;
-
-    this.starShardOrbitSprites.forEach((star) => {
-      const angle = this.starShardOrbitAngle + (star.getData("orbitOffset") as number);
-      const depthRatio = (Math.sin(angle) + 1) / 2;
-      star.setPosition(centerX + Math.cos(angle) * radiusX, centerY + Math.sin(angle) * radiusY)
-        .setScale((0.22 + depthRatio * 0.12) * scale)
-        .setAlpha(0.55 + depthRatio * 0.4)
-        .setAngle(Phaser.Math.RadToDeg(angle))
-        .setDepth(this.baseDepth + 18 + Math.round(depthRatio * 4));
+    if (this.starOrbitSfx) return;
+    this.starOrbitSfx = SfxCmd.Create(StarShardsOrbitSfx, {
+      scene: this.scene,
+      baseDepth: this.baseDepth,
+      viewGroup: this.viewGroup,
+      getAnchor: () => ({
+        x: this.x + this.offsetX,
+        y: this.y + this.offsetY,
+        active: !this.isDying,
+      }),
     });
   }
 
   private stopStarShardsOrbitEffect() {
-    this.starShardOrbitTimer?.remove();
-    this.starShardOrbitTimer = null;
-    this.starShardOrbitSprites.forEach((star) => star.destroy());
-    this.starShardOrbitSprites = [];
+    this.starOrbitSfx?.stop();
+    this.starOrbitSfx = null;
   }
 
   public override destroy() {
@@ -512,19 +479,16 @@ export abstract class BaseMonsterEntity extends MonsterEntity {
       this.rigidBody = null;
     }
 
-    this.scene.tweens.add({
+    SfxCmd.Create(DeathRotateSfx, {
+      scene: this.scene,
       targets: [...this.getAnimTargets(), ...this.attachSprites.values()],
-      angle: 90,
-      duration: 400,
-      ease: "Linear",
       onComplete: () => {
-        this.scene.musical.zombieDeathPool.play();
-        const smoke = this.scene.add.sprite(this.x, this.y, "anime/death_smoke")
-          .setDisplaySize(100, 100)
-          .setOrigin(0.5, 1)
-          .setDepth(this.baseDepth + 15);
-        smoke.play("death_smoke");
-        smoke.once("animationcomplete", () => smoke.destroy());
+        SfxCmd.Create(DeathSmokeSfx, {
+          scene: this.scene,
+          x: this.x,
+          y: this.y,
+          depth: this.baseDepth + 15,
+        });
       },
     });
   }

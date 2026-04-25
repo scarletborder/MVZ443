@@ -5,7 +5,8 @@ import { PositionManager } from "../../../managers/view/PositionManager";
 import { PresetMonsterModel } from "../../../models/entities/MonsterEntity";
 import { Faction } from "../../../models/Enum";
 import { ObsidianGolemAnimProps } from "../../../sprite/normal_golem";
-import { StartArc } from "../../../utils/arc";
+import { SfxCmd } from "../../../utils/cmd/SfxCmd";
+import { ArcSfx } from "../../../sfx/arc/ArcSfx";
 import MobCmd from "../../../utils/cmd/MobCmd";
 import ObstacleCmd from "../../../utils/cmd/ObstacleCmd";
 import { PlantCmd } from "../../../utils/cmd/PlantCmd";
@@ -28,18 +29,30 @@ export function spawnObsidianObstacle(entity: BaseGolemEntity, col: number, row:
   if (ObstacleManager.Instance.HasObstacle(col, row)) return;
 
   const { x, y } = PositionManager.Instance.getPlantBottomCenter(col, row);
-  StartArc(entity.scene, entity.x, entity.y, x, y, "zombie/mob_obsidian", 1200, () => {
-    ObstacleCmd.createInGrid(ObsidianObstacleData.oid, entity.scene, col, row, {
-      hp,
-      faction: Faction.ZOMBIE,
-      summoner: entity,
-    });
+  const arcDuration = 1200;
+  SfxCmd.Create(ArcSfx, {
+    scene: entity.scene,
+    x1: entity.x, y1: entity.y,
+    x2: x, y2: y,
+    texture: "zombie/mob_obsidian",
+    duration: arcDuration,
+    arcHeight,
+  });
+  entity.tickmanager.delayedCall({
+    delay: arcDuration,
+    callback: () => {
+      ObstacleCmd.createInGrid(ObsidianObstacleData.oid, entity.scene, col, row, {
+        hp,
+        faction: Faction.ZOMBIE,
+        summoner: entity,
+      });
 
-    const plants = PlantsManager.Instance.PlantsMap.get(`${col}-${row}`) ?? [];
-    for (const plant of [...plants]) {
-      PlantCmd.DealDamage(plant, SECKILL / 2, entity);
-    }
-  }, arcHeight);
+      const plants = PlantsManager.Instance.PlantsMap.get(`${col}-${row}`) ?? [];
+      for (const plant of [...plants]) {
+        PlantCmd.DealDamage(plant, SECKILL / 2, entity);
+      }
+    },
+  });
 }
 
 export class ObsidianGolemEntity extends BaseGolemEntity {

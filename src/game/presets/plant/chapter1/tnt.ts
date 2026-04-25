@@ -4,8 +4,10 @@ import { PositionManager } from "../../../managers/view/PositionManager";
 import { PlantEntity } from "../../../models/entities/PlantEntity";
 import { PlantModel } from "../../../models/PlantModel";
 import type { Game } from "../../../scenes/Game";
-import { StartArc } from "../../../utils/arc";
 import { ProjectileCmd } from "../../../utils/cmd/ProjectileCmd";
+import { SfxCmd } from "../../../utils/cmd/SfxCmd";
+import { ArcSfx } from "../../../sfx/arc/ArcSfx";
+import { AlphaBlinkSfx } from "../../../sfx/flash/AlphaBlinkSfx";
 import { Faction } from "../../../models/Enum";
 import CombatManager from "../../../managers/CombatManager";
 
@@ -36,14 +38,15 @@ export class TntModel extends PlantModel {
     }
     entity.explosionDamage = baseDamage;
 
-    // 闪烁效果（表现层），使用 scene.time
-    entity.scene.tweens.add({
+    // 闪烁效果（表现层）
+    SfxCmd.Create(AlphaBlinkSfx, {
+      scene: entity.scene,
       targets: entity.mainSprite,
-      alpha: { from: 1, to: 0.2 },
+      from: 1,
+      to: 0.2,
       duration: 300,
       yoyo: true,
       repeat: 3,
-      ease: 'Sine.easeInOut'
     });
 
     // 倒计时爆炸（游戏逻辑），使用 tickmanager
@@ -100,33 +103,44 @@ export class TntModel extends PlantModel {
 
     // 生成爆炸效果
     const targets = getExplosionTargets(scene, entity.col, entity.row);
+    const arcDuration = 800;
     targets.forEach(([targetCol, targetRow]) => {
       const { x, y } = PositionManager.Instance.getPlantBottomCenter(targetCol, targetRow);
-      StartArc(scene, entity.x, entity.y, x, y, 'plant/tnt', 800, () => {
-        ProjectileCmd.CreateExplosion(scene, x, targetRow, {
-          damage: entity.explosionDamage,
-          rightGrid: 1.5,
-          leftGrid: 1.5,
-          upGrid: 1,
-          faction: entity.faction,
-          dealer: entity
-        });
-
-        // 精英7+：延迟爆炸
-        if (entity.level >= 7) {
-          entity.tickmanager.delayedCall({
-            delay: 3900,
-            callback: () => {
-              ProjectileCmd.CreateExplosion(scene, x, targetRow, {
-                damage: entity.explosionDamage / 3,
-                rightGrid: 1.5,
-                leftGrid: 1.5,
-                upGrid: 1,
-                faction: entity.faction,
-                dealer: entity
-              });
-            }
+      SfxCmd.Create(ArcSfx, {
+        scene,
+        x1: entity.x, y1: entity.y,
+        x2: x, y2: y,
+        texture: 'plant/tnt',
+        duration: arcDuration,
+      });
+      entity.tickmanager.delayedCall({
+        delay: arcDuration,
+        callback: () => {
+          ProjectileCmd.CreateExplosion(scene, x, targetRow, {
+            damage: entity.explosionDamage,
+            rightGrid: 1.5,
+            leftGrid: 1.5,
+            upGrid: 1,
+            faction: entity.faction,
+            dealer: entity
           });
+
+          // 精英7+：延迟爆炸
+          if (entity.level >= 7) {
+            entity.tickmanager.delayedCall({
+              delay: 3900,
+              callback: () => {
+                ProjectileCmd.CreateExplosion(scene, x, targetRow, {
+                  damage: entity.explosionDamage / 3,
+                  rightGrid: 1.5,
+                  leftGrid: 1.5,
+                  upGrid: 1,
+                  faction: entity.faction,
+                  dealer: entity
+                });
+              }
+            });
+          }
         }
       });
     });

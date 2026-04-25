@@ -3,11 +3,12 @@
  */
 
 import { PlantStat } from "../../../../utils/numbervalue";
-import { PositionManager } from "../../../managers/view/PositionManager";
 import { PlantEntity } from "../../../models/entities/PlantEntity";
 import { PlantModel } from "../../../models/PlantModel";
 import type { Game } from "../../../scenes/Game";
 import PlantHelper from "../../../utils/helper/PlantHelper";
+import { SfxCmd } from "../../../utils/cmd/SfxCmd";
+import { PowderScatterSfx } from "../../../sfx/powder/PowderScatterSfx";
 
 const SECKILL = 99889988; // 秒杀血量
 
@@ -68,53 +69,15 @@ export class GlowPowderEntity extends PlantEntity {
     }
   }
 
-  /**
-   * 创建黄色矩形散布的视觉效果
-   */
   public createVisualEffect(): void {
-    const depth = this.baseDepth + 1;
-    const centerX = this.x;
-    const centerY = this.y - PositionManager.Instance.GRID_SIZEY / 2;
-    const rangeWidth = PositionManager.Instance.GRID_SIZEX;
-    const rangeHeight = PositionManager.Instance.GRID_SIZEY;
-    const rectWidth = PositionManager.Instance.GRID_SIZEX / 15;
-    const rectHeight = PositionManager.Instance.GRID_SIZEX / 15;
-    const rectCount = 15;
-
-    for (let i = 0; i < rectCount; i++) {
-      // 在范围内随机生成小矩形的中心坐标
-      const posX = Phaser.Math.Between(
-        centerX - rangeWidth / 2,
-        centerX + rangeWidth / 2
-      );
-      const posY = Phaser.Math.Between(
-        centerY - rangeHeight / 2,
-        centerY + rangeHeight / 2
-      );
-
-      // 创建黄色矩形
-      const graphics = this.scene.add.graphics({
-        fillStyle: { color: 0xFFFF5A }
-      }).setDepth(depth);
-
-      graphics.fillRect(
-        posX - rectWidth / 2,
-        posY - rectHeight / 2,
-        rectWidth,
-        rectHeight
-      );
-
-      // Tween：透明度在 1600ms 内从 1 衰减到 0.2，然后销毁
-      this.scene.tweens.add({
-        targets: graphics,
-        alpha: 0.2,
-        duration: 1600,
-        ease: 'Linear',
-        onComplete: () => {
-          graphics.destroy();
-        }
-      });
-    }
+    SfxCmd.Create(PowderScatterSfx, {
+      scene: this.scene,
+      x: this.x,
+      y: this.y,
+      depth: this.baseDepth + 1,
+      color: 0xFFFF5A,
+      count: 15,
+    });
   }
 }
 

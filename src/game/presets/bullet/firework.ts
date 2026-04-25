@@ -3,6 +3,8 @@ import { BulletEntity } from "../../models/projectiles/BulletEntity";
 import { BulletConfig, BulletModel } from "../../models/projectiles/ProjectileModels";
 import type { Game } from "../../scenes/Game";
 import { ProjectileCmd } from "../../utils/cmd/ProjectileCmd";
+import { SfxCmd } from "../../utils/cmd/SfxCmd";
+import { RocketSmokeSfx } from "../../sfx/trail/RocketSmokeSfx";
 
 export interface HFireWorkConfig extends BulletConfig {
   explodeDamage?: number;
@@ -31,16 +33,6 @@ export class HFireWorkEntity extends BulletEntity {
     this.sprite.setDisplaySize(size.sizeX * 2, size.sizeY / 2);
 
     scene.musical.shootFireworkPool.play();
-
-    // 创建动画（如果没有）
-    if (!scene.anims.exists('rocket_smoke')) {
-      scene.anims.create({
-        key: 'rocket_smoke',
-        frames: scene.anims.generateFrameNumbers('anime/death_smoke', { start: 0, end: 7 }),
-        frameRate: 7,
-        repeat: 0,
-      });
-    }
   }
 
   stepUpdate(): void {
@@ -51,37 +43,17 @@ export class HFireWorkEntity extends BulletEntity {
     this.smokeTimer = 0;
 
     if (this.rigidBody) {
-      const scene = this.scene;
-
       const vel = this.rigidBody.linvel();
       const angle = Math.atan2(vel.y, vel.x);
-
       const offsetX = -Math.cos(angle) * this.sprite.displayWidth * 0.5;
       const offsetY = -Math.sin(angle) * this.sprite.displayHeight * 0.5;
 
-      const anime = scene.add.sprite(this.x + offsetX, this.y + offsetY, 'anime/death_smoke');
-      anime.setDisplaySize(this.sprite.displayHeight * 2, this.sprite.displayHeight * 2)
-        .setOrigin(0.5, 1)
-        .setDepth(this.baseDepth + 1)
-        .setAlpha(0);
-
-      anime.play('rocket_smoke');
-
-      scene.tweens.add({
-        targets: anime,
-        alpha: 1,
-        duration: 500,
-        ease: 'Linear',
-        onComplete: () => {
-          scene.tweens.add({
-            targets: anime,
-            alpha: 0,
-            duration: 500,
-            onComplete: () => {
-              anime.destroy();
-            }
-          });
-        }
+      SfxCmd.Create(RocketSmokeSfx, {
+        scene: this.scene,
+        x: this.x + offsetX,
+        y: this.y + offsetY,
+        size: this.sprite.displayHeight * 2,
+        depth: this.baseDepth + 1,
       });
     }
   }

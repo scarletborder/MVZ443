@@ -5,8 +5,9 @@ import { PositionManager } from "../../../managers/view/PositionManager";
 import { PlantEntity } from "../../../models/entities/PlantEntity";
 import { PlantModel } from "../../../models/PlantModel";
 import type { Game } from "../../../scenes/Game";
-import { StartArc } from "../../../utils/arc";
-import createDirtOut from "../../../sprite/dirt_out";
+import { SfxCmd } from "../../../utils/cmd/SfxCmd";
+import { ArcSfx } from "../../../sfx/arc/ArcSfx";
+import { DirtOutSfx } from "../../../sfx/dirt/DirtOutSfx";
 import { ProjectileCmd } from "../../../utils/cmd/ProjectileCmd";
 import { Faction } from "../../../models/Enum";
 import { CollisionContext } from "../../../types";
@@ -106,12 +107,23 @@ export class TntMinesModel extends PlantModel {
       }
 
       // 开始放置
+      const arcDuration = 1000;
       for (const pos of targetPositions) {
-        StartArc(scene, entity.x, entity.y, pos.x, pos.y, 'plant/tnt_mines', 1000, () => {
-          DeferredManager.Instance.defer(() => {
-            const newMine = this.createEntity(scene, pos.col, pos.row, entity.level);
-            newMine.wakeup();
-          });
+        SfxCmd.Create(ArcSfx, {
+          scene,
+          x1: entity.x, y1: entity.y,
+          x2: pos.x, y2: pos.y,
+          texture: 'plant/tnt_mines',
+          duration: arcDuration,
+        });
+        entity.tickmanager.delayedCall({
+          delay: arcDuration,
+          callback: () => {
+            DeferredManager.Instance.defer(() => {
+              const newMine = this.createEntity(scene, pos.col, pos.row, entity.level);
+              newMine.wakeup();
+            });
+          }
         });
       }
     }
@@ -160,8 +172,11 @@ export class TntMinesEntity extends PlantEntity {
       this.isBuried = false;
 
       this.buriedSprite.setVisible(false);
-      createDirtOut(this.game, this.col, this.row, () => {
-        this.mainSprite.setVisible(true);
+      SfxCmd.Create(DirtOutSfx, {
+        scene: this.game,
+        col: this.col,
+        row: this.row,
+        onComplete: () => this.mainSprite.setVisible(true),
       });
     }
   }

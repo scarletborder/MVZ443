@@ -4,6 +4,8 @@ import { PlantEntity } from "../../../models/entities/PlantEntity";
 import { PlantModel } from "../../../models/PlantModel";
 import type { Game } from "../../../scenes/Game";
 import { ProjectileCmd } from "../../../utils/cmd/ProjectileCmd";
+import { SfxCmd } from "../../../utils/cmd/SfxCmd";
+import { PowderScatterSfx } from "../../../sfx/powder/PowderScatterSfx";
 
 
 export class IceBombModel extends PlantModel {
@@ -139,38 +141,17 @@ export class IceBombEntity extends PlantEntity {
   }
 
   public playFreezeAnimation() {
-    // 创建蓝色冰晶矩形散射效果
     const posManager = PositionManager.Instance;
-    const depth = this.baseDepth + 1;
-    const centerX = this.x;
-    const centerY = this.y - posManager.GRID_SIZEY / 2;
-
-    const rangeWidth = posManager.GRID_SIZEX * 1.5;   // 横向散布范围
-    const rangeHeight = posManager.GRID_SIZEY * 1.5;  // 纵向散布范围
-    const rectWidth = posManager.GRID_SIZEX / 15;     // 小矩形宽度
-    const rectHeight = posManager.GRID_SIZEX / 15;    // 小矩形高度
-    const rectCount = 20;                             // 矩形数量
-
-    for (let i = 0; i < rectCount; i++) {
-      // 在范围内随机生成小矩形的中心坐标
-      const posX = Phaser.Math.Between(centerX - rangeWidth / 2, centerX + rangeWidth / 2);
-      const posY = Phaser.Math.Between(centerY - rangeHeight / 2, centerY + rangeHeight / 2);
-
-      // 创建图形对象并绘制蓝色矩形
-      const graphics = this.scene.add.graphics({ fillStyle: { color: 0x0265b6 } }).setDepth(depth);
-      graphics.fillRect(posX - rectWidth / 2, posY - rectHeight / 2, rectWidth, rectHeight);
-
-      // Tween动画：透明度从1渐变到0.2，同时缓慢消失
-      this.scene.tweens.add({
-        targets: graphics,
-        alpha: 0.2,
-        duration: 1600,
-        ease: 'Linear',
-        onComplete: () => {
-          graphics.destroy();
-        }
-      });
-    }
+    SfxCmd.Create(PowderScatterSfx, {
+      scene: this.scene,
+      x: this.x,
+      y: this.y,
+      depth: this.baseDepth + 1,
+      color: 0x0265b6,
+      count: 20,
+      rangeWidth: posManager.GRID_SIZEX * 1.5,
+      rangeHeight: posManager.GRID_SIZEY * 1.5,
+    });
   }
 }
 
