@@ -1,3 +1,5 @@
+该项目已迁移到 [mvz443-team/mvz443](https://github.com/mvz443-team/mvz443) 维护
+
 # Minecraft Vs Zombie 443
 
 develop from https://github.com/phaserjs/template-react-ts
