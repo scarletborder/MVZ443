@@ -39,3 +39,16 @@ MVZ2,Minecraft,东方Project同人游戏
 | `npm run build` | Create a production build in the `dist` folder |
 | `npm run dev-nolog` | Launch a development web server without sending anonymous data (see "About log.js" below) |
 | `npm run build-nolog` | Create a production build in the `dist` folder without sending anonymous data (see "About log.js" below) |
+| `pnpm run doctor:deps` | Check whether `node_modules` links are broken (common after moving/copying folder) |
+| `pnpm run doctor:deps:fix` | Reinstall and repair broken dependency links automatically |
+
+## Dependency Health Check
+
+如果你移动/复制了项目目录，`node_modules` 里可能残留旧路径软链接，导致类似 `Cannot find package 'vite'` 的错误。
+
+本项目已在 `dev/build` 前自动执行依赖自检；你也可以手动运行：
+
+```bash
+pnpm run doctor:deps
+pnpm run doctor:deps:fix
+```

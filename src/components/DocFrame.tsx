@@ -17,6 +17,12 @@ import { useLocaleMessages } from '../hooks/useLocaleMessages';
 import OnlineStatus from './OnlineStatus';
 import GlobalRoomListener from './GlobalRoomListener';
 
+// Docs site lives on Vercel (kept off gh-pages so it doesn't fight the game deploy).
+// Override per environment with VITE_DOCS_URL if the project's domain changes.
+const docsBaseUrl = (
+  (import.meta.env.VITE_DOCS_URL as string | undefined) || 'https://mvz443-docs.vercel.app'
+).replace(/\/$/, '');
+
 interface Props {
   width: number,
   height?: number,
@@ -38,8 +44,6 @@ export default function DocFrame({ width, height, setGameParams, gameStart }: Pr
     "menu.pokedex",
     "menu.shop",
     "menu.settings",
-    "menu.updates",
-    "menu.docs",
     "menu.about",
   ];
 
@@ -204,17 +208,10 @@ export default function DocFrame({ width, height, setGameParams, gameStart }: Pr
               if (item === "menu.choose_level") setCurrentView('levels');
               else if (item === "menu.pokedex") setCurrentView('pokedex');
               else if (item === "menu.shop") setCurrentView('shop');
-              else if (item === "menu.updates") {
-                // 跳转
-                navigate(`${publicUrl}/updates`);
-              }
               else if (item === "menu.settings") {
                 navigate(`${publicUrl}/settings`);
               }
               else if (item === "menu.about") setCurrentView('about');
-              else if (item === "menu.docs") {
-                navigate(`${publicUrl}/docs`);
-              }
               else if (item === "menu.homepage") setCurrentView('main')
             }}
           >
@@ -313,6 +310,24 @@ export default function DocFrame({ width, height, setGameParams, gameStart }: Pr
             msUserSelect: "text", // 针对IE10及以上
             userSelect: "text", // 标准属性
           }}>
+            <div style={{ marginBottom: "12px", display: "flex", gap: "16px", flexWrap: "wrap" }}>
+              <a
+                href={`${docsBaseUrl}/game-docs/`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: "#00ccff", textDecoration: "underline" }}
+              >
+                {translate('menu.docs')}
+              </a>
+              <a
+                href={`${docsBaseUrl}/updates_log/`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: "#00ccff", textDecoration: "underline" }}
+              >
+                {translate('menu.updates')}
+              </a>
+            </div>
             {translate('menu.about_text', {
               VERSION: VERSION,
               commitVersion: commitVersion,

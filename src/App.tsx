@@ -11,10 +11,7 @@ import GameResultView from './components/menu/result';
 import { useDeviceType } from './hooks/useDeviceType';
 import BackendWS from './utils/net/sync';
 import { BrowserRouter as Router, Route, Routes, useNavigate, useLocation } from 'react-router-dom';
-import UpdatesPage from './pages/updates';
 import SettingsPage from './pages/settings';
-import Docs from './pages/docs';
-import DocDetail from './pages/docDetail';
 import { publicUrl } from './utils/browser';
 import { initializeGameLibraries } from './game/managers/library/initializeGameLibraries';
 
@@ -204,10 +201,6 @@ function App() {
       <Routes>
         <Route path={`${publicUrl}/`} element={<GameMainWindow />} />
         <Route path={`${publicUrl}/settings`} element={<SettingsPage width={width} height={width * 3 / 4} />} />
-        <Route path={`${publicUrl}/updates`} element={<UpdatesPage />} />
-
-        <Route path={`${publicUrl}/docs`} element={<Docs />} />
-        <Route path={`${publicUrl}/docs/:name`} element={<DocDetail />} />
       </Routes>
     </Router>
   )
